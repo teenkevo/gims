@@ -3,21 +3,27 @@
 import * as React from "react";
 import {
   AudioWaveform,
-  BookOpen,
-  Bot,
+  Briefcase,
+  Cable,
   Command,
+  DatabaseZap,
+  FileCheck2,
+  FileStack,
+  FlaskConical,
   Frame,
   GalleryVerticalEnd,
+  LayoutList,
   Map,
   PieChart,
-  Settings2,
-  SquareTerminal,
+  Rocket,
+  ScrollText,
+  ShieldCheck,
+  Users,
+  Wallet,
 } from "lucide-react";
 
-import { NavMain } from "./nav-main";
-import { NavProjects } from "./nav-projects";
+import { NavGroup } from "./nav-group";
 import { NavUser } from "./nav-user";
-import { TeamSwitcher } from "./team-switcher";
 
 import {
   Sidebar,
@@ -26,6 +32,8 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Logo } from "./logo";
+import { ToggleLightDark } from "./toggle-light-dark";
 
 // This is sample data.
 const data = {
@@ -51,50 +59,24 @@ const data = {
       plan: "Free",
     },
   ],
-  navMain: [
+  navCore: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
+      title: "Projects",
+      url: "/projects",
+      icon: FileStack,
+      isActive: false,
       items: [
         {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Create new",
+          url: "/projects/create",
         },
       ],
     },
+
     {
-      title: "Models",
+      title: "Labs",
       url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      icon: FlaskConical,
       items: [
         {
           title: "Introduction",
@@ -115,9 +97,9 @@ const data = {
       ],
     },
     {
-      title: "Settings",
+      title: "Equipment",
       url: "#",
-      icon: Settings2,
+      icon: Cable,
       items: [
         {
           title: "General",
@@ -133,6 +115,113 @@ const data = {
         },
         {
           title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Repository",
+      url: "#",
+      icon: DatabaseZap,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Staff",
+      url: "#",
+      icon: Users,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Billing",
+      url: "#",
+      icon: Wallet,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Workflows",
+      url: "#",
+      icon: FileCheck2,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Security",
+      url: "#",
+      icon: ShieldCheck,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+      ],
+    },
+  ],
+  navCustomer: [
+    {
+      title: "Clients",
+      url: "/clients",
+      icon: Briefcase,
+
+      items: [
+        {
+          title: "Create new",
+          url: "/projects/create",
+        },
+      ],
+    },
+    {
+      title: "Services",
+      url: "#",
+      icon: LayoutList,
+      items: [
+        {
+          title: "Genesis",
+          url: "#",
+        },
+        {
+          title: "Explorer",
+          url: "#",
+        },
+        {
+          title: "Quantum",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Reporting",
+      url: "#",
+      icon: ScrollText,
+      items: [
+        {
+          title: "Genesis",
+          url: "#",
+        },
+        {
+          title: "Explorer",
+          url: "#",
+        },
+        {
+          title: "Quantum",
           url: "#",
         },
       ],
@@ -161,13 +250,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <Logo icon={Rocket} name="GIMS by GETLAB" />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavGroup label="Internal" items={data.navCore} />
+        <NavGroup label="Customer" items={data.navCustomer} />
       </SidebarContent>
       <SidebarFooter>
+        <ToggleLightDark />
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />

@@ -18,8 +18,9 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-export function NavMain({
+export function NavGroup({
   items,
+  label,
 }: {
   items: {
     title: string;
@@ -31,10 +32,11 @@ export function NavMain({
       url: string;
     }[];
   }[];
+  label: string;
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible
