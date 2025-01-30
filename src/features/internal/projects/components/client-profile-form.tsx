@@ -53,18 +53,16 @@ export function ClientProfileForm({ isSubmitting }: ClientProfileFormProps) {
         control={form.control}
         name="clientType"
         render={({ field }) => (
-          <FormItem className="space-y-20">
-            <FormLabel className="mb-5">
-              How do you want to add the client?
-            </FormLabel>
+          <FormItem className="space-y-3">
+            <FormLabel>How do you want to add the client?</FormLabel>
             <FormControl>
               <RadioGroup
                 disabled={isSubmitting}
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                className="flex flex-col space-y-3"
+                className="flex flex-col space-y-1"
               >
-                <FormItem className="flex items-center space-x-5 space-y-0">
+                <FormItem className="flex items-center space-x-3 space-y-0">
                   <FormControl>
                     <RadioGroupItem value="new" />
                   </FormControl>
@@ -72,7 +70,7 @@ export function ClientProfileForm({ isSubmitting }: ClientProfileFormProps) {
                     Create a new client
                   </FormLabel>
                 </FormItem>
-                <FormItem className="flex items-center space-x-5 space-y-0">
+                <FormItem className="flex items-center space-x-3 space-y-0">
                   <FormControl>
                     <RadioGroupItem value="existing" />
                   </FormControl>
@@ -98,7 +96,7 @@ export function ClientProfileForm({ isSubmitting }: ClientProfileFormProps) {
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || getClientsLoading}
                       variant="outline"
                       role="combobox"
                       className={cn(

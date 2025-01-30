@@ -2,7 +2,7 @@
 // core
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -79,11 +79,8 @@ export function CreateProjectForm() {
 
   return (
     <>
-      <Link className="mb-5 inline-flex" href="/projects">
-        <ArrowLeftCircle
-          //   style={{ marginRight: "20px", marginBottom: "20px" }}
-          className="mr-5 text-primary"
-        />
+      <Link className="mb-10 inline-flex" href="/projects">
+        <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
       <FormProvider {...form}>
