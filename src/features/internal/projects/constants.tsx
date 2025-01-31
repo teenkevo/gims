@@ -1,4 +1,4 @@
-import { Project } from "../../../../sanity.types";
+import { ALL_PROJECTS_QUERYResult } from "../../../../sanity.types";
 import { ProjectStage } from "./types";
 
 export const possibleStages: ProjectStage[] = [
@@ -9,7 +9,9 @@ export const possibleStages: ProjectStage[] = [
   "REPORTING",
 ];
 
-export const getCurrentStageIndex = (project: Project): number => {
+export const getCurrentStageIndex = (
+  project: ALL_PROJECTS_QUERYResult[number]
+): number => {
   const currentStage = project.stagesCompleted![
     project.stagesCompleted!.length - 1
   ] as ProjectStage;

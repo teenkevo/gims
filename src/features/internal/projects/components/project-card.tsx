@@ -11,7 +11,7 @@ import React from "react";
 import { getCurrentStageIndex, possibleStages } from "../constants";
 import { format } from "date-fns";
 import ProjectStage from "./project-stage";
-import { Project } from "../../../../../sanity.types";
+import { ALL_PROJECTS_QUERYResult, Project } from "../../../../../sanity.types";
 
 // Reusable InfoBlock component for displaying label-value pairs
 function InfoBlock({
@@ -29,7 +29,7 @@ function InfoBlock({
   );
 }
 
-export default function ProjectCard(project: Project) {
+export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
   const { _id, name, client, startDate, endDate } = project;
 
   return (
@@ -38,7 +38,7 @@ export default function ProjectCard(project: Project) {
         <div className="flex-1">
           <h2 className="text-lg font-semibold tracking-tight">{name}</h2>
           <p className="text-sm text-muted-foreground tracking-tight">
-            {client?._ref}
+            {client?.name}
           </p>
         </div>
       </CardHeader>
@@ -58,9 +58,7 @@ export default function ProjectCard(project: Project) {
             label="Client Satisfaction "
             value={
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-semibold text-primary">
-                  89% ↗
-                </span>
+                <span className="text-sm font-semibold text-primary">89%</span>
                 <span className="text-sm">Out of 100</span>
               </div>
             }

@@ -4,7 +4,7 @@
 import * as React from "react";
 
 // types
-import { Project } from "../../../../../sanity.types";
+import { ALL_PROJECTS_QUERYResult, Project } from "../../../../../sanity.types";
 
 // components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,11 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NoProjectsPlaceholder from "./no-projects-placeholder";
 import ProjectCard from "./project-card";
 
-interface ProjectsProps {
-  projects: Project[];
-}
-
-export function ProjectsView({ projects }: ProjectsProps) {
+export function ProjectsView({
+  projects,
+}: {
+  projects: ALL_PROJECTS_QUERYResult;
+}) {
+  console.log(projects);
   return (
     <main className="grid flex-1 items-start gap-4 md:gap-8 lg:grid-cols-1 xl:grid-cols-1">
       <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">

@@ -6,7 +6,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
-import { Project } from "../../../../../sanity.types";
+import { ALL_PROJECTS_QUERYResult, Project } from "../../../../../sanity.types";
 
 export function Stage({
   stage,
@@ -36,7 +36,9 @@ export function Stage({
   );
 }
 
-export default function ProjectStage(project: Project) {
+export default function ProjectStage(
+  project: ALL_PROJECTS_QUERYResult[number]
+) {
   const currentStage = getCurrentStageIndex(project);
 
   return (

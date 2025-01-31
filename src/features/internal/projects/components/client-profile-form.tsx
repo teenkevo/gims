@@ -4,9 +4,10 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // icons
-import { Check, ChevronsUpDown, Loader } from "lucide-react"; // Assuming Loader2 is a spinner icon
+import { Check, ChevronsUpDown } from "lucide-react"; // Assuming Loader2 is a spinner icon
 
 // components
 import {
@@ -15,6 +16,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -32,17 +34,20 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-import { cn } from "@/lib/utils";
-import { Client } from "../types";
 import Formheader from "@/components/form-header";
 import FormSpacerWrapper from "@/components/form-spacer-wrapper";
 
+import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+
 interface ClientProfileFormProps {
   isSubmitting: boolean;
+  clients: ALL_CLIENTS_QUERYResult;
 }
 
-export function ClientProfileForm({ isSubmitting }: ClientProfileFormProps) {
+export function ClientProfileForm({
+  isSubmitting,
+  clients,
+}: ClientProfileFormProps) {
   const [open, setOpen] = useState(false);
   const form = useFormContext();
 
@@ -96,70 +101,56 @@ export function ClientProfileForm({ isSubmitting }: ClientProfileFormProps) {
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      disabled={isSubmitting || getClientsLoading}
+                      disabled={isSubmitting}
                       variant="outline"
                       role="combobox"
                       className={cn(
                         "w-auto",
-                        getClientsLoading && "justify-start",
-                        !getClientsLoading && "justify-between",
+                        "justify-between",
                         !field.value && "text-muted-foreground"
                       )}
                     >
                       <AnimatePresence mode="wait">
-                        {getClientsLoading ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex items-center"
-                          >
-                            <Loader className="mr-2 h-4 w-4 animate-spin" />
-                            Loading existing clients, please wait...
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="clientSelection"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex items-center justify-between w-full"
-                          >
-                            {field.value !== undefined
-                              ? existingClients?.find(
-                                  (client) => client.id === field.value
-                                )?.name
-                              : "Select a client"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </motion.div>
-                        )}
+                        <motion.div
+                          key="clientSelection"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex items-center justify-between w-full"
+                        >
+                          {field.value !== undefined
+                            ? clients?.find(
+                                (client) => client._id === field.value
+                              )?.name
+                            : "Select a client"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </motion.div>
                       </AnimatePresence>
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                {!getClientsLoading && (
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Command>
+
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Command>
+                    <CommandList>
                       <CommandInput placeholder="Search client..." />
                       <CommandEmpty>No client found.</CommandEmpty>
                       <CommandGroup>
-                        {existingClients?.map((client) => (
+                        {clients?.map((client) => (
                           <CommandItem
                             disabled={isSubmitting}
-                            value={client.name}
-                            key={client.id}
+                            value={client.name || ""}
+                            key={client._id}
                             onSelect={() => {
-                              form.setValue("existingClient", client.id);
+                              form.setValue("existingClient", client._id);
                               setOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                client.id === field.value
+                                client._id === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
@@ -168,9 +159,9 @@ export function ClientProfileForm({ isSubmitting }: ClientProfileFormProps) {
                           </CommandItem>
                         ))}
                       </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
               </Popover>
               <FormMessage />
             </FormItem>

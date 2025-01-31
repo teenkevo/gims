@@ -24,6 +24,7 @@ import { createProjectSchema } from "@/features/internal/projects/schemas";
 
 import { useCreateProject } from "../api/use-create-project";
 import { createProject } from "../server/actions";
+import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 
 const formVariants = {
   hidden: {
@@ -43,7 +44,11 @@ const formVariants = {
   },
 };
 
-export function CreateProjectForm() {
+export function CreateProjectForm({
+  clients,
+}: {
+  clients: ALL_CLIENTS_QUERYResult;
+}) {
   const { mutate } = useCreateProject();
 
   const router = useRouter();
@@ -86,7 +91,7 @@ export function CreateProjectForm() {
             exit="exit"
           >
             <ProjectDetailsForm isSubmitting={isSubmitting} />
-            <ClientProfileForm isSubmitting={isSubmitting} />
+            <ClientProfileForm clients={clients} isSubmitting={isSubmitting} />
           </motion.div>
           <FormSubmitButton text="Create Project" isSubmitting={isSubmitting} />
         </form>

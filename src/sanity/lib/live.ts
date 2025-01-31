@@ -8,8 +8,9 @@ import { client } from "./client";
 const token = process.env.SANITY_API_READ_TOKEN;
 
 if (!token) {
-  throw new Error("Mission ANITY_API_READ_TOKEN");
+  throw new Error("MISSING SANITY_API_READ_TOKEN");
 }
+
 export const { sanityFetch, SanityLive } = defineLive({
   client: client.withConfig({
     // Live content is currently only available on the experimental API

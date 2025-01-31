@@ -26,7 +26,7 @@ export default function NoProjectsPlaceholder() {
           You have no projects
         </h3>
         <p className="text-sm text-muted-foreground">
-          Let's start off with creating a project
+          Let&apos;s start off with creating a project.
         </p>
         <div className="mx-4 my-2">
           <Button asChild className="sm:w-auto" variant="default">

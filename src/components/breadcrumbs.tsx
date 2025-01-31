@@ -34,9 +34,9 @@ const NextBreadcrumb = ({
         </li>
         {pathNames.length > 0 && separator}
         {pathNames.map((link, index) => {
-          let href = `/${pathNames.slice(0, index + 1).join("/")}`;
-          let itemClasses = paths === href ? `${activeClasses}` : listClasses;
-          let itemLink = capitalizeLinks
+          const href = `/${pathNames.slice(0, index + 1).join("/")}`;
+          const itemClasses = paths === href ? `${activeClasses}` : listClasses;
+          const itemLink = capitalizeLinks
             ? link[0].toUpperCase() + link.slice(1, link.length)
             : link;
           return (
