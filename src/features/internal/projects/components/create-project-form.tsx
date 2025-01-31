@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FormProvider, useForm } from "react-hook-form";
+import { Form, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import { FormSubmitButton } from "@/components/form-submit-button";
 import { createProjectSchema } from "@/features/internal/projects/schemas";
 
 import { useCreateProject } from "../api/use-create-project";
+import { createProject } from "../server/actions";
 
 const formVariants = {
   hidden: {
@@ -63,13 +64,6 @@ export function CreateProjectForm() {
     newClientPhone: undefined,
   });
 
-  //  handle form submission
-  const handleCreateProject = (values: z.infer<typeof createProjectSchema>) => {
-    mutate({
-      json: values,
-    });
-  };
-
   const form = useForm<z.infer<typeof createProjectSchema>>({
     mode: "onChange",
     reValidateMode: "onChange",
@@ -84,7 +78,7 @@ export function CreateProjectForm() {
         Go back
       </Link>
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(handleCreateProject)}>
+        <form action={createProject}>
           <motion.div
             variants={formVariants}
             initial="hidden"

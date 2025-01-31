@@ -1,17 +1,33 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { projectDetailsSchema } from "../schemas";
+import { createProjectSchema } from "../schemas";
 
 const app = new Hono().post(
   "/create",
-  zValidator("json", projectDetailsSchema),
+  zValidator("json", createProjectSchema),
 
   async (c) => {
     // use c.req.valid only when using the zValidator middleware
-    const body = c.req.valid;
-    console.log(body);
-    return c.json({ success: "ok" });
+    const {
+      projectName,
+      dateRange,
+      clientType,
+      existingClient,
+      newClientEmail,
+      newClientName,
+      newClientPhone,
+    } = c.req.valid("json");
+
+    return c.json({
+      projectName,
+      dateRange,
+      clientType,
+      existingClient,
+      newClientEmail,
+      newClientName,
+      newClientPhone,
+    });
   }
 );
 
