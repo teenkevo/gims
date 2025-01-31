@@ -10,6 +10,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import NextBreadcrumb from "@/components/breadcrumbs";
 
 //TODO: work on per page metadata below, this layout is shared
 export const metadata: Metadata = {
@@ -30,19 +31,16 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <NextBreadcrumb
+              homeElement={"Home"}
+              separator={
+                <BreadcrumbSeparator className="flex justify-center space-x-2 items-center" />
+              }
+              activeClasses="text-white"
+              containerClasses="flex py-5 "
+              listClasses=" transition-all text-sm text-muted-foreground hover:text-white mx-2"
+              capitalizeLinks
+            />
           </div>
         </header>
         <main>{children}</main>
