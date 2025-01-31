@@ -1,13 +1,12 @@
+import { ProjectsView } from "@/features/internal/projects/components/projects-view";
+import { getAllProjects } from "@/sanity/lib/products/getAllProjects";
+
 export default async function ProjectsPage() {
+  const projects = await getAllProjects();
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+    <div className="flex flex-1 flex-col">
       <div className="flex h-full flex-col">
-        <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-          <div className="aspect-video rounded-xl bg-muted/50" />
-          <div className="aspect-video rounded-xl bg-muted/50" />
-          <div className="aspect-video rounded-xl bg-muted/50" />
-        </div>
-        <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+        <ProjectsView projects={projects} />
       </div>
     </div>
   );

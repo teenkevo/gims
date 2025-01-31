@@ -1,21 +1,16 @@
 import { Metadata } from "next";
-import { BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { BreadcrumbLink } from "@/components/ui/breadcrumb";
-import { BreadcrumbItem } from "@/components/ui/breadcrumb";
-import { BreadcrumbList } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Separator } from "@/components/ui/separator";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
 import NextBreadcrumb from "@/components/breadcrumbs";
 
 //TODO: work on per page metadata below, this layout is shared
 export const metadata: Metadata = {
   title: "GIMS",
-  description: "GIMS pages that don't share a layout with the home page",
+  description: "GIMS pages that don't share a layout with the home page", //TODO: work on meta description
 };
 
 interface LayoutProps {
@@ -27,23 +22,23 @@ export default function Layout({ children }: LayoutProps) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 border-b border-muted items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <NextBreadcrumb
               homeElement={"Home"}
               separator={
-                <BreadcrumbSeparator className="flex justify-center space-x-2 items-center" />
+                <BreadcrumbSeparator className="text-foreground flex justify-center space-x-2 items-center" />
               }
-              activeClasses="text-white"
-              containerClasses="flex py-5 "
-              listClasses=" transition-all text-sm text-muted-foreground hover:text-white mx-2"
+              activeClasses="transition-all text-sm font-semibold text-foreground mx-2"
+              containerClasses="flex py-5"
+              listClasses="transition-all text-sm font-semibold text-muted-foreground hover:text-foreground mx-2"
               capitalizeLinks
             />
           </div>
         </header>
-        <main>{children}</main>
+        <main className="p-4 md:p-10">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
