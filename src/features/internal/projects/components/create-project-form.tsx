@@ -1,6 +1,6 @@
 "use client";
 // core
-import { useState } from "react";
+import { useActionState, useState, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -49,12 +49,9 @@ export function CreateProjectForm({
 }: {
   clients: ALL_CLIENTS_QUERYResult;
 }) {
-  const { mutate } = useCreateProject();
+  const [_, action, isPending] = useActionState(createProject, null);
 
   const router = useRouter();
-
-  // Local loading state to handle both mutation and revalidation
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData] = useState<z.infer<typeof createProjectSchema>>({
     projectName: "",
@@ -71,10 +68,32 @@ export function CreateProjectForm({
 
   const form = useForm<z.infer<typeof createProjectSchema>>({
     mode: "onChange",
-    reValidateMode: "onChange",
+    reValidateMode: "onSubmit",
     resolver: zodResolver(createProjectSchema),
     defaultValues: formData,
   });
+
+  const onSubmit = form.handleSubmit(
+    (data: z.infer<typeof createProjectSchema>) => {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (
+          key === "dateRange" &&
+          typeof value === "object" &&
+          value !== null
+        ) {
+          formData.append("dateFrom", value.from.toISOString());
+          formData.append("dateTo", value.to.toISOString());
+        } else {
+          formData.append(key, value as string);
+        }
+      });
+
+      startTransition(() => {
+        action(formData);
+      });
+    }
+  );
 
   return (
     <>
@@ -83,17 +102,17 @@ export function CreateProjectForm({
         Go back
       </Link>
       <FormProvider {...form}>
-        <form action={createProject}>
+        <form action={action} onSubmit={onSubmit}>
           <motion.div
             variants={formVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={isSubmitting} />
-            <ClientProfileForm clients={clients} isSubmitting={isSubmitting} />
+            <ProjectDetailsForm isSubmitting={isPending} />
+            <ClientProfileForm clients={clients} isSubmitting={isPending} />
           </motion.div>
-          <FormSubmitButton text="Create Project" isSubmitting={isSubmitting} />
+          <FormSubmitButton text="Create Project" isSubmitting={isPending} />
         </form>
       </FormProvider>
     </>
