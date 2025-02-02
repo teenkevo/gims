@@ -52,7 +52,7 @@ export function CreateProjectForm({
 }) {
   const router = useRouter();
 
-  const { mutate } = useCreateProject();
+  const { mutation } = useCreateProject();
 
   const [formData] = useState<z.infer<typeof createProjectSchema>>({
     projectName: "",
@@ -84,7 +84,7 @@ export function CreateProjectForm({
         to: data.dateRange.to.toISOString(),
       },
     };
-    mutate({ json: formattedData });
+    mutation.mutate({ json: formattedData });
   };
 
   return (
@@ -101,10 +101,16 @@ export function CreateProjectForm({
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={false} />
-            <ClientProfileForm clients={clients} isSubmitting={false} />
+            <ProjectDetailsForm isSubmitting={mutation.isPending} />
+            <ClientProfileForm
+              clients={clients}
+              isSubmitting={mutation.isPending}
+            />
           </motion.div>
-          <FormSubmitButton text="Create Project" isSubmitting={false} />
+          <FormSubmitButton
+            text="Create Project"
+            isSubmitting={mutation.isPending}
+          />
         </form>
       </FormProvider>
     </>
