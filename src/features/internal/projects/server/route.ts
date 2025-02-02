@@ -34,29 +34,47 @@ const app = new Hono().post(
       newClientPhone,
     } = c.req.valid("json");
 
-    // Create the client first
-    const client = await backendClient.create({
-      _type: "client", // Ensure this matches your client schema type
-      name: newClientName,
-      email: newClientEmail,
-      phoneNumber: newClientPhone,
-    });
+    if (clientType === "new") {
+      // Create the client first
+      const client = await backendClient.create({
+        _type: "client", // Ensure this matches your client schema type
+        name: newClientName,
+        email: newClientEmail,
+        phoneNumber: newClientPhone,
+      });
 
-    // Now create the project with a reference to the newly created client
-    const project = await backendClient.create({
-      _type: "project",
-      name: projectName,
-      startDate: dateRange.from,
-      endDate: dateRange.to,
-      priority,
-      stagesCompleted: ["BILLING"], //TODO: refactor the logic for this param
-      client: {
-        _type: "reference",
-        _ref: client._id, // Use the ID of the newly created client
-      },
-    });
+      // Now create the project with a reference to the newly created client
+      const project = await backendClient.create({
+        _type: "project",
+        name: projectName,
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+        priority,
+        stagesCompleted: ["BILLING"], //TODO: refactor the logic for this param
+        client: {
+          _type: "reference",
+          _ref: client._id, // Use the ID of the newly created client
+        },
+      });
 
-    return c.json({ project });
+      return c.json({ project });
+    } else {
+      // Now create the project with a reference to the newly created client
+      const project = await backendClient.create({
+        _type: "project",
+        name: projectName,
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+        priority,
+        stagesCompleted: ["BILLING"], //TODO: refactor the logic for this param
+        client: {
+          _type: "reference",
+          _ref: existingClient, // Use the ID of existing client
+        },
+      });
+
+      return c.json({ project });
+    }
   }
 );
 
