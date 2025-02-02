@@ -23,9 +23,7 @@ import { FormSubmitButton } from "@/components/form-submit-button";
 import { createProjectSchema } from "@/features/internal/projects/schemas";
 
 import { useCreateProject } from "../api/use-create-project";
-import { createProject } from "../server/actions";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
-import { client } from "@/lib/rpc";
 
 const formVariants = {
   hidden: {
