@@ -1,5 +1,12 @@
+import {
+  CircleAlert,
+  Ellipsis,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
+} from "lucide-react";
 import { ALL_PROJECTS_QUERYResult } from "../../../../sanity.types";
-import { ProjectStage } from "./types";
+import { Priority, ProjectStage } from "./types";
 
 export const possibleStages: ProjectStage[] = [
   "BILLING",
@@ -7,6 +14,34 @@ export const possibleStages: ProjectStage[] = [
   "TESTING",
   "ANALYSIS",
   "REPORTING",
+];
+
+export const priorities: Priority[] = [
+  {
+    label: "No priority",
+    value: "noPriority",
+    icon: Ellipsis,
+  },
+  {
+    label: "Urgent",
+    value: "urgent",
+    icon: CircleAlert,
+  },
+  {
+    label: "High",
+    value: "high",
+    icon: SignalHigh,
+  },
+  {
+    label: "Medium",
+    value: "medium",
+    icon: SignalMedium,
+  },
+  {
+    label: "Low",
+    value: "low",
+    icon: SignalLow,
+  },
 ];
 
 export const getCurrentStageIndex = (

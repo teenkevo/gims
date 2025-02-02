@@ -25,6 +25,7 @@ import { createProjectSchema } from "@/features/internal/projects/schemas";
 import { useCreateProject } from "../api/use-create-project";
 import { createProject } from "../server/actions";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import { client } from "@/lib/rpc";
 
 const formVariants = {
   hidden: {
@@ -49,9 +50,9 @@ export function CreateProjectForm({
 }: {
   clients: ALL_CLIENTS_QUERYResult;
 }) {
-  const [_, action, isPending] = useActionState(createProject, null);
-
   const router = useRouter();
+
+  const { mutate } = useCreateProject();
 
   const [formData] = useState<z.infer<typeof createProjectSchema>>({
     projectName: "",
@@ -59,6 +60,7 @@ export function CreateProjectForm({
       from: new Date(),
       to: new Date(),
     },
+    priority: "noPriority",
     clientType: "new",
     existingClient: undefined,
     newClientName: "",
@@ -73,27 +75,17 @@ export function CreateProjectForm({
     defaultValues: formData,
   });
 
-  const onSubmit = form.handleSubmit(
-    (data: z.infer<typeof createProjectSchema>) => {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (
-          key === "dateRange" &&
-          typeof value === "object" &&
-          value !== null
-        ) {
-          formData.append("dateFrom", value.from.toISOString());
-          formData.append("dateTo", value.to.toISOString());
-        } else {
-          formData.append(key, value as string);
-        }
-      });
-
-      startTransition(() => {
-        action(formData);
-      });
-    }
-  );
+  const onSubmit = async (data: z.infer<typeof createProjectSchema>) => {
+    // Convert Date objects to ISO strings
+    const formattedData = {
+      ...data,
+      dateRange: {
+        from: data.dateRange.from.toISOString(),
+        to: data.dateRange.to.toISOString(),
+      },
+    };
+    mutate({ json: formattedData });
+  };
 
   return (
     <>
@@ -102,17 +94,17 @@ export function CreateProjectForm({
         Go back
       </Link>
       <FormProvider {...form}>
-        <form action={action} onSubmit={onSubmit}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <motion.div
             variants={formVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={isPending} />
-            <ClientProfileForm clients={clients} isSubmitting={isPending} />
+            <ProjectDetailsForm isSubmitting={false} />
+            <ClientProfileForm clients={clients} isSubmitting={false} />
           </motion.div>
-          <FormSubmitButton text="Create Project" isSubmitting={isPending} />
+          <FormSubmitButton text="Create Project" isSubmitting={false} />
         </form>
       </FormProvider>
     </>

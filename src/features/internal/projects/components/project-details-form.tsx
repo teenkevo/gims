@@ -28,6 +28,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import FormSpacerWrapper from "@/components/form-spacer-wrapper";
 import Formheader from "@/components/form-header";
+import { priorities } from "../constants";
+import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { useState } from "react";
+import { Priority } from "../types";
 
 interface ProjectDetailsFormProps {
   isSubmitting: boolean;
@@ -35,6 +47,11 @@ interface ProjectDetailsFormProps {
 
 export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
   const form = useFormContext();
+
+  const [open, setOpen] = useState(false);
+  const [selectedPriority, setSelectedPriority] = useState<Priority>(
+    priorities[0]
+  );
 
   return (
     <FormSpacerWrapper>
@@ -66,7 +83,7 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
         render={({ field }) => (
           <FormItem className="flex flex-col">
             <FormLabel>Start and End Date</FormLabel>
-            <Popover modal={true}>
+            <Popover>
               <PopoverTrigger asChild>
                 <Button
                   id="date"
@@ -78,8 +95,8 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {field.value.from ? (
-                    field.value.to ? (
+                  {field.value?.from ? (
+                    field.value?.to ? (
                       <>
                         {format(field.value.from, "LLL dd, y")} -{" "}
                         {format(field.value.to, "LLL dd, y")}
@@ -96,17 +113,91 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
                 <Calendar
                   initialFocus
                   mode="range"
-                  defaultMonth={field.value.from}
-                  selected={{
-                    from: field.value.from!,
-                    to: field.value.to,
-                  }}
+                  defaultMonth={field.value?.from}
+                  selected={field.value}
                   onSelect={field.onChange}
                   numberOfMonths={2}
                 />
               </PopoverContent>
             </Popover>
             <FormDescription>Select the start and end date</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="priority"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Choose a priority level</FormLabel>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className={cn(
+                      "w-[200px] justify-between",
+                      !field.value && "text-muted-foreground"
+                    )}
+                  >
+                    {selectedPriority ? (
+                      <div className="flex items-center">
+                        <selectedPriority.icon className="mr-2 h-4 w-4 shrink-0" />
+                        {selectedPriority.label}
+                      </div>
+                    ) : (
+                      <>Select Priority</>
+                    )}
+
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0">
+                <Command>
+                  <CommandInput placeholder="Search priority level" />
+                  <CommandList>
+                    <CommandEmpty>None found.</CommandEmpty>
+                    <CommandGroup>
+                      {priorities.map((priority) => (
+                        <CommandItem
+                          value={priority.label}
+                          key={priority.value}
+                          onSelect={() => {
+                            form.setValue("priority", priority.value);
+                            setSelectedPriority(priority);
+                            setOpen(false);
+                          }}
+                        >
+                          <priority.icon
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              priority.value === selectedPriority?.value
+                                ? "opacity-100"
+                                : "opacity-40"
+                            )}
+                          />
+                          {priority.label}
+                          <Check
+                            className={cn(
+                              "ml-auto",
+                              priority.value === field.value
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <FormDescription>
+              Helps signify to your team the urgency of this project
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

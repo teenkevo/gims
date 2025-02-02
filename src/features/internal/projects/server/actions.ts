@@ -1,4 +1,5 @@
 import { createProjectSchema } from "../schemas";
+import { backendClient } from "@/sanity/lib/backendClient";
 
 export async function createProject(_: unknown, formData: FormData) {
   try {
@@ -24,8 +25,31 @@ export async function createProject(_: unknown, formData: FormData) {
       };
     }
 
-    // save to database
-    console.log("Project submitted:", validatedData.data);
+    const {
+      projectName,
+      dateRange,
+      clientType,
+      existingClient,
+      newClientEmail,
+      newClientName,
+      newClientPhone,
+    } = validatedData.data;
+
+    // Then, create a project referencing that client
+    const project = await backendClient.create({
+      _type: "project",
+      name: projectName,
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      client: {
+        _type: "client",
+        name: newClientName,
+        email: newClientEmail,
+        phoneNumber: newClientPhone,
+      },
+    });
+
+    console.log("Project created:", project);
 
     return {
       success: true,

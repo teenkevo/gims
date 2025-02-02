@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createProjectSchema } from "./schemas";
+import { LucideIcon } from "lucide-react";
 
 export type ProjectStage =
   | "BILLING"
@@ -7,6 +8,12 @@ export type ProjectStage =
   | "TESTING"
   | "ANALYSIS"
   | "REPORTING";
+
+export type Priority = {
+  value: string;
+  label: string;
+  icon: LucideIcon;
+};
 
 export interface Project {
   id: string;

@@ -1,4 +1,3 @@
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
 
 export const projectDetailsSchema = z.object({
@@ -17,6 +16,7 @@ export const projectDetailsSchema = z.object({
       path: ["dateRange"],
       message: "From date must be before to date",
     }),
+  priority: z.string(),
 });
 
 export const clientDetailsSchema = z.object({
@@ -31,12 +31,7 @@ export const clientDetailsSchema = z.object({
     .min(1, "Required")
     .optional()
     .or(z.literal("")),
-  newClientPhone: z
-    .string()
-    .refine(isValidPhoneNumber, {
-      message: "Please enter a valid phone number",
-    })
-    .optional(),
+  newClientPhone: z.string().optional(),
 });
 
 export const billingFormSchema = z.object({
@@ -129,6 +124,7 @@ export const createPartialBillFormSchema = (
     );
 };
 
+// client side create project schema
 export const createProjectSchema = projectDetailsSchema
   .merge(clientDetailsSchema)
   // client profile refinement

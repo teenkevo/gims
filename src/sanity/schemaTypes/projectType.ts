@@ -44,13 +44,13 @@ export const projectType = defineType({
     defineField({
       name: "startDate",
       title: "Start Date",
-      type: "date",
+      type: "datetime",
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "endDate",
       title: "Start Date",
-      type: "date",
+      type: "datetime",
       validation: (Rule) => Rule.required(),
     }),
     defineField({
