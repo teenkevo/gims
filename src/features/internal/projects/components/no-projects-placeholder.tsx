@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 export default function NoProjectsPlaceholder() {
   return (
     <motion.div
-      className="flex flex-1 items-center justify-center h-[74vh] rounded-lg border border-dashed shadow-sm p-4"
+      className="flex flex-1 items-center justify-center h-[72vh] rounded-lg border border-dashed shadow-sm p-4"
       initial={{ opacity: 0, y: 10 }} // Start hidden and slightly below
       animate={{ opacity: 1, y: 0 }} // Fade in and slide up
       transition={{ duration: 0.1, ease: "easeOut" }} // Control the speed of the animation
