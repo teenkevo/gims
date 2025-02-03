@@ -7,7 +7,7 @@ export const getAllClients = async () => {
             _id, 
             name, 
             email, 
-            phoneNumber
+            phone
         }
   `);
 

@@ -63,7 +63,7 @@ const app = new Hono()
 
       const updatedClient = await backendClient
         .patch(clientId)
-        .set({ phoneNumber: phone })
+        .set({ phone })
         .commit();
       return c.json({ updatedClient });
     }

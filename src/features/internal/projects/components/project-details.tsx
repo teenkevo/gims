@@ -37,6 +37,8 @@ export default function ProjectDetails(
 ) {
   const { _id, name, client, startDate, endDate } = project;
 
+  console.log(project);
+
   // billing services table states
 
   const [coreFieldRowSelection, setCoreFieldRowSelection] = useState({});

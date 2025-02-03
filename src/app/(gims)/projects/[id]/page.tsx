@@ -9,7 +9,8 @@ export default async function ProjectPage({
 }: {
   params: { id: string };
 }) {
-  const projectArray = await getProjectById(params.id);
+  const { id } = await params;
+  const projectArray = await getProjectById(id);
   const project = projectArray[0];
 
   return project ? <ProjectDetails {...project} /> : <NoProjectPlaceholder />;

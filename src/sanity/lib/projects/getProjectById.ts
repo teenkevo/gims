@@ -14,7 +14,7 @@ export const getProjectById = async (projectId: string) => {
             _id, 
             name, 
             email, 
-            phoneNumber
+            phone
           }
         }
   `);

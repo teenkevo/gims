@@ -60,7 +60,7 @@ const app = new Hono()
         _type: "client",
         name: newClientName,
         email: newClientEmail,
-        phoneNumber: newClientPhone,
+        phone: newClientPhone,
       });
       clientId = client._id;
     }
