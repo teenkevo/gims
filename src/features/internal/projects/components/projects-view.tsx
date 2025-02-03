@@ -24,7 +24,7 @@ export function ProjectsView({
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
       <Tabs defaultValue="in-progress">
-        <div className="flex justify-between">
+        <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="in-progress">In Progress</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
