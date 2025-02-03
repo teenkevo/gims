@@ -31,9 +31,9 @@ export function ProjectsView({
             <TabsTrigger value="quoted">Quoted</TabsTrigger>
           </TabsList>
           <Button asChild className="sm:w-auto" variant="default">
-            <Link href="/projects/create" className="my-2">
-              <PlusCircleIcon className="h-5 w-5 mr-2" />
-              Create New Project
+            <Link href="/projects/create" className="my-2 flex items-center">
+              <PlusCircleIcon className="h-5 w-5 md:mr-2" />
+              <span className="hidden sm:inline">Create New Project</span>
             </Link>
           </Button>
         </div>
