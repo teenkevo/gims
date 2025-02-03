@@ -19,7 +19,7 @@ export const clientType = defineType({
     }),
     defineField({
       name: "phone",
-      title: "phone",
+      title: "Phone Number",
       type: "string",
       validation: (Rule) => Rule.required(),
     }),

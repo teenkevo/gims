@@ -101,7 +101,7 @@ export type Client = {
   _rev: string;
   name?: string;
   email?: string;
-  phoneNumber?: string;
+  phone?: string;
 };
 
 export type BlockContent = Array<
@@ -213,12 +213,12 @@ export type AllSanitySchemaTypes =
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ./src/sanity/lib/clients/getAllClients.ts
 // Variable: ALL_CLIENTS_QUERY
-// Query: *[_type == "client"] {            _id,             name,             email,             phoneNumber        }
+// Query: *[_type == "client"] {            _id,             name,             email,             phone        }
 export type ALL_CLIENTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
   email: string | null;
-  phoneNumber: string | null;
+  phone: string | null;
 }>;
 
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
@@ -231,7 +231,7 @@ export type ALL_PROJECTS_QUERYResult = Array<{
     _id: string;
     name: string | null;
     email: string | null;
-    phone: null;
+    phone: string | null;
   } | null;
   startDate: string | null;
   endDate: string | null;
@@ -248,7 +248,7 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
     _id: string;
     name: string | null;
     email: string | null;
-    phone: null;
+    phone: string | null;
   } | null;
   startDate: string | null;
   endDate: string | null;
@@ -259,7 +259,7 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n        *[_type == "client"] {\n            _id, \n            name, \n            email, \n            phoneNumber\n        }\n  ': ALL_CLIENTS_QUERYResult;
+    '\n        *[_type == "client"] {\n            _id, \n            name, \n            email, \n            phone\n        }\n  ': ALL_CLIENTS_QUERYResult;
     '\n        *[_type == "project"] {\n          _id,\n          name,\n          client, \n          startDate, \n          endDate, \n          stagesCompleted, \n          client->{\n            _id, \n            name, \n            email, \n            phone\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name,\n          client, \n          startDate, \n          endDate, \n          stagesCompleted, \n          client->{\n            _id, \n            name, \n            email, \n            phone\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
   }

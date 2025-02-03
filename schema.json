@@ -531,7 +531,7 @@
         },
         "optional": true
       },
-      "phoneNumber": {
+      "phone": {
         "type": "objectAttribute",
         "value": {
           "type": "string"
