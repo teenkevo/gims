@@ -6,6 +6,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useUpdateClientEmail } from "@/features/customer/clients/api/use-update-client-email";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -33,9 +34,17 @@ export default function ProjectUpdateClientEmailForm({
 }: ProjectUpdateClientEmailFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { mutation } = useUpdateClientEmail();
+
   const handleUpdateClientEmail = async (email: string) => {
     setIsSubmitting(true);
     try {
+      mutation.mutate({
+        json: {
+          clientId,
+          clientEmail: email,
+        },
+      });
       toast("✅ Successful operation", {
         description: "Updated client email successfully",
       });

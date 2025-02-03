@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { backendClient } from "@/sanity/lib/backendClient";
 
-// server-side create project schema
+// Schema for creating a project
 const createProjectSchema = z.object({
   projectName: z.string(),
   dateRange: z.object({
@@ -18,11 +18,29 @@ const createProjectSchema = z.object({
   newClientPhone: z.string().optional(),
 });
 
-const app = new Hono().post(
-  "/create",
-  zValidator("json", createProjectSchema),
+// Schema for updating project name
+const updateProjectNameSchema = z.object({
+  projectId: z.string(),
+  projectName: z.string(),
+});
 
-  async (c) => {
+// Schema for updating project dates
+const updateProjectDatesSchema = z.object({
+  projectId: z.string(),
+  dateRange: z.object({
+    from: z.string().datetime(),
+    to: z.string().datetime(),
+  }),
+});
+
+// Schema for deleting project
+const deleteProjectSchema = z.object({
+  projectId: z.string(),
+});
+
+const app = new Hono()
+  // Create a new project
+  .post("/create", zValidator("json", createProjectSchema), async (c) => {
     const {
       projectName,
       dateRange,
@@ -34,48 +52,71 @@ const app = new Hono().post(
       newClientPhone,
     } = c.req.valid("json");
 
+    let clientId = existingClient;
+
     if (clientType === "new") {
-      // Create the client first
+      // Create the client
       const client = await backendClient.create({
-        _type: "client", // Ensure this matches your client schema type
+        _type: "client",
         name: newClientName,
         email: newClientEmail,
         phoneNumber: newClientPhone,
       });
-
-      // Now create the project with a reference to the newly created client
-      const project = await backendClient.create({
-        _type: "project",
-        name: projectName,
-        startDate: dateRange.from,
-        endDate: dateRange.to,
-        priority,
-        stagesCompleted: ["BILLING"], //TODO: refactor the logic for this param
-        client: {
-          _type: "reference",
-          _ref: client._id, // Use the ID of the newly created client
-        },
-      });
-
-      return c.json({ project });
-    } else {
-      // Now create the project with a reference to the newly created client
-      const project = await backendClient.create({
-        _type: "project",
-        name: projectName,
-        startDate: dateRange.from,
-        endDate: dateRange.to,
-        priority,
-        stagesCompleted: ["BILLING"], //TODO: refactor the logic for this param
-        client: {
-          _type: "reference",
-          _ref: existingClient, // Use the ID of existing client
-        },
-      });
-
-      return c.json({ project });
+      clientId = client._id;
     }
-  }
-);
+
+    // Create the project
+    const project = await backendClient.create({
+      _type: "project",
+      name: projectName,
+      startDate: dateRange.from,
+      endDate: dateRange.to,
+      priority,
+      stagesCompleted: ["BILLING"], // Placeholder logic
+      client: { _type: "reference", _ref: clientId },
+    });
+
+    return c.json({ project });
+  })
+
+  // Update project name
+  .post(
+    "/update-name",
+    zValidator("json", updateProjectNameSchema),
+    async (c) => {
+      const { projectId, projectName } = c.req.valid("json");
+
+      const updatedProject = await backendClient
+        .patch(projectId)
+        .set({ name: projectName })
+        .commit();
+
+      return c.json({ updatedProject });
+    }
+  )
+
+  // Update project dates
+  .post(
+    "/update-dates",
+    zValidator("json", updateProjectDatesSchema),
+    async (c) => {
+      const { projectId, dateRange } = c.req.valid("json");
+
+      const updatedProject = await backendClient
+        .patch(projectId)
+        .set({ startDate: dateRange.from, endDate: dateRange.to })
+        .commit();
+
+      return c.json({ updatedProject });
+    }
+  )
+  // Delete project
+  .post("/delete", zValidator("json", deleteProjectSchema), async (c) => {
+    const { projectId } = c.req.valid("json");
+
+    const deletedProject = await backendClient.delete(projectId);
+
+    return c.json({ deletedProject });
+  });
 
 export default app;

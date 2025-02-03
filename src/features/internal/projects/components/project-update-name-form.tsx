@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import React, { useState } from "react";
 import { z } from "zod";
-import { updateProjectName } from "@/sanity/lib/projects/updateProjectName";
+import { useUpdateProjectName } from "../api/use-update-project-name";
 
 interface ProjectUpdateNameFormProps {
   title: string;
@@ -34,10 +34,17 @@ export default function ProjectUpdateNameForm({
 }: ProjectUpdateNameFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { mutation } = useUpdateProjectName();
+
   const handleUpdateProjectName = async (name: any): Promise<void> => {
     setIsSubmitting(true);
     try {
-      await updateProjectName(projectId, name);
+      mutation.mutate({
+        json: {
+          projectId,
+          projectName: name,
+        },
+      });
 
       toast("✅ Successful operation", {
         description: "Updated project name successfully",

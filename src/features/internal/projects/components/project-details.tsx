@@ -64,7 +64,7 @@ export default function ProjectDetails(
   });
 
   return (
-    <main className="w-full p-1 md:p-4 my-2 overflow-y-auto">
+    <>
       <Link className="mb-10 inline-flex" href="/projects">
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
@@ -225,6 +225,6 @@ export default function ProjectDetails(
           </div>
         </TabsContent>
       </Tabs>
-    </main>
+    </>
   );
 }

@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import React, { useState } from "react";
 import { z } from "zod";
-import { updateProjectDates } from "@/sanity/lib/projects/updateProjectDates";
+import { useUpdateProjectDates } from "../api/use-update-project-dates";
 
 interface ProjectUpdateDatesFormProps {
   title: string;
@@ -41,13 +41,23 @@ export default function ProjectUpdateDatesForm({
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
+  const { mutation } = useUpdateProjectDates();
+
   const handleUpdateProjectDates = async (dateRange: {
     from: Date;
     to: Date;
   }) => {
     setIsSubmitting(true);
     try {
-      await updateProjectDates(projectId, dateRange);
+      mutation.mutate({
+        json: {
+          dateRange: {
+            from: dateRange.from.toISOString(),
+            to: dateRange.to.toISOString(),
+          },
+          projectId,
+        },
+      });
 
       toast("✅ Successful operation", {
         description: "Updated project dates successfully",

@@ -6,7 +6,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { updateClientName } from "@/sanity/lib/clients/updateClientName";
+import { useUpdateClientName } from "@/features/customer/clients/api/use-update-client-name";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -34,10 +34,17 @@ export default function ProjectUpdateClientNameForm({
 }: ProjectUpdateClientNameFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { mutation } = useUpdateClientName();
+
   const handleUpdateClientName = async (name: string) => {
     setIsSubmitting(true);
     try {
-      await updateClientName(clientId, name);
+      mutation.mutate({
+        json: {
+          clientId,
+          clientName: name,
+        },
+      });
 
       toast("✅ Successful operation", {
         description: "Updated client name successfully",

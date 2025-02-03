@@ -20,8 +20,8 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
-import { deleteProject } from "@/sanity/lib/projects/deleteProject";
 import { useState } from "react";
+import { useDeleteProject } from "../api/use-delete-project";
 
 export function DeleteProject({ name, id }: { name: string; id: string }) {
   const [open, setOpen] = React.useState(false);
@@ -31,10 +31,16 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
 
   const router = useRouter();
 
+  const { mutation } = useDeleteProject();
+
   const handleDeleteProject = async (id: string) => {
     setDeleteProjectLoading(true); // Set loading to true
     try {
-      await deleteProject(id);
+      mutation.mutate({
+        json: {
+          projectId: id,
+        },
+      });
 
       router.push("/projects");
 

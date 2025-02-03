@@ -6,12 +6,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { updateClientPhone } from "@/sanity/lib/clients/updateClientPhone";
+import { useUpdateClientPhone } from "@/features/customer/clients/api/use-update-client-phone";
 import React, { useState } from "react";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 import { z } from "zod";
-
 interface ProjectUpdateClientPhoneFormProps {
   title: string;
   description?: string;
@@ -35,10 +34,17 @@ export default function ProjectUpdateClientPhoneForm({
 }: ProjectUpdateClientPhoneFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { mutation } = useUpdateClientPhone();
+
   const handleUpdateClientPhone = async (phone: string) => {
     setIsSubmitting(true);
     try {
-      await updateClientPhone(clientId, phone);
+      mutation.mutate({
+        json: {
+          clientId,
+          phone,
+        },
+      });
 
       toast("✅ Successful operation", {
         description: "Updated client phone successfully",
