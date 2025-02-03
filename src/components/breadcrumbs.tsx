@@ -24,14 +24,12 @@ const NextBreadcrumb = ({
 }: TBreadCrumbProps) => {
   const paths = usePathname();
   const pathNames = paths.split("/").filter((path) => path);
-
   const searchParams = useSearchParams();
 
   // Define mappings of path segments to query params
   const pathToQueryParam: Record<string, string> = {
     projects: "project",
     clients: "client",
-    orders: "order",
   };
 
   return (
@@ -44,27 +42,29 @@ const NextBreadcrumb = ({
         {pathNames.map((link, index) => {
           const isLast = index === pathNames.length - 1;
           const parentSegment = pathNames[index - 1]; // Previous segment (e.g., 'clients')
+          const href = `/${pathNames.slice(0, index + 1).join("/")}`;
 
           let displayText = capitalizeLinks
             ? link[0].toUpperCase() + link.slice(1)
             : link;
 
-          // Check if the parent segment has a query parameter mapping
+          // Replace ID with query parameter value if available
           if (isLast && parentSegment && pathToQueryParam[parentSegment]) {
             const queryParam = pathToQueryParam[parentSegment];
             const queryValue = searchParams.get(queryParam);
             if (queryValue) {
-              displayText = capitalizeWords(queryValue); // Replace ID with query param value
+              displayText = capitalizeWords(queryValue);
             }
           }
 
-          const href = `/${pathNames.slice(0, index + 1).join("/")}`;
-          const itemClasses = paths === href ? activeClasses : listClasses;
+          // Always preserve the original query parameters in the breadcrumb URL
+          const queryParams = searchParams.toString();
+          const fullHref = queryParams ? `${href}?${queryParams}` : href;
 
           return (
             <React.Fragment key={index}>
-              <li className={itemClasses}>
-                <Link href={href}>{displayText}</Link>
+              <li className={paths === href ? activeClasses : listClasses}>
+                <Link href={fullHref}>{displayText}</Link>
               </li>
               {!isLast && separator}
             </React.Fragment>
