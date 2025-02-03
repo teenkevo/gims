@@ -12,6 +12,7 @@ import { getCurrentStageIndex, possibleStages } from "../constants";
 import { format } from "date-fns";
 import ProjectStage from "./project-stage";
 import { ALL_PROJECTS_QUERYResult, Project } from "../../../../../sanity.types";
+import { sanitizeString } from "@/lib/utils";
 
 // Reusable InfoBlock component for displaying label-value pairs
 function InfoBlock({
@@ -75,7 +76,9 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
         {/* View Listing Button */}
 
         <Button size="sm" variant="secondary" asChild>
-          <Link href={`/projects/${_id}`}>
+          <Link
+            href={`/projects/${_id}?project=${sanitizeString(project.name!)}`}
+          >
             Go to project <ChevronRight className="ml-2 text-primary" />
           </Link>
         </Button>

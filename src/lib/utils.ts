@@ -15,7 +15,7 @@ export function sanitizeString(name: string) {
 
 export function capitalizeWords(string: string) {
   return string
-    .split(" ")
+    .split("-")
     .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
