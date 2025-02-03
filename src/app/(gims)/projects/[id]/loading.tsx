@@ -65,11 +65,12 @@ export default function Loading() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex h-9 p-1 max-w-sm space-x-2 border rounded-lg shadow-sm bg-white dark:bg-[#0c0c0c]"
+          className="flex h-9 p-1 max-w-lg space-x-2 border rounded-lg shadow-sm bg-white dark:bg-[#0c0c0c]"
         >
           <Skeleton className="w-28" />
-          <Skeleton className="w-14" />
-          <Skeleton className="w-14" />
+          <Skeleton className="w-16" />
+          <Skeleton className="w-16" />
+          <Skeleton className="w-28" />
           <Skeleton className="w-28" />
         </motion.div>
 
