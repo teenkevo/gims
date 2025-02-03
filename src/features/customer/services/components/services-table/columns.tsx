@@ -7,8 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { test_methods, statuses, sample_classes } from "../../data/data";
 import { Service } from "../../data/schema";
-import { DataTableColumnHeader } from "../../../data-table/data-table-column-header";
-import { DataTableRowActions } from "../../../data-table/data-table-row-actions";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { DataTableRowActions } from "@/components/data-table/data-table-row-actions";
 
 export const columns: ColumnDef<Service>[] = [
   {

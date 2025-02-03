@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/query-provider";
 import { SanityLive } from "@/sanity/lib/live";
+import { Suspense } from "react";
+import Loading from "./loading";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,7 +29,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>{children}</QueryProvider>
+          <Suspense fallback={<Loading />}>
+            <QueryProvider>{children}</QueryProvider>
+          </Suspense>
+
           <SanityLive />
           <Toaster />
         </ThemeProvider>

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 interface TestMethod {
   value: string;
   label: string;
-  code: String;
+  code: string;
 }
 
 interface TestData {

@@ -7,7 +7,7 @@ import { getProjectById } from "@/sanity/lib/projects/getProjectById";
 export default async function ProjectPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
   const projectArray = await getProjectById(id);

@@ -43,7 +43,7 @@ interface ReportingProps {
   onSubmit: () => void;
   initialValues: Partial<ReportingValue>;
   onReportingChange: (activity: string) => void;
-  isRowSelected: Boolean;
+  isRowSelected: boolean;
 }
 
 export function Reporting({

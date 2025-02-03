@@ -27,9 +27,10 @@ import { GenerateBillingDocument } from "./generate-billing-document";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle, Loader } from "lucide-react";
 import ValidityChecker from "./services-table/validity-checker";
+import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 
 interface QuotationOptionsProps {
-  project: Project;
+  project: PROJECT_BY_ID_QUERYResult[number];
   coreFieldRowSelection: {};
   setCoreFieldRowSelection: Dispatch<SetStateAction<{}>>;
   coreLabRowSelection: {};

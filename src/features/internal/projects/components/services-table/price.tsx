@@ -42,7 +42,7 @@ interface PriceProps {
   initialValues: Partial<PriceValue>;
   onPriceChange: (price: number | undefined) => void;
   onQuantityChange: (quantity: number | undefined) => void;
-  isRowSelected: Boolean;
+  isRowSelected: boolean;
 }
 
 export function Price({

@@ -187,7 +187,7 @@ export function DataTableFieldTests({
         ),
       },
     ],
-    []
+    [setFieldTestsTableData]
   );
 
   const table = useReactTable({
@@ -230,7 +230,12 @@ export function DataTableFieldTests({
 
     // Trigger validation state change
     onValidationChange(fieldTestsValid);
-  }, [table.getSelectedRowModel()]);
+  }, [
+    table.getSelectedRowModel(),
+    onValidationChange,
+    setSelectedFieldTests,
+    table,
+  ]);
 
   return (
     <div className="p-4">
