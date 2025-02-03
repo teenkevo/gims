@@ -38,26 +38,24 @@ export default function ProjectUpdateNameForm({
 
   const handleUpdateProjectName = async (name: any): Promise<void> => {
     setIsSubmitting(true);
-    try {
-      mutation.mutate({
+    mutation.mutate(
+      {
         json: {
           projectId,
           projectName: name,
         },
-      });
-
-      toast("✅ Successful operation", {
-        description: "Updated project name successfully",
-      });
-    } catch (error) {
-      toast("⚠️ Uh Oh! Something went wrong", {
-        description: "Project name was not updated",
-      });
-
-      throw new Error("Error in mutation response");
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success("Project name has been updated");
+          setIsSubmitting(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   return (

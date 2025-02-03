@@ -38,26 +38,25 @@ export default function ProjectUpdateClientPhoneForm({
 
   const handleUpdateClientPhone = async (phone: string) => {
     setIsSubmitting(true);
-    try {
-      mutation.mutate({
+
+    mutation.mutate(
+      {
         json: {
           clientId,
           phone,
         },
-      });
-
-      toast("✅ Successful operation", {
-        description: "Updated client phone successfully",
-      });
-    } catch (error) {
-      toast("⚠️ Uh Oh! Something went wrong", {
-        description: "Client phone was not updated",
-      });
-
-      throw new Error("Error in mutation response"); // this error is caught in the handleForm submit of Single Field Form
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success("Client phone has been updated");
+          setIsSubmitting(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   return (

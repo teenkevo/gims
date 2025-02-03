@@ -35,27 +35,27 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
 
   const handleDeleteProject = async (id: string) => {
     setDeleteProjectLoading(true); // Set loading to true
-    try {
-      mutation.mutate({
+
+    mutation.mutate(
+      {
         json: {
           projectId: id,
         },
-      });
+      },
+      {
+        onSuccess: () => {
+          router.push("/projects");
+          toast.success("Project has been deleted");
+          setDeleteProjectLoading(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setDeleteProjectLoading(false);
+        },
+      }
+    );
 
-      router.push("/projects");
-
-      toast("✅ Successfull operation", {
-        description: "The project has been deleted successfully",
-      });
-    } catch (error) {
-      toast("❌ Error", {
-        description: "Something went wrong",
-      });
-
-      throw new Error("Error in mutation response"); // this error is caught in the handleForm submit of Single Field Form
-    } finally {
-      setDeleteProjectLoading(false); // Reset loading state
-    }
+    router.push("/projects");
   };
 
   const isDeleteDisabled = inputValue !== name; // Disable button if names don't match

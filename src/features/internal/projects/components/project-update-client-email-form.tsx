@@ -38,25 +38,25 @@ export default function ProjectUpdateClientEmailForm({
 
   const handleUpdateClientEmail = async (email: string) => {
     setIsSubmitting(true);
-    try {
-      mutation.mutate({
+
+    mutation.mutate(
+      {
         json: {
           clientId,
           clientEmail: email,
         },
-      });
-      toast("✅ Successful operation", {
-        description: "Updated client email successfully",
-      });
-    } catch (error) {
-      toast("⚠️ Uh Oh! Something went wrong", {
-        description: "Client email was not updated",
-      });
-
-      throw new Error("Error in mutation response"); // this error is caught in the handleForm submit of Single Field Form
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success("Client email has been updated");
+          setIsSubmitting(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   return (

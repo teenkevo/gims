@@ -24,6 +24,7 @@ import { createProjectSchema } from "@/features/internal/projects/schemas";
 
 import { useCreateProject } from "../api/use-create-project";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import React from "react";
 
 const formVariants = {
   hidden: {
@@ -82,7 +83,18 @@ export function CreateProjectForm({
         to: data.dateRange.to.toISOString(),
       },
     };
-    mutation.mutate({ json: formattedData });
+    mutation.mutate(
+      { json: formattedData },
+      {
+        onSuccess: () => {
+          router.push(`/projects`);
+          toast.success("Project has been created");
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+        },
+      }
+    );
   };
 
   return (

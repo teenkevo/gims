@@ -48,8 +48,9 @@ export default function ProjectUpdateDatesForm({
     to: Date;
   }) => {
     setIsSubmitting(true);
-    try {
-      mutation.mutate({
+
+    mutation.mutate(
+      {
         json: {
           dateRange: {
             from: dateRange.from.toISOString(),
@@ -57,20 +58,18 @@ export default function ProjectUpdateDatesForm({
           },
           projectId,
         },
-      });
-
-      toast("✅ Successful operation", {
-        description: "Updated project dates successfully",
-      });
-    } catch (error) {
-      toast("⚠️ Uh Oh! Something went wrong", {
-        description: "Project dates were not updated",
-      });
-
-      throw new Error("Error in mutation response"); // this error is caught in the handleForm submit of Single Field Form
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success("Project dates have been updated");
+          setIsSubmitting(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   return (

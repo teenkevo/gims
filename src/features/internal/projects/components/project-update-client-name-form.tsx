@@ -38,26 +38,25 @@ export default function ProjectUpdateClientNameForm({
 
   const handleUpdateClientName = async (name: string) => {
     setIsSubmitting(true);
-    try {
-      mutation.mutate({
+
+    mutation.mutate(
+      {
         json: {
           clientId,
           clientName: name,
         },
-      });
-
-      toast("✅ Successful operation", {
-        description: "Updated client name successfully",
-      });
-    } catch (error) {
-      toast("⚠️ Uh Oh! Something went wrong", {
-        description: "Client name was not updated",
-      });
-
-      throw new Error("Error in mutation response"); // this error is caught in the handleForm submit of Single Field Form
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success("Client name has been updated");
+          setIsSubmitting(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   return (
