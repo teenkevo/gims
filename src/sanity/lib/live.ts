@@ -3,10 +3,13 @@
 // https://github.com/sanity-io/next-sanity#live-content-api for more information.
 import { defineLive } from "next-sanity";
 import { client } from "./client";
-import { sanityReadToken } from "../env";
 
 // set your viewer token
-const token = sanityReadToken;
+const token = process.env.SANITY_API_READ_TOKEN;
+
+if (!token) {
+  throw new Error("MISSING SANITY_API_READ_TOKEN");
+}
 
 export const { sanityFetch, SanityLive } = defineLive({
   client: client.withConfig({

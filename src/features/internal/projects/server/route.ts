@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { backendClient } from "@/sanity/lib/backendClient";
+import { writeClient } from "@/sanity/lib/write-client";
 
 // Schema for creating a project
 const createProjectSchema = z.object({
@@ -56,7 +56,7 @@ const app = new Hono()
 
     if (clientType === "new") {
       // Create the client
-      const client = await backendClient.create({
+      const client = await writeClient.create({
         _type: "client",
         name: newClientName,
         email: newClientEmail,
@@ -66,7 +66,7 @@ const app = new Hono()
     }
 
     // Create the project
-    const project = await backendClient.create({
+    const project = await writeClient.create({
       _type: "project",
       name: projectName,
       startDate: dateRange.from,
@@ -86,7 +86,7 @@ const app = new Hono()
     async (c) => {
       const { projectId, projectName } = c.req.valid("json");
 
-      const updatedProject = await backendClient
+      const updatedProject = await writeClient
         .patch(projectId)
         .set({ name: projectName })
         .commit();
@@ -102,7 +102,7 @@ const app = new Hono()
     async (c) => {
       const { projectId, dateRange } = c.req.valid("json");
 
-      const updatedProject = await backendClient
+      const updatedProject = await writeClient
         .patch(projectId)
         .set({ startDate: dateRange.from, endDate: dateRange.to })
         .commit();
@@ -114,7 +114,7 @@ const app = new Hono()
   .post("/delete", zValidator("json", deleteProjectSchema), async (c) => {
     const { projectId } = c.req.valid("json");
 
-    const deletedProject = await backendClient.delete(projectId);
+    const deletedProject = await writeClient.delete(projectId);
 
     return c.json({ deletedProject });
   });

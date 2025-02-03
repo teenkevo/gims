@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { backendClient } from "@/sanity/lib/backendClient";
+import { writeClient } from "@/sanity/lib/write-client";
 
 // Schema for updating client name
 const updateClientNameSchema = z.object({
@@ -29,7 +29,7 @@ const app = new Hono()
     async (c) => {
       const { clientId, clientName } = c.req.valid("json");
 
-      const updatedClient = await backendClient
+      const updatedClient = await writeClient
         .patch(clientId)
         .set({ name: clientName })
         .commit();
@@ -45,7 +45,7 @@ const app = new Hono()
     async (c) => {
       const { clientId, clientEmail } = c.req.valid("json");
 
-      const updatedClient = await backendClient
+      const updatedClient = await writeClient
         .patch(clientId)
         .set({ email: clientEmail })
         .commit();
@@ -61,7 +61,7 @@ const app = new Hono()
     async (c) => {
       const { clientId, phone } = c.req.valid("json");
 
-      const updatedClient = await backendClient
+      const updatedClient = await writeClient
         .patch(clientId)
         .set({ phone })
         .commit();
