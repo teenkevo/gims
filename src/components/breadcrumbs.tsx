@@ -54,7 +54,7 @@ const NextBreadcrumb = ({
             const queryValue = searchParams.get(queryParam);
             if (queryValue) {
               // Truncate long query value and add ellipsis
-              const maxLength = 24; // Set your desired max length
+              const maxLength = 20; // Set your desired max length
               displayText =
                 queryValue.length > maxLength
                   ? capitalizeWords(queryValue.slice(0, maxLength) + "...")

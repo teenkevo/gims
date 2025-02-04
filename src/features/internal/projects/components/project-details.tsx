@@ -80,7 +80,7 @@ export default function ProjectDetails(
       </div>
       <Tabs defaultValue="details">
         <TabsList>
-          <TabsTrigger value="details">Project Details</TabsTrigger>
+          <TabsTrigger value="details">Project</TabsTrigger>
           <TabsTrigger value="client">Client</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
