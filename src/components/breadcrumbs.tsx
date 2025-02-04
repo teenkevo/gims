@@ -53,7 +53,12 @@ const NextBreadcrumb = ({
             const queryParam = pathToQueryParam[parentSegment];
             const queryValue = searchParams.get(queryParam);
             if (queryValue) {
-              displayText = capitalizeWords(queryValue);
+              // Truncate long query value and add ellipsis
+              const maxLength = 24; // Set your desired max length
+              displayText =
+                queryValue.length > maxLength
+                  ? capitalizeWords(queryValue.slice(0, maxLength) + "...")
+                  : capitalizeWords(queryValue);
             }
           }
 

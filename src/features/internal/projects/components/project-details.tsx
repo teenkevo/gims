@@ -1,6 +1,6 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeftCircle } from "lucide-react";
+import { ArrowLeftCircle, DeleteIcon, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import {
@@ -88,7 +88,7 @@ export default function ProjectDetails(
             className="text-destructive data-[state=active]:text-destructive"
             value="danger"
           >
-            Danger Zone
+            <Trash2 strokeWidth={1.5} className="w-5 h-5" />
           </TabsTrigger>
         </TabsList>
         <TabsContent value="details">
