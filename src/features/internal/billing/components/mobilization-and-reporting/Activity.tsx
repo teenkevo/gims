@@ -1,4 +1,3 @@
-"use client";
 // core
 import { useForm } from "react-hook-form";
 import * as z from "zod";

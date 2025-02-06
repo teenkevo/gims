@@ -1,22 +1,16 @@
 "use client";
 
-import { Cross2Icon } from "@radix-ui/react-icons";
 import { Table } from "@tanstack/react-table";
-
+import { Cross2Icon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import { sample_classes } from "@/features/customer/services/data/data";
-import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 
-interface DataTableToolbarProps<TData> {
+interface ToolbarProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTableFieldToolbar<TData>({
-  table,
-}: DataTableToolbarProps<TData>) {
+export function Toolbar<TData>({ table }: ToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
   return (

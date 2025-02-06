@@ -1,4 +1,5 @@
 "use client";
+import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,33 +13,25 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { Project } from "../types";
-import { Dispatch, SetStateAction, useState } from "react";
 import {
   FieldService,
   MobilizationService,
   ReportingService,
   Service,
 } from "@/features/customer/services/data/schema";
-import { Activity } from "./services-table/Activity";
-import { DataTableFieldTests } from "./services-table/data-table-field-tests";
-import { DataTableLabTests } from "./services-table/data-table-lab-tests";
+import labTestsData from "@/features/customer/services/data/services.json";
+import fieldTestsData from "@/features/customer/services/data/field_services.json";
 import { GenerateBillingDocument } from "./generate-billing-document";
-import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle, Loader } from "lucide-react";
-import ValidityChecker from "./services-table/validity-checker";
+import ValidityChecker from "./validity-checker";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { Activity } from "./mobilization-and-reporting/Activity";
+import { DataTable as LabInvestigationsTable } from "./lab-investigations/data-table";
+import { DataTable as FieldInvestigationsTable } from "./field-investigations/data-table";
+import { columns as fieldColumns } from "./field-investigations/columns";
+import { columns as labColumns } from "./lab-investigations/columns";
 
 interface QuotationOptionsProps {
   project: PROJECT_BY_ID_QUERYResult[number];
-  coreFieldRowSelection: {};
-  setCoreFieldRowSelection: Dispatch<SetStateAction<{}>>;
-  coreLabRowSelection: {};
-  setCoreLabRowSelection: Dispatch<SetStateAction<{}>>;
-  labTestsTableData: Service[];
-  setLabTestsTableData: Dispatch<SetStateAction<Service[]>>;
-  fieldTestsTableData: FieldService[];
-  setFieldTestsTableData: Dispatch<SetStateAction<FieldService[]>>;
   selectedLabTests: Service[];
   setSelectedLabTests: Dispatch<SetStateAction<Service[]>>;
   selectedFieldTests: FieldService[];
@@ -49,8 +42,8 @@ interface QuotationOptionsProps {
   setReportingActivity: Dispatch<SetStateAction<ReportingService>>;
 }
 
+// TODO: work on toggle state upon changing tabs
 const quotationOptionsSchema = z.object({
-  mobile: z.boolean().default(false).optional(),
   mobilization: z.boolean().default(false).optional(),
   field: z.boolean().default(false).optional(),
   lab: z.boolean().default(false).optional(),
@@ -99,7 +92,26 @@ const SwitchField = ({
   isLabTestsValid,
   isReportingValid,
 }: SwitchFieldProps) => {
-  const { project } = quotationOptionsProps;
+  const [labTestsTableData, setLabTestsTableData] =
+    useState<Service[]>(labTestsData);
+  const [fieldTestsTableData, setFieldTestsTableData] =
+    useState<FieldService[]>(fieldTestsData);
+
+  const fieldInvestigationsColumns = useMemo(
+    () =>
+      fieldColumns({
+        setFieldInvestigationsTableData: setFieldTestsTableData,
+      }),
+    [setFieldTestsTableData]
+  );
+
+  const labInvestigationsColumns = useMemo(
+    () =>
+      labColumns({
+        setLabInvestigationsTableData: setLabTestsTableData,
+      }),
+    [setLabTestsTableData]
+  );
 
   const form = useForm<QuotationOptionsValues>({
     resolver: zodResolver(quotationOptionsSchema),
@@ -223,27 +235,21 @@ const SwitchField = ({
 
       {/* Field Tests */}
       {form.getValues("field") && (
-        <DataTableFieldTests
-          coreFieldRowSelection={quotationOptionsProps.coreFieldRowSelection}
-          fieldTestsTableData={quotationOptionsProps.fieldTestsTableData}
+        <FieldInvestigationsTable
           setSelectedFieldTests={quotationOptionsProps.setSelectedFieldTests}
-          setFieldTestsTableData={quotationOptionsProps.setFieldTestsTableData}
-          setCoreFieldRowSelection={
-            quotationOptionsProps.setCoreFieldRowSelection
-          }
           onValidationChange={handleFieldsValidationChange}
+          columns={fieldInvestigationsColumns}
+          data={fieldTestsTableData}
         />
       )}
 
       {/* Lab Tests */}
       {form.getValues("lab") && (
-        <DataTableLabTests
-          coreLabRowSelection={quotationOptionsProps.coreLabRowSelection}
-          labTestsTableData={quotationOptionsProps.labTestsTableData}
+        <LabInvestigationsTable
           setSelectedLabTests={quotationOptionsProps.setSelectedLabTests}
-          setLabTestsTableData={quotationOptionsProps.setLabTestsTableData}
-          setCoreLabRowSelection={quotationOptionsProps.setCoreLabRowSelection}
           onValidationChange={handleLabTestsValidationChange}
+          columns={labInvestigationsColumns}
+          data={labTestsTableData}
         />
       )}
 
@@ -291,13 +297,6 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     reportingActivity,
   } = quotationOptionsProps;
 
-  console.log({
-    mobilizationActivity,
-    selectedFieldTests,
-    selectedLabTests,
-    reportingActivity,
-  });
-
   const [isMobilizationValid, setIsMobilizationValid] = useState(false);
   const [isFieldsValid, setIsFieldsValid] = useState(false);
   const [isLabTestsValid, setIsLabTestsValid] = useState(false);
@@ -333,78 +332,76 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
 
   return (
     <>
-      <div>
-        <h3 className="mb-4 font-medium tracking-tight">
-          Choose the items to add to the client's quotation
-        </h3>
-        <div className="space-y-8">
-          <SwitchField
-            handleMobilizationValidationChange={
-              handleMobilizationValidationChange
-            }
-            handleFieldsValidationChange={handleFieldsValidationChange}
-            handleLabTestsValidationChange={handleLabTestsValidationChange}
-            handleReportingValidationChange={handleReportingValidationChange}
-            isMobilizationValid={isMobilizationValid}
-            isFieldsValid={isFieldsValid}
-            isLabTestsValid={isLabTestsValid}
-            isReportingValid={isReportingValid}
-            quotationOptionsProps={quotationOptionsProps}
-            name="mobilization"
-            label="Mobilization Activities"
-            description="Mobilization activities for work to be done outside the laboratory"
-          />
-          <SwitchField
-            handleMobilizationValidationChange={
-              handleMobilizationValidationChange
-            }
-            handleFieldsValidationChange={handleFieldsValidationChange}
-            handleLabTestsValidationChange={handleLabTestsValidationChange}
-            handleReportingValidationChange={handleReportingValidationChange}
-            isMobilizationValid={isMobilizationValid}
-            isFieldsValid={isFieldsValid}
-            isLabTestsValid={isLabTestsValid}
-            isReportingValid={isReportingValid}
-            quotationOptionsProps={quotationOptionsProps}
-            name="field"
-            label="Field Investigations"
-            description="Work to be done in the field"
-          />
-          <SwitchField
-            handleMobilizationValidationChange={
-              handleMobilizationValidationChange
-            }
-            handleFieldsValidationChange={handleFieldsValidationChange}
-            handleLabTestsValidationChange={handleLabTestsValidationChange}
-            handleReportingValidationChange={handleReportingValidationChange}
-            isMobilizationValid={isMobilizationValid}
-            isFieldsValid={isFieldsValid}
-            isLabTestsValid={isLabTestsValid}
-            isReportingValid={isReportingValid}
-            quotationOptionsProps={quotationOptionsProps}
-            name="lab"
-            label="Laboratory Tests"
-            description="Investigations to be carried out in the laboratory"
-          />
-          <SwitchField
-            handleMobilizationValidationChange={
-              handleMobilizationValidationChange
-            }
-            handleFieldsValidationChange={handleFieldsValidationChange}
-            handleLabTestsValidationChange={handleLabTestsValidationChange}
-            handleReportingValidationChange={handleReportingValidationChange}
-            isMobilizationValid={isMobilizationValid}
-            isFieldsValid={isFieldsValid}
-            isLabTestsValid={isLabTestsValid}
-            isReportingValid={isReportingValid}
-            quotationOptionsProps={quotationOptionsProps}
-            name="reporting"
-            label="Reporting"
-            description="Receive emails about your account activity and security."
-          />
-          <div className="mt-5 md:mt-0">
-            <GenerateBillingDocument {...billingInfo} />
-          </div>
+      <h3 className="mb-4 font-medium tracking-tight">
+        Choose the items to add to the client's quotation
+      </h3>
+      <div className="space-y-8">
+        <SwitchField
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
+          handleFieldsValidationChange={handleFieldsValidationChange}
+          handleLabTestsValidationChange={handleLabTestsValidationChange}
+          handleReportingValidationChange={handleReportingValidationChange}
+          isMobilizationValid={isMobilizationValid}
+          isFieldsValid={isFieldsValid}
+          isLabTestsValid={isLabTestsValid}
+          isReportingValid={isReportingValid}
+          quotationOptionsProps={quotationOptionsProps}
+          name="mobilization"
+          label="Mobilization Activities"
+          description="Mobilization activities for work to be done outside the laboratory"
+        />
+        <SwitchField
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
+          handleFieldsValidationChange={handleFieldsValidationChange}
+          handleLabTestsValidationChange={handleLabTestsValidationChange}
+          handleReportingValidationChange={handleReportingValidationChange}
+          isMobilizationValid={isMobilizationValid}
+          isFieldsValid={isFieldsValid}
+          isLabTestsValid={isLabTestsValid}
+          isReportingValid={isReportingValid}
+          quotationOptionsProps={quotationOptionsProps}
+          name="field"
+          label="Field Investigations"
+          description="Work to be done in the field"
+        />
+        <SwitchField
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
+          handleFieldsValidationChange={handleFieldsValidationChange}
+          handleLabTestsValidationChange={handleLabTestsValidationChange}
+          handleReportingValidationChange={handleReportingValidationChange}
+          isMobilizationValid={isMobilizationValid}
+          isFieldsValid={isFieldsValid}
+          isLabTestsValid={isLabTestsValid}
+          isReportingValid={isReportingValid}
+          quotationOptionsProps={quotationOptionsProps}
+          name="lab"
+          label="Laboratory Tests"
+          description="Investigations to be carried out in the laboratory"
+        />
+        <SwitchField
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
+          handleFieldsValidationChange={handleFieldsValidationChange}
+          handleLabTestsValidationChange={handleLabTestsValidationChange}
+          handleReportingValidationChange={handleReportingValidationChange}
+          isMobilizationValid={isMobilizationValid}
+          isFieldsValid={isFieldsValid}
+          isLabTestsValid={isLabTestsValid}
+          isReportingValid={isReportingValid}
+          quotationOptionsProps={quotationOptionsProps}
+          name="reporting"
+          label="Reporting"
+          description="Receive emails about your account activity and security."
+        />
+        <div className="mt-5 md:mt-0">
+          <GenerateBillingDocument {...billingInfo} />
         </div>
       </div>
     </>

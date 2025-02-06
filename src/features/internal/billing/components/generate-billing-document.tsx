@@ -1,6 +1,6 @@
 import { Document, pdf, PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 
-import { Project } from "../types";
+import { Project } from "../../projects/types";
 import { Menu, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,7 @@ import {
   ReportingService,
   Service,
 } from "@/features/customer/services/data/schema";
-import { BillingDocument } from "./services-table/billingDocument";
+import { BillingDocument } from "./billingDocument";
 import {
   Sheet,
   SheetContent,

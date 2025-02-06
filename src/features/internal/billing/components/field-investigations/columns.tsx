@@ -1,18 +1,20 @@
-"use client";
-
+import { Dispatch, SetStateAction, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
-
 import {
-  test_methods,
-  sample_classes,
-} from "@/features/customer/services/data/data";
-import { Service } from "@/features/customer/services/data/schema";
+  FieldService,
+  Service,
+} from "@/features/customer/services/data/schema";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { Price } from "./price";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { PriceForm } from "./price-form";
 
-export const columns: ColumnDef<Service>[] = [
+interface ColumnProps {
+  setFieldInvestigationsTableData: Dispatch<SetStateAction<FieldService[]>>;
+}
+
+export const columns = ({
+  setFieldInvestigationsTableData,
+}: ColumnProps): ColumnDef<FieldService>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -67,36 +69,7 @@ export const columns: ColumnDef<Service>[] = [
       );
     },
   },
-  {
-    accessorKey: "test_method",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        className="text-sm"
-        column={column}
-        title="Test Method"
-      />
-    ),
-    cell: ({ row }) => {
-      const test_methods_to_check = row.original.test_methods.map(
-        (m) => m.label
-      );
-      const filtered_test_methods = test_methods.filter((test_method) =>
-        test_methods_to_check.includes(test_method.label)
-      );
 
-      return (
-        <div className="flex space-x-2">
-          <ToggleGroup type="single" defaultValue="s" variant="outline">
-            {filtered_test_methods.map((tm) => (
-              <ToggleGroupItem key={tm.value} value={tm.value}>
-                {tm.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-      );
-    },
-  },
   {
     accessorKey: "sample_class",
     header: ({ column }) => (
@@ -107,22 +80,11 @@ export const columns: ColumnDef<Service>[] = [
       />
     ),
     cell: ({ row }) => {
-      const sample_class = sample_classes.find(
-        (sample_class) => sample_class.value === row.getValue("sample_class")
-      );
-
-      if (!sample_class) {
-        return null;
-      }
-
       return (
         <div className="flex w-[100px] items-center">
-          <span>{sample_class.label}</span>
+          <span>Field</span>
         </div>
       );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
     },
   },
   {
@@ -134,17 +96,47 @@ export const columns: ColumnDef<Service>[] = [
         title="Unit Price - Quantity - Total"
       />
     ),
-    cell: ({ row }) => (
-      <Price
-        initialValues={{
-          price: undefined,
-          quantity: undefined,
-        }}
-        onPriceChange={() => null}
-        onQuantityChange={() => null}
-        isRowSelected
-        onSubmit={() => null}
-      />
-    ),
+    cell: ({ row }) => {
+      const price = row.original.price;
+      const quantity = row.original.quantity;
+      const onSubmit = () => null;
+
+      const onPriceChange = (newPrice: number | undefined) => {
+        setFieldInvestigationsTableData((prevData) =>
+          prevData.map((item) =>
+            item.id === row.original.id
+              ? {
+                  ...item,
+                  price: newPrice,
+                }
+              : item
+          )
+        );
+      };
+
+      const onQuantityChange = (newQuantity: number | undefined) => {
+        console.log("newQuantity", newQuantity);
+        setFieldInvestigationsTableData((prevData) =>
+          prevData.map((item) =>
+            item.id === row.original.id
+              ? {
+                  ...item,
+                  quantity: newQuantity,
+                }
+              : item
+          )
+        );
+      };
+
+      return (
+        <PriceForm
+          initialValues={{ price, quantity }}
+          isRowSelected={row.getIsSelected()}
+          onSubmit={onSubmit}
+          onPriceChange={onPriceChange}
+          onQuantityChange={onQuantityChange}
+        />
+      );
+    },
   },
 ];

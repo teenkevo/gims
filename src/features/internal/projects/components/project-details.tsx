@@ -1,6 +1,6 @@
 "use client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeftCircle, DeleteIcon, Trash2 } from "lucide-react";
+
+import { ArrowLeftCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import {
@@ -9,9 +9,6 @@ import {
   ReportingService,
   Service,
 } from "@/features/customer/services/data/schema";
-// services data
-import labTestsData from "@/features/customer/services/data/services.json";
-import fieldTestsData from "@/features/customer/services/data/field_services.json";
 import { DeleteProject } from "./delete-project";
 import {
   Card,
@@ -20,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InfoCard } from "@/components/info-card";
 import CopyableInput from "./copyable-input";
 import ProjectUpdateNameForm from "./project-update-name-form";
@@ -28,7 +26,7 @@ import ProjectUpdateClientNameForm from "./project-update-client-name-form";
 import ProjectUpdateClientEmailForm from "./project-update-client-email-form";
 import ProjectUpdateClientPhoneForm from "./project-update-client-phone-form";
 import ProjectStage from "./project-stage";
-import { QuotationOptions } from "./quotation-options";
+import { QuotationOptions } from "../../billing/components/quotation-options";
 import SampleReceiptVerification from "./sample-receipt-verifications";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 
@@ -38,15 +36,6 @@ export default function ProjectDetails(
   const { _id, name, client, startDate, endDate } = project;
 
   // billing services table states
-
-  const [coreFieldRowSelection, setCoreFieldRowSelection] = useState({});
-  const [coreLabRowSelection, setCoreLabRowSelection] = useState({});
-
-  const [labTestsTableData, setLabTestsTableData] =
-    useState<Service[]>(labTestsData);
-  const [fieldTestsTableData, setFieldTestsTableData] =
-    useState<FieldService[]>(fieldTestsData);
-
   const [selectedLabTests, setSelectedLabTests] = useState<Service[]>([]);
   const [selectedFieldTests, setSelectedFieldTests] = useState<FieldService[]>(
     []
@@ -183,14 +172,6 @@ export default function ProjectDetails(
           <div className="space-y-8 my-10">
             <QuotationOptions
               project={project}
-              coreFieldRowSelection={coreFieldRowSelection}
-              setCoreFieldRowSelection={setCoreFieldRowSelection}
-              coreLabRowSelection={coreLabRowSelection}
-              setCoreLabRowSelection={setCoreLabRowSelection}
-              labTestsTableData={labTestsTableData}
-              setLabTestsTableData={setLabTestsTableData}
-              fieldTestsTableData={fieldTestsTableData}
-              setFieldTestsTableData={setFieldTestsTableData}
               selectedLabTests={selectedLabTests}
               setSelectedLabTests={setSelectedLabTests}
               selectedFieldTests={selectedFieldTests}

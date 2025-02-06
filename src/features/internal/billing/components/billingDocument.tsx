@@ -7,9 +7,8 @@ import {
   ReportingService,
   Service,
 } from "@/features/customer/services/data/schema";
-import { Project } from "../../types";
-import { numberToWords } from "../../constants";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import { numberToWords } from "../../projects/constants";
+import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 
 // Register font
 Font.register({

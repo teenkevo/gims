@@ -1,4 +1,3 @@
-"use client";
 // core
 import { NumericFormat } from "react-number-format";
 import { useForm } from "react-hook-form";
@@ -45,7 +44,7 @@ interface PriceProps {
   isRowSelected: boolean;
 }
 
-export function Price({
+export function PriceForm({
   onSubmit,
   initialValues,
   onPriceChange,
@@ -71,8 +70,6 @@ export function Price({
       form.trigger("quantity");
     } else {
       form.clearErrors();
-      // form.resetField("price");
-      // form.resetField("quantity");
     }
   }, [isRowSelected]);
 
