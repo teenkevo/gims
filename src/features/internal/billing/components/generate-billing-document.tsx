@@ -1,4 +1,5 @@
-import { Document, pdf, PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import { Document, pdf, PDFDownloadLink } from "@react-pdf/renderer";
+import dynamic from "next/dynamic";
 
 import { Project } from "../../projects/types";
 import { Menu, Receipt } from "lucide-react";
@@ -22,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React from "react";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import Loading from "@/app/loading";
 
 interface GenerateBillingDocumentProps {
   labTests: Service[];
@@ -64,6 +66,11 @@ export const GenerateBillingDocument = (
     });
   };
 
+  const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), {
+    loading: () => <Loading />,
+    ssr: false,
+  });
+
   return (
     // <Button type="button" size="sm" onClick={handleOpenInNewTab}>
     //   <Receipt className="mr-2" strokeWidth={1} />
@@ -92,10 +99,9 @@ export const GenerateBillingDocument = (
         }
       >
         <SheetHeader className="text-start">
-          <SheetTitle className="text-lg md:text-2xl">Quotation</SheetTitle>
-          <SheetDescription>
-            <Badge>Draft</Badge>
-          </SheetDescription>
+          <SheetTitle className="flex items-center gap-2 text-lg md:text-2xl">
+            Quotation <Badge>Draft</Badge>
+          </SheetTitle>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <PDFViewer width="100%" height={600}>
