@@ -318,15 +318,23 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     setIsReportingValid(isValid);
   };
 
+  const mobilizationActivityInfo = isMobilizationValid
+    ? mobilizationActivity
+    : { price: 0, quantity: 0, activity: "" };
+
+  const labTestsInfo = isLabTestsValid ? selectedLabTests : [];
+
+  const fieldTestsInfo = isFieldsValid ? selectedFieldTests : [];
+
+  const reportingActivityInfo = isReportingValid
+    ? reportingActivity
+    : { price: 0, quantity: 0, activity: "" };
+
   const billingInfo = {
-    mobilizationActivity: isMobilizationValid
-      ? mobilizationActivity
-      : { price: 0, quantity: 0, activity: "" },
-    labTests: isLabTestsValid ? selectedLabTests : [],
-    fieldTests: isFieldsValid ? selectedFieldTests : [],
-    reportingActivity: isReportingValid
-      ? reportingActivity
-      : { price: 0, quantity: 0, activity: "" },
+    mobilizationActivity: mobilizationActivityInfo,
+    labTests: labTestsInfo,
+    fieldTests: fieldTestsInfo,
+    reportingActivity: reportingActivityInfo,
     project,
   };
 
