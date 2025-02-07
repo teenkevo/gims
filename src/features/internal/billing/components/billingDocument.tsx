@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
+import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
 import {
   FieldService,
@@ -10,6 +11,15 @@ import {
 import { numberToWords } from "../../projects/constants";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 
+const tw = createTw({
+  theme: {
+    extend: {
+      colors: {
+        custom: "#bada55",
+      },
+    },
+  },
+});
 // Register font
 Font.register({
   family: "SpaceGrotesk",
@@ -124,7 +134,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       flexDirection: "row",
       textAlign: "right",
       borderRadius: 10,
-      flex: 1,
+      flex: 2,
       justifyContent: "space-between",
     },
 
@@ -174,10 +184,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     tbody: {
       fontSize: 8,
       fontWeight: 400,
-      paddingTop: 7,
+      paddingTop: 2,
       paddingLeft: 7,
       paddingRight: 7,
-      paddingBottom: 7,
+      paddingBottom: 2,
       flex: 1,
       borderColor: "whitesmoke",
       borderRightWidth: 1,
@@ -214,10 +224,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     },
 
     total: {
-      fontSize: 10,
+      fontSize: 8,
       fontWeight: 700,
-      paddingTop: 7,
-      paddingLeft: 7,
+      paddingTop: 4,
+      paddingLeft: 4,
       paddingRight: 7,
       paddingBottom: 7,
       flex: 1.5,
@@ -238,9 +248,9 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     subsection: {
       fontSize: 9,
       textAlign: "center",
-      paddingTop: 10,
+      paddingTop: 4,
       paddingLeft: 7,
-      paddingBottom: 10,
+      paddingBottom: 4,
       flex: 1.5,
       borderColor: "whitesmoke",
       borderBottomWidth: 1,
@@ -268,49 +278,94 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       textAlign: "center",
       color: "grey",
     },
+    title: {
+      fontSize: 24,
+    },
+    textBold: {
+      fontFamily: "Helvetica-Bold",
+    },
+    spaceY: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "2px",
+    },
   });
 
   /* eslint-disable jsx-a11y/alt-text */
   const Header = () => (
-    <View style={styles.titleContainer}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.reportTitle}>
-            {generateInvoice ? "INVOICE" : "QUOTATION"}
-          </Text>
-          <Text style={styles.quotationDetail}>
-            Revision Number: R{new Date().getFullYear()}-00
-          </Text>
-          <Text style={styles.quotationDetail}>
-            Acquision Number: A{new Date().getFullYear()}-420A
-          </Text>
-          <Text style={styles.quotationDetail}>
-            {generateInvoice ? "Invoice" : "Quotation"} Number: Q
-            {new Date().getFullYear()}-420A
-          </Text>
-          <Text style={styles.quotationDetail}>
-            {generateInvoice ? "Invoice" : "Quotation"} Date:{" "}
-            {format(billing_data.quotation_date, "MMM d, yyyy")}
-          </Text>
+    <View style={styles.header}>
+      <View>
+        <Image style={tw("w-40 mb-10")} src="/getlab-logo.png" />
+      </View>
+      <View>
+        <Text style={[styles.title, styles.textBold]}>QUOTATION</Text>
+        <View style={tw("flex flex-row mt-7")}>
+          <Text style={tw("font-bold")}>Revision No:</Text>
+          <Text> R2023-00</Text>
         </View>
-        <View>
-          <Image style={styles.logo} src="/getlab-logo.png" />
+        <View style={tw("flex flex-row")}>
+          <Text style={tw("font-bold")}>Acquisition No:</Text>
+          <Text> A-2024-337</Text>
+        </View>
+        <View style={tw("flex flex-row")}>
+          <Text style={tw("font-bold")}>Quotation No:</Text>
+          <Text> Q-2024-337</Text>
+        </View>
+        <View style={tw("flex flex-row")}>
+          <Text style={tw("font-bold")}>Quotation Date:</Text>
+          <Text> 2024-01-01</Text>
         </View>
       </View>
+      {/* <View style={styles.spaceY}>
+        <Text style={styles.textBold}>Company Name</Text>
+        <Text>123 Business Street</Text>
+        <Text>City, State 12345</Text>
+      </View> */}
     </View>
   );
+
+  // const Header = () => (
+  //   <View style={styles.titleContainer}>
+  //     <View style={styles.header}>
+  //       <View>
+  //         <Text style={styles.reportTitle}>
+  //           {generateInvoice ? "INVOICE" : "QUOTATION"}
+  //         </Text>
+  //         <View>
+  //           <Text style={styles.quotationDetail}>
+  //             Revision Number: R{new Date().getFullYear()}-00
+  //           </Text>
+  //           <Text style={styles.quotationDetail}>
+  //             Acquision Number: A{new Date().getFullYear()}-420A
+  //           </Text>
+  //           <Text style={styles.quotationDetail}>
+  //             {generateInvoice ? "Invoice" : "Quotation"} Number: Q
+  //             {new Date().getFullYear()}-420A
+  //           </Text>
+  //           <Text style={styles.quotationDetail}>
+  //             {generateInvoice ? "Invoice" : "Quotation"} Date:{" "}
+  //             {format(billing_data.quotation_date, "MMM d, yyyy")}
+  //           </Text>
+  //         </View>
+  //       </View>
+  //       <View>
+  //         <Image style={styles.logo} src="/getlab-logo.png" />
+  //       </View>
+  //     </View>
+  //   </View>
+  // );
 
   /* eslint-enable jsx-a11y/alt-text */
 
   const Address = () => (
-    <View style={styles.titleContainer}>
+    <View style={tw("flex-row mt-5")}>
       <View style={styles.spaceBetween}>
         <View
           style={{
             flexBasis: "50%",
             backgroundColor: "#E1EBE3",
             borderRadius: 10,
-            padding: 20,
+            padding: 10,
             height: "100%",
             marginRight: 10,
           }}
@@ -336,7 +391,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
             flexBasis: "50%",
             backgroundColor: "#E1EBE3",
             borderRadius: 10,
-            padding: 20,
+            padding: 10,
             height: "100%",
             marginLeft: 10,
           }}

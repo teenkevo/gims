@@ -65,6 +65,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
     "react-number-format": "^5.4.3",
+    "react-pdf-tailwind": "^2.3.0",
     "react-phone-number-input": "^3.4.11",
     "react-resizable-panels": "^2.1.7",
     "react-spinners": "^0.15.0",

@@ -86,7 +86,7 @@ export const GenerateBillingDocument = (
         </Button>
       </SheetTrigger>
       <SheetContent
-        side={isMobile ? "bottom" : "right"}
+        side="bottom"
         className={
           isMobile ? "h-[80vh] rounded-t-2xl p-4" : "h-full rounded-l-2xl"
         }
