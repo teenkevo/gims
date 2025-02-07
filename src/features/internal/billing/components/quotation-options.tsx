@@ -102,7 +102,7 @@ const SwitchField = ({
       fieldColumns({
         setFieldInvestigationsTableData: setFieldTestsTableData,
       }),
-    [setFieldTestsTableData]
+    []
   );
 
   const labInvestigationsColumns = useMemo(

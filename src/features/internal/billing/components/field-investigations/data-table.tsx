@@ -58,6 +58,7 @@ export function DataTable<TData extends FieldService, TValue>({
       columnFilters,
     },
     enableRowSelection: true,
+    autoResetPageIndex: false,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
