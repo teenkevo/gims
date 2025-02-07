@@ -93,10 +93,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   const styles = StyleSheet.create({
     page: {
       fontSize: 11,
-      paddingTop: 35,
+      paddingTop: 30,
       paddingBottom: 65,
       paddingHorizontal: 35,
-      lineHeight: 1.5,
+      lineHeight: 1.2,
       flexDirection: "column",
       fontFamily: "SpaceGrotesk",
     },
@@ -110,8 +110,8 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
 
     subHeading: {
       color: "black",
-      fontSize: 10,
-      fontWeight: 500,
+      fontSize: 9,
+      fontWeight: 600,
       marginBottom: 5,
     },
 
@@ -136,9 +136,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       borderRadius: 10,
       flex: 2,
       justifyContent: "space-between",
+      marginBottom: 10,
     },
 
-    titleContainer: { flexDirection: "row", marginTop: 24 },
+    titleContainer: { flexDirection: "row", marginTop: 10 },
 
     logo: { width: 150, marginBottom: 20 },
 
@@ -150,6 +151,8 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     },
 
     addressTitle: { fontSize: 8, fontWeight: 400 },
+    metaTitle: { fontSize: 9, fontWeight: 600 },
+    metaDescription: { fontSize: 9, fontWeight: 400 },
 
     invoice: { fontWeight: 400, fontSize: 20 },
 
@@ -159,7 +162,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     },
 
     quotationDetail: {
-      fontSize: 10,
+      fontSize: 8,
       fontWeight: 400,
     },
 
@@ -167,10 +170,11 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
 
     theader: {
       marginTop: 5,
-      fontSize: 9,
+      fontSize: 7,
       fontWeight: 500,
       paddingTop: 4,
       paddingLeft: 7,
+      paddingRight: 7,
       flex: 1,
       height: 20,
       backgroundColor: "#E1EBE3",
@@ -179,7 +183,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       borderBottomWidth: 1,
     },
 
-    theader2: { flex: 2, borderRightWidth: 1, borderBottomWidth: 1 },
+    theader2: { flex: 4, borderRightWidth: 1, borderBottomWidth: 1 },
 
     tbody: {
       fontSize: 8,
@@ -187,52 +191,74 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       paddingTop: 2,
       paddingLeft: 7,
       paddingRight: 7,
-      paddingBottom: 2,
       flex: 1,
       borderColor: "whitesmoke",
       borderRightWidth: 1,
       borderBottomWidth: 1,
     },
+    tbodyRightAlign: {
+      fontSize: 8,
+      fontWeight: 400,
+      paddingTop: 2,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 1,
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      textAlign: "right",
+    },
 
-    tbody2: { flex: 2, borderRightWidth: 1 },
+    tbody2: { flex: 4, borderRightWidth: 1 },
 
     tbodyTotal: {
-      fontSize: 10,
+      fontSize: 8,
       fontWeight: 700,
       paddingTop: 7,
       paddingLeft: 7,
       paddingRight: 7,
-      paddingBottom: 7,
       flex: 1,
       borderColor: "whitesmoke",
       borderRightWidth: 1,
       borderBottomWidth: 1,
+      textAlign: "right",
     },
 
     tbodyTotalWithVAT: {
-      fontSize: 14,
+      fontSize: 8,
       fontWeight: 700,
       color: "#43AC33",
       paddingTop: 7,
       paddingLeft: 7,
       paddingRight: 7,
-      paddingBottom: 7,
       flex: 1,
       borderColor: "whitesmoke",
       borderRightWidth: 1,
       borderBottomWidth: 1,
+      textAlign: "right",
     },
 
     total: {
       fontSize: 8,
       fontWeight: 700,
-      paddingTop: 4,
-      paddingLeft: 4,
+      paddingTop: 7,
+      paddingLeft: 7,
       paddingRight: 7,
-      paddingBottom: 7,
-      flex: 1.5,
+      flex: 1,
       borderColor: "whitesmoke",
       borderBottomWidth: 1,
+      textAlign: "right",
+    },
+    total2: {
+      fontSize: 8,
+      fontWeight: 700,
+      paddingTop: 7,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 4,
+      borderColor: "whitesmoke",
+      borderBottomWidth: 1,
+      textAlign: "right",
     },
 
     flex: {
@@ -279,11 +305,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       color: "grey",
     },
     title: {
-      fontSize: 24,
+      fontSize: 20,
+      fontWeight: 600,
     },
-    textBold: {
-      fontFamily: "Helvetica-Bold",
-    },
+
     spaceY: {
       display: "flex",
       flexDirection: "column",
@@ -295,127 +320,62 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   const Header = () => (
     <View style={styles.header}>
       <View>
-        <Image style={tw("w-40 mb-10")} src="/getlab-logo.png" />
+        <Image style={tw("w-32 mb-4")} src="/getlab-logo.png" />
+        <Text style={styles.subHeading}>
+          Geotechnical Engineering and Technology Laboratory (GETLAB) Limited
+        </Text>
+        <Text style={styles.addressTitle}>
+          Plot 1234, Block 197, Namirembe Hillside Road Kitetika Cell,
+        </Text>
+        <Text style={styles.addressTitle}>
+          Kasangati Town Council, Wakiso, Uganda
+        </Text>
+        <Text style={styles.addressTitle}>Tel: +256 (0) 392 175 883</Text>
+        <Text style={styles.addressTitle}>
+          Email: info@getlab.co.ug Web: www.getlab.co.ug
+        </Text>
+        <Text style={{ ...styles.subHeading, fontSize: 8, marginTop: 5 }}>
+          TIN Number: 1006958253
+        </Text>
       </View>
       <View>
-        <Text style={[styles.title, styles.textBold]}>QUOTATION</Text>
-        <View style={tw("flex flex-row mt-7")}>
-          <Text style={tw("font-bold")}>Revision No:</Text>
-          <Text> R2023-00</Text>
+        <Text style={[styles.title]}>QUOTATION</Text>
+        <View style={tw("flex flex-row mt-9")}>
+          <Text style={styles.metaTitle}>Revision No:</Text>
+          <Text style={styles.metaDescription}> R2023-00</Text>
         </View>
         <View style={tw("flex flex-row")}>
-          <Text style={tw("font-bold")}>Acquisition No:</Text>
-          <Text> A-2024-337</Text>
+          <Text style={styles.metaTitle}>Acquisition No:</Text>
+          <Text style={styles.metaDescription}> A-2024-337</Text>
         </View>
         <View style={tw("flex flex-row")}>
-          <Text style={tw("font-bold")}>Quotation No:</Text>
-          <Text> Q-2024-337</Text>
+          <Text style={styles.metaTitle}>Quotation No:</Text>
+          <Text style={styles.metaDescription}> Q-2024-337</Text>
         </View>
         <View style={tw("flex flex-row")}>
-          <Text style={tw("font-bold")}>Quotation Date:</Text>
-          <Text> 2024-01-01</Text>
+          <Text style={styles.metaTitle}>Quotation Date:</Text>
+          <Text style={styles.metaDescription}> 2024-01-01</Text>
         </View>
       </View>
-      {/* <View style={styles.spaceY}>
-        <Text style={styles.textBold}>Company Name</Text>
-        <Text>123 Business Street</Text>
-        <Text>City, State 12345</Text>
-      </View> */}
     </View>
   );
-
-  // const Header = () => (
-  //   <View style={styles.titleContainer}>
-  //     <View style={styles.header}>
-  //       <View>
-  //         <Text style={styles.reportTitle}>
-  //           {generateInvoice ? "INVOICE" : "QUOTATION"}
-  //         </Text>
-  //         <View>
-  //           <Text style={styles.quotationDetail}>
-  //             Revision Number: R{new Date().getFullYear()}-00
-  //           </Text>
-  //           <Text style={styles.quotationDetail}>
-  //             Acquision Number: A{new Date().getFullYear()}-420A
-  //           </Text>
-  //           <Text style={styles.quotationDetail}>
-  //             {generateInvoice ? "Invoice" : "Quotation"} Number: Q
-  //             {new Date().getFullYear()}-420A
-  //           </Text>
-  //           <Text style={styles.quotationDetail}>
-  //             {generateInvoice ? "Invoice" : "Quotation"} Date:{" "}
-  //             {format(billing_data.quotation_date, "MMM d, yyyy")}
-  //           </Text>
-  //         </View>
-  //       </View>
-  //       <View>
-  //         <Image style={styles.logo} src="/getlab-logo.png" />
-  //       </View>
-  //     </View>
-  //   </View>
-  // );
 
   /* eslint-enable jsx-a11y/alt-text */
 
-  const Address = () => (
-    <View style={tw("flex-row mt-5")}>
-      <View style={styles.spaceBetween}>
-        <View
-          style={{
-            flexBasis: "50%",
-            backgroundColor: "#E1EBE3",
-            borderRadius: 10,
-            padding: 10,
-            height: "100%",
-            marginRight: 10,
-          }}
-        >
-          <Text style={styles.heading}>
-            {generateInvoice ? "Invoice" : "Quotation"} by
-          </Text>
-          <Text style={styles.subHeading}>GETLAB Limited</Text>
-          <Text style={styles.addressTitle}>
-            Plot 1234, Block 197, Namirembe Hillside Road Kitetika Cell,
-            Kasangati Town Council, Wakiso, Uganda
-          </Text>
-          <Text style={styles.addressTitle}>Tel: +256 (0) 392 175 883</Text>
-          <Text style={styles.addressTitle}>
-            Email: info@getlab.co.ug Web: www.getlab.co.ug
-          </Text>
-          <Text style={{ ...styles.subHeading, fontSize: 8, marginTop: 10 }}>
-            TIN Number: 1006958253
-          </Text>
-        </View>
-        <View
-          style={{
-            flexBasis: "50%",
-            backgroundColor: "#E1EBE3",
-            borderRadius: 10,
-            padding: 10,
-            height: "100%",
-            marginLeft: 10,
-          }}
-        >
-          <Text style={styles.heading}>
-            {generateInvoice ? "Invoice" : "Quotation"} to
-          </Text>
-          <Text style={styles.subHeading}>{project?.client?.name}</Text>
-          <Text style={styles.addressTitle}>
-            Email: {project?.client?.email}
-          </Text>
-          <Text style={styles.addressTitle}>Tel: {project?.client?.phone}</Text>
-        </View>
+  const ClientAddressAndProject = () => (
+    <View style={styles.spaceBetweenNoAlign}>
+      <View>
+        <Text style={styles.heading}>
+          {generateInvoice ? "Invoice" : "Quotation"} to
+        </Text>
+        <Text style={styles.subHeading}>{project?.client?.name}</Text>
+        <Text style={styles.addressTitle}>Email: {project?.client?.email}</Text>
+        <Text style={styles.addressTitle}>Tel: {project?.client?.phone}</Text>
       </View>
-    </View>
-  );
 
-  const UserAddress = () => (
-    <View style={styles.titleContainer}>
-      <View style={styles.spaceBetween}>
-        <View>
-          <Text style={styles.heading}>Project</Text>
-          <Text style={styles.subHeading}>{project.name}</Text>
-        </View>
+      <View>
+        <Text style={styles.heading}>Project</Text>
+        <Text style={styles.subHeading}>{project.name}</Text>
       </View>
     </View>
   );
@@ -444,25 +404,23 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <NoItems text="No items" />
     ) : (
       items?.map((item: any) => (
-        <React.Fragment key={item.id}>
-          <View style={{ width: "100%", flexDirection: "row" }}>
-            <View style={styles.tbody}>
-              <Text>{item.quantity}</Text>
-            </View>
-            <View style={styles.tbody}>
-              <Text>No</Text>
-            </View>
-            <View style={[styles.tbody, styles.tbody2]}>
-              <Text>{item.test_parameter}</Text>
-            </View>
-            <View style={styles.tbody}>
-              <Text>{item.price.toLocaleString()} </Text>
-            </View>
-            <View style={styles.tbody}>
-              <Text>{(item.price * item.quantity).toLocaleString()}</Text>
-            </View>
+        <View key={item.id} style={{ width: "100%", flexDirection: "row" }}>
+          <View style={styles.tbody}>
+            <Text>{item.quantity}</Text>
           </View>
-        </React.Fragment>
+          <View style={styles.tbody}>
+            <Text>No</Text>
+          </View>
+          <View style={[styles.tbody, styles.tbody2]}>
+            <Text>{item.test_parameter}</Text>
+          </View>
+          <View style={styles.tbodyRightAlign}>
+            <Text>{item.price.toLocaleString()} </Text>
+          </View>
+          <View style={styles.tbodyRightAlign}>
+            <Text>{(item.price * item.quantity).toLocaleString()}</Text>
+          </View>
+        </View>
       ))
     );
 
@@ -474,35 +432,43 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     !item.price || !item.quantity ? (
       <NoItems text="No item" />
     ) : (
-      <React.Fragment>
-        <View style={{ width: "100%", flexDirection: "row" }}>
-          <View style={styles.tbody}>
-            <Text>{item.quantity}</Text>
-          </View>
-          <View style={styles.tbody}>
-            <Text>No</Text>
-          </View>
-          <View style={[styles.tbody, styles.tbody2]}>
-            <Text>{item.activity}</Text>
-          </View>
-          <View style={styles.tbody}>
-            <Text>{item?.price?.toLocaleString()} </Text>
-          </View>
-          <View style={styles.tbody}>
-            <Text>
-              {((item?.price ?? 0) * (item?.quantity ?? 0)).toLocaleString()}
-            </Text>
-          </View>
+      <View style={{ width: "100%", flexDirection: "row" }}>
+        <View style={styles.tbody}>
+          <Text>{item.quantity}</Text>
         </View>
-      </React.Fragment>
+        <View style={styles.tbody}>
+          <Text>No</Text>
+        </View>
+        <View style={[styles.tbody, styles.tbody2]}>
+          <Text>{item.activity}</Text>
+        </View>
+        <View style={styles.tbodyRightAlign}>
+          <Text>{item?.price?.toLocaleString()} </Text>
+        </View>
+        <View style={styles.tbodyRightAlign}>
+          <Text>
+            {((item?.price ?? 0) * (item?.quantity ?? 0)).toLocaleString()}
+          </Text>
+        </View>
+      </View>
     );
 
   const TableTotal = () => (
-    <View style={{ width: "100%", flexDirection: "row" }}>
+    <View
+      style={{
+        width: "100%",
+        flexDirection: "row",
+        borderTopWidth: 1,
+        borderColor: "whitesmoke",
+      }}
+    >
       <View style={styles.total}>
         <Text></Text>
       </View>
       <View style={styles.total}>
+        <Text></Text>
+      </View>
+      <View style={[styles.total, styles.total2]}>
         <Text></Text>
       </View>
       <View style={styles.tbodyTotal}>
@@ -523,6 +489,9 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <View style={styles.total}>
         <Text></Text>
       </View>
+      <View style={[styles.total, styles.total2]}>
+        <Text></Text>
+      </View>
       <View style={styles.tbodyTotal}>
         <Text>VAT (18%)</Text>
       </View>
@@ -538,6 +507,9 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text></Text>
       </View>
       <View style={styles.total}>
+        <Text></Text>
+      </View>
+      <View style={[styles.total, styles.total2]}>
         <Text></Text>
       </View>
       <View style={styles.tbodyTotalWithVAT}>
@@ -557,6 +529,9 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <View style={styles.total}>
         <Text></Text>
       </View>
+      <View style={styles.total}>
+        <Text></Text>
+      </View>
       <View style={styles.tbodyTotalWithVAT}>
         <Text>TOTAL BILL</Text>
       </View>
@@ -568,23 +543,27 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
 
   const AmountInWords = () => (
     <View style={styles.titleContainer}>
-      <View style={styles.spaceBetween}>
-        <View>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          flexWrap: "wrap", // Ensures text wraps properly
+        }}
+      >
+        <View style={{ width: "48%" }}>
+          {" "}
+          {/* Limits each child to half the screen width */}
           <Text style={styles.heading}>Amount in words</Text>
-          <Text style={styles.quotationDetail}>
+          <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
             {numberToWords(totalBill + totalBill * 0.18)} Uganda Shillings Only
           </Text>
         </View>
-      </View>
-    </View>
-  );
 
-  const UpFrontPaymentNote = () => (
-    <View style={styles.titleContainer}>
-      <View style={styles.spaceBetween}>
-        <View>
-          <Text style={styles.heading}>Note</Text>
-          <Text style={styles.quotationDetail}>
+        <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>Payment Notes</Text>
+          <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
             We recommend 60% payment to be made before field mobilization. 40%
             on submission of the Final Report.
           </Text>
@@ -596,7 +575,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   const Payment = () => (
     <View style={styles.titleContainer}>
       <View style={styles.spaceBetween}>
-        <View>
+        <View style={{ width: "48%" }}>
           <Text style={styles.heading}>Bank Payment Details</Text>
           <Text style={styles.quotationDetail}>
             ACCOUNT NAME: GEOTECHNICAL ENGINEERING AND TECHNOLOGY LABORATORY
@@ -648,8 +627,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   return (
     <Page size="A4" style={styles.page}>
       <Header />
-      <Address />
-      <UserAddress />
+      <ClientAddressAndProject />
       <TableHead />
       <Subsection text="Mobilization & Demobilization costs" />
       <TableBodyWithSingleItem item={mobilization} />
@@ -663,7 +641,6 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       {isVATRequired() ? <VAT /> : null}
       {isVATRequired() ? <TotalBillWithVAT /> : <TotalBill />}
       <AmountInWords />
-      <UpFrontPaymentNote />
       <Payment />
       <Contact />
       <Text
