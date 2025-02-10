@@ -1,7 +1,7 @@
 "use client";
 
 // Core
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -30,13 +30,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { PhoneInput } from "@/components/ui/phone-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Formheader from "@/components/form-header";
 import FormSpacerWrapper from "@/components/form-spacer-wrapper";
-
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 
 interface ClientProfileFormProps {
@@ -59,15 +57,14 @@ export function ClientProfileForm({
     control,
     name: "clients",
     rules: {
-      required: true,
+      required: {
+        value: true,
+        message: "At least one client profile is required",
+      },
     },
   });
 
-  console.log(errors);
-
   const clientsArrayError = errors.clients?.root?.message as string;
-
-  console.log(clientsArrayError);
 
   return (
     <FormSpacerWrapper>
@@ -230,7 +227,7 @@ export function ClientProfileForm({
 
       {/* Add More Clients Button */}
 
-      <>
+      <div className="space-y-4">
         <Button
           type="button"
           variant="outline"
@@ -246,10 +243,10 @@ export function ClientProfileForm({
         </Button>
         {errors.clients && (
           <p className="text-sm font-medium text-destructive">
-            {errors.clients.root?.message as string}
+            {clientsArrayError}
           </p>
         )}
-      </>
+      </div>
     </FormSpacerWrapper>
   );
 }
