@@ -21,7 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      style={{ scrollBehavior: "smooth" }}
+      lang="en"
+      suppressHydrationWarning
+    >
       <body className={`${spaceGrotesk.className} antialiased`}>
         <ThemeProvider
           attribute="class"
