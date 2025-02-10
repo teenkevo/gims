@@ -11,11 +11,13 @@ const createProjectSchema = z.object({
     to: z.string().datetime(),
   }),
   priority: z.string(),
-  clientType: z.enum(["new", "existing"]),
-  existingClient: z.string().optional(),
-  newClientName: z.string().optional(),
-  newClientEmail: z.string().optional(),
-  newClientPhone: z.string().optional(),
+  clients: z.array(
+    z.object({
+      clientType: z.enum(["new", "existing"]),
+      existingClient: z.string().optional(),
+      newClientName: z.string().optional(),
+    })
+  ),
 });
 
 // Schema for updating project name
@@ -41,40 +43,42 @@ const deleteProjectSchema = z.object({
 const app = new Hono()
   // Create a new project
   .post("/create", zValidator("json", createProjectSchema), async (c) => {
-    const {
-      projectName,
-      dateRange,
-      priority,
-      clientType,
-      existingClient,
-      newClientEmail,
-      newClientName,
-      newClientPhone,
-    } = c.req.valid("json");
+    const { projectName, dateRange, priority, clients } = c.req.valid("json");
 
-    let clientId = existingClient;
-
-    if (clientType === "new") {
-      // Create the client
-      const client = await writeClient.create({
-        _type: "client",
-        name: newClientName,
-        email: newClientEmail,
-        phone: newClientPhone,
-      });
-      clientId = client._id;
-    }
+    let clientIds = await Promise.all(
+      clients.map(async (client) => {
+        if (client.clientType === "new") {
+          // Create the new client
+          const newClient = await writeClient.create({
+            _type: "client",
+            name: client.newClientName,
+          });
+          return newClient._id; // Return the new client's ID
+        } else {
+          // Use existing client ID
+          return client.existingClient;
+        }
+      })
+    );
 
     // Create the project
-    const project = await writeClient.create({
-      _type: "project",
-      name: projectName,
-      startDate: dateRange.from,
-      endDate: dateRange.to,
-      priority,
-      stagesCompleted: ["BILLING"], // Placeholder logic
-      client: { _type: "reference", _ref: clientId },
-    });
+    const project = await writeClient.create(
+      {
+        _type: "project",
+        name: projectName,
+        startDate: dateRange.from,
+        endDate: dateRange.to,
+        priority,
+        stagesCompleted: ["BILLING"], // Placeholder logic
+        clients: clientIds.map((clientId) => ({
+          _type: "reference",
+          _ref: clientId,
+        })), // Reference clients
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
 
     return c.json({ project });
   })

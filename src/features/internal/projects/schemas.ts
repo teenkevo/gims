@@ -25,13 +25,6 @@ export const clientDetailsSchema = z.object({
   }),
   existingClient: z.string().optional(),
   newClientName: z.string().min(1, "Required").optional().or(z.literal("")),
-  newClientEmail: z
-    .string()
-    .email({ message: "Enter valid email" })
-    .min(1, "Required")
-    .optional()
-    .or(z.literal("")),
-  newClientPhone: z.string().optional(),
 });
 
 export const billingFormSchema = z.object({
@@ -124,68 +117,44 @@ export const createPartialBillFormSchema = (
     );
 };
 
-// client side create project schema
+// Updated Create Project Schema: Supports multiple clients
 export const createProjectSchema = projectDetailsSchema
-  .merge(clientDetailsSchema)
-  // client profile refinement
+  .merge(
+    z.object({
+      clients: z
+        .array(clientDetailsSchema)
+        .min(1, "At least one client is required"),
+    })
+  )
   .refine(
     (data) => {
-      if (
-        data.clientType === "new" &&
-        (data.newClientName === undefined || data.newClientName === "")
-      ) {
-        // If clientType is new, make sure newClientName is defined
-        return false;
-      }
-      return true;
+      // console.log(data.clients);
+      return data.clients.every((client) => {
+        if (
+          client.clientType === "new" &&
+          (client.newClientName === undefined || client.newClientName === "")
+        ) {
+          return false;
+        }
+        return true;
+      });
     },
     {
-      message: "Please enter the client name",
-      path: ["newClientName"],
+      message: "Please enter the client name for new clients",
+      path: ["clients"],
     }
   )
   .refine(
     (data) => {
-      if (
-        data.clientType === "new" &&
-        (data.newClientEmail === undefined || data.newClientEmail === "")
-      ) {
-        // If clientType is new, make sure newClientEmail is defined
-        return false;
-      }
-      return true;
+      return data.clients.every((client) => {
+        if (client.clientType === "existing" && !client.existingClient) {
+          return false;
+        }
+        return true;
+      });
     },
     {
-      message: "Please enter the client email address",
-      path: ["newClientEmail"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (
-        data.clientType === "new" &&
-        (data.newClientPhone === undefined || data.newClientPhone === "")
-      ) {
-        // If clientType is new, make sure newClientPhone is defined
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Please enter the client phone number",
-      path: ["newClientPhone"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.clientType === "existing" && data.existingClient === undefined) {
-        // If clientType is exisiting, make sure existingClient is defined
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Please select a client",
-      path: ["existingClient"],
+      message: "Please select an existing client",
+      path: ["clients"],
     }
   );

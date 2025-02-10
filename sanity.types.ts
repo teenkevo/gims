@@ -39,6 +39,22 @@ export type SanityImageDimensions = {
   aspectRatio?: number;
 };
 
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
 export type SanityFileAsset = {
   _id: string;
   _type: "sanity.fileAsset";
@@ -59,99 +75,6 @@ export type SanityFileAsset = {
   path?: string;
   url?: string;
   source?: SanityAssetSourceData;
-};
-
-export type Geopoint = {
-  _type: "geopoint";
-  lat?: number;
-  lng?: number;
-  alt?: number;
-};
-
-export type Slug = {
-  _type: "slug";
-  current?: string;
-  source?: string;
-};
-
-export type Project = {
-  _id: string;
-  _type: "project";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name?: string;
-  priority?: "noPriority" | "urgent" | "high" | "medium" | "low";
-  startDate?: string;
-  endDate?: string;
-  client?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "client";
-  };
-  stagesCompleted?: Array<string>;
-};
-
-export type Client = {
-  _id: string;
-  _type: "client";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-};
-
-export type BlockContent = Array<
-  | {
-      children?: Array<{
-        marks?: Array<string>;
-        text?: string;
-        _type: "span";
-        _key: string;
-      }>;
-      style?: "normal" | "h1" | "h2" | "h3" | "h4" | "blockquote";
-      listItem?: "bullet";
-      markDefs?: Array<{
-        href?: string;
-        _type: "link";
-        _key: string;
-      }>;
-      level?: number;
-      _type: "block";
-      _key: string;
-    }
-  | {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-      };
-      hotspot?: SanityImageHotspot;
-      crop?: SanityImageCrop;
-      alt?: string;
-      _type: "image";
-      _key: string;
-    }
->;
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
 };
 
 export type SanityImageAsset = {
@@ -177,13 +100,6 @@ export type SanityImageAsset = {
   source?: SanityAssetSourceData;
 };
 
-export type SanityAssetSourceData = {
-  _type: "sanity.assetSourceData";
-  name?: string;
-  id?: string;
-  url?: string;
-};
-
 export type SanityImageMetadata = {
   _type: "sanity.imageMetadata";
   location?: Geopoint;
@@ -195,30 +111,103 @@ export type SanityImageMetadata = {
   isOpaque?: boolean;
 };
 
+export type Geopoint = {
+  _type: "geopoint";
+  lat?: number;
+  lng?: number;
+  alt?: number;
+};
+
+export type Slug = {
+  _type: "slug";
+  current?: string;
+  source?: string;
+};
+
+export type SanityAssetSourceData = {
+  _type: "sanity.assetSourceData";
+  name?: string;
+  id?: string;
+  url?: string;
+};
+
+export type ContactPerson = {
+  _id: string;
+  _type: "contactPerson";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  email?: string;
+  designation?: string;
+  phone?: string;
+  clients?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "client";
+  }>;
+};
+
+export type Client = {
+  _id: string;
+  _type: "client";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+};
+
+export type Project = {
+  _id: string;
+  _type: "project";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  priority?: "noPriority" | "urgent" | "high" | "medium" | "low";
+  startDate?: string;
+  endDate?: string;
+  clients?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "client";
+  }>;
+  contactPersons?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "contactPerson";
+  }>;
+  stagesCompleted?: Array<string>;
+};
+
 export type AllSanitySchemaTypes =
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
+  | SanityImageHotspot
+  | SanityImageCrop
   | SanityFileAsset
+  | SanityImageAsset
+  | SanityImageMetadata
   | Geopoint
   | Slug
-  | Project
-  | Client
-  | BlockContent
-  | SanityImageCrop
-  | SanityImageHotspot
-  | SanityImageAsset
   | SanityAssetSourceData
-  | SanityImageMetadata;
+  | ContactPerson
+  | Client
+  | Project;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ./src/sanity/lib/clients/getAllClients.ts
 // Variable: ALL_CLIENTS_QUERY
-// Query: *[_type == "client"] {            _id,             name,             email,             phone        }
+// Query: *[_type == "client"] {            _id,             name,        }
 export type ALL_CLIENTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
-  email: string | null;
-  phone: string | null;
 }>;
 
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
@@ -227,12 +216,7 @@ export type ALL_CLIENTS_QUERYResult = Array<{
 export type ALL_PROJECTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
-  client: {
-    _id: string;
-    name: string | null;
-    email: string | null;
-    phone: string | null;
-  } | null;
+  client: null;
   startDate: string | null;
   endDate: string | null;
   stagesCompleted: Array<string> | null;
@@ -244,12 +228,7 @@ export type ALL_PROJECTS_QUERYResult = Array<{
 export type PROJECT_BY_ID_QUERYResult = Array<{
   _id: string;
   name: string | null;
-  client: {
-    _id: string;
-    name: string | null;
-    email: string | null;
-    phone: string | null;
-  } | null;
+  client: null;
   startDate: string | null;
   endDate: string | null;
   stagesCompleted: Array<string> | null;
@@ -259,7 +238,7 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n        *[_type == "client"] {\n            _id, \n            name, \n            email, \n            phone\n        }\n  ': ALL_CLIENTS_QUERYResult;
+    '\n        *[_type == "client"] {\n            _id, \n            name,\n        }\n  ': ALL_CLIENTS_QUERYResult;
     '\n        *[_type == "project"] {\n          _id,\n          name,\n          client, \n          startDate, \n          endDate, \n          stagesCompleted, \n          client->{\n            _id, \n            name, \n            email, \n            phone\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name,\n          client, \n          startDate, \n          endDate, \n          stagesCompleted, \n          client->{\n            _id, \n            name, \n            email, \n            phone\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
   }

@@ -50,38 +50,34 @@ export function CreateProjectForm({
   });
 
   const onSubmit = async (data: z.infer<typeof createProjectSchema>) => {
-    // // Convert dates to ISO format
-    // const formattedData = {
-    //   ...data,
-    //   dateRange: {
-    //     from: data.dateRange.from.toISOString(),
-    //     to: data.dateRange.to.toISOString(),
-    //   },
-    //   clients: data.clients.map((client) => ({
-    //     clientType: client.clientType,
-    //     clientId:
-    //       client.clientType === "existing" ? client.existingClient : undefined,
-    //     newClient:
-    //       client.clientType === "new"
-    //         ? { name: client.newClientName }
-    //         : undefined,
-    //   })),
-    // };
+    // Convert dates to ISO format
+    const formattedData = {
+      ...data,
+      dateRange: {
+        from: data.dateRange.from.toISOString(),
+        to: data.dateRange.to.toISOString(),
+      },
+      clients: data.clients.map((client) => ({
+        clientType: client.clientType,
+        existingClient:
+          client.clientType === "existing" ? client.existingClient : undefined,
+        newClientName:
+          client.clientType === "new" ? client.newClientName : undefined,
+      })),
+    };
 
-    console.log(data);
-
-    // mutation.mutate(
-    //   { json: formattedData },
-    //   {
-    //     onSuccess: () => {
-    //       router.push(`/projects`);
-    //       toast.success("Project has been created");
-    //     },
-    //     onError: () => {
-    //       toast.error("Something went wrong");
-    //     },
-    //   }
-    // );
+    mutation.mutate(
+      { json: formattedData },
+      {
+        onSuccess: () => {
+          router.push(`/projects`);
+          toast.success("Project has been created");
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+        },
+      }
+    );
   };
 
   return (

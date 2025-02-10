@@ -86,7 +86,7 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
           validate: (value: DateRange | undefined) => {
             if (!value?.from && !value?.to) return "Date range is required";
             if (!value?.from || !value?.to)
-              return "Both start date and end date are required";
+              return "Both start and end dates are required";
             if (value.to < value.from)
               return "End date cannot be before start date";
             return true;
