@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/command";
 import { useState } from "react";
 import { Priority } from "../types";
+import { DateRange } from "react-day-picker";
 
 interface ProjectDetailsFormProps {
   isSubmitting: boolean;
@@ -59,6 +60,7 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
       <FormField
         control={form.control}
         name="projectName"
+        rules={{ required: "Project name is required" }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Enter Project name</FormLabel>
@@ -80,6 +82,16 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
       <FormField
         control={form.control}
         name="dateRange"
+        rules={{
+          validate: (value: DateRange | undefined) => {
+            if (!value?.from && !value?.to) return "Date range is required";
+            if (!value?.from || !value?.to)
+              return "Both start date and end date are required";
+            if (value.to < value.from)
+              return "End date cannot be before start date";
+            return true;
+          },
+        }}
         render={({ field }) => (
           <FormItem className="flex flex-col">
             <FormLabel>Start and End Date</FormLabel>
@@ -105,7 +117,7 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
                       format(field.value.from, "LLL dd, y")
                     )
                   ) : (
-                    <span>Pick a date</span>
+                    <span>Pick a date range</span>
                   )}
                 </Button>
               </PopoverTrigger>

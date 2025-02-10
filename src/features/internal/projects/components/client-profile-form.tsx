@@ -1,15 +1,15 @@
 "use client";
 
-// core
-import { useState } from "react";
-import { useFormContext } from "react-hook-form";
+// Core
+import { useEffect, useState } from "react";
+import { useFormContext, useFieldArray } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// icons
-import { Check, ChevronsUpDown } from "lucide-react"; // Assuming Loader2 is a spinner icon
+// Icons
+import { Check, ChevronsUpDown, Plus, Trash } from "lucide-react";
 
-// components
+// Components
 import {
   Command,
   CommandEmpty,
@@ -49,181 +49,207 @@ export function ClientProfileForm({
   clients,
 }: ClientProfileFormProps) {
   const [open, setOpen] = useState(false);
-  const form = useFormContext();
+  const {
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "clients",
+    rules: {
+      required: true,
+    },
+  });
+
+  console.log(errors);
+
+  const clientsArrayError = errors.clients?.root?.message as string;
+
+  console.log(clientsArrayError);
 
   return (
     <FormSpacerWrapper>
       <Formheader title="Create / Add Client Profile" step={2} />
-      <FormField
-        control={form.control}
-        name="clientType"
-        render={({ field }) => (
-          <FormItem className="space-y-3">
-            <FormLabel>How do you want to add the client?</FormLabel>
-            <FormControl>
-              <RadioGroup
-                disabled={isSubmitting}
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                className="flex flex-col space-y-1"
-              >
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="new" />
-                  </FormControl>
-                  <FormLabel className="font-normal">
-                    Create a new client
-                  </FormLabel>
+      {fields.map((clientField, index) => {
+        const clientType = watch(`clients.${index}.clientType`);
+        return (
+          <FormItem key={clientField.id} className="mb-4 border p-4 rounded-lg">
+            {/* Client Type Selection */}
+            <FormField
+              control={control}
+              name={`clients.${index}.clientType`}
+              render={({ field }) => (
+                <FormItem>
+                  <RadioGroup
+                    disabled={isSubmitting}
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-row space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="new" />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Create New Client
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="existing" />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Existing Client
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                  <FormMessage />
                 </FormItem>
-                <FormItem className="flex items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <RadioGroupItem value="existing" />
-                  </FormControl>
-                  <FormLabel className="font-normal">
-                    Choose from already existing clients
-                  </FormLabel>
-                </FormItem>
-              </RadioGroup>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+              )}
+            />
 
-      {form.watch("clientType") === "existing" ? (
-        <FormField
-          control={form.control}
-          name="existingClient"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Choose an existing client</FormLabel>
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      disabled={isSubmitting}
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "w-auto",
-                        "justify-between",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key="clientSelection"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex items-center justify-between w-full"
-                        >
-                          {field.value !== undefined
-                            ? clients?.find(
-                                (client) => client._id === field.value
-                              )?.name
-                            : "Select a client"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </motion.div>
-                      </AnimatePresence>
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Command>
-                    <CommandList>
-                      <CommandInput placeholder="Search client..." />
-                      <CommandEmpty>No client found.</CommandEmpty>
-                      <CommandGroup>
-                        {clients?.map((client) => (
-                          <CommandItem
+            {/* Existing Client Selection */}
+            {clientType === "existing" && (
+              <FormField
+                control={control}
+                name={`clients.${index}.existingClient`}
+                rules={{ required: "Please select an existing client" }}
+                render={({ field }) => (
+                  <FormItem className="py-4">
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
                             disabled={isSubmitting}
-                            value={client.name || ""}
-                            key={client._id}
-                            onSelect={() => {
-                              form.setValue("existingClient", client._id);
-                              setOpen(false);
-                            }}
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-auto justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
                           >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                client._id === field.value
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            {client.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ) : (
-        <>
-          <FormField
-            control={form.control}
-            name="newClientName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Client name</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled={isSubmitting}
-                    placeholder="e.g. Paragon Construction (SG) Limited"
-                    {...field}
-                  />
-                </FormControl>
+                            <AnimatePresence mode="wait">
+                              <motion.div
+                                key="clientSelection"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex items-center justify-between w-full"
+                              >
+                                {field.value
+                                  ? clients.find((c) => c._id === field.value)
+                                      ?.name
+                                  : "Select an existing client"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </motion.div>
+                            </AnimatePresence>
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
 
-                <FormMessage />
-              </FormItem>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Command>
+                          <CommandList>
+                            <CommandInput placeholder="Search client..." />
+                            <CommandEmpty>No client found.</CommandEmpty>
+                            <CommandGroup>
+                              {clients.map((client) => (
+                                <CommandItem
+                                  disabled={isSubmitting}
+                                  value={client.name || ""}
+                                  key={client._id}
+                                  onSelect={() => {
+                                    setValue(
+                                      `clients.${index}.existingClient`,
+                                      client._id
+                                    );
+                                    setOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      client._id === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {client.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
-          <FormField
-            control={form.control}
-            name="newClientEmail"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Client email</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled={isSubmitting}
-                    placeholder="e.g. contact@paragon.com"
-                    {...field}
-                  />
-                </FormControl>
 
-                <FormMessage />
-              </FormItem>
+            {/* New Client Fields */}
+            {clientType === "new" && (
+              <div className="flex flex-col py-4 space-y-4">
+                <FormField
+                  control={control}
+                  name={`clients.${index}.newClientName`}
+                  rules={{ required: "Client name is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isSubmitting}
+                          placeholder="e.g. Acme Corporation"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
-          />
-          <FormField
-            control={form.control}
-            name="newClientPhone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Client phone number</FormLabel>
-                <FormControl>
-                  <PhoneInput
-                    disabled={isSubmitting}
-                    placeholder="Enter a phone number e.g. +256 792 445002"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </>
-      )}
+
+            {/* Remove Client Button */}
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => remove(index)}
+              className="mt-3"
+            >
+              <Trash className="w-4 h-4 mr-2" /> Remove Client
+            </Button>
+          </FormItem>
+        );
+      })}
+
+      {/* Add More Clients Button */}
+
+      <>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            append({
+              clientType: "new",
+              existingClient: undefined,
+              newClientName: "",
+            })
+          }
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add a Client
+        </Button>
+        {errors.clients && (
+          <p className="text-sm font-medium text-destructive">
+            {errors.clients.root?.message as string}
+          </p>
+        )}
+      </>
     </FormSpacerWrapper>
   );
 }

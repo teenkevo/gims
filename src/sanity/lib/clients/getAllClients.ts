@@ -5,9 +5,7 @@ export const getAllClients = async () => {
   const ALL_CLIENTS_QUERY = defineQuery(`
         *[_type == "client"] {
             _id, 
-            name, 
-            email, 
-            phone
+            name,
         }
   `);
 

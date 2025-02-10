@@ -1,47 +1,34 @@
 "use client";
-// core
-import { useActionState, useState, startTransition } from "react";
+
+// Core
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Form, FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 
-// icons
+// Icons
 import { ArrowLeftCircle } from "lucide-react";
 
-// forms
+// Forms
 import { ProjectDetailsForm } from "./project-details-form";
 import { ClientProfileForm } from "./client-profile-form";
 
-// components
+// Components
 import { FormSubmitButton } from "@/components/form-submit-button";
 
-// form schema
+// Form schema
 import { createProjectSchema } from "@/features/internal/projects/schemas";
 
 import { useCreateProject } from "../api/use-create-project";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
-import React from "react";
+import { ScrollToFieldError } from "@/components/scroll-to-field-error";
 
 const formVariants = {
-  hidden: {
-    opacity: 0,
-    x: -50,
-  },
-  visible: {
-    opacity: 1,
-    x: 0,
-  },
-  exit: {
-    opacity: 0,
-    x: 50,
-    transition: {
-      ease: "easeOut",
-    },
-  },
+  hidden: { opacity: 0, x: -50 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 50, transition: { ease: "easeOut" } },
 };
 
 export function CreateProjectForm({
@@ -50,51 +37,51 @@ export function CreateProjectForm({
   clients: ALL_CLIENTS_QUERYResult;
 }) {
   const router = useRouter();
-
   const { mutation } = useCreateProject();
-
-  const [formData] = useState<z.infer<typeof createProjectSchema>>({
-    projectName: "",
-    dateRange: {
-      from: new Date(),
-      to: new Date(),
-    },
-    priority: "noPriority",
-    clientType: "new",
-    existingClient: undefined,
-    newClientName: "",
-    newClientEmail: "",
-    newClientPhone: undefined,
-  });
 
   const form = useForm<z.infer<typeof createProjectSchema>>({
     mode: "onChange",
-    reValidateMode: "onSubmit",
-    resolver: zodResolver(createProjectSchema),
-    defaultValues: formData,
+    defaultValues: {
+      projectName: "",
+      dateRange: { from: undefined, to: undefined },
+      priority: "noPriority",
+      clients: [],
+    },
   });
 
   const onSubmit = async (data: z.infer<typeof createProjectSchema>) => {
-    // Convert Date objects to ISO strings
-    const formattedData = {
-      ...data,
-      dateRange: {
-        from: data.dateRange.from.toISOString(),
-        to: data.dateRange.to.toISOString(),
-      },
-    };
-    mutation.mutate(
-      { json: formattedData },
-      {
-        onSuccess: () => {
-          router.push(`/projects`);
-          toast.success("Project has been created");
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-        },
-      }
-    );
+    // // Convert dates to ISO format
+    // const formattedData = {
+    //   ...data,
+    //   dateRange: {
+    //     from: data.dateRange.from.toISOString(),
+    //     to: data.dateRange.to.toISOString(),
+    //   },
+    //   clients: data.clients.map((client) => ({
+    //     clientType: client.clientType,
+    //     clientId:
+    //       client.clientType === "existing" ? client.existingClient : undefined,
+    //     newClient:
+    //       client.clientType === "new"
+    //         ? { name: client.newClientName }
+    //         : undefined,
+    //   })),
+    // };
+
+    console.log(data);
+
+    // mutation.mutate(
+    //   { json: formattedData },
+    //   {
+    //     onSuccess: () => {
+    //       router.push(`/projects`);
+    //       toast.success("Project has been created");
+    //     },
+    //     onError: () => {
+    //       toast.error("Something went wrong");
+    //     },
+    //   }
+    // );
   };
 
   return (
@@ -104,6 +91,7 @@ export function CreateProjectForm({
         Go back
       </Link>
       <FormProvider {...form}>
+        <ScrollToFieldError />
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <motion.div
             variants={formVariants}
