@@ -5,16 +5,13 @@ export const getProjectById = async (projectId: string) => {
   const PROJECT_BY_ID_QUERY = defineQuery(`
         *[_type == "project" && _id == $projectId] {
           _id,
-          name,
-          client, 
+          name, 
           startDate, 
           endDate, 
           stagesCompleted, 
-          client->{
+          clients[]->{
             _id, 
-            name, 
-            email, 
-            phone
+            name,
           }
         }
   `);

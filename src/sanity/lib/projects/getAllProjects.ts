@@ -6,15 +6,12 @@ export const getAllProjects = async () => {
         *[_type == "project"] {
           _id,
           name,
-          client, 
           startDate, 
           endDate, 
           stagesCompleted, 
-          client->{
+          clients[]->{
             _id, 
-            name, 
-            email, 
-            phone
+            name,
           }
         }
   `);
