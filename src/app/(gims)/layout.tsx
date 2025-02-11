@@ -38,7 +38,7 @@ export default function Layout({ children }: LayoutProps) {
             />
           </div>
         </header>
-        <main className="p-4 md:p-10">{children}</main>
+        <main className="p-4 md:pl-10 md:pr-10 md:pt-4">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -29,11 +29,13 @@ import ProjectStage from "./project-stage";
 import { QuotationOptions } from "../../billing/components/quotation-options";
 import SampleReceiptVerification from "./sample-receipt-verifications";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import ClientNameForm from "./client-name-form";
+import { ContactTable } from "./contact-table";
 
 export default function ProjectDetails(
   project: PROJECT_BY_ID_QUERYResult[number]
 ) {
-  const { _id, name, client, startDate, endDate } = project;
+  const { _id, name, clients, startDate, endDate } = project;
 
   // billing services table states
   const [selectedLabTests, setSelectedLabTests] = useState<Service[]>([]);
@@ -58,19 +60,11 @@ export default function ProjectDetails(
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
-
-      <div className="flex justify-between items-start mb-4">
-        <div className="space-y-3 mb-6">
-          <h1 className="text-2xl md:text-3xl font-semibold">{name}</h1>
-          <p className="text-base md:text-lg text-muted-foreground tracking-tight">
-            {client?.name}
-          </p>
-        </div>
-      </div>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">{name}</h1>
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details">Project</TabsTrigger>
-          <TabsTrigger value="client">Client</TabsTrigger>
+          <TabsTrigger value="client">Client(s)</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
           <TabsTrigger
@@ -128,44 +122,21 @@ export default function ProjectDetails(
         </TabsContent>
         <TabsContent value="client">
           <div className="space-y-8 my-10">
-            <InfoCard
-              title="Client ID"
-              description="Used when interacting with GIMS' services and the API"
-              learnMoreLink="#"
-              savable={false}
-            >
-              <CopyableInput inputValue={client?._id || ""} />
-            </InfoCard>
-            <ProjectUpdateClientNameForm
-              title="Client Name"
-              description="Used to identify the client on the dashboard"
-              learnMoreLink="#"
-              learnMoreText="Save"
-              savable
-              fieldName="clientName"
-              initialValue={client?.name || ""}
-              clientId={client?._id || ""}
-            />
-            <ProjectUpdateClientEmailForm
-              title="Client Email"
-              description="Used to communicate with the client and send them updates about their projects"
-              learnMoreLink="#"
-              learnMoreText="Save"
-              savable
-              fieldName="clientEmail"
-              initialValue={client?.email || ""}
-              clientId={client?._id || ""}
-            />
-            <ProjectUpdateClientPhoneForm
-              title="Client Phone"
-              description="Used to communicate with the client over phone and SMS"
-              learnMoreLink="#"
-              learnMoreText="Save"
-              savable
-              fieldName="clientPhone"
-              initialValue={client?.phone || ""}
-              clientId={client?._id || ""}
-            />
+            {clients?.map((client, key) => (
+              <Card className="border rounded-lg p-5" key={client._id}>
+                <p className="text-xl font-bold mb-4">
+                  Client {clients.length > 1 ? key + 1 : ""}{" "}
+                </p>
+                <ClientNameForm
+                  title="Client Name"
+                  savable={true}
+                  fieldName="name"
+                  initialValue={client?.name || ""}
+                  clientId={client?._id || ""}
+                />
+                <ContactTable contacts={[]} isSubmitting={false} />
+              </Card>
+            ))}
           </div>
         </TabsContent>
         <TabsContent value="billing">

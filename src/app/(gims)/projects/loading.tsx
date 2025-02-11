@@ -18,6 +18,7 @@ const InfoRowSkeleton = () => (
 export default function Loading() {
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+      <Skeleton className=" h-8 w-32" />
       {/* Tabs Skeleton */}
       <Tabs defaultValue="in-progress">
         <div className="flex items-center">
@@ -41,7 +42,7 @@ export default function Loading() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 gap-4 mt-5 lg:grid-cols-2"
+            className="grid grid-cols-1 gap-4 mt-5 lg:grid-cols-1"
           >
             {Array.from({ length: 4 }).map((_, index) => (
               <motion.div

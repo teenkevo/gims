@@ -1,12 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { getCurrentStageIndex, possibleStages } from "../constants";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Button } from "@/components/ui/button";
-import { ALL_PROJECTS_QUERYResult, Project } from "../../../../../sanity.types";
+import { HoverCard, HoverCardTrigger } from "@/components/ui/hover-card";
+import { ALL_PROJECTS_QUERYResult } from "../../../../../sanity.types";
 
 export function Stage({
   stage,

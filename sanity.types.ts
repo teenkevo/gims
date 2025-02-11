@@ -210,28 +210,45 @@ export type ALL_CLIENTS_QUERYResult = Array<{
   name: string | null;
 }>;
 
+// Source: ./src/sanity/lib/clients/getAllContacts.ts
+// Variable: ALL_CONTACTS_QUERY
+// Query: *[_type == "contactPerson"] {            _id,             name,            email,            designation,            phone,        }
+export type ALL_CONTACTS_QUERYResult = Array<{
+  _id: string;
+  name: string | null;
+  email: string | null;
+  designation: string | null;
+  phone: string | null;
+}>;
+
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
 // Variable: ALL_PROJECTS_QUERY
-// Query: *[_type == "project"] {          _id,          name,          client,           startDate,           endDate,           stagesCompleted,           client->{            _id,             name,             email,             phone          }        }
+// Query: *[_type == "project"] {          _id,          name,          startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,          }        }
 export type ALL_PROJECTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
-  client: null;
   startDate: string | null;
   endDate: string | null;
   stagesCompleted: Array<string> | null;
+  clients: Array<{
+    _id: string;
+    name: string | null;
+  }> | null;
 }>;
 
 // Source: ./src/sanity/lib/projects/getProjectById.ts
 // Variable: PROJECT_BY_ID_QUERY
-// Query: *[_type == "project" && _id == $projectId] {          _id,          name,          client,           startDate,           endDate,           stagesCompleted,           client->{            _id,             name,             email,             phone          }        }
+// Query: *[_type == "project" && _id == $projectId] {          _id,          name,           startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,          }        }
 export type PROJECT_BY_ID_QUERYResult = Array<{
   _id: string;
   name: string | null;
-  client: null;
   startDate: string | null;
   endDate: string | null;
   stagesCompleted: Array<string> | null;
+  clients: Array<{
+    _id: string;
+    name: string | null;
+  }> | null;
 }>;
 
 // Query TypeMap
@@ -239,7 +256,8 @@ import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
     '\n        *[_type == "client"] {\n            _id, \n            name,\n        }\n  ': ALL_CLIENTS_QUERYResult;
-    '\n        *[_type == "project"] {\n          _id,\n          name,\n          client, \n          startDate, \n          endDate, \n          stagesCompleted, \n          client->{\n            _id, \n            name, \n            email, \n            phone\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
-    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name,\n          client, \n          startDate, \n          endDate, \n          stagesCompleted, \n          client->{\n            _id, \n            name, \n            email, \n            phone\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
+    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n        }\n  ': ALL_CONTACTS_QUERYResult;
+    '\n        *[_type == "project"] {\n          _id,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
+    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
   }
 }
