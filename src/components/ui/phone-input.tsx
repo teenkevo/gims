@@ -95,7 +95,8 @@ const CountrySelect = ({
   );
 
   return (
-    <Popover>
+    // FIX: Modal does not scroll unless it is modal={true}
+    <Popover modal={true}>
       <PopoverTrigger asChild>
         <Button
           type="button"
