@@ -25,25 +25,35 @@ function InfoBlock({
   return (
     <div>
       <p className="text-xs font-normal mb-1 text-muted-foreground">{label}</p>
-      <div className="font-normal text-sm">{value}</div>
+      <div className="font-medium text-sm">{value}</div>
     </div>
   );
 }
 
 export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
-  const { _id, name, client, startDate, endDate } = project;
+  const { _id, name, clients, startDate, endDate } = project;
+  console.log(clients);
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-4">
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold tracking-tight">{name}</h2>
-          <p className="text-sm text-muted-foreground tracking-tight">
-            {client?.name}
-          </p>
+      <CardHeader className="flex flex-row items-center gap-4 rounded-t-xl bg-sidebar-primary-foreground py-2">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold tracking-tight text-white">
+            {name}
+          </h2>
         </div>
       </CardHeader>
       <CardContent>
+        {/* TODO: Add hyperlinks on client names redirecting to client details page */}
+        <div className="my-5">
+          <p className="text-xs font-normal mb-1 text-muted-foreground">
+            Client(s)
+          </p>
+          <div className="font-medium text-sm">
+            {clients?.map((client) => client.name).join("  |  ")}
+          </div>
+        </div>
+        <p className="text-sm my-5 tracking-tight"></p>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
           {/* Using the reusable InfoBlock component */}
           <InfoBlock

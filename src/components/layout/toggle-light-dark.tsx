@@ -26,7 +26,7 @@ export function ToggleLightDark() {
       onClick={toggleTheme}
     >
       {theme === "light" ? (
-        <MoonIcon className="h-[1.2rem] text-black w-[1.2rem] transition-all" />
+        <MoonIcon className="h-[1.2rem] text-blue-500 w-[1.2rem] transition-all" />
       ) : (
         <SunIcon className="h-[1.2rem] text-yellow-400 w-[1.2rem] transition-all" />
       )}
