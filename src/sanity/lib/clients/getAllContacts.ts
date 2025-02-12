@@ -9,6 +9,10 @@ export const getAllContacts = async () => {
             email,
             designation,
             phone,
+            clients[]->{
+              _id,
+            },
+
         }
   `);
 

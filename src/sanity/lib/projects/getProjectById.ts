@@ -9,6 +9,16 @@ export const getProjectById = async (projectId: string) => {
           startDate, 
           endDate, 
           stagesCompleted, 
+          contactPersons[]->{
+            _id,
+            name,
+            email,
+            phone,
+            designation,
+            clients[]->{
+              _id,
+            },
+          },
           clients[]->{
             _id, 
             name,
