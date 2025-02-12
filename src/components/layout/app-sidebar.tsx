@@ -38,8 +38,8 @@ import { ToggleLightDark } from "./toggle-light-dark";
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Kevin Mugumya",
+    email: "luwembamugumya@gmail.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
