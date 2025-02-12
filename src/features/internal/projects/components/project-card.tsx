@@ -32,7 +32,6 @@ function InfoBlock({
 
 export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
   const { _id, name, clients, startDate, endDate } = project;
-  console.log(clients);
 
   return (
     <Card>
@@ -47,7 +46,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
         {/* TODO: Add hyperlinks on client names redirecting to client details page */}
         <div className="my-5">
           <p className="text-xs font-normal mb-1 text-muted-foreground">
-            Client(s)
+            Client
           </p>
           <div className="font-medium text-sm">
             {clients?.map((client) => client.name).join("  |  ")}

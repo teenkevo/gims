@@ -22,20 +22,24 @@ import { InfoCard } from "@/components/info-card";
 import CopyableInput from "./copyable-input";
 import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
-import ProjectUpdateClientNameForm from "./project-update-client-name-form";
-import ProjectUpdateClientEmailForm from "./project-update-client-email-form";
-import ProjectUpdateClientPhoneForm from "./project-update-client-phone-form";
 import ProjectStage from "./project-stage";
 import { QuotationOptions } from "../../billing/components/quotation-options";
 import SampleReceiptVerification from "./sample-receipt-verifications";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import {
+  ALL_CONTACTS_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
 
-export default function ProjectDetails(
-  project: PROJECT_BY_ID_QUERYResult[number]
-) {
-  const { _id, name, clients, startDate, endDate } = project;
+export default function ProjectDetails({
+  project,
+  existingContacts,
+}: {
+  project: PROJECT_BY_ID_QUERYResult[number];
+  existingContacts: ALL_CONTACTS_QUERYResult;
+}) {
+  const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
   // billing services table states
   const [selectedLabTests, setSelectedLabTests] = useState<Service[]>([]);
@@ -64,7 +68,7 @@ export default function ProjectDetails(
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details">Project</TabsTrigger>
-          <TabsTrigger value="client">Client(s)</TabsTrigger>
+          <TabsTrigger value="client">Client</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
           <TabsTrigger
@@ -122,21 +126,32 @@ export default function ProjectDetails(
         </TabsContent>
         <TabsContent value="client">
           <div className="space-y-8 my-10">
-            {clients?.map((client, key) => (
-              <Card className="border rounded-lg p-5" key={client._id}>
-                <p className="text-xl font-bold mb-4">
-                  Client {clients.length > 1 ? key + 1 : ""}{" "}
-                </p>
-                <ClientNameForm
-                  title="Client Name"
-                  savable={true}
-                  fieldName="name"
-                  initialValue={client?.name || ""}
-                  clientId={client?._id || ""}
-                />
-                <ContactTable contacts={[]} isSubmitting={false} />
-              </Card>
-            ))}
+            {/* Map through clients and filter contacts by client id */}
+            {clients?.map((client, key) => {
+              const clientContacts = contactPersons?.filter((contact) =>
+                contact.clients?.some((c) => c._id === client?._id)
+              );
+              return (
+                <Card className="border rounded-lg p-5" key={client._id}>
+                  <p className="text-xl font-bold mb-4">
+                    Client {clients.length > 1 ? key + 1 : ""}{" "}
+                  </p>
+                  <ClientNameForm
+                    title="Client Name"
+                    savable={true}
+                    fieldName="name"
+                    initialValue={client?.name || ""}
+                    clientId={client?._id || ""}
+                  />
+                  <ContactTable
+                    projectId={_id || ""}
+                    clientId={client?._id || ""}
+                    projectContacts={clientContacts || []}
+                    existingContacts={existingContacts}
+                  />
+                </Card>
+              );
+            })}
           </div>
         </TabsContent>
         <TabsContent value="billing">

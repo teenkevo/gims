@@ -15,64 +15,64 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ExternalLink, PlusCircleIcon } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { CreateContactDialog } from "./create-contact-dialog";
 import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import { RemoveContactFromProject } from "./remove-contact-from-project";
+import { motion } from "framer-motion";
 
-type Contact = {
-  name: string;
-  email: string;
-  phoneNumber: string;
-  designation: string;
-};
-const defaultData: Contact[] = [
-  {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phoneNumber: "+1 (555) 123-4567",
-    designation: "Software Engineer",
-  },
-  {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phoneNumber: "+1 (555) 987-6543",
-    designation: "Product Manager",
-  },
-];
-
-const columnHelper = createColumnHelper<Contact>();
-
-const columns = [
-  columnHelper.accessor("name", {
-    cell: (info) => <span>{info.getValue()}</span>,
-    header: () => <span>Name</span>,
-  }),
-  columnHelper.accessor("email", {
-    cell: (info) => <span>{info.getValue()}</span>,
-    header: () => <span>Email</span>,
-  }),
-  columnHelper.accessor("phoneNumber", {
-    cell: (info) => info.getValue(),
-    header: () => <span>Phone Number</span>,
-  }),
-  columnHelper.accessor("designation", {
-    cell: (info) => <span className="italic">{info.getValue()}</span>,
-    header: () => <span>Designation</span>,
-  }),
-];
+// Extend the type to include actions
+type ExtendedContact = ALL_CONTACTS_QUERYResult[number] & { actions?: string };
 
 export function ContactTable({
-  contacts,
-  isSubmitting,
+  projectId,
+  clientId,
+  projectContacts,
+  existingContacts,
 }: {
-  contacts: ALL_CONTACTS_QUERYResult;
-  isSubmitting: boolean;
+  projectId: string;
+  clientId: string;
+  projectContacts: ALL_CONTACTS_QUERYResult;
+  existingContacts: ALL_CONTACTS_QUERYResult;
 }) {
-  const [data] = React.useState(() => [...defaultData]);
+  // Update the column helper to use the new type
+  const columnHelper = createColumnHelper<ExtendedContact>();
+
+  const columns = [
+    columnHelper.accessor("name", {
+      cell: (info) => (
+        <span className="max-w-[300px] truncate">{info.getValue()}</span>
+      ),
+      header: () => <span>Name</span>,
+    }),
+    columnHelper.accessor("email", {
+      cell: (info) => <span>{info.getValue()}</span>,
+      header: () => <span>Email</span>,
+    }),
+    columnHelper.accessor("phone", {
+      cell: (info) => info.getValue(),
+      header: () => <span>Phone Number</span>,
+    }),
+    columnHelper.accessor("designation", {
+      cell: (info) => <span className="italic">{info.getValue()}</span>,
+      header: () => <span>Designation</span>,
+    }),
+    columnHelper.accessor("actions", {
+      cell: (info) => (
+        <div className="flex items-center gap-2">
+          <RemoveContactFromProject
+            email={info.row.original.email!}
+            projectId={projectId}
+            contactId={info.row.original._id}
+          />
+        </div>
+      ),
+      header: () => <span>Actions</span>,
+    }),
+  ];
   const table = useReactTable({
-    data,
+    data: projectContacts,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -81,12 +81,17 @@ export function ContactTable({
     <div className="my-6 space-y-4">
       <div className="flex justify-between items-end">
         <p className="text-lg font-medium">Contact Persons</p>
-        <CreateContactDialog contacts={contacts} isSubmitting={isSubmitting} />
+        <CreateContactDialog
+          projectId={projectId}
+          clientId={clientId}
+          existingContacts={existingContacts}
+          projectContacts={projectContacts}
+        />
       </div>
 
-      <div className="rounded-md border">
+      <div className="border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -105,7 +110,14 @@ export function ContactTable({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <motion.tr
+                  key={row.id}
+                  initial={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="border-b"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -114,7 +126,7 @@ export function ContactTable({
                       )}
                     </TableCell>
                   ))}
-                </TableRow>
+                </motion.tr>
               ))
             ) : (
               <TableRow>
@@ -122,7 +134,7 @@ export function ContactTable({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No contact persons present.
                 </TableCell>
               </TableRow>
             )}

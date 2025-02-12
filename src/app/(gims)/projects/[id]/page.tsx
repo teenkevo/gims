@@ -12,8 +12,12 @@ export default async function ProjectPage({
 }) {
   const { id } = await params;
   const projectArray = await getProjectById(id);
+  const existingContacts = await getAllContacts();
   const project = projectArray[0];
-  const contacts = await getAllContacts();
 
-  return project ? <ProjectDetails {...project} /> : <NoProjectPlaceholder />;
+  return project ? (
+    <ProjectDetails project={project} existingContacts={existingContacts} />
+  ) : (
+    <NoProjectPlaceholder />
+  );
 }

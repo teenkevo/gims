@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { toast } from "sonner";
+
+// Components
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -23,7 +25,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronsUpDown, Loader, PlusCircleIcon } from "lucide-react";
+import {
+  ArrowRightCircle,
+  Check,
+  ChevronsUpDown,
+  PlusCircleIcon,
+} from "lucide-react";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { RadioGroupItem } from "@/components/ui/radio-group";
@@ -38,66 +45,189 @@ import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
 import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import { useCreateContact } from "@/features/customer/clients/api/use-create-contact";
+import { ButtonLoading } from "@/components/button-loading";
+import { Badge } from "@/components/ui/badge";
 
-const formSchema = z.object({
-  contactType: z.enum(["new", "existing"], {
-    required_error: "Required",
-  }),
-  existingContact: z.string().optional(),
-  name: z.string().min(1, "Required").optional().or(z.literal("")),
-  email: z
-    .string()
-    .email({ message: "Enter valid email" })
-    .min(1, "Required")
-    .optional()
-    .or(z.literal("")),
-  phone: z
-    .string()
-    .refine(isValidPhoneNumber, {
-      message: "Please enter a valid phone number",
-    })
-    .optional(),
-  designation: z.string().min(1, "Required").optional().or(z.literal("")),
-});
+const formSchema = z
+  .object({
+    contactType: z.enum(["new", "existing"], {
+      required_error: "Required",
+    }),
+    existingContact: z.string().optional(),
+    name: z.string().min(1, "Required").optional().or(z.literal("")),
+    email: z
+      .string()
+      .email({ message: "Enter valid email" })
+      .min(1, "Required")
+      .optional()
+      .or(z.literal("")),
+    phone: z
+      .string()
+      .refine(isValidPhoneNumber, {
+        message: "Please enter a valid phone number",
+      })
+      .optional(),
+    designation: z.string().min(1, "Required").optional().or(z.literal("")),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.contactType === "new" &&
+        (data.name === undefined || data.name === "")
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please enter the contact name",
+      path: ["name"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.contactType === "new" &&
+        (data.email === undefined || data.email === "")
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please enter the contact email address",
+      path: ["email"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.contactType === "new" &&
+        (data.phone === undefined || data.phone === "")
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please enter the contact phone number",
+      path: ["phone"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.contactType === "existing" &&
+        data.existingContact === undefined
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please select a contact",
+      path: ["existingContact"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.contactType === "new" &&
+        (data.designation === undefined || data.designation === "")
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please enter the contact designation",
+      path: ["designation"],
+    }
+  );
 
 export function CreateContactDialog({
-  isSubmitting,
-  contacts = [],
+  projectId,
+  clientId,
+  existingContacts,
+  projectContacts,
 }: {
-  isSubmitting: boolean;
-  contacts: ALL_CONTACTS_QUERYResult;
+  projectId: string;
+  clientId: string;
+  existingContacts: ALL_CONTACTS_QUERYResult;
+  projectContacts: ALL_CONTACTS_QUERYResult;
 }) {
   const [open, setOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { mutation } = useCreateContact();
 
   const form = useForm<z.infer<typeof formSchema>>({
+    mode: "onChange",
     resolver: zodResolver(formSchema),
     defaultValues: {
       contactType: "new",
       existingContact: undefined,
       name: "",
       email: "",
-      phone: "",
+      phone: undefined,
       designation: "",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    setOpen(false);
-    form.reset();
+    setIsSubmitting(true);
+    const formattedData = {
+      projectId,
+      clientId,
+      contactType: values.contactType,
+      existingContact:
+        values.contactType === "existing" ? values.existingContact : undefined,
+      name: values.contactType === "new" ? values.name : undefined,
+      email: values.contactType === "new" ? values.email : undefined,
+      phone: values.contactType === "new" ? values.phone : undefined,
+      designation:
+        values.contactType === "new" ? values.designation : undefined,
+    };
+
+    mutation.mutate(
+      { json: formattedData },
+      {
+        onSuccess: () => {
+          toast.success("Contact has been added to the project");
+          setIsSubmitting(false);
+          setOpen(false);
+          form.reset();
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+          setIsSubmitting(false);
+          setOpen(false);
+          form.reset();
+        },
+      }
+    );
   }
 
-  console.log(form.watch("contactType"));
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (isOpen) {
+          form.reset(); // Reset the form when the dialog opens
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline">
           <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
           Add Contact
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Contact</DialogTitle>
         </DialogHeader>
@@ -144,7 +274,7 @@ export function CreateContactDialog({
                 name="existingContact"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <Popover>
+                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -167,7 +297,7 @@ export function CreateContactDialog({
                                 className="flex items-center justify-between w-full"
                               >
                                 {field.value !== undefined
-                                  ? contacts?.find(
+                                  ? existingContacts?.find(
                                       (contact) => contact._id === field.value
                                     )?.name
                                   : "Select an existing contact"}
@@ -184,29 +314,47 @@ export function CreateContactDialog({
                             <CommandInput placeholder="Search contact..." />
                             <CommandEmpty>No contact found.</CommandEmpty>
                             <CommandGroup>
-                              {contacts?.map((contact) => (
-                                <CommandItem
-                                  disabled={isSubmitting}
-                                  value={contact.name || ""}
-                                  key={contact._id}
-                                  onSelect={() => {
-                                    form.setValue(
-                                      "existingContact",
-                                      contact._id
-                                    );
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      contact._id === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {contact.name}
-                                </CommandItem>
-                              ))}
+                              {existingContacts
+                                ?.filter((contact) =>
+                                  contact.clients?.some(
+                                    (client) => client._id === clientId
+                                  )
+                                )
+                                .map((contact) => {
+                                  const isAdded = projectContacts.some(
+                                    (projectContact) =>
+                                      projectContact._id === contact._id
+                                  );
+                                  return (
+                                    <CommandItem
+                                      disabled={isSubmitting || isAdded}
+                                      value={contact.name || ""}
+                                      key={contact._id}
+                                      onSelect={() => {
+                                        form.setValue(
+                                          "existingContact",
+                                          contact._id
+                                        );
+                                        setPopoverOpen(false);
+                                      }}
+                                    >
+                                      {contact.name}
+                                      {isAdded && (
+                                        <Badge variant="secondary">
+                                          Already added
+                                        </Badge>
+                                      )}
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          contact._id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  );
+                                })}
                             </CommandGroup>
                           </CommandList>
                         </Command>
@@ -263,6 +411,7 @@ export function CreateContactDialog({
                       <FormLabel>Phone number</FormLabel>
                       <FormControl>
                         <PhoneInput
+                          defaultCountry="UG"
                           disabled={isSubmitting}
                           placeholder="Enter a phone number e.g. +256 792 445002"
                           {...field}
@@ -293,8 +442,19 @@ export function CreateContactDialog({
               </>
             )}
 
-            <DialogFooter>
-              <Button type="submit">Add contact to project</Button>
+            <DialogFooter className="py-2">
+              <div className="flex items-center">
+                <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
+                  {isSubmitting ? (
+                    <ButtonLoading />
+                  ) : (
+                    <Button type="submit" variant="default">
+                      Add contact to project
+                      <ArrowRightCircle className="ml-5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             </DialogFooter>
           </form>
         </Form>

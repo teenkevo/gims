@@ -157,6 +157,13 @@ export type Client = {
   _updatedAt: string;
   _rev: string;
   name?: string;
+  projects?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "project";
+  }>;
 };
 
 export type Project = {
@@ -212,13 +219,16 @@ export type ALL_CLIENTS_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/clients/getAllContacts.ts
 // Variable: ALL_CONTACTS_QUERY
-// Query: *[_type == "contactPerson"] {            _id,             name,            email,            designation,            phone,        }
+// Query: *[_type == "contactPerson"] {            _id,             name,            email,            designation,            phone,            clients[]->{              _id,            },        }
 export type ALL_CONTACTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
   email: string | null;
   designation: string | null;
   phone: string | null;
+  clients: Array<{
+    _id: string;
+  }> | null;
 }>;
 
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
@@ -238,13 +248,23 @@ export type ALL_PROJECTS_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/projects/getProjectById.ts
 // Variable: PROJECT_BY_ID_QUERY
-// Query: *[_type == "project" && _id == $projectId] {          _id,          name,           startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,          }        }
+// Query: *[_type == "project" && _id == $projectId] {          _id,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            clients[]->{              _id,            },          },          clients[]->{            _id,             name,          }        }
 export type PROJECT_BY_ID_QUERYResult = Array<{
   _id: string;
   name: string | null;
   startDate: string | null;
   endDate: string | null;
   stagesCompleted: Array<string> | null;
+  contactPersons: Array<{
+    _id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    designation: string | null;
+    clients: Array<{
+      _id: string;
+    }> | null;
+  }> | null;
   clients: Array<{
     _id: string;
     name: string | null;
@@ -256,8 +276,8 @@ import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
     '\n        *[_type == "client"] {\n            _id, \n            name,\n        }\n  ': ALL_CLIENTS_QUERYResult;
-    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n        }\n  ': ALL_CONTACTS_QUERYResult;
+    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            clients[]->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
     '\n        *[_type == "project"] {\n          _id,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
-    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
+    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
   }
 }
