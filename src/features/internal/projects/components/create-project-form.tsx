@@ -24,6 +24,7 @@ import { createProjectSchema } from "@/features/internal/projects/schemas";
 import { useCreateProject } from "../api/use-create-project";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
+import { useTransition } from "react";
 
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
@@ -38,6 +39,7 @@ export function CreateProjectForm({
 }) {
   const router = useRouter();
   const { mutation } = useCreateProject();
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof createProjectSchema>>({
     mode: "onChange",
@@ -66,18 +68,18 @@ export function CreateProjectForm({
       })),
     };
 
-    mutation.mutate(
-      { json: formattedData },
-      {
-        onSuccess: () => {
+    startTransition(async () => {
+      try {
+        const response = await mutation.mutateAsync({ json: formattedData });
+
+        if (response) {
           router.push(`/projects`);
           toast.success("Project has been created");
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-        },
+        }
+      } catch (error) {
+        toast.error("Something went wrong");
       }
-    );
+    });
   };
 
   return (
@@ -95,16 +97,10 @@ export function CreateProjectForm({
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={mutation.isPending} />
-            <ClientProfileForm
-              clients={clients}
-              isSubmitting={mutation.isPending}
-            />
+            <ProjectDetailsForm isSubmitting={isPending} />
+            <ClientProfileForm clients={clients} isSubmitting={isPending} />
           </motion.div>
-          <FormSubmitButton
-            text="Create Project"
-            isSubmitting={mutation.isPending}
-          />
+          <FormSubmitButton text="Create Project" isSubmitting={isPending} />
         </form>
       </FormProvider>
     </>
