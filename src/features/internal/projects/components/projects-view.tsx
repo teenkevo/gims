@@ -40,7 +40,7 @@ export function ProjectsView({
         </div>
         <TabsContent value="in-progress">
           {projects.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 mt-5 lg:grid-cols-1">
+            <div className="grid grid-cols-1 gap-6 mt-5 lg:grid-cols-2">
               {projects.map((project) => (
                 <ProjectCard key={project._id} {...project} />
               ))}

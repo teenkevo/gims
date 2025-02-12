@@ -42,7 +42,7 @@ export default function Loading() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 gap-4 mt-5 lg:grid-cols-1"
+            className="grid grid-cols-1 gap-4 mt-5 lg:grid-cols-2"
           >
             {Array.from({ length: 4 }).map((_, index) => (
               <motion.div
