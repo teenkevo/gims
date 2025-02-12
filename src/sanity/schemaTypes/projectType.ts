@@ -15,6 +15,7 @@ export const projectType = defineType({
       name: "priority",
       title: "Priority",
       type: "string",
+      initialValue: "noPriority",
       options: {
         list: [
           {
@@ -49,9 +50,12 @@ export const projectType = defineType({
     }),
     defineField({
       name: "endDate",
-      title: "Start Date",
+      title: "End Date",
       type: "datetime",
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) =>
+        Rule.required()
+          .min(Rule.valueOfField("startDate"))
+          .error("End date must be after start date"),
     }),
     defineField({
       name: "clients",
