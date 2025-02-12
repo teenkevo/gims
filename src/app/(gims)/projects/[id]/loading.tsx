@@ -46,7 +46,7 @@ export default function Loading() {
         Go back
       </Link>
 
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -55,7 +55,6 @@ export default function Loading() {
           className="space-y-3 mb-6"
         >
           <Skeleton className="h-7 w-48 md:h-9 md:w-64" />
-          <Skeleton className="h-6 w-32 md:h-7 md:w-40" />
         </motion.div>
       </div>
 
@@ -65,7 +64,7 @@ export default function Loading() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex h-9 p-1 max-w-lg space-x-2 border rounded-lg shadow-sm bg-white dark:bg-[#0c0c0c]"
+          className="flex h-9 p-1 max-w-sm space-x-2 border rounded-lg shadow-sm bg-white dark:bg-[#0c0c0c]"
         >
           <Skeleton className="w-16" />
           <Skeleton className="w-14" />
