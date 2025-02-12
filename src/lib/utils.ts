@@ -28,7 +28,7 @@ export function extractStringParts(sanitizedString: string) {
   return { namePart, idPart };
 }
 
-export function toTitleCase(text: String) {
+export function toTitleCase(text: string) {
   return text
     .toLowerCase()
     .replace(/(?<!\S)\S/gu, (match) => match.toUpperCase());

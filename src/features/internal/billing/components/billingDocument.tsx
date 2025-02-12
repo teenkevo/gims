@@ -368,9 +368,18 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text style={styles.heading}>
           {generateInvoice ? "Invoice" : "Quotation"} to
         </Text>
-        <Text style={styles.subHeading}>{project?.client?.name}</Text>
-        <Text style={styles.addressTitle}>Email: {project?.client?.email}</Text>
-        <Text style={styles.addressTitle}>Tel: {project?.client?.phone}</Text>
+        {/* {project?.clients?.map((client) => (
+          <View key={client._id}>
+            <Text style={styles.subHeading}>{client.name}</Text>
+            <Text style={styles.addressTitle}>
+              Email: {project?.contactPersons?.[0]?.email}
+            </Text>
+          </View>
+        ))} */}
+        <Text style={styles.subHeading}>{project?.clients?.[0]?.name}</Text>
+        <Text style={styles.addressTitle}>
+          Email: {project?.contactPersons?.[0]?.email}
+        </Text>
       </View>
 
       <View>

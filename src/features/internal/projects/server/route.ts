@@ -45,7 +45,7 @@ const app = new Hono()
   .post("/create", zValidator("json", createProjectSchema), async (c) => {
     const { projectName, dateRange, priority, clients } = c.req.valid("json");
 
-    let clientIds = await Promise.all(
+    const clientIds = await Promise.all(
       clients.map(async (client) => {
         if (client.clientType === "new") {
           // Create the new client

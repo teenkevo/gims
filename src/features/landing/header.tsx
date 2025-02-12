@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 // import { LoginButton } from "@/components/auth/login-button";
 // import { SignupButton } from "@/components/auth/signup-button";
 // import { ModeToggle } from "@/components/modeToggle";
@@ -97,7 +98,7 @@ const links = [
 export function Header() {
   return (
     <header className="fixed inset-x-0 max-w-4xl sm:mx-auto mx-4 top-0 z-50 flex h-14 items-center gap-2 border border-foreground/10 shadow-lg bg-background/30 backdrop-blur-md rounded-full px-4 sm:px-6 m-4">
-      <a href="/">
+      <Link href="/">
         <Image
           src="/logo.png"
           width="120"
@@ -106,7 +107,7 @@ export function Header() {
           className="md:flex px-4"
           priority={true}
         />
-      </a>
+      </Link>
       <div className="relative ml-auto flex-1 md:grow-0"></div>
       {/* <ModeToggle />
       <LoginButton />
