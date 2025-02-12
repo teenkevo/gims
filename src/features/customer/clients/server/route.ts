@@ -37,6 +37,14 @@ const removeContactFromProjectSchema = z.object({
   contactId: z.string(),
 });
 
+const updateContactSchema = z.object({
+  contactId: z.string(),
+  name: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  designation: z.string(),
+});
+
 const app = new Hono()
   // Update client name
   .post(
@@ -158,6 +166,20 @@ const app = new Hono()
         .unset([`contactPersons[_ref == "${contactId}"]`])
         .commit();
       return c.json({ updatedProject });
+    }
+  )
+  .post(
+    "/update-contact",
+    zValidator("json", updateContactSchema),
+    async (c) => {
+      const { contactId, name, email, phone, designation } =
+        c.req.valid("json");
+
+      const updatedContact = await writeClient
+        .patch(contactId)
+        .set({ name, email, phone, designation })
+        .commit();
+      return c.json({ updatedContact });
     }
   );
 

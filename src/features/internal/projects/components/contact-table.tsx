@@ -21,6 +21,7 @@ import { CreateContactDialog } from "./create-contact-dialog";
 import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
 import { RemoveContactFromProject } from "./remove-contact-from-project";
 import { motion } from "framer-motion";
+import { UpdateContactDialog } from "./update-contact-dialog";
 
 // Extend the type to include actions
 type ExtendedContact = ALL_CONTACTS_QUERYResult[number] & { actions?: string };
@@ -61,6 +62,7 @@ export function ContactTable({
     columnHelper.accessor("actions", {
       cell: (info) => (
         <div className="flex items-center gap-2">
+          <UpdateContactDialog contact={info.row.original} />
           <RemoveContactFromProject
             email={info.row.original.email!}
             projectId={projectId}
@@ -112,7 +114,7 @@ export function ContactTable({
               table.getRowModel().rows.map((row) => (
                 <motion.tr
                   key={row.id}
-                  initial={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}

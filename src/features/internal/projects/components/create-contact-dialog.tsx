@@ -330,6 +330,7 @@ export function CreateContactDialog({
                                       disabled={isSubmitting || isAdded}
                                       value={contact.name || ""}
                                       key={contact._id}
+                                      className="flex items-center justify-between"
                                       onSelect={() => {
                                         form.setValue(
                                           "existingContact",
@@ -344,14 +345,6 @@ export function CreateContactDialog({
                                           Already added
                                         </Badge>
                                       )}
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          contact._id === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
                                     </CommandItem>
                                   );
                                 })}
