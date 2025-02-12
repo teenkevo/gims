@@ -11,5 +11,11 @@ export const clientType = defineType({
       type: "string",
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: "projects",
+      title: "Projects",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "project" }] }],
+    }),
   ],
 });
