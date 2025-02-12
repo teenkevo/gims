@@ -34,10 +34,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={<Loading />}>
-            <QueryProvider>{children}</QueryProvider>
+            <QueryProvider>
+              {children}
+              <SanityLive />
+            </QueryProvider>
           </Suspense>
 
-          <SanityLive />
           <Toaster />
         </ThemeProvider>
       </body>
