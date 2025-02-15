@@ -48,6 +48,7 @@ import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
 import { useCreateContact } from "@/features/customer/clients/api/use-create-contact";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
+import { revalidateProject } from "@/lib/actions";
 
 const formSchema = z
   .object({
@@ -169,14 +170,14 @@ export function CreateContactDialog({
     defaultValues: {
       contactType: "new",
       existingContact: undefined,
-      name: "",
-      email: "",
-      phone: undefined,
-      designation: "",
+      name: "Sonia",
+      email: "swalhe@gmail.com",
+      phone: "+256772445002",
+      designation: "Software Engineer",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const formattedData = {
       projectId,
@@ -191,23 +192,18 @@ export function CreateContactDialog({
         values.contactType === "new" ? values.designation : undefined,
     };
 
-    mutation.mutate(
-      { json: formattedData },
-      {
-        onSuccess: () => {
-          toast.success("Contact has been added to the project");
-          setIsSubmitting(false);
-          setOpen(false);
-          form.reset();
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-          setIsSubmitting(false);
-          setOpen(false);
-          form.reset();
-        },
-      }
-    );
+    const result = await mutation.mutateAsync({ json: formattedData });
+
+    if (result) {
+      revalidateProject(projectId).then(() => {
+        form.reset();
+        setOpen(false);
+        toast.success("Contact has been added to the project");
+      });
+    } else {
+      toast.error("Something went wrong");
+      setIsSubmitting(false);
+    }
   }
 
   return (

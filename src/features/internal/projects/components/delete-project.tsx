@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useState, useTransition } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,35 +20,38 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
+import { useState } from "react";
 import { useDeleteProject } from "../api/use-delete-project";
+import { revalidateProjects } from "@/lib/actions";
 
 export function DeleteProject({ name, id }: { name: string; id: string }) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(""); // Track input value
+  const [deleteProjectLoading, setDeleteProjectLoading] = useState(false); // Track loading state
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const router = useRouter();
 
   const { mutation } = useDeleteProject();
-  const [isPending, startTransition] = useTransition();
 
   const handleDeleteProject = async (id: string) => {
-    startTransition(async () => {
-      try {
-        const response = await mutation.mutateAsync({
-          json: {
-            projectId: id,
-          },
-        });
+    setDeleteProjectLoading(true); // Set loading to true
 
-        if (response) {
-          router.push(`/projects`);
-          toast.success("Project has been deleted");
-        }
-      } catch (error) {
-        toast.error("Something went wrong");
-      }
+    const result = await mutation.mutateAsync({
+      json: {
+        projectId: id,
+      },
     });
+
+    if (result) {
+      revalidateProjects().then(() => {
+        router.push("/projects");
+        toast.success("Project has been deleted");
+      });
+    } else {
+      toast.error("Something went wrong");
+      setDeleteProjectLoading(false);
+    }
   };
 
   const isDeleteDisabled = inputValue !== name; // Disable button if names don't match
@@ -87,7 +89,7 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
             />
           </div>
           <DialogFooter>
-            {isPending ? (
+            {deleteProjectLoading ? (
               <DestructiveButtonLoading />
             ) : (
               <Button
@@ -137,7 +139,7 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
           />
         </div>
         <DrawerFooter className="pt-2">
-          {isPending ? (
+          {deleteProjectLoading ? (
             <DestructiveButtonLoading />
           ) : (
             <Button

@@ -24,7 +24,7 @@ import { createProjectSchema } from "@/features/internal/projects/schemas";
 import { useCreateProject } from "../api/use-create-project";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
-import { useTransition } from "react";
+import { revalidateProjects } from "@/lib/actions";
 
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
@@ -39,10 +39,10 @@ export function CreateProjectForm({
 }) {
   const router = useRouter();
   const { mutation } = useCreateProject();
-  const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof createProjectSchema>>({
     mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       projectName: "",
       dateRange: { from: undefined, to: undefined },
@@ -68,18 +68,16 @@ export function CreateProjectForm({
       })),
     };
 
-    startTransition(async () => {
-      try {
-        const response = await mutation.mutateAsync({ json: formattedData });
+    const result = await mutation.mutateAsync({ json: formattedData });
 
-        if (response) {
-          router.push(`/projects`);
-          toast.success("Project has been created");
-        }
-      } catch (error) {
-        toast.error("Something went wrong");
-      }
-    });
+    if (result) {
+      revalidateProjects().then(() => {
+        router.push("/projects");
+        toast.success("Project has been created");
+      });
+    } else {
+      toast.error("Something went wrong");
+    }
   };
 
   return (
@@ -97,10 +95,16 @@ export function CreateProjectForm({
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={isPending} />
-            <ClientProfileForm clients={clients} isSubmitting={isPending} />
+            <ProjectDetailsForm isSubmitting={mutation.isPending} />
+            <ClientProfileForm
+              clients={clients}
+              isSubmitting={mutation.isPending}
+            />
           </motion.div>
-          <FormSubmitButton text="Create Project" isSubmitting={isPending} />
+          <FormSubmitButton
+            text="Create Project"
+            isSubmitting={mutation.isPending}
+          />
         </form>
       </FormProvider>
     </>

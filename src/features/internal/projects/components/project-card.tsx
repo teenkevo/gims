@@ -86,7 +86,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
 
         <Button size="sm" variant="secondary" asChild>
           <Link
-            href={`/projects/${_id}?project=${sanitizeString(project.name!)}`}
+            href={`/projects/${_id}?project=${sanitizeString(project.name!)}&tab=details`}
           >
             Go to project <ChevronRight className="ml-2 text-primary" />
           </Link>

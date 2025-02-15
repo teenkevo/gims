@@ -52,6 +52,7 @@ export function ClientProfileForm({
     watch,
     setValue,
     formState: { errors },
+    clearErrors,
   } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
@@ -164,6 +165,9 @@ export function ClientProfileForm({
                                       client._id
                                     );
                                     setOpen(false);
+                                    clearErrors(
+                                      `clients.${index}.existingClient`
+                                    );
                                   }}
                                 >
                                   <Check
@@ -234,7 +238,7 @@ export function ClientProfileForm({
           onClick={() =>
             append({
               clientType: "new",
-              existingClient: undefined,
+              existingClient: "",
               newClientName: "",
             })
           }

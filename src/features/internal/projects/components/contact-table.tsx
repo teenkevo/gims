@@ -62,7 +62,10 @@ export function ContactTable({
     columnHelper.accessor("actions", {
       cell: (info) => (
         <div className="flex items-center gap-2">
-          <UpdateContactDialog contact={info.row.original} />
+          <UpdateContactDialog
+            contact={info.row.original}
+            projectId={projectId}
+          />
           <RemoveContactFromProject
             email={info.row.original.email!}
             projectId={projectId}
