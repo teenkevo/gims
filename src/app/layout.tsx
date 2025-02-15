@@ -7,6 +7,7 @@ import { QueryProvider } from "@/components/query-provider";
 import { SanityLive } from "@/sanity/lib/live";
 import { Suspense } from "react";
 import Loading from "./loading";
+import ScrollToTop from "@/components/scroll-to-top";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      style={{ scrollBehavior: "smooth" }}
+      // style={{ scrollBehavior: "smooth" }}
       lang="en"
       suppressHydrationWarning
     >
@@ -35,6 +36,7 @@ export default function RootLayout({
         >
           <Suspense fallback={<Loading />}>
             <QueryProvider>
+              <ScrollToTop />
               {children}
               <SanityLive />
             </QueryProvider>
