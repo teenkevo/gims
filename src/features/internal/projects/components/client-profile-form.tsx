@@ -46,7 +46,6 @@ export function ClientProfileForm({
   isSubmitting,
   clients,
 }: ClientProfileFormProps) {
-  const [open, setOpen] = useState(false);
   const {
     control,
     watch,
@@ -66,6 +65,19 @@ export function ClientProfileForm({
   });
 
   const clientsArrayError = errors.clients?.root?.message as string;
+
+  // Manage open state for each client
+  const [openStates, setOpenStates] = useState<boolean[]>(
+    Array(fields.length).fill(false)
+  );
+
+  const togglePopover = (index: number) => {
+    setOpenStates((prev) => {
+      const newStates = [...prev];
+      newStates[index] = !newStates[index];
+      return newStates;
+    });
+  };
 
   return (
     <FormSpacerWrapper>
@@ -116,7 +128,10 @@ export function ClientProfileForm({
                 rules={{ required: "Please select an existing client" }}
                 render={({ field }) => (
                   <FormItem className="py-4">
-                    <Popover open={open} onOpenChange={setOpen}>
+                    <Popover
+                      open={openStates[index]}
+                      onOpenChange={() => togglePopover(index)}
+                    >
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -164,7 +179,7 @@ export function ClientProfileForm({
                                       `clients.${index}.existingClient`,
                                       client._id
                                     );
-                                    setOpen(false);
+                                    togglePopover(index);
                                     clearErrors(
                                       `clients.${index}.existingClient`
                                     );

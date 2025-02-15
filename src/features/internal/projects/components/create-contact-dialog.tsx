@@ -199,6 +199,7 @@ export function CreateContactDialog({
         form.reset();
         setOpen(false);
         toast.success("Contact has been added to the project");
+        setIsSubmitting(false);
       });
     } else {
       toast.error("Something went wrong");
