@@ -252,7 +252,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Logo icon={Rocket} name="GIMS by GETLAB" />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent aria-describedby={undefined}>
         <NavGroup label="Internal" items={data.navCore} />
         <NavGroup label="Customer" items={data.navCustomer} />
       </SidebarContent>
