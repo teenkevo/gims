@@ -142,7 +142,7 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
         name="priority"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Choose a priority level</FormLabel>
+            <FormLabel className="w-[200px]">Choose a priority level</FormLabel>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <FormControl>
