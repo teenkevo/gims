@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useRemoveContactFromProject } from "@/features/customer/clients/api/use-remove-contact-from-project";
+import { revalidateProject } from "@/lib/actions";
 
 export function RemoveContactFromProject({
   email,
@@ -33,27 +34,29 @@ export function RemoveContactFromProject({
 }) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(""); // Track input value
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { mutation } = useRemoveContactFromProject();
 
   const handleRemoveContactFromProject = async () => {
-    mutation.mutate(
-      {
-        json: {
-          projectId,
-          contactId,
-        },
+    setIsSubmitting(true);
+    const result = await mutation.mutateAsync({
+      json: {
+        projectId,
+        contactId,
       },
-      {
-        onSuccess: () => {
-          toast.success("Contact has been removed from project");
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-        },
-      }
-    );
+    });
+
+    if (result) {
+      revalidateProject(projectId).then(() => {
+        setOpen(false);
+        setIsSubmitting(false);
+        toast.success("Contact has been removed from project");
+      });
+    } else {
+      toast.error("Something went wrong");
+    }
   };
 
   const isDeleteDisabled = inputValue !== email; // Disable button if emails don't match
@@ -93,7 +96,7 @@ export function RemoveContactFromProject({
             />
           </div>
           <DialogFooter>
-            {mutation.isPending ? (
+            {isSubmitting ? (
               <DestructiveButtonLoading />
             ) : (
               <Button
@@ -142,7 +145,7 @@ export function RemoveContactFromProject({
           />
         </div>
         <DrawerFooter className="pt-2">
-          {mutation.isPending ? (
+          {isSubmitting ? (
             <DestructiveButtonLoading />
           ) : (
             <Button

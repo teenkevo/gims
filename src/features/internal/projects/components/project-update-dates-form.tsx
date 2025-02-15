@@ -15,6 +15,7 @@ import { CalendarIcon } from "lucide-react";
 import React, { useState } from "react";
 import { z } from "zod";
 import { useUpdateProjectDates } from "../api/use-update-project-dates";
+import { revalidateProject } from "@/lib/actions";
 
 interface ProjectUpdateDatesFormProps {
   title: string;
@@ -48,28 +49,25 @@ export default function ProjectUpdateDatesForm({
     to: Date;
   }) => {
     setIsSubmitting(true);
-
-    mutation.mutate(
-      {
-        json: {
-          dateRange: {
-            from: dateRange.from.toISOString(),
-            to: dateRange.to.toISOString(),
-          },
-          projectId,
+    const result = await mutation.mutateAsync({
+      json: {
+        dateRange: {
+          from: dateRange.from.toISOString(),
+          to: dateRange.to.toISOString(),
         },
+        projectId,
       },
-      {
-        onSuccess: () => {
-          toast.success("Project dates have been updated");
-          setIsSubmitting(false);
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-          setIsSubmitting(false);
-        },
-      }
-    );
+    });
+
+    if (result) {
+      revalidateProject(projectId).then(() => {
+        toast.success("Project dates have been updated");
+        setIsSubmitting(false);
+      });
+    } else {
+      toast.error("Something went wrong");
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import React, { useState } from "react";
 import { z } from "zod";
 import { useUpdateProjectName } from "../api/use-update-project-name";
+import { revalidateProject } from "@/lib/actions";
 
 interface ProjectUpdateNameFormProps {
   title: string;
@@ -38,24 +39,21 @@ export default function ProjectUpdateNameForm({
 
   const handleUpdateProjectName = async (name: any): Promise<void> => {
     setIsSubmitting(true);
-    mutation.mutate(
-      {
-        json: {
-          projectId,
-          projectName: name,
-        },
+    const result = await mutation.mutateAsync({
+      json: {
+        projectId,
+        projectName: name,
       },
-      {
-        onSuccess: () => {
-          toast.success("Project name has been updated");
-          setIsSubmitting(false);
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-          setIsSubmitting(false);
-        },
-      }
-    );
+    });
+
+    if (result) {
+      revalidateProject(projectId).then(() => {
+        toast.success("Project name has been updated");
+        setIsSubmitting(false);
+      });
+    } else {
+      toast.error("Something went wrong");
+    }
   };
 
   return (

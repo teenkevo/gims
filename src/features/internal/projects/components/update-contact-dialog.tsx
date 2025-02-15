@@ -32,6 +32,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { ButtonLoading } from "@/components/button-loading";
 import { useUpdateContact } from "@/features/customer/clients/api/use-update-contact";
 import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import { revalidateProject } from "@/lib/actions";
 const formSchema = z.object({
   name: z.string().min(1, "Required"),
   email: z.string().email({ message: "Enter valid email" }).min(1, "Required"),
@@ -43,8 +44,10 @@ const formSchema = z.object({
 
 export function UpdateContactDialog({
   contact,
+  projectId,
 }: {
   contact: ALL_CONTACTS_QUERYResult[number];
+  projectId: string;
 }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,7 +65,7 @@ export function UpdateContactDialog({
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const formattedData = {
       contactId: contact._id,
@@ -72,23 +75,19 @@ export function UpdateContactDialog({
       designation: values.designation,
     };
 
-    mutation.mutate(
-      { json: formattedData },
-      {
-        onSuccess: () => {
-          toast.success("Contact has been updated");
-          setIsSubmitting(false);
-          setOpen(false);
-          form.reset();
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-          setIsSubmitting(false);
-          setOpen(false);
-          form.reset();
-        },
-      }
-    );
+    const result = await mutation.mutateAsync({ json: formattedData });
+
+    if (result) {
+      revalidateProject(projectId).then(() => {
+        form.reset();
+        setOpen(false);
+        setIsSubmitting(false);
+        toast.success("Contact has been updated");
+      });
+    } else {
+      toast.error("Something went wrong");
+      setIsSubmitting(false);
+    }
   }
 
   return (

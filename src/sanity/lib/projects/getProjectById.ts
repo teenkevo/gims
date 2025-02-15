@@ -1,5 +1,5 @@
 import { defineQuery } from "next-sanity";
-import { sanityFetch } from "../live";
+import { sanityFetch } from "../client";
 
 export const getProjectById = async (projectId: string) => {
   const PROJECT_BY_ID_QUERY = defineQuery(`
@@ -30,10 +30,11 @@ export const getProjectById = async (projectId: string) => {
     const project = await sanityFetch({
       query: PROJECT_BY_ID_QUERY,
       params: { projectId },
+      tags: [`project-${projectId}`],
     });
 
     // return data or empty array if no data is found
-    return project.data || [];
+    return project || [];
   } catch (error) {
     console.error("Error fetching project by id", error);
     return [];
