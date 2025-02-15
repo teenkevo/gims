@@ -2,7 +2,7 @@
 
 import { ArrowLeftCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FieldService,
   MobilizationService,
@@ -58,6 +58,17 @@ export default function ProjectDetails({
     quantity: 0,
   });
 
+  // State to manage the active tab
+  const [activeTab, setActiveTab] = useState("details");
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, []);
+
   return (
     <>
       <Link className="mb-10 inline-flex" href="/projects">
@@ -65,15 +76,56 @@ export default function ProjectDetails({
         Go back
       </Link>
       <h1 className="text-2xl md:text-3xl font-bold mb-6">{name}</h1>
-      <Tabs defaultValue="details">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="details">Project</TabsTrigger>
-          <TabsTrigger value="client">Client</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-          <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
+          <TabsTrigger
+            value="details"
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", "details");
+              window.history.pushState({}, "", url);
+            }}
+          >
+            Project
+          </TabsTrigger>
+          <TabsTrigger
+            value="client"
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", "client");
+              window.history.pushState({}, "", url);
+            }}
+          >
+            Client
+          </TabsTrigger>
+          <TabsTrigger
+            value="billing"
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", "billing");
+              window.history.pushState({}, "", url);
+            }}
+          >
+            Billing
+          </TabsTrigger>
+          <TabsTrigger
+            value="sample-receipt"
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", "sample-receipt");
+              window.history.pushState({}, "", url);
+            }}
+          >
+            Sample Receipt
+          </TabsTrigger>
           <TabsTrigger
             className="text-destructive data-[state=active]:text-destructive"
             value="danger"
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", "danger");
+              window.history.pushState({}, "", url);
+            }}
           >
             <Trash2 strokeWidth={1.5} className="w-5 h-5" />
           </TabsTrigger>
