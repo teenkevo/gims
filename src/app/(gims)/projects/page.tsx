@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { ProjectsView } from "@/features/internal/projects/components/projects-view";
 import { getAllProjects } from "@/sanity/lib/projects/getAllProjects";
 
