@@ -13,6 +13,7 @@ import { z } from "zod";
 import { useUpdateProjectName } from "../api/use-update-project-name";
 import { useUpdateClientName } from "@/features/customer/clients/api/use-update-client-name";
 import { SingleField } from "./singleField";
+import { revalidateProject } from "@/lib/actions";
 
 interface ClientNameFormProps {
   title: string;
@@ -20,6 +21,7 @@ interface ClientNameFormProps {
   fieldName: string;
   initialValue: string;
   clientId: string;
+  projectId: string;
 }
 
 export default function ClientNameForm({
@@ -28,6 +30,7 @@ export default function ClientNameForm({
   fieldName,
   initialValue,
   clientId,
+  projectId,
 }: ClientNameFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,24 +38,22 @@ export default function ClientNameForm({
 
   const handleUpdateProjectName = async (name: any): Promise<void> => {
     setIsSubmitting(true);
-    mutation.mutate(
-      {
-        json: {
-          clientId,
-          clientName: name,
-        },
+    const result = await mutation.mutateAsync({
+      json: {
+        clientId,
+        clientName: name,
       },
-      {
-        onSuccess: () => {
-          toast.success("Client name has been updated");
-          setIsSubmitting(false);
-        },
-        onError: () => {
-          toast.error("Something went wrong");
-          setIsSubmitting(false);
-        },
-      }
-    );
+    });
+
+    if (result) {
+      revalidateProject(projectId).then(() => {
+        toast.success("Client name has been updated");
+        setIsSubmitting(false);
+      });
+    } else {
+      toast.error("Something went wrong");
+      setIsSubmitting(false);
+    }
   };
 
   return (

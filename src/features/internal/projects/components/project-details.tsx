@@ -143,14 +143,14 @@ export default function ProjectDetails({
                 Hover to jump to stage
               </p>
             </InfoCard>
-            <InfoCard
+            {/* <InfoCard
               title="Project ID"
               description="Used when interacting with GIMS' services and the API"
               learnMoreLink="#"
               savable={false}
             >
               <CopyableInput inputValue={_id} />
-            </InfoCard>
+            </InfoCard> */}
             <ProjectUpdateNameForm
               title="Project Name"
               description="Used to identify your Project on the Dashboard"
@@ -185,15 +185,21 @@ export default function ProjectDetails({
               );
               return (
                 <Card className="border rounded-lg p-5" key={client._id}>
-                  <p className="text-xl font-bold mb-4">
-                    Client {clients.length > 1 ? key + 1 : ""}{" "}
-                  </p>
+                  <div className="md:flex items-center my-5">
+                    <div className="flex items-center justify-center w-[40px] h-[25px] mb-2 md:mb-0 bg-primary text-primary-foreground mr-4">
+                      {clients.length > 1 ? key + 1 : ""}
+                    </div>
+                    <p className=" font-semibold text-xl tracking-tight">
+                      {client.name}
+                    </p>
+                  </div>
                   <ClientNameForm
                     title="Client Name"
                     savable={true}
                     fieldName="name"
                     initialValue={client?.name || ""}
                     clientId={client?._id || ""}
+                    projectId={_id}
                   />
                   <ContactTable
                     projectId={_id || ""}
