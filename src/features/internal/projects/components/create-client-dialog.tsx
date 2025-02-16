@@ -93,9 +93,11 @@ const formSchema = z
 export function CreateClientDialog({
   projectId,
   existingClients,
+  projectClients,
 }: {
   projectId: string;
   existingClients: ALL_CLIENTS_QUERYResult;
+  projectClients: ALL_CLIENTS_QUERYResult;
 }) {
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -245,28 +247,37 @@ export function CreateClientDialog({
                             <CommandInput placeholder="Search client..." />
                             <CommandEmpty>No client found.</CommandEmpty>
                             <CommandGroup>
-                              {existingClients.map((client) => (
-                                <CommandItem
-                                  disabled={isSubmitting}
-                                  value={client.name || ""}
-                                  key={client._id}
-                                  onSelect={() => {
-                                    form.setValue("existingClient", client._id);
-                                    setPopoverOpen(false);
-                                    form.clearErrors("existingClient");
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      client._id === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
+                              {existingClients.map((client) => {
+                                const isAdded = projectClients.some(
+                                  (c) => c._id === client._id
+                                );
+                                return (
+                                  <CommandItem
+                                    disabled={isSubmitting || isAdded}
+                                    value={client.name || ""}
+                                    key={client._id}
+                                    className="flex items-center justify-between"
+                                    onSelect={() => {
+                                      form.setValue(
+                                        "existingClient",
+                                        client._id
+                                      );
+                                      setPopoverOpen(false);
+                                      form.clearErrors("existingClient");
+                                    }}
+                                  >
+                                    {client.name}
+                                    {isAdded && (
+                                      <Badge
+                                        className="text-primary"
+                                        variant="secondary"
+                                      >
+                                        Already added
+                                      </Badge>
                                     )}
-                                  />
-                                  {client.name}
-                                </CommandItem>
-                              ))}
+                                  </CommandItem>
+                                );
+                              })}
                             </CommandGroup>
                           </CommandList>
                         </Command>

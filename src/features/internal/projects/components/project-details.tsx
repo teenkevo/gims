@@ -261,6 +261,7 @@ export default function ProjectDetails({
             <CreateClientDialog
               projectId={_id || ""}
               existingClients={existingClients}
+              projectClients={project.clients || []}
             />
           </div>
         </TabsContent>
