@@ -23,6 +23,28 @@ export async function updateClientName(
   }
 }
 
+export async function updateContactPerson(
+  contactId: string,
+  projectId: string,
+  formData: FormData
+) {
+  try {
+    const name = formData.get("name");
+    const email = formData.get("email");
+    const phone = formData.get("phone");
+    const designation = formData.get("designation");
+    const result = await writeClient
+      .patch(contactId)
+      .set({ name, email, phone, designation })
+      .commit();
+    // TODO: Possible bug, no tag is specified but revalidateTag seems to update cache
+    revalidateTag(`project-${projectId}`);
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
 export async function revalidateProjects() {
   revalidateTag("projects");
 }

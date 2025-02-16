@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,7 +32,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { ButtonLoading } from "@/components/button-loading";
 import { useUpdateContact } from "@/features/customer/clients/api/use-update-contact";
 import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
-import { revalidateProject } from "@/lib/actions";
+import { revalidateProject, updateContactPerson } from "@/lib/actions";
 const formSchema = z.object({
   name: z.string().min(1, "Required"),
   email: z.string().email({ message: "Enter valid email" }).min(1, "Required"),
@@ -50,7 +50,6 @@ export function UpdateContactDialog({
   projectId: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutation } = useUpdateContact();
 
@@ -65,30 +64,18 @@ export function UpdateContactDialog({
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    const formattedData = {
-      contactId: contact._id,
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      designation: values.designation,
-    };
-
-    const result = await mutation.mutateAsync({ json: formattedData });
-
-    if (result) {
-      revalidateProject(projectId).then(() => {
-        form.reset();
-        setOpen(false);
-        setIsSubmitting(false);
-        toast.success("Contact has been updated");
-      });
+  const action = async (_: void | null, formData: FormData) => {
+    const result = await updateContactPerson(contact._id, projectId, formData);
+    if (result.status === "ok") {
+      form.reset();
+      setOpen(false);
+      toast.success("Contact has been updated");
     } else {
       toast.error("Something went wrong");
-      setIsSubmitting(false);
     }
-  }
+  };
+
+  const [_, dispatch, isPending] = useActionState(action, null);
 
   return (
     <Dialog
@@ -111,7 +98,7 @@ export function UpdateContactDialog({
           <DialogTitle>Update Contact Person</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form action={dispatch} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -121,7 +108,7 @@ export function UpdateContactDialog({
                   <FormControl>
                     <Input
                       autoFocus
-                      disabled={isSubmitting}
+                      disabled={isPending}
                       placeholder="John Doe"
                       {...field}
                     />
@@ -139,7 +126,7 @@ export function UpdateContactDialog({
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isPending}
                       placeholder="contact@email.com"
                       {...field}
                     />
@@ -157,7 +144,7 @@ export function UpdateContactDialog({
                   <FormLabel>Phone number</FormLabel>
                   <FormControl>
                     <PhoneInput
-                      disabled={isSubmitting}
+                      disabled={isPending}
                       placeholder="Enter a phone number e.g. +256 792 445002"
                       {...field}
                     />
@@ -174,7 +161,7 @@ export function UpdateContactDialog({
                   <FormLabel>Designation</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isSubmitting}
+                      disabled={isPending}
                       placeholder="Technical Engineer"
                       {...field}
                     />
@@ -188,7 +175,7 @@ export function UpdateContactDialog({
             <DialogFooter className="py-2">
               <div className="flex items-center">
                 <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
-                  {isSubmitting ? (
+                  {isPending ? (
                     <ButtonLoading />
                   ) : (
                     <Button type="submit" variant="default">
