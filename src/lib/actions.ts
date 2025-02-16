@@ -9,12 +9,18 @@ export async function updateClientName(
   projectId: string,
   formData: FormData
 ) {
-  const clientName = formData.get("clientName");
-  await writeClient
-    .patch(clientId as string)
-    .set({ name: clientName as string })
-    .commit();
-  revalidateTag(`project-${projectId}`);
+  try {
+    const clientName = formData.get("clientName");
+    const result = await writeClient
+      .patch(clientId as string)
+      .set({ name: clientName as string })
+      .commit();
+    // TODO: Possible bug, no tag is specified but revalidateTag seems to update cache
+    revalidateTag(`project-${projectId}`);
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
 }
 
 export async function revalidateProjects() {

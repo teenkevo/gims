@@ -1,3 +1,7 @@
+import { FormProvider } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { ReloadIcon } from "@radix-ui/react-icons";
+import { ExternalLink } from "lucide-react";
 import {
   FormControl,
   FormField,
@@ -9,15 +13,9 @@ import { toast } from "sonner";
 import React, { useActionState } from "react";
 import { updateClientName } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
-import { FormProvider } from "react-hook-form";
-import { useForm } from "react-hook-form";
-import { ReloadIcon } from "@radix-ui/react-icons";
-import { ExternalLink } from "lucide-react";
 
 interface ClientNameFormProps {
   title: string;
-  savable: boolean;
-  fieldName: string;
   initialValue: string;
   clientId: string;
   projectId: string;
@@ -25,20 +23,22 @@ interface ClientNameFormProps {
 
 export default function ClientNameForm({
   title,
-  savable,
-  fieldName,
   initialValue,
   clientId,
   projectId,
 }: ClientNameFormProps) {
-  const action = async (state: void | null, formData: FormData) => {
+  const action = async (_: void | null, formData: FormData) => {
     const clientName = formData.get("clientName");
-    form.reset({ clientName: clientName as string });
-    await updateClientName(clientId, projectId, formData);
-    toast.success("Client name has been updated");
+    const result = await updateClientName(clientId, projectId, formData);
+    if (result.status === "ok") {
+      form.reset({ clientName: clientName as string });
+      toast.success("Client name has been updated");
+    } else {
+      toast.error("Something went wrong");
+    }
   };
 
-  const [state, dispatch, isPending] = useActionState(action, null);
+  const [_, dispatch, isPending] = useActionState(action, null);
 
   const form = useForm({
     mode: "onChange",
@@ -68,7 +68,7 @@ export default function ClientNameForm({
               )}
             />
           </div>
-          {savable && formIsEdited && (
+          {(formIsEdited || isPending) && (
             <div className="flex-grow-0">
               <div className="ml-4">
                 <Button type="submit" disabled={isPending || !formIsEdited}>

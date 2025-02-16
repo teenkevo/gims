@@ -233,8 +233,6 @@ export default function ProjectDetails({
                   </div>
                   <ClientNameForm
                     title="Client Name"
-                    savable={true}
-                    fieldName="name"
                     initialValue={client?.name || ""}
                     clientId={client?._id || ""}
                     projectId={_id}
