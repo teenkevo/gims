@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import NoProjectPlaceholder from "@/features/internal/projects/components/no-project-placeholder";
 import ProjectDetails from "@/features/internal/projects/components/project-details";
 
@@ -22,7 +24,7 @@ export default async function ProjectPage({
 
   console.log(projectData[0]?.clients?.[0]?.name);
 
-  return project ? (
+  return projectData ? (
     <ProjectDetails
       project={projectData[0]}
       existingContacts={existingContactsData}
