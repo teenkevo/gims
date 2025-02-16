@@ -6,6 +6,7 @@ import {
   EllipsisVerticalIcon,
   Trash2,
 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import * as motion from "framer-motion/client";
@@ -197,63 +198,65 @@ export default function ProjectDetails({
         </TabsContent>
         <TabsContent value="client">
           <div className="space-y-8 my-10">
-            {/* Map through clients and filter contacts by client id */}
-            {clients?.map((client, key) => {
-              const clientContacts = contactPersons?.filter((contact) =>
-                contact.clients?.some((c) => c._id === client?._id)
-              );
-              return (
-                <motion.div
-                  key={client._id}
-                  layout="position"
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <Card className="border rounded-lg p-5">
-                    <div className="flex justify-between py-5">
-                      <div className="md:flex items-center">
-                        <div className="flex items-center justify-center w-[40px] h-[25px] mb-2 md:mb-0 bg-primary text-primary-foreground mr-4">
-                          {key + 1}
+            <AnimatePresence mode="popLayout">
+              {/* Map through clients and filter contacts by client id */}
+              {clients?.map((client, key) => {
+                const clientContacts = contactPersons?.filter((contact) =>
+                  contact.clients?.some((c) => c._id === client?._id)
+                );
+                return (
+                  <motion.div
+                    key={client._id}
+                    layout="position"
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <Card className="border rounded-lg p-5">
+                      <div className="flex justify-between py-5">
+                        <div className="md:flex items-center">
+                          <div className="flex items-center justify-center w-[40px] h-[25px] mb-2 md:mb-0 bg-primary text-primary-foreground mr-4">
+                            {key + 1}
+                          </div>
+                          <p className=" font-semibold text-xl tracking-tight">
+                            {client.name}
+                          </p>
                         </div>
-                        <p className=" font-semibold text-xl tracking-tight">
-                          {client.name}
-                        </p>
+                        {clients.length > 1 && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="icon">
+                                <span className="sr-only">Client actions</span>
+                                <EllipsisVerticalIcon className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <RemoveClientFromProject
+                                email={client?.name || ""}
+                                projectId={_id || ""}
+                                clientId={client?._id || ""}
+                                clientName={client.name || ""}
+                              />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
-                      {clients.length > 1 && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <span className="sr-only">Client actions</span>
-                              <EllipsisVerticalIcon className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <RemoveClientFromProject
-                              email={client?.name || ""}
-                              projectId={_id || ""}
-                              clientId={client?._id || ""}
-                              clientName={client.name || ""}
-                            />
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                    <ClientNameForm
-                      title="Client Name"
-                      initialValue={client?.name || ""}
-                      clientId={client?._id || ""}
-                      projectId={_id}
-                    />
-                    <ContactTable
-                      projectId={_id || ""}
-                      clientId={client?._id || ""}
-                      projectContacts={clientContacts || []}
-                      existingContacts={existingContacts}
-                    />
-                  </Card>
-                </motion.div>
-              );
-            })}
+                      <ClientNameForm
+                        title="Client Name"
+                        initialValue={client?.name || ""}
+                        clientId={client?._id || ""}
+                        projectId={_id}
+                      />
+                      <ContactTable
+                        projectId={_id || ""}
+                        clientId={client?._id || ""}
+                        projectContacts={clientContacts || []}
+                        existingContacts={existingContacts}
+                      />
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
             <CreateClientDialog
               projectId={_id || ""}
               existingClients={existingClients}
