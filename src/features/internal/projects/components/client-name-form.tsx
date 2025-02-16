@@ -42,11 +42,13 @@ export default function ClientNameForm({
       json: {
         clientId,
         clientName: name,
+        projectId,
       },
     });
     if (result) {
       toast.success("Client name has been updated");
       setIsSubmitting(false);
+      console.log(isSubmitting);
     } else {
       toast.error("Something went wrong");
       setIsSubmitting(false);

@@ -8,6 +8,7 @@ import { revalidateProject } from "@/lib/actions";
 const updateClientNameSchema = z.object({
   clientId: z.string(),
   clientName: z.string(),
+  projectId: z.string(),
 });
 
 const createContactSchema = z.object({
@@ -52,12 +53,13 @@ const app = new Hono()
     "/update-name",
     zValidator("json", updateClientNameSchema),
     async (c) => {
-      const { clientId, clientName } = c.req.valid("json");
+      const { clientId, clientName, projectId } = c.req.valid("json");
 
       const updatedClient = await writeClient
         .patch(clientId)
         .set({ name: clientName })
         .commit();
+      await revalidateProject(projectId);
 
       return c.json({ updatedClient });
     }
