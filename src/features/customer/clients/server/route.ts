@@ -2,13 +2,11 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { writeClient } from "@/sanity/lib/write-client";
-import { revalidateProject } from "@/lib/actions";
 
 // Schema for updating client name
 const updateClientNameSchema = z.object({
   clientId: z.string(),
   clientName: z.string(),
-  projectId: z.string(),
 });
 
 const createContactSchema = z.object({
@@ -53,13 +51,12 @@ const app = new Hono()
     "/update-name",
     zValidator("json", updateClientNameSchema),
     async (c) => {
-      const { clientId, clientName, projectId } = c.req.valid("json");
+      const { clientId, clientName } = c.req.valid("json");
 
       const updatedClient = await writeClient
         .patch(clientId)
         .set({ name: clientName })
         .commit();
-      await revalidateProject(projectId);
 
       return c.json({ updatedClient });
     }
