@@ -20,8 +20,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
-import { revalidateProject } from "@/lib/actions";
+import { removeClientFromProject, revalidateProject } from "@/lib/actions";
 import { useRemoveClientFromProject } from "@/features/customer/clients/api/use-remove-client-from-project";
+import { useActionState } from "react";
 
 export function RemoveClientFromProject({
   email,
@@ -35,31 +36,22 @@ export function RemoveClientFromProject({
   clientName: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(""); // Track input value
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { mutation } = useRemoveClientFromProject();
 
-  const handleRemoveClientFromProject = async () => {
-    setIsSubmitting(true);
-    const result = await mutation.mutateAsync({
-      json: {
-        projectId,
-        clientId,
-      },
-    });
-
-    if (result) {
-      revalidateProject(projectId).then(() => {
-        setOpen(false);
-        setIsSubmitting(false);
-        toast.success("Contact has been removed from project");
-      });
+  const action = async (_: void | null) => {
+    const result = await removeClientFromProject(clientId, projectId);
+    if (result.status === "ok") {
+      setOpen(false);
+      toast.success("Client has been dissociated from project");
     } else {
       toast.error("Something went wrong");
     }
   };
+
+  const [_, dispatch, isPending] = useActionState(action, null);
 
   const isDeleteDisabled = inputValue !== email; // Disable button if emails don't match
 
@@ -89,11 +81,11 @@ export function RemoveClientFromProject({
             <Button variant="secondary" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            {isSubmitting ? (
+            {isPending ? (
               <DestructiveButtonLoading />
             ) : (
               <Button
-                onClick={() => handleRemoveClientFromProject()}
+                onClick={() => React.startTransition(() => dispatch())}
                 variant="destructive"
                 type="submit"
               >
@@ -137,11 +129,11 @@ export function RemoveClientFromProject({
           />
         </div>
         <DrawerFooter className="pt-2">
-          {isSubmitting ? (
+          {isPending ? (
             <DestructiveButtonLoading />
           ) : (
             <Button
-              onClick={() => handleRemoveClientFromProject()}
+              onClick={() => React.startTransition(() => dispatch())}
               variant="destructive"
               type="submit"
               disabled={isDeleteDisabled} // Disable button if names don't match
