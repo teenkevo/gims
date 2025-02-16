@@ -117,10 +117,10 @@ export function ContactTable({
               table.getRowModel().rows.map((row) => (
                 <motion.tr
                   key={row.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  layout="position"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="border-b"
                 >
                   {row.getVisibleCells().map((cell) => (
