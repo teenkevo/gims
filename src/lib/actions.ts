@@ -45,6 +45,23 @@ export async function updateContactPerson(
   }
 }
 
+export async function removeContactFromProject(
+  contactId: string,
+  projectId: string
+) {
+  try {
+    const result = await writeClient
+      .patch(projectId)
+      .unset([`contactPersons[_ref == "${contactId}"]`])
+      .commit();
+    // TODO: Possible bug, no tag is specified but revalidateTag seems to update cache
+    revalidateTag(`project-${projectId}`);
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
 export async function revalidateProjects() {
   revalidateTag("projects");
 }

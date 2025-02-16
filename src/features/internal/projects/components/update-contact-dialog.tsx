@@ -51,8 +51,6 @@ export function UpdateContactDialog({
 }) {
   const [open, setOpen] = useState(false);
 
-  const { mutation } = useUpdateContact();
-
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
     resolver: zodResolver(formSchema),
