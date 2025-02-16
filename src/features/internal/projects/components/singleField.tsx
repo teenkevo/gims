@@ -47,6 +47,7 @@ export function SingleField({
       await onSubmit(data[fieldName]);
       form.reset(data); // reset to updated data if success
     } catch (error) {
+      console.log(error);
       console.log("Error has been caught and form has been reset");
       form.reset(); // reset to original form data if error
     }
@@ -60,11 +61,9 @@ export function SingleField({
       >
         {/* Use the renderField prop */}
         <div className="flex items-end flex-grow">
-          <div className="flex-grow" style={{ flexBasis: "90%" }}>
-            {renderField && renderField(form)}{" "}
-          </div>
-          {savable && (
-            <div className="flex-grow-0" style={{ flexBasis: "10%" }}>
+          <div className="flex-grow">{renderField && renderField(form)} </div>
+          {savable && formIsEdited && (
+            <div className="flex-grow-0">
               <div className="ml-4">
                 <Button type="submit" disabled={isSubmitting || !formIsEdited}>
                   {isSubmitting ? (

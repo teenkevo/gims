@@ -37,7 +37,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
     <Card>
       <CardHeader className="flex flex-row items-center gap-4 rounded-t-xl bg-sidebar-primary-foreground dark:bg-white py-2">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight text-white dark:text-black uppercase">
+          <h2 className="text-md font-semibold tracking-tight text-white dark:text-black uppercase">
             {name}
           </h2>
         </div>

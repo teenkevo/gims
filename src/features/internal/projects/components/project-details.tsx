@@ -1,6 +1,11 @@
 "use client";
 
-import { ArrowLeftCircle, Trash2 } from "lucide-react";
+import {
+  ArrowLeftCircle,
+  CircleMinus,
+  EllipsisVerticalIcon,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import {
@@ -26,18 +31,31 @@ import ProjectStage from "./project-stage";
 import { QuotationOptions } from "../../billing/components/quotation-options";
 import SampleReceiptVerification from "./sample-receipt-verifications";
 import {
+  ALL_CLIENTS_QUERYResult,
   ALL_CONTACTS_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
-
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { RemoveClientFromProject } from "./remove-client-from-project";
+import { CreateClientDialog } from "./create-client-dialog";
 export default function ProjectDetails({
   project,
   existingContacts,
+  existingClients,
 }: {
   project: PROJECT_BY_ID_QUERYResult[number];
   existingContacts: ALL_CONTACTS_QUERYResult;
+  existingClients: ALL_CLIENTS_QUERYResult;
 }) {
   const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
@@ -185,13 +203,33 @@ export default function ProjectDetails({
               );
               return (
                 <Card className="border rounded-lg p-5" key={client._id}>
-                  <div className="md:flex items-center my-5">
-                    <div className="flex items-center justify-center w-[40px] h-[25px] mb-2 md:mb-0 bg-primary text-primary-foreground mr-4">
-                      {clients.length > 1 ? key + 1 : ""}
+                  <div className="flex justify-between py-5">
+                    <div className="md:flex items-center">
+                      <div className="flex items-center justify-center w-[40px] h-[25px] mb-2 md:mb-0 bg-primary text-primary-foreground mr-4">
+                        {key + 1}
+                      </div>
+                      <p className=" font-semibold text-xl tracking-tight">
+                        {client.name}
+                      </p>
                     </div>
-                    <p className=" font-semibold text-xl tracking-tight">
-                      {client.name}
-                    </p>
+                    {clients.length > 1 && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <span className="sr-only">Client actions</span>
+                            <EllipsisVerticalIcon className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <RemoveClientFromProject
+                            email={client?.name || ""}
+                            projectId={_id || ""}
+                            clientId={client?._id || ""}
+                            clientName={client.name || ""}
+                          />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                   <ClientNameForm
                     title="Client Name"
@@ -210,6 +248,10 @@ export default function ProjectDetails({
                 </Card>
               );
             })}
+            <CreateClientDialog
+              projectId={_id || ""}
+              existingClients={existingClients}
+            />
           </div>
         </TabsContent>
         <TabsContent value="billing">

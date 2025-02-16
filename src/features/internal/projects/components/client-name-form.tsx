@@ -36,20 +36,20 @@ export default function ClientNameForm({
 
   const { mutation } = useUpdateClientName();
 
-  const handleUpdateProjectName = async (name: any): Promise<void> => {
+  const handleUpdateClientName = async (name: any): Promise<void> => {
     setIsSubmitting(true);
     const result = await mutation.mutateAsync({
       json: {
         clientId,
         clientName: name,
+        projectId,
       },
     });
-
     if (result) {
-      revalidateProject(projectId).then(() => {
-        toast.success("Client name has been updated");
-        setIsSubmitting(false);
-      });
+      console.log("revalidated");
+      toast.success("Client name has been updated");
+      setIsSubmitting(false);
+      console.log(isSubmitting);
     } else {
       toast.error("Something went wrong");
       setIsSubmitting(false);
@@ -62,7 +62,7 @@ export default function ClientNameForm({
       savable={savable}
       fieldName={fieldName}
       initialValue={initialValue}
-      onSubmit={handleUpdateProjectName}
+      onSubmit={handleUpdateClientName}
       isSubmitting={isSubmitting}
       validation={z.string().trim().min(1, "Required")}
       renderField={(form) => (

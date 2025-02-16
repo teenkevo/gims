@@ -4,6 +4,7 @@ import ProjectDetails from "@/features/internal/projects/components/project-deta
 import React from "react";
 import { getProjectById } from "@/sanity/lib/projects/getProjectById";
 import { getAllContacts } from "@/sanity/lib/clients/getAllContacts";
+import { getAllClients } from "@/sanity/lib/clients/getAllClients";
 
 export default async function ProjectPage({
   params,
@@ -11,12 +12,22 @@ export default async function ProjectPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const projectArray = await getProjectById(id);
+  const project = await getProjectById(id);
   const existingContacts = await getAllContacts();
-  const project = projectArray[0];
+  const existingClients = await getAllClients();
+
+  // Initiate both requests in parallel
+  const [projectData, existingContactsData, existingClientsData] =
+    await Promise.all([project, existingContacts, existingClients]);
+
+  console.log(projectData[0]?.clients?.[0]?.name);
 
   return project ? (
-    <ProjectDetails project={project} existingContacts={existingContacts} />
+    <ProjectDetails
+      project={projectData[0]}
+      existingContacts={existingContactsData}
+      existingClients={existingClientsData}
+    />
   ) : (
     <NoProjectPlaceholder />
   );

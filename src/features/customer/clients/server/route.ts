@@ -2,23 +2,13 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { writeClient } from "@/sanity/lib/write-client";
+import { revalidateProject } from "@/lib/actions";
 
 // Schema for updating client name
 const updateClientNameSchema = z.object({
   clientId: z.string(),
   clientName: z.string(),
-});
-
-// Schema for updating client email
-const updateClientEmailSchema = z.object({
-  clientId: z.string(),
-  clientEmail: z.string(),
-});
-
-// Schema for updating client phone
-const updateClientPhoneSchema = z.object({
-  clientId: z.string(),
-  phone: z.string(),
+  projectId: z.string(),
 });
 
 const createContactSchema = z.object({
@@ -45,53 +35,36 @@ const updateContactSchema = z.object({
   designation: z.string(),
 });
 
+const removeClientFromProjectSchema = z.object({
+  projectId: z.string(),
+  clientId: z.string(),
+});
+
+const addClientToProjectSchema = z.object({
+  projectId: z.string(),
+  clientType: z.enum(["new", "existing"]),
+  existingClient: z.string().optional(),
+  newClientName: z.string().optional(),
+});
+
 const app = new Hono()
   // Update client name
   .post(
     "/update-name",
     zValidator("json", updateClientNameSchema),
     async (c) => {
-      const { clientId, clientName } = c.req.valid("json");
+      const { clientId, clientName, projectId } = c.req.valid("json");
 
       const updatedClient = await writeClient
         .patch(clientId)
         .set({ name: clientName })
         .commit();
+      await revalidateProject(projectId);
 
       return c.json({ updatedClient });
     }
   )
 
-  // Update client email
-  .post(
-    "/update-email",
-    zValidator("json", updateClientEmailSchema),
-    async (c) => {
-      const { clientId, clientEmail } = c.req.valid("json");
-
-      const updatedClient = await writeClient
-        .patch(clientId)
-        .set({ email: clientEmail })
-        .commit();
-
-      return c.json({ updatedClient });
-    }
-  )
-
-  // Update client phone
-  .post(
-    "/update-phone",
-    zValidator("json", updateClientPhoneSchema),
-    async (c) => {
-      const { clientId, phone } = c.req.valid("json");
-
-      const updatedClient = await writeClient
-        .patch(clientId)
-        .set({ phone })
-        .commit();
-      return c.json({ updatedClient });
-    }
-  )
   .post(
     "/create-contact",
     zValidator("json", createContactSchema),
@@ -180,6 +153,62 @@ const app = new Hono()
         .set({ name, email, phone, designation })
         .commit();
       return c.json({ updatedContact });
+    }
+  )
+  // Contact persons might also not to be desociated from project after client is dissociated from project because contact persons are linked to a client.
+  .post(
+    "/remove-client-from-project",
+    zValidator("json", removeClientFromProjectSchema),
+    async (c) => {
+      const { projectId, clientId } = c.req.valid("json");
+
+      const updatedProject = await writeClient
+        .patch(projectId)
+        .unset([`clients[_ref == "${clientId}"]`])
+        .commit();
+      return c.json({ updatedProject });
+    }
+  )
+  .post(
+    "/add-client-to-project",
+    zValidator("json", addClientToProjectSchema),
+    async (c) => {
+      const { projectId, clientType, existingClient, newClientName } =
+        c.req.valid("json");
+
+      if (clientType === "new") {
+        // Create the new client
+        const newClient = await writeClient.create({
+          _type: "client",
+          name: newClientName,
+        });
+
+        const updatedProject = await writeClient
+          .patch(projectId)
+          .setIfMissing({ clients: [] })
+          .append("clients", [
+            {
+              _type: "reference",
+              _ref: newClient._id,
+            },
+          ])
+          .commit();
+
+        return c.json({ updatedProject });
+      } else {
+        const updatedProject = await writeClient
+          .patch(projectId)
+          .setIfMissing({ clients: [] })
+          .append("clients", [
+            {
+              _type: "reference",
+              _ref: existingClient,
+            },
+          ])
+          .commit();
+
+        return c.json({ updatedProject });
+      }
     }
   );
 
