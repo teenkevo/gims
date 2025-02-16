@@ -18,7 +18,7 @@ export function Stage({
       <HoverCardTrigger>
         <div
           key={stage}
-          className={`md:w-10 w-6 h-2 rounded ${
+          className={`w-6 h-2 rounded ${
             index < currentStage
               ? "bg-green-500"
               : index === currentStage
