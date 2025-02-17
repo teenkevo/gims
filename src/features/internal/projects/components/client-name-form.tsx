@@ -85,23 +85,6 @@ export default function ClientNameForm({
             </div>
           )}
         </div>
-
-        <span className="text-sm text-muted-foreground flex">
-          Learn more about
-          <a
-            onClick={() =>
-              toast("🧑‍🍳 In the kitchen...", {
-                description:
-                  "GIMS documentation is still in active development. Check back later",
-              })
-            }
-            href={undefined}
-            className="text-primary text-sm flex items-center hover:underline ml-1"
-          >
-            {title}
-            <ExternalLink className="w-4 h-4 ml-1" />
-          </a>
-        </span>
       </form>
     </FormProvider>
   );

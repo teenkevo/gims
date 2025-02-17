@@ -35,7 +35,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-4 rounded-t-xl bg-sidebar-primary-foreground dark:bg-white py-2">
+      <CardHeader className="flex flex-row items-center gap-4 rounded-t-xl bg-gradient-to-b from-black/90 to-black/80 dark:from-white dark:to-zinc-300 py-2">
         <div className="space-y-1">
           <h2 className="text-md font-semibold text-white dark:text-black leading-tight">
             {name}

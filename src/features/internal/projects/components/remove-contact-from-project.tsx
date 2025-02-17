@@ -106,7 +106,9 @@ export function RemoveContactFromProject({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">Delete</Button>
+        <Button size="icon" variant="outline">
+          <TrashIcon className="h-4 w-4" />
+        </Button>
       </DialogTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-3 text-left">

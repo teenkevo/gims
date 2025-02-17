@@ -48,15 +48,21 @@ export function ContactTable({
       header: () => <span>Name</span>,
     }),
     columnHelper.accessor("email", {
-      cell: (info) => <span>{info.getValue()}</span>,
+      cell: (info) => (
+        <span className="max-w-[300px] truncate">{info.getValue()}</span>
+      ),
       header: () => <span>Email</span>,
     }),
     columnHelper.accessor("phone", {
-      cell: (info) => info.getValue(),
+      cell: (info) => (
+        <span className="max-w-[300px] truncate">{info.getValue()}</span>
+      ),
       header: () => <span>Phone Number</span>,
     }),
     columnHelper.accessor("designation", {
-      cell: (info) => <span className="italic">{info.getValue()}</span>,
+      cell: (info) => (
+        <span className="max-w-[300px] truncate italic">{info.getValue()}</span>
+      ),
       header: () => <span>Designation</span>,
     }),
     columnHelper.accessor("actions", {
