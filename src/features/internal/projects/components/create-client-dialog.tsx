@@ -160,7 +160,7 @@ export function CreateClientDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Add Client To Project</DialogTitle>
           <DialogDescription>
@@ -179,7 +179,7 @@ export function CreateClientDialog({
                       disabled={isSubmitting}
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex items-center justify-between space-x-4 my-5"
+                      className="flex items-center justify-evenly space-x-4 my-5"
                     >
                       <FormItem>
                         <FormControl>
@@ -242,7 +242,7 @@ export function CreateClientDialog({
                             variant="outline"
                             role="combobox"
                             className={cn(
-                              "w-auto justify-between",
+                              "w-[350px] md:w-[450px] justify-between",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -255,11 +255,13 @@ export function CreateClientDialog({
                                 transition={{ duration: 0.3 }}
                                 className="flex items-center justify-between w-full"
                               >
-                                {field.value
-                                  ? existingClients.find(
-                                      (c) => c._id === field.value
-                                    )?.name
-                                  : "Select an existing client"}
+                                <span className="truncate">
+                                  {field.value
+                                    ? existingClients.find(
+                                        (c) => c._id === field.value
+                                      )?.name
+                                    : "Select an existing client"}
+                                </span>
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </motion.div>
                             </AnimatePresence>
@@ -267,7 +269,10 @@ export function CreateClientDialog({
                         </FormControl>
                       </PopoverTrigger>
 
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        className="w-[350px] md:w-[400px] p-0"
+                        align="start"
+                      >
                         <Command>
                           <CommandList>
                             <CommandInput placeholder="Search client..." />
@@ -292,7 +297,9 @@ export function CreateClientDialog({
                                       form.clearErrors("existingClient");
                                     }}
                                   >
-                                    {client.name}
+                                    <span className="truncate">
+                                      {client.name}
+                                    </span>
                                     {isAdded && (
                                       <Badge
                                         className="text-primary"

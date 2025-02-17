@@ -223,7 +223,7 @@ export function CreateContactDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Add Contact Person</DialogTitle>
           <DialogDescription>
@@ -242,7 +242,7 @@ export function CreateContactDialog({
                       disabled={isSubmitting}
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex items-center justify-between space-x-4 my-5"
+                      className="flex items-center justify-evenly space-x-4 my-5"
                     >
                       <FormItem>
                         <FormControl>
@@ -302,8 +302,7 @@ export function CreateContactDialog({
                             variant="outline"
                             role="combobox"
                             className={cn(
-                              "w-auto",
-                              "justify-between",
+                              "w-[350px] md:w-[450px] justify-between",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -316,11 +315,13 @@ export function CreateContactDialog({
                                 transition={{ duration: 0.3 }}
                                 className="flex items-center justify-between w-full"
                               >
-                                {field.value !== undefined
-                                  ? existingContacts?.find(
-                                      (contact) => contact._id === field.value
-                                    )?.name
-                                  : "Select an existing contact"}
+                                <span className="truncate">
+                                  {field.value !== undefined
+                                    ? existingContacts?.find(
+                                        (contact) => contact._id === field.value
+                                      )?.name
+                                    : "Select an existing contact"}
+                                </span>
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </motion.div>
                             </AnimatePresence>
@@ -328,7 +329,10 @@ export function CreateContactDialog({
                         </FormControl>
                       </PopoverTrigger>
 
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        className="w-[350px] md:w-[400px] p-0"
+                        align="start"
+                      >
                         <Command>
                           <CommandList>
                             <CommandInput placeholder="Search contact..." />
@@ -359,11 +363,11 @@ export function CreateContactDialog({
                                         setPopoverOpen(false);
                                       }}
                                     >
-                                      {contact.name}
+                                      <span className="truncate">
+                                        {contact.name}
+                                      </span>
                                       {isAdded && (
-                                        <Badge variant="secondary">
-                                          Already added
-                                        </Badge>
+                                        <Badge variant="secondary">Added</Badge>
                                       )}
                                     </CommandItem>
                                   );
