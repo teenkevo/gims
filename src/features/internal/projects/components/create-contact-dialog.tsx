@@ -218,7 +218,7 @@ export function CreateContactDialog({
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const FormContent = () => (
+  const content = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
@@ -482,9 +482,7 @@ export function CreateContactDialog({
             Associate a new / existing contact person with this project
           </DrawerDescription>
         </DrawerHeader>
-        <div className="p-4 pb-0">
-          <FormContent />
-        </div>
+        <div className="p-4 pb-0">{content}</div>
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -516,7 +514,7 @@ export function CreateContactDialog({
             Associate a new / existing contact person with this project
           </DialogDescription>
         </DialogHeader>
-        <FormContent />
+        {content}
       </DialogContent>
     </Dialog>
   );

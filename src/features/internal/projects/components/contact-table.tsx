@@ -89,9 +89,9 @@ export function ContactTable({
   });
 
   return (
-    <div className="my-6 space-y-4">
+    <div className="my-10 space-y-2">
       <div className="flex justify-between items-center">
-        <p className="md:text-md font-medium">Contact Persons</p>
+        <p className="text-sm font-bold">Contact Persons</p>
         <CreateContactDialog
           projectId={projectId}
           clientId={clientId}

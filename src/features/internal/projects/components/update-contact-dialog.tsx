@@ -102,16 +102,6 @@ export function UpdateContactDialog({
 
   const [_, dispatch, isPending] = useActionState(action, null);
 
-  const handleOpenChange = useCallback(
-    (isOpen: boolean) => {
-      setOpen(isOpen);
-      if (isOpen) {
-        form.reset();
-      }
-    },
-    [form]
-  );
-
   const formContent = (
     <Form {...form}>
       <form action={dispatch} className="space-y-4">
@@ -199,14 +189,22 @@ export function UpdateContactDialog({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={handleOpenChange}>
+      <Drawer
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (isOpen) {
+            form.reset();
+          }
+        }}
+      >
         <DrawerTrigger asChild>
           <Button size="icon" variant="outline">
             <PencilIcon className="h-4 w-4" />
           </Button>
         </DrawerTrigger>
         <DrawerContent>
-          <DrawerHeader>
+          <DrawerHeader className="gap-3 text-left">
             <DrawerTitle>Update Contact Person</DrawerTitle>
           </DrawerHeader>
           <div className="px-4">{formContent}</div>
@@ -221,15 +219,23 @@ export function UpdateContactDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (isOpen) {
+          form.reset();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="icon" variant="outline">
           <PencilIcon className="h-4 w-4" />
         </Button>
       </DialogTrigger>
 
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader className="gap-3 text-left">
           <DialogTitle>Update Contact Person</DialogTitle>
         </DialogHeader>
         {formContent}

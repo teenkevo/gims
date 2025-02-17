@@ -383,7 +383,7 @@ export function CreateClientDialog({
       }}
     >
       <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent aria-describedby={undefined}>
         <DrawerHeader className="gap-3 text-left">
           <DrawerTitle>Add Client To Project</DrawerTitle>
           <DrawerDescription>

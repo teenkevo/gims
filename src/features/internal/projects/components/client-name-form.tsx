@@ -6,6 +6,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,7 @@ export default function ClientNameForm({
               name="clientName"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Client Name</FormLabel>
                   <FormControl>
                     <Input disabled={isPending} {...field} autoComplete="off" />
                   </FormControl>

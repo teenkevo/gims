@@ -96,7 +96,7 @@ export default function ProjectDetails({
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">{name}</h1>
+      <h1 className="text-2xl md:text-3xl font-extrabold mb-6">{name}</h1>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger
@@ -213,13 +213,13 @@ export default function ProjectDetails({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <div className="border bg-gradient-to-b from-muted/10 to-muted/30 rounded-lg p-6">
+                    <div className="border bg-gradient-to-b from-muted/10 to-muted/30 rounded-lg p-4 md:p-6">
                       <div className="flex justify-between py-2">
                         <div className="md:flex items-center mb-6">
-                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-4 md:mb-0 mr-4">
+                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-2 md:mb-0 mr-4">
                             {key + 1}
                           </div>
-                          <p className="font-semibold text-lg md:text-xl tracking-tight">
+                          <p className="font-bold text-xl md:text-xl tracking-tight">
                             <span>{client.name}</span>
                           </p>
                         </div>
