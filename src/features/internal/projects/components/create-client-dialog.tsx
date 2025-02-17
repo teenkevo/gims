@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -27,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   ArrowRightCircle,
+  BriefcaseBusiness,
   Check,
   ChevronsUpDown,
   PlusCircleIcon,
@@ -74,7 +76,7 @@ const formSchema = z
     },
     {
       message: "Please enter the contact name",
-      path: ["name"],
+      path: ["newClientName"],
     }
   )
   .refine(
@@ -161,6 +163,9 @@ export function CreateClientDialog({
       <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Client To Project</DialogTitle>
+          <DialogDescription>
+            Associate a new / existing client with this project
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -168,28 +173,48 @@ export function CreateClientDialog({
               control={form.control}
               name="clientType"
               render={({ field }) => (
-                <FormItem className="space-y-3 my-4">
+                <FormItem className="space-y-3 my-2">
                   <FormControl>
                     <RadioGroup
                       disabled={isSubmitting}
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex flex-col space-y-1"
+                      className="flex items-center justify-between space-x-4 my-5"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="new" />
+                          <RadioGroupItem
+                            value="new"
+                            className="sr-only peer"
+                            id="new-client"
+                          />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Create a new client
+                        <FormLabel
+                          htmlFor="new-client"
+                          className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <PlusCircleIcon className="h-8 w-8 mb-2" />
+                          <span className="text-sm text-center font-medium">
+                            Create New
+                          </span>
                         </FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="existing" />
+                          <RadioGroupItem
+                            value="existing"
+                            className="sr-only peer"
+                            id="existing-client"
+                          />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Choose from already existing clients
+                        <FormLabel
+                          htmlFor="existing-client"
+                          className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <BriefcaseBusiness className="h-8 w-8 mb-2" />
+                          <span className="text-sm font-medium">
+                            Choose Existing
+                          </span>
                         </FormLabel>
                       </FormItem>
                     </RadioGroup>
@@ -204,7 +229,8 @@ export function CreateClientDialog({
                 control={form.control}
                 name="existingClient"
                 render={({ field }) => (
-                  <FormItem className="py-4">
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="py-1">Existing contacts</FormLabel>
                     <Popover
                       open={popoverOpen}
                       onOpenChange={() => setPopoverOpen(!popoverOpen)}

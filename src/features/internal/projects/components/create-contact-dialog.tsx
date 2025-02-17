@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -25,30 +26,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  ArrowRightCircle,
-  Check,
-  ChevronsUpDown,
-  PlusCircleIcon,
-} from "lucide-react";
+import { ArrowRightCircle, ChevronsUpDown } from "lucide-react";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { RadioGroupItem } from "@/components/ui/radio-group";
-import { RadioGroup } from "@/components/ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { motion } from "framer-motion";
-import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Popover } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { AnimatePresence } from "framer-motion";
 import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
-import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
 import { useCreateContact } from "@/features/customer/clients/api/use-create-contact";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
 import { revalidateProject } from "@/lib/actions";
+import { PlusCircleIcon, Users } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -226,7 +225,10 @@ export function CreateContactDialog({
 
       <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Contact</DialogTitle>
+          <DialogTitle>Add Contact Person</DialogTitle>
+          <DialogDescription>
+            Associate a new / existing contact person with this project
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -234,28 +236,48 @@ export function CreateContactDialog({
               control={form.control}
               name="contactType"
               render={({ field }) => (
-                <FormItem className="space-y-3">
+                <FormItem className="space-y-2">
                   <FormControl>
                     <RadioGroup
                       disabled={isSubmitting}
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex flex-row my-10"
+                      className="flex items-center justify-between space-x-4 my-5"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="new" />
+                          <RadioGroupItem
+                            value="new"
+                            className="sr-only peer"
+                            id="new-contact"
+                          />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Create new contact
+                        <FormLabel
+                          htmlFor="new-contact"
+                          className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <PlusCircleIcon className="h-8 w-8 mb-2" />
+                          <span className="text-sm text-center font-medium">
+                            Create New
+                          </span>
                         </FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="existing" />
+                          <RadioGroupItem
+                            value="existing"
+                            className="sr-only peer"
+                            id="existing-contact"
+                          />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Existing contact
+                        <FormLabel
+                          htmlFor="existing-contact"
+                          className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <Users className="h-8 w-8 mb-2" />
+                          <span className="text-sm font-medium">
+                            Choose Existing
+                          </span>
                         </FormLabel>
                       </FormItem>
                     </RadioGroup>
@@ -271,6 +293,7 @@ export function CreateContactDialog({
                 name="existingContact"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
+                    <FormLabel className="py-2">Existing contacts</FormLabel>
                     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
