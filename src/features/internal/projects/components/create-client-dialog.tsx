@@ -18,6 +18,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Form,
   FormControl,
   FormField,
@@ -33,28 +42,25 @@ import {
   ChevronsUpDown,
   PlusCircleIcon,
 } from "lucide-react";
-import { isValidPhoneNumber } from "react-phone-number-input";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { RadioGroupItem } from "@/components/ui/radio-group";
-import { RadioGroup } from "@/components/ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { motion } from "framer-motion";
-import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Popover } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { AnimatePresence } from "framer-motion";
 import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
-import {
-  ALL_CLIENTS_QUERYResult,
-  ALL_CONTACTS_QUERYResult,
-} from "../../../../../sanity.types";
-import { useCreateContact } from "@/features/customer/clients/api/use-create-contact";
+import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
 import { revalidateProject } from "@/lib/actions";
 import { useAddClientToProject } from "@/features/customer/clients/api/use-add-client-to-project";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const formSchema = z
   .object({
@@ -106,6 +112,7 @@ export function CreateClientDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutation } = useAddClientToProject();
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
@@ -143,16 +150,233 @@ export function CreateClientDialog({
     }
   }
 
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen) {
-          form.reset(); // Reset the form when the dialog opens
-        }
-      }}
-    >
+  const FormContent = () => (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="clientType"
+          render={({ field }) => (
+            <FormItem className="space-y-3 my-2">
+              <FormControl>
+                <RadioGroup
+                  disabled={isSubmitting}
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex items-center justify-evenly space-x-4 my-5"
+                >
+                  <FormItem>
+                    <FormControl>
+                      <RadioGroupItem
+                        value="new"
+                        className="sr-only peer"
+                        id="new-client"
+                      />
+                    </FormControl>
+                    <FormLabel
+                      htmlFor="new-client"
+                      className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    >
+                      <PlusCircleIcon className="h-8 w-8 mb-2" />
+                      <span className="text-sm text-center font-medium">
+                        Create New
+                      </span>
+                    </FormLabel>
+                  </FormItem>
+                  <FormItem>
+                    <FormControl>
+                      <RadioGroupItem
+                        value="existing"
+                        className="sr-only peer"
+                        id="existing-client"
+                      />
+                    </FormControl>
+                    <FormLabel
+                      htmlFor="existing-client"
+                      className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    >
+                      <BriefcaseBusiness className="h-8 w-8 mb-2" />
+                      <span className="text-sm font-medium">
+                        Choose Existing
+                      </span>
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.watch("clientType") === "existing" ? (
+          <FormField
+            control={form.control}
+            name="existingClient"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel className="py-1">Existing contacts</FormLabel>
+                <Popover
+                  open={popoverOpen}
+                  onOpenChange={() => setPopoverOpen(!popoverOpen)}
+                >
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        disabled={isSubmitting}
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-[350px] md:w-[450px] justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key="clientSelection"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex items-center justify-between w-full"
+                          >
+                            <span className="truncate">
+                              {field.value
+                                ? existingClients.find(
+                                    (c) => c._id === field.value
+                                  )?.name
+                                : "Select an existing client"}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </motion.div>
+                        </AnimatePresence>
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+
+                  <PopoverContent
+                    className="w-[350px] md:w-[400px] p-0"
+                    align="start"
+                  >
+                    <Command>
+                      <CommandList>
+                        <CommandInput placeholder="Search client..." />
+                        <CommandEmpty>No client found.</CommandEmpty>
+                        <CommandGroup>
+                          {existingClients.map((client) => {
+                            const isAdded = projectClients.some(
+                              (c) => c._id === client._id
+                            );
+                            return (
+                              <CommandItem
+                                disabled={isSubmitting || isAdded}
+                                value={client.name || ""}
+                                key={client._id}
+                                className="flex items-center justify-between"
+                                onSelect={() => {
+                                  form.setValue("existingClient", client._id);
+                                  setPopoverOpen(false);
+                                  form.clearErrors("existingClient");
+                                }}
+                              >
+                                <span className="truncate">{client.name}</span>
+                                {isAdded && (
+                                  <Badge
+                                    className="text-primary"
+                                    variant="secondary"
+                                  >
+                                    Already added
+                                  </Badge>
+                                )}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <>
+            <FormField
+              control={form.control}
+              name="newClientName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client name</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder="e.g. Paragon Construction (SG) Limited"
+                      {...field}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
+        {isMobile ? (
+          <SheetFooter>
+            <div className="flex items-center">
+              <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
+                {isSubmitting ? (
+                  <ButtonLoading />
+                ) : (
+                  <Button type="submit" variant="default">
+                    Add client to project
+                    <ArrowRightCircle className="ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </SheetFooter>
+        ) : (
+          <DialogFooter className="py-2">
+            <div className="flex items-center">
+              <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
+                {isSubmitting ? (
+                  <ButtonLoading />
+                ) : (
+                  <Button type="submit" variant="default">
+                    Add client to project
+                    <ArrowRightCircle className="ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogFooter>
+        )}
+      </form>
+    </Form>
+  );
+
+  return isMobile ? (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline">
+          <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
+          Add Client To Project
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="bottom">
+        <SheetHeader>
+          <SheetTitle>Add Client To Project</SheetTitle>
+          <SheetDescription>
+            Associate a new / existing client with this project
+          </SheetDescription>
+        </SheetHeader>
+        <FormContent />
+      </SheetContent>
+    </Sheet>
+  ) : (
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
@@ -167,198 +391,7 @@ export function CreateClientDialog({
             Associate a new / existing client with this project
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="clientType"
-              render={({ field }) => (
-                <FormItem className="space-y-3 my-2">
-                  <FormControl>
-                    <RadioGroup
-                      disabled={isSubmitting}
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex items-center justify-evenly space-x-4 my-5"
-                    >
-                      <FormItem>
-                        <FormControl>
-                          <RadioGroupItem
-                            value="new"
-                            className="sr-only peer"
-                            id="new-client"
-                          />
-                        </FormControl>
-                        <FormLabel
-                          htmlFor="new-client"
-                          className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                        >
-                          <PlusCircleIcon className="h-8 w-8 mb-2" />
-                          <span className="text-sm text-center font-medium">
-                            Create New
-                          </span>
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem>
-                        <FormControl>
-                          <RadioGroupItem
-                            value="existing"
-                            className="sr-only peer"
-                            id="existing-client"
-                          />
-                        </FormControl>
-                        <FormLabel
-                          htmlFor="existing-client"
-                          className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                        >
-                          <BriefcaseBusiness className="h-8 w-8 mb-2" />
-                          <span className="text-sm font-medium">
-                            Choose Existing
-                          </span>
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {form.watch("clientType") === "existing" ? (
-              <FormField
-                control={form.control}
-                name="existingClient"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="py-1">Existing contacts</FormLabel>
-                    <Popover
-                      open={popoverOpen}
-                      onOpenChange={() => setPopoverOpen(!popoverOpen)}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            disabled={isSubmitting}
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-[350px] md:w-[450px] justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <AnimatePresence mode="wait">
-                              <motion.div
-                                key="clientSelection"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.3 }}
-                                className="flex items-center justify-between w-full"
-                              >
-                                <span className="truncate">
-                                  {field.value
-                                    ? existingClients.find(
-                                        (c) => c._id === field.value
-                                      )?.name
-                                    : "Select an existing client"}
-                                </span>
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </motion.div>
-                            </AnimatePresence>
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-
-                      <PopoverContent
-                        className="w-[350px] md:w-[400px] p-0"
-                        align="start"
-                      >
-                        <Command>
-                          <CommandList>
-                            <CommandInput placeholder="Search client..." />
-                            <CommandEmpty>No client found.</CommandEmpty>
-                            <CommandGroup>
-                              {existingClients.map((client) => {
-                                const isAdded = projectClients.some(
-                                  (c) => c._id === client._id
-                                );
-                                return (
-                                  <CommandItem
-                                    disabled={isSubmitting || isAdded}
-                                    value={client.name || ""}
-                                    key={client._id}
-                                    className="flex items-center justify-between"
-                                    onSelect={() => {
-                                      form.setValue(
-                                        "existingClient",
-                                        client._id
-                                      );
-                                      setPopoverOpen(false);
-                                      form.clearErrors("existingClient");
-                                    }}
-                                  >
-                                    <span className="truncate">
-                                      {client.name}
-                                    </span>
-                                    {isAdded && (
-                                      <Badge
-                                        className="text-primary"
-                                        variant="secondary"
-                                      >
-                                        Already added
-                                      </Badge>
-                                    )}
-                                  </CommandItem>
-                                );
-                              })}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <>
-                <FormField
-                  control={form.control}
-                  name="newClientName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client name</FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={isSubmitting}
-                          placeholder="e.g. Paragon Construction (SG) Limited"
-                          {...field}
-                        />
-                      </FormControl>
-
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-
-            <DialogFooter className="py-2">
-              <div className="flex items-center">
-                <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
-                  {isSubmitting ? (
-                    <ButtonLoading />
-                  ) : (
-                    <Button type="submit" variant="default">
-                      Add client to project
-                      <ArrowRightCircle className="ml-2" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </DialogFooter>
-          </form>
-        </Form>
+        <FormContent />
       </DialogContent>
     </Dialog>
   );
