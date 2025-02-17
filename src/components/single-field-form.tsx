@@ -60,7 +60,7 @@ export function SingleFieldForm({
   };
 
   return (
-    <Card>
+    <div className="border rounded-lg ">
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>
@@ -107,6 +107,6 @@ export function SingleFieldForm({
           </form>
         </Form>
       </CardContent>
-    </Card>
+    </div>
   );
 }

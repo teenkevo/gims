@@ -212,13 +212,13 @@ export default function ProjectDetails({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <Card className="border rounded-lg p-5">
-                      <div className="flex justify-between py-5">
-                        <div className="flex items-center">
-                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-primary text-primary-foreground mr-4">
+                    <div className="border rounded-lg p-6">
+                      <div className="flex justify-between py-2">
+                        <div className="md:flex items-center mb-2">
+                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-primary text-primary-foreground mb-4 md:mb-0 mr-4">
                             {key + 1}
                           </div>
-                          <p className=" font-semibold text-md md:text-xl tracking-tight">
+                          <p className=" font-semibold text-lg md:text-xl tracking-tight">
                             {client.name}
                           </p>
                         </div>
@@ -253,7 +253,7 @@ export default function ProjectDetails({
                         projectContacts={clientContacts || []}
                         existingContacts={existingContacts}
                       />
-                    </Card>
+                    </div>
                   </motion.div>
                 );
               })}

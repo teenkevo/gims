@@ -22,7 +22,7 @@ export function InfoCard({
   children,
 }: InfoCardProps) {
   return (
-    <Card>
+    <div className="border rounded-lg ">
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>
@@ -43,6 +43,6 @@ export function InfoCard({
           {savable && <Button variant="outline">Save</Button>}
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 }
