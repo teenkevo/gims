@@ -64,7 +64,7 @@ export function RemoveClientFromProject({
             className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
           >
             <CircleMinus className="mr-2 w-4" />
-            Dissociate from projects
+            Dissociate from project
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-3xl">

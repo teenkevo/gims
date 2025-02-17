@@ -174,7 +174,7 @@ export default function ProjectDetails({
             </InfoCard> */}
             <ProjectUpdateNameForm
               title="Project Name"
-              description="Used to identify your Project on the Dashboard"
+              description="Used to identify a project on the Dashboard"
               learnMoreLink="#"
               learnMoreText="Save"
               savable
@@ -184,7 +184,7 @@ export default function ProjectDetails({
             />
             <ProjectUpdateDatesForm
               title="Start and End Date"
-              description="Used to track the progression of your project"
+              description="Used to track the progression and milestones of a project"
               learnMoreLink="#"
               learnMoreText="Save"
               savable={true}
@@ -215,7 +215,7 @@ export default function ProjectDetails({
                   >
                     <div className="border bg-gradient-to-b from-muted/10 to-muted/30 rounded-lg p-6">
                       <div className="flex justify-between py-2">
-                        <div className="md:flex items-center mb-2">
+                        <div className="md:flex items-center mb-6">
                           <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-4 md:mb-0 mr-4">
                             {key + 1}
                           </div>
