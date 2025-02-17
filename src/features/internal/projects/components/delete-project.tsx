@@ -20,39 +20,27 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
-import { useState } from "react";
-import { useDeleteProject } from "../api/use-delete-project";
-import { revalidateProjects } from "@/lib/actions";
+import { useActionState } from "react";
+import { deleteProject } from "@/lib/actions";
 
 export function DeleteProject({ name, id }: { name: string; id: string }) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(""); // Track input value
-  const [deleteProjectLoading, setDeleteProjectLoading] = useState(false); // Track loading state
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const router = useRouter();
 
-  const { mutation } = useDeleteProject();
-
-  const handleDeleteProject = async (id: string) => {
-    setDeleteProjectLoading(true); // Set loading to true
-
-    const result = await mutation.mutateAsync({
-      json: {
-        projectId: id,
-      },
-    });
-
-    if (result) {
-      revalidateProjects().then(() => {
-        router.push("/projects");
-        toast.success("Project has been deleted");
-      });
+  const action = async (_: void | null) => {
+    const result = await deleteProject(id);
+    if (result.status === "ok") {
+      router.push("/projects");
+      toast.success("Project has been deleted");
     } else {
       toast.error("Something went wrong");
-      setDeleteProjectLoading(false);
     }
   };
+
+  const [_, dispatch, isPending] = useActionState(action, null);
 
   const isDeleteDisabled = inputValue !== name; // Disable button if names don't match
 
@@ -89,11 +77,11 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
             />
           </div>
           <DialogFooter>
-            {deleteProjectLoading ? (
+            {isPending ? (
               <DestructiveButtonLoading />
             ) : (
               <Button
-                onClick={() => handleDeleteProject(id)}
+                onClick={() => React.startTransition(() => dispatch())}
                 variant="destructive"
                 type="submit"
                 disabled={isDeleteDisabled} // Disable button if names don't match
@@ -139,11 +127,11 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
           />
         </div>
         <DrawerFooter className="pt-2">
-          {deleteProjectLoading ? (
+          {isPending ? (
             <DestructiveButtonLoading />
           ) : (
             <Button
-              onClick={() => handleDeleteProject(id)}
+              onClick={() => React.startTransition(() => dispatch())}
               variant="destructive"
               type="submit"
               disabled={isDeleteDisabled} // Disable button if names don't match

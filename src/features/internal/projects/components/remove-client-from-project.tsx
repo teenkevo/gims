@@ -20,8 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
-import { removeClientFromProject, revalidateProject } from "@/lib/actions";
-import { useRemoveClientFromProject } from "@/features/customer/clients/api/use-remove-client-from-project";
+import { removeClientFromProject } from "@/lib/actions";
 import { useActionState } from "react";
 
 export function RemoveClientFromProject({
@@ -38,8 +37,6 @@ export function RemoveClientFromProject({
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  const { mutation } = useRemoveClientFromProject();
 
   const action = async (_: void | null) => {
     const result = await removeClientFromProject(clientId, projectId);

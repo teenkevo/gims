@@ -85,6 +85,17 @@ export async function removeClientFromProject(
   }
 }
 
+export async function deleteProject(projectId: string) {
+  try {
+    const result = await writeClient.delete(projectId);
+    // TODO: Is there a need to revalidate projects?
+    revalidateTag(`projects`);
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
 export async function revalidateProjects() {
   revalidateTag("projects");
 }
