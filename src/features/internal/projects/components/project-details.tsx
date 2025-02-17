@@ -214,11 +214,11 @@ export default function ProjectDetails({
                   >
                     <Card className="border rounded-lg p-5">
                       <div className="flex justify-between py-5">
-                        <div className="md:flex items-center">
-                          <div className="flex items-center justify-center w-[40px] h-[25px] mb-2 md:mb-0 bg-primary text-primary-foreground mr-4">
+                        <div className="flex items-center">
+                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-primary text-primary-foreground mr-4">
                             {key + 1}
                           </div>
-                          <p className=" font-semibold text-xl tracking-tight">
+                          <p className=" font-semibold text-md md:text-xl tracking-tight">
                             {client.name}
                           </p>
                         </div>
