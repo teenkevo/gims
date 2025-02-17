@@ -101,7 +101,13 @@ export function RemoveClientFromProject({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">Delete</Button>
+        <Button
+          variant="ghost"
+          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <CircleMinus className="mr-2 w-4" />
+          Dissociate from project
+        </Button>
       </DialogTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-3 text-left">

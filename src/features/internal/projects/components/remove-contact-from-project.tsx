@@ -58,7 +58,7 @@ export function RemoveContactFromProject({
             <TrashIcon className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-3xl">
           <DialogHeader className="space-y-3">
             <DialogTitle>Remove Contact Person from Project</DialogTitle>
             <DialogDescription>

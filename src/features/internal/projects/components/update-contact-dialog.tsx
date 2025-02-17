@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,6 +17,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
   Form,
   FormControl,
   FormField,
@@ -25,14 +34,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ArrowRightCircle, PencilIcon, PlusCircleIcon } from "lucide-react";
+import { ArrowRightCircle, PencilIcon } from "lucide-react";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 import { ButtonLoading } from "@/components/button-loading";
-import { useUpdateContact } from "@/features/customer/clients/api/use-update-contact";
-import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
-import { revalidateProject, updateContactPerson } from "@/lib/actions";
+import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import { updateContactPerson } from "@/lib/actions";
+
 const formSchema = z.object({
   name: z.string().min(1, "Required"),
   email: z.string().email({ message: "Enter valid email" }).min(1, "Required"),
@@ -42,6 +51,22 @@ const formSchema = z.object({
   designation: z.string().min(1, "Required"),
 });
 
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addListener(listener);
+    return () => media.removeListener(listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
 export function UpdateContactDialog({
   contact,
   projectId,
@@ -50,6 +75,7 @@ export function UpdateContactDialog({
   projectId: string;
 }) {
   const [open, setOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
@@ -63,6 +89,7 @@ export function UpdateContactDialog({
   });
 
   const action = async (_: void | null, formData: FormData) => {
+    console.log("clicked");
     const result = await updateContactPerson(contact._id, projectId, formData);
     if (result.status === "ok") {
       form.reset();
@@ -75,16 +102,131 @@ export function UpdateContactDialog({
 
   const [_, dispatch, isPending] = useActionState(action, null);
 
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      setOpen(isOpen);
+      if (isOpen) {
+        form.reset();
+      }
+    },
+    [form]
+  );
+
+  const formContent = (
+    <Form {...form}>
+      <form action={dispatch} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input
+                  autoFocus
+                  disabled={isPending}
+                  placeholder="John Doe"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  disabled={isPending}
+                  placeholder="contact@email.com"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone number</FormLabel>
+              <FormControl>
+                <PhoneInput
+                  disabled={isPending}
+                  placeholder="Enter a phone number e.g. +256 792 445002"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="designation"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Designation</FormLabel>
+              <FormControl>
+                <Input
+                  disabled={isPending}
+                  placeholder="Technical Engineer"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="py-2">
+          <div className="flex items-center">
+            <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition w-full">
+              {isPending ? (
+                <ButtonLoading />
+              ) : (
+                <Button type="submit" variant="default" className="w-full">
+                  Save
+                  <ArrowRightCircle className="ml-2" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </form>
+    </Form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerTrigger asChild>
+          <Button size="icon" variant="outline">
+            <PencilIcon className="h-4 w-4" />
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Update Contact Person</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4">{formContent}</div>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen) {
-          form.reset(); // Reset the form when the dialog opens
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="icon" variant="outline">
           <PencilIcon className="h-4 w-4" />
@@ -95,97 +237,7 @@ export function UpdateContactDialog({
         <DialogHeader>
           <DialogTitle>Update Contact Person</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form action={dispatch} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      autoFocus
-                      disabled={isPending}
-                      placeholder="John Doe"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={isPending}
-                      placeholder="contact@email.com"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone number</FormLabel>
-                  <FormControl>
-                    <PhoneInput
-                      disabled={isPending}
-                      placeholder="Enter a phone number e.g. +256 792 445002"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="designation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Designation</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={isPending}
-                      placeholder="Technical Engineer"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter className="py-2">
-              <div className="flex items-center">
-                <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
-                  {isPending ? (
-                    <ButtonLoading />
-                  ) : (
-                    <Button type="submit" variant="default">
-                      Update contact
-                      <ArrowRightCircle className="ml-5" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </DialogFooter>
-          </form>
-        </Form>
+        {formContent}
       </DialogContent>
     </Dialog>
   );

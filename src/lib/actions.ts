@@ -3,6 +3,7 @@
 import { writeClient } from "@/sanity/lib/write-client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { sanitizePhoneNumber } from "./utils";
 
 export async function updateClientName(
   clientId: string,
@@ -35,7 +36,12 @@ export async function updateContactPerson(
     const designation = formData.get("designation");
     const result = await writeClient
       .patch(contactId)
-      .set({ name, email, phone, designation })
+      .set({
+        name,
+        email,
+        phone: sanitizePhoneNumber(phone as string),
+        designation,
+      })
       .commit();
     // TODO: Possible bug, no tag is specified but revalidateTag seems to update cache
     revalidateTag(`project-${projectId}`);

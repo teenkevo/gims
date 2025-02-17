@@ -13,6 +13,10 @@ export function sanitizeString(name: string) {
     .trim();
 }
 
+export function sanitizePhoneNumber(number: string) {
+  return number.replace(/\s/g, "");
+}
+
 export function capitalizeWords(string: string) {
   return string
     .split("-")

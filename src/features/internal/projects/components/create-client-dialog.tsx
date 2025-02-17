@@ -18,15 +18,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
   Form,
   FormControl,
   FormField,
@@ -38,7 +29,6 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowRightCircle,
   BriefcaseBusiness,
-  Check,
   ChevronsUpDown,
   PlusCircleIcon,
 } from "lucide-react";
@@ -55,11 +45,20 @@ import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
-import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
 import { revalidateProject } from "@/lib/actions";
 import { useAddClientToProject } from "@/features/customer/clients/api/use-add-client-to-project";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 const formSchema = z
@@ -110,9 +109,9 @@ export function CreateClientDialog({
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const { mutation } = useAddClientToProject();
-  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
@@ -150,14 +149,21 @@ export function CreateClientDialog({
     }
   }
 
-  const FormContent = () => (
+  const triggerButton = (
+    <Button variant="outline">
+      <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
+      Add Client To Project
+    </Button>
+  );
+
+  const content = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="clientType"
           render={({ field }) => (
-            <FormItem className="space-y-3 my-2">
+            <FormItem className="space-y-3">
               <FormControl>
                 <RadioGroup
                   disabled={isSubmitting}
@@ -165,7 +171,7 @@ export function CreateClientDialog({
                   defaultValue={field.value}
                   className="flex items-center justify-evenly space-x-4 my-5"
                 >
-                  <FormItem>
+                  <FormItem className="w-1/2">
                     <FormControl>
                       <RadioGroupItem
                         value="new"
@@ -175,7 +181,7 @@ export function CreateClientDialog({
                     </FormControl>
                     <FormLabel
                       htmlFor="new-client"
-                      className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <PlusCircleIcon className="h-8 w-8 mb-2" />
                       <span className="text-sm text-center font-medium">
@@ -183,7 +189,8 @@ export function CreateClientDialog({
                       </span>
                     </FormLabel>
                   </FormItem>
-                  <FormItem>
+
+                  <FormItem className="w-1/2">
                     <FormControl>
                       <RadioGroupItem
                         value="existing"
@@ -193,7 +200,7 @@ export function CreateClientDialog({
                     </FormControl>
                     <FormLabel
                       htmlFor="existing-client"
-                      className="flex flex-col items-center justify-center w-40 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <BriefcaseBusiness className="h-8 w-8 mb-2" />
                       <span className="text-sm font-medium">
@@ -322,77 +329,69 @@ export function CreateClientDialog({
           </>
         )}
 
-        {isMobile ? (
-          <SheetFooter>
-            <div className="flex items-center">
-              <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
-                {isSubmitting ? (
-                  <ButtonLoading />
-                ) : (
-                  <Button type="submit" variant="default">
-                    Add client to project
-                    <ArrowRightCircle className="ml-2" />
-                  </Button>
-                )}
-              </div>
+        <div className="py-2">
+          <div className="flex items-center">
+            <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition w-full">
+              {isSubmitting ? (
+                <ButtonLoading />
+              ) : (
+                <Button type="submit" variant="default" className="w-full">
+                  Add client to project
+                  <ArrowRightCircle className="ml-2" />
+                </Button>
+              )}
             </div>
-          </SheetFooter>
-        ) : (
-          <DialogFooter className="py-2">
-            <div className="flex items-center">
-              <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition">
-                {isSubmitting ? (
-                  <ButtonLoading />
-                ) : (
-                  <Button type="submit" variant="default">
-                    Add client to project
-                    <ArrowRightCircle className="ml-2" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </DialogFooter>
-        )}
+          </div>
+        </div>
       </form>
     </Form>
   );
 
-  return isMobile ? (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline">
-          <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
-          Add Client To Project
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="bottom">
-        <SheetHeader>
-          <SheetTitle>Add Client To Project</SheetTitle>
-          <SheetDescription>
-            Associate a new / existing client with this project
-          </SheetDescription>
-        </SheetHeader>
-        <FormContent />
-      </SheetContent>
-    </Sheet>
-  ) : (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
-          Add Client To Project
-        </Button>
-      </DialogTrigger>
+  if (isDesktop) {
+    return (
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (isOpen) {
+            form.reset();
+          }
+        }}
+      >
+        <DialogTrigger asChild>{triggerButton}</DialogTrigger>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Add Client To Project</DialogTitle>
+            <DialogDescription>
+              Associate a new / existing client with this project
+            </DialogDescription>
+          </DialogHeader>
+          {content}
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
-      <DialogContent aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Add Client To Project</DialogTitle>
-          <DialogDescription>
+  return (
+    <Drawer
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (isOpen) {
+          form.reset();
+        }
+      }}
+    >
+      <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="gap-3 text-left">
+          <DrawerTitle>Add Client To Project</DrawerTitle>
+          <DrawerDescription>
             Associate a new / existing client with this project
-          </DialogDescription>
-        </DialogHeader>
-        <FormContent />
-      </DialogContent>
-    </Dialog>
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className=" py-4 px-4">{content}</div>
+      </DrawerContent>
+    </Drawer>
   );
 }
