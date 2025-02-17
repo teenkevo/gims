@@ -5,6 +5,57 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { sanitizePhoneNumber } from "./utils";
 
+export async function createProject(prevState: any, formData: FormData) {
+  try {
+    const projectName = formData.get("projectName");
+    const dateFrom = formData.get("dateFrom");
+    const dateTo = formData.get("dateTo");
+    const priority = formData.get("priority");
+    const clients = formData
+      .getAll("clients")
+      .map((client) => JSON.parse(client as string));
+
+    const clientIds = await Promise.all(
+      clients.map(async (client) => {
+        if (client.clientType === "new") {
+          // Create the new client
+          const newClient = await writeClient.create({
+            _type: "client",
+            name: client.newClientName,
+          });
+          return newClient._id; // Return the new client's ID
+        } else {
+          // Use existing client ID
+          return client.existingClient;
+        }
+      })
+    );
+
+    // Create the project
+    const project = await writeClient.create(
+      {
+        _type: "project",
+        name: projectName,
+        startDate: dateFrom,
+        endDate: dateTo,
+        priority,
+        stagesCompleted: ["BILLING"], // Placeholder logic
+        clients: clientIds.map((clientId) => ({
+          _type: "reference",
+          _ref: clientId,
+        })), // Reference clients
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
+    revalidateTag(`projects`);
+    return { result: project, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
 export async function updateClientName(
   clientId: string,
   projectId: string,

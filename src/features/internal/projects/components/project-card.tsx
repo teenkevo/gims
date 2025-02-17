@@ -34,7 +34,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
   const { _id, name, clients, startDate, endDate } = project;
 
   return (
-    <Card>
+    <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-xl border">
       <CardHeader className="flex flex-row items-center gap-4 rounded-t-xl bg-gradient-to-b from-black/90 to-black/80 dark:from-white dark:to-zinc-300 py-2">
         <div className="space-y-1">
           <h2 className="text-md font-semibold text-white dark:text-black leading-tight">
@@ -92,6 +92,6 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
           </Link>
         </Button>
       </CardFooter>
-    </Card>
+    </div>
   );
 }

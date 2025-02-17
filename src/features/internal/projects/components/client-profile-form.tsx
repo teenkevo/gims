@@ -226,6 +226,7 @@ export function ClientProfileForm({
                   />
                   <Button
                     type="button"
+                    disabled={isSubmitting}
                     variant="destructive"
                     onClick={() => remove(index)}
                     className="mt-3 max-w-[150px]"
@@ -258,6 +259,7 @@ export function ClientProfileForm({
                   />
                   <Button
                     type="button"
+                    disabled={isSubmitting}
                     variant="destructive"
                     onClick={() => remove(index)}
                     className="mt-3 max-w-[150px]"
@@ -275,6 +277,7 @@ export function ClientProfileForm({
       <div className="space-y-4">
         <Button
           type="button"
+          disabled={isSubmitting}
           variant="outline"
           onClick={() =>
             append({

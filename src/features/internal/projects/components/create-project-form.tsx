@@ -7,6 +7,7 @@ import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
+import { startTransition, useEffect } from "react";
 
 // Icons
 import { ArrowLeftCircle } from "lucide-react";
@@ -21,10 +22,10 @@ import { FormSubmitButton } from "@/components/form-submit-button";
 // Form schema
 import { createProjectSchema } from "@/features/internal/projects/schemas";
 
-import { useCreateProject } from "../api/use-create-project";
 import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
-import { revalidateProjects } from "@/lib/actions";
+import { createProject } from "@/lib/actions";
+import { useActionState } from "react";
 
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
@@ -38,7 +39,9 @@ export function CreateProjectForm({
   clients: ALL_CLIENTS_QUERYResult;
 }) {
   const router = useRouter();
-  const { mutation } = useCreateProject();
+
+  // Restored useActionState
+  const [state, dispatch, isPending] = useActionState(createProject, null);
 
   const form = useForm<z.infer<typeof createProjectSchema>>({
     mode: "onChange",
@@ -51,34 +54,38 @@ export function CreateProjectForm({
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof createProjectSchema>) => {
-    // Convert dates to ISO format
-    const formattedData = {
-      ...data,
-      dateRange: {
-        from: data.dateRange.from.toISOString(),
-        to: data.dateRange.to.toISOString(),
-      },
-      clients: data.clients.map((client) => ({
-        clientType: client.clientType,
-        existingClient:
-          client.clientType === "existing" ? client.existingClient : undefined,
-        newClientName:
-          client.clientType === "new" ? client.newClientName : undefined,
-      })),
-    };
+  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
+    const formData = new FormData();
+    formData.append("projectName", data.projectName);
+    formData.append("dateFrom", data.dateRange.from.toISOString());
+    formData.append("dateTo", data.dateRange.to.toISOString());
+    formData.append("priority", data.priority);
+    data.clients.forEach((client) =>
+      formData.append(
+        "clients",
+        JSON.stringify({
+          clientType: client.clientType,
+          existingClient:
+            client.clientType === "existing"
+              ? client.existingClient
+              : undefined,
+          newClientName:
+            client.clientType === "new" ? client.newClientName : undefined,
+        })
+      )
+    );
 
-    const result = await mutation.mutateAsync({ json: formattedData });
+    startTransition(() => dispatch(formData)); // Use dispatch instead of createProject
+  };
 
-    if (result) {
-      revalidateProjects().then(() => {
-        router.push("/projects");
-        toast.success("Project has been created");
-      });
-    } else {
+  useEffect(() => {
+    if (state?.status === "ok") {
+      router.push(`/projects`);
+      toast.success("Project created successfully");
+    } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
-  };
+  }, [state, router]);
 
   return (
     <>
@@ -95,16 +102,10 @@ export function CreateProjectForm({
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={mutation.isPending} />
-            <ClientProfileForm
-              clients={clients}
-              isSubmitting={mutation.isPending}
-            />
+            <ProjectDetailsForm isSubmitting={isPending} />
+            <ClientProfileForm clients={clients} isSubmitting={isPending} />
           </motion.div>
-          <FormSubmitButton
-            text="Create Project"
-            isSubmitting={mutation.isPending}
-          />
+          <FormSubmitButton text="Create Project" isSubmitting={isPending} />
         </form>
       </FormProvider>
     </>

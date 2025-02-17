@@ -213,7 +213,7 @@ export default function ProjectDetails({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <div className="border bg-gradient-to-b from-muted/10 to-muted/30 rounded-lg p-4 md:p-6">
+                    <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
                       <div className="flex justify-between py-2">
                         <div className="md:flex items-center mb-6">
                           <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-2 md:mb-0 mr-4">
@@ -290,19 +290,25 @@ export default function ProjectDetails({
         </TabsContent>
         <TabsContent value="danger">
           <div className="space-y-8 my-10">
-            <Card className="border-[1px] border-destructive/20">
+            <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
               <CardHeader>
-                <CardTitle className="text-2xl">Delete Project</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-xl font-bold mb-2">
+                  Delete Project
+                </CardTitle>
+
+                <CardDescription className="text-sm text-foregeound">
                   This project will be deleted, along with all of its Data,
                   Files, Invoices and Quotations. This action is irreversible
                   and can not be undone.
                 </CardDescription>
               </CardHeader>
+
               <CardContent>
-                <DeleteProject name={name || ""} id={_id || ""} />
+                <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
+                  <DeleteProject name={name || ""} id={_id || ""} />
+                </div>
               </CardContent>
-            </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

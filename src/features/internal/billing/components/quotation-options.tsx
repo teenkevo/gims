@@ -138,8 +138,8 @@ const SwitchField = ({
   // Conditionally apply styles only if the field is on and not valid
   const switchFieldClasses =
     form.watch(name) && !isFieldValid()
-      ? "transition-all duration-200 ease-in-out rounded-lg border border-destructive p-1"
-      : "transition-all duration-200 ease-in-out rounded-lg border p-1";
+      ? "transition-all duration-200 ease-in-out rounded-lg border border-destructive p-1 bg-gradient-to-b from-muted/20 to-muted/40"
+      : "transition-all duration-200 ease-in-out rounded-lg border p-1 bg-gradient-to-b from-muted/10 to-muted/20";
 
   const isSwitchOn = form.watch(name);
 
