@@ -186,8 +186,6 @@ export function CreateContactDialog({
     },
   });
 
-  console.log(form.getValues());
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const formattedData = {
