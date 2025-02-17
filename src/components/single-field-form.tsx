@@ -60,7 +60,7 @@ export function SingleFieldForm({
   };
 
   return (
-    <div className="border rounded-lg ">
+    <div className="border bg-gradient-to-b from-muted/10 to-muted/30 rounded-lg ">
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>

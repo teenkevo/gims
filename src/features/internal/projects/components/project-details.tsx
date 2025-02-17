@@ -4,6 +4,7 @@ import {
   ArrowLeftCircle,
   CircleMinus,
   EllipsisVerticalIcon,
+  PencilIcon,
   Trash2,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
@@ -212,14 +213,14 @@ export default function ProjectDetails({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <div className="border rounded-lg p-6">
+                    <div className="border bg-gradient-to-b from-muted/10 to-muted/30 rounded-lg p-6">
                       <div className="flex justify-between py-2">
                         <div className="md:flex items-center mb-2">
-                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-primary text-primary-foreground mb-4 md:mb-0 mr-4">
+                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-4 md:mb-0 mr-4">
                             {key + 1}
                           </div>
-                          <p className=" font-semibold text-lg md:text-xl tracking-tight">
-                            {client.name}
+                          <p className="font-semibold text-lg md:text-xl tracking-tight">
+                            <span>{client.name}</span>
                           </p>
                         </div>
                         {clients.length > 1 && (
@@ -241,12 +242,14 @@ export default function ProjectDetails({
                           </DropdownMenu>
                         )}
                       </div>
+
                       <ClientNameForm
                         title="Client Name"
                         initialValue={client?.name || ""}
                         clientId={client?._id || ""}
                         projectId={_id}
                       />
+
                       <ContactTable
                         projectId={_id || ""}
                         clientId={client?._id || ""}

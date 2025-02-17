@@ -61,7 +61,12 @@ export default function ClientNameForm({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input disabled={isPending} {...field} autoComplete="off" />
+                    <Input
+                      autoFocus
+                      disabled={isPending}
+                      {...field}
+                      autoComplete="off"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
