@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "./logo";
 import { ToggleLightDark } from "./toggle-light-dark";
+import SentryFeedbackButton from "../sentry-feedback-button";
 
 // This is sample data.
 const data = {
@@ -258,6 +259,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <ToggleLightDark />
+        <SentryFeedbackButton />
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
