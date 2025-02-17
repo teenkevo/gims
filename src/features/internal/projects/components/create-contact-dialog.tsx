@@ -181,10 +181,12 @@ export function CreateContactDialog({
       existingContact: undefined,
       name: "",
       email: "",
-      phone: "",
+      phone: undefined,
       designation: "",
     },
   });
+
+  console.log(form.getValues());
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
