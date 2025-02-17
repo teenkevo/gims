@@ -377,7 +377,6 @@ export function CreateContactDialog({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      autoFocus
                       disabled={isSubmitting}
                       placeholder="John Doe"
                       {...field}

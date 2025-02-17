@@ -66,7 +66,6 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
             <FormLabel>Enter Project name</FormLabel>
             <FormControl>
               <Input
-                autoFocus
                 disabled={isSubmitting}
                 placeholder="e.g. Nakawa Power Lines"
                 {...field}

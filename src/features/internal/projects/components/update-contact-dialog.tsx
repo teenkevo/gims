@@ -122,12 +122,7 @@ export function UpdateContactDialog({
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input
-                  autoFocus
-                  disabled={isPending}
-                  placeholder="John Doe"
-                  {...field}
-                />
+                <Input disabled={isPending} placeholder="John Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
