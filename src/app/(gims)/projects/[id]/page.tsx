@@ -14,21 +14,17 @@ export default async function ProjectPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = await getProjectById(id);
-  const existingContacts = await getAllContacts();
-  const existingClients = await getAllClients();
 
-  // Initiate both requests in parallel
+  // Fetch data in parallel
   const [projectData, existingContactsData, existingClientsData] =
-    await Promise.all([project, existingContacts, existingClients]);
+    await Promise.all([getProjectById(id), getAllContacts(), getAllClients()]);
 
-  // Check if projectData is defined and has at least one item
-  const projectDetails =
-    projectData && projectData.length > 0 ? projectData[0] : null;
+  // Ensure projectData exists and is not an empty array
+  const hasProject = projectData && projectData.length > 0;
 
-  return projectDetails ? (
+  return hasProject ? (
     <ProjectDetails
-      project={projectDetails}
+      project={projectData[0]}
       existingContacts={existingContactsData}
       existingClients={existingClientsData}
     />

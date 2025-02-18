@@ -85,7 +85,7 @@ export function CreateProjectForm({
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
-  }, [state, router]);
+  }, [state]);
 
   return (
     <>
