@@ -80,8 +80,8 @@ export function CreateProjectForm({
 
   useEffect(() => {
     if (state?.status === "ok") {
-      router.push(`/projects`);
       toast.success("Project created successfully");
+      router.push("/projects");
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
