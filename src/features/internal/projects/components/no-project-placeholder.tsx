@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { PlusCircleIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -30,7 +30,7 @@ export default function NoProjectPlaceholder() {
         <div className="mx-4 my-2">
           <Button asChild className="sm:w-auto" variant="default">
             <Link href="/projects" className="my-2">
-              <PlusCircleIcon className="h-5 w-5 mr-2" />
+              <ArrowLeftIcon className="h-5 w-5 mr-2" />
               Go Back to Projects
             </Link>
           </Button>
