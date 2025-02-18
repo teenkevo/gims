@@ -33,8 +33,8 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
   const action = async (_: void | null) => {
     const result = await deleteProject(id);
     if (result.status === "ok") {
-      router.push("/projects");
       toast.success("Project has been deleted");
+      router.push("/projects");
     } else {
       toast.error("Something went wrong");
     }
