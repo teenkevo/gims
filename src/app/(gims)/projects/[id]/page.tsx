@@ -19,16 +19,16 @@ export default async function ProjectPage({
   const [projectData, existingContactsData, existingClientsData] =
     await Promise.all([getProjectById(id), getAllContacts(), getAllClients()]);
 
-  // Ensure projectData exists and is not an empty array
-  const hasProject = projectData && projectData.length > 0;
+  // If project is not found, show 404 placeholder
+  if (!projectData || projectData.length === 0) {
+    return <NoProjectPlaceholder />;
+  }
 
-  return hasProject ? (
+  return (
     <ProjectDetails
       project={projectData[0]}
       existingContacts={existingContactsData}
       existingClients={existingClientsData}
     />
-  ) : (
-    <NoProjectPlaceholder />
   );
 }
