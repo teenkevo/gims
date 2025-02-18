@@ -49,7 +49,7 @@ export async function createProject(prevState: any, formData: FormData) {
         autoGenerateArrayKeys: true,
       }
     );
-    revalidateTag(`projects`);
+    revalidateTag("projects");
     return { result: project, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
