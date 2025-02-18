@@ -22,11 +22,13 @@ export default async function ProjectPage({
   const [projectData, existingContactsData, existingClientsData] =
     await Promise.all([project, existingContacts, existingClients]);
 
-  console.log(projectData[0]?.clients?.[0]?.name);
+  // Check if projectData is defined and has at least one item
+  const projectDetails =
+    projectData && projectData.length > 0 ? projectData[0] : null;
 
-  return projectData ? (
+  return projectDetails ? (
     <ProjectDetails
-      project={projectData[0]}
+      project={projectDetails}
       existingContacts={existingContactsData}
       existingClients={existingClientsData}
     />
