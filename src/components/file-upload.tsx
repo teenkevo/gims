@@ -129,45 +129,6 @@ export default function FileUpload({
 
   return (
     <div className="w-full space-y-4 pb-10">
-      <div
-        className={cn(
-          "border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer text-center",
-          isDragging
-            ? "border-primary bg-primary/5"
-            : "border-muted-foreground/25 hover:border-primary/50",
-          files.length > 0 && "border-muted-foreground/25"
-        )}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={openFileDialog}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          multiple={multiple}
-          accept={accept}
-          onChange={(e) => handleFileChange(e.target.files)}
-        />
-
-        <div className="flex flex-col items-center justify-center gap-2">
-          <div className="p-3 rounded-full bg-muted">
-            <Upload className="w-3 h-3 text-muted-foreground" />
-          </div>
-          <div className="text-sm font-medium">
-            {isDragging ? "Drop files here" : "Drag & drop files here"}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            or <span className="text-primary font-medium">browse files</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">
-            {multiple ? "Upload multiple files up to " : "Upload a file up to "}
-            {maxSize}MB
-          </div>
-        </div>
-      </div>
-
       {files.length > 0 && (
         <div className="space-y-3">
           {files.map((fileData, index) => (
@@ -237,6 +198,44 @@ export default function FileUpload({
           ))}
         </div>
       )}
+      <div
+        className={cn(
+          "border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer text-center",
+          isDragging
+            ? "border-primary bg-primary/5"
+            : "border-muted-foreground/25 hover:border-primary/50",
+          files.length > 0 && "border-muted-foreground/25"
+        )}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={openFileDialog}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          multiple={multiple}
+          accept={accept}
+          onChange={(e) => handleFileChange(e.target.files)}
+        />
+
+        <div className="flex flex-col items-center justify-center gap-2">
+          <div className="p-3 rounded-full bg-muted">
+            <Upload className="w-3 h-3 text-muted-foreground" />
+          </div>
+          <div className="text-sm font-medium">
+            {isDragging ? "Drop files here" : "Drag & drop files here"}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            or <span className="text-primary font-medium">browse files</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">
+            {multiple ? "Upload multiple files up to " : "Upload a file up to "}
+            {maxSize}MB
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

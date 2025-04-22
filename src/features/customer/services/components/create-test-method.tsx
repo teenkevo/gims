@@ -147,6 +147,24 @@ function TestMethodForm({
     },
   });
 
+  // Add new state for the prefix
+  const [prefix, setPrefix] = React.useState("");
+
+  // Update the prefix when standard changes
+  React.useEffect(() => {
+    const selectedStandard = standards.find(
+      (s) => s._id === form.getValues("standard")
+    );
+    setPrefix(selectedStandard?.acronym ? `${selectedStandard.acronym} ` : "");
+    // If there's an existing code value, we need to handle it
+    const currentCode = form.getValues("code");
+    if (currentCode && selectedStandard?.acronym) {
+      // Remove any existing prefix and set new value
+      const codeWithoutPrefix = currentCode.replace(/^[A-Z]+ /, "");
+      form.setValue("code", `${selectedStandard.acronym} ${codeWithoutPrefix}`);
+    }
+  }, [form.watch("standard")]);
+
   const onSubmit = async (data: TestMethodType) => {
     const formData = new FormData();
     formData.append("code", data.code);
@@ -285,19 +303,51 @@ function TestMethodForm({
           name="code"
           rules={{ required: "Code is required" }}
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel className="flex " required>
-                Code
-              </FormLabel>
-              <FormControl>
-                <Input
-                  disabled={isPending || loading}
-                  placeholder="e.g. BS EN 10025-2"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+            <AnimatePresence mode="wait">
+              {form.watch("standard") && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="flex" required>
+                      Code
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        {prefix && (
+                          <div className="absolute text-sm left-3 top-1/2 -translate-y-1/2 font-bold select-none">
+                            {prefix}
+                          </div>
+                        )}
+                        <Input
+                          disabled={isPending || loading}
+                          placeholder="e.g. EN 10025-2"
+                          {...field}
+                          value={field.value.replace(prefix, "")}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            field.onChange(prefix + newValue);
+                          }}
+                          className={cn(
+                            prefix && "pl-[calc(0.8rem_+_var(--prefix-length))]"
+                          )}
+                          style={
+                            {
+                              "--prefix-length": `${prefix.length}ch`,
+                            } as React.CSSProperties
+                          }
+                          autoFocus
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         />
         <FormField
