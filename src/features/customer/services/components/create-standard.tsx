@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface StandardType {
   name: string;
@@ -109,6 +110,8 @@ function StandardForm({
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(addStandard, null);
 
+  const router = useRouter();
+
   const form = useForm({
     mode: "onChange",
     reValidateMode: "onChange",
@@ -131,6 +134,7 @@ function StandardForm({
     if (state?.status === "ok") {
       toast.success("Standard has been added");
       setOpen(false);
+      router.push("/services/standards");
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }

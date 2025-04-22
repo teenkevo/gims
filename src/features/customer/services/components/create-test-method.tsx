@@ -48,6 +48,7 @@ import { CommandInput } from "@/components/ui/command";
 import { CommandList } from "@/components/ui/command";
 import { ALL_STANDARDS_QUERYResult } from "../../../../../sanity.types";
 import FileUpload from "@/components/file-upload";
+import { useRouter } from "next/navigation";
 
 interface TestMethodType {
   code: string;
@@ -125,6 +126,7 @@ function TestMethodForm({
   standards: ALL_STANDARDS_QUERYResult;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const router = useRouter();
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false); // Local loading state
 
@@ -180,6 +182,7 @@ function TestMethodForm({
     if (state?.status === "ok") {
       toast.success("Test method has been added");
       setOpen(false);
+      router.push("/services/test-methods");
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
