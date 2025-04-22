@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -27,15 +27,32 @@ import {
 
 import { DataTableToolbar } from "@/features/customer/services/components/services-table/data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import type {
+  ALL_SERVICES_QUERYResult,
+  ALL_TEST_METHODS_QUERYResult,
+} from "../../../../../../sanity.types";
+import type { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_STANDARDS_QUERYResult } from "../../../../../../sanity.types";
+import { getColumns } from "./columns"; // Import the function instead of the constant
+import { deleteMultipleServices } from "@/lib/actions";
+import { DeleteMultipleServices } from "./delete-multiple-services";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+  columns?: ColumnDef<TData, TValue>[]; // Make columns optional
   data: TData[];
+  standards: ALL_STANDARDS_QUERYResult;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
+  testMethods: ALL_TEST_METHODS_QUERYResult;
 }
 
 export function DataTable<TData, TValue>({
-  columns,
+  columns: propColumns, // Rename to avoid conflict
   data,
+  standards,
+  sampleClasses,
+  testMethods,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -44,6 +61,20 @@ export function DataTable<TData, TValue>({
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+
+  // Generate columns with the provided props
+  // Use propColumns if provided, otherwise generate columns with the function
+  const columns = React.useMemo(
+    () =>
+      propColumns ||
+      (getColumns(standards, sampleClasses, testMethods) as ColumnDef<
+        TData,
+        TValue
+      >[]),
+    [propColumns, standards, sampleClasses, testMethods]
+  );
 
   const table = useReactTable({
     data,
@@ -67,9 +98,23 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
+  const serviceIds = table
+    .getSelectedRowModel()
+    .rows.map((row) => (row.original as { _id: string })._id);
+
   return (
     <div className="space-y-4">
-      <DataTableToolbar table={table} />
+      <DataTableToolbar
+        table={table}
+        sampleClasses={sampleClasses}
+        openDialog={() => setOpenDialog(true)}
+      />
+      <DeleteMultipleServices
+        ids={serviceIds}
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+      />
+      {/* <Button onClick={handleDelete}>Delete Selected</Button> */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -113,7 +158,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No services.
                 </TableCell>
               </TableRow>
             )}

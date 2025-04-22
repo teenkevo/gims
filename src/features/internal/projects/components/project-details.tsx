@@ -92,7 +92,10 @@ export default function ProjectDetails({
 
   return (
     <>
-      <Link className="mb-10 inline-flex" href="/projects">
+      <Link
+        className="mb-10 inline-flex tracking-tight underline underline-offset-4"
+        href="/projects"
+      >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>

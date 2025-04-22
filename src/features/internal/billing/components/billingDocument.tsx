@@ -363,9 +363,18 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   /* eslint-enable jsx-a11y/alt-text */
 
   const ClientAddressAndProject = () => (
-    <View style={styles.spaceBetweenNoAlign}>
-      <View>
-        <Text style={styles.heading}>
+    <View style={[styles.spaceBetweenNoAlign, { marginBottom: 20 }]}>
+      <View
+        style={{
+          width: "48%",
+          border: "1px solid #43AC33",
+          backgroundColor: "#e1ebe3",
+          padding: 15,
+          height: "80px",
+          borderRadius: 10,
+        }}
+      >
+        <Text style={{ ...styles.heading, marginBottom: 15 }}>
           {generateInvoice ? "Invoice" : "Quotation"} to
         </Text>
         {/* {project?.clients?.map((client) => (
@@ -382,8 +391,17 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         </Text>
       </View>
 
-      <View>
-        <Text style={styles.heading}>Project</Text>
+      <View
+        style={{
+          width: "48%",
+          border: "1px solid #43AC33",
+          backgroundColor: "#e1ebe3",
+          padding: 15,
+          borderRadius: 10,
+          height: "80px",
+        }}
+      >
+        <Text style={{ ...styles.heading, marginBottom: 15 }}>Project</Text>
         <Text style={styles.subHeading}>{project.name}</Text>
       </View>
     </View>
@@ -581,9 +599,17 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     </View>
   );
 
-  const Payment = () => (
+  const Contact = () => (
     <View style={styles.titleContainer}>
-      <View style={styles.spaceBetween}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          flexWrap: "wrap", // Ensures text wraps properly
+        }}
+      >
         <View style={{ width: "48%" }}>
           <Text style={styles.heading}>Bank Payment Details</Text>
           <Text style={styles.quotationDetail}>
@@ -596,20 +622,17 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           </Text>
           <Text style={styles.quotationDetail}>ACCOUNT NUMBER: 6007328255</Text>
           <Text style={styles.quotationDetail}>SWIFT CODE: BARCUGKXXX</Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  const Contact = () => (
-    <View style={styles.titleContainer}>
-      <View style={styles.spaceBetween}>
-        <View>
-          <Text style={styles.heading}>Contact us</Text>
+          <Text style={{ ...styles.heading, marginTop: 10 }}>Contact us</Text>
           <Text style={styles.quotationDetail}>
             If you have any questions concerning this quotation, contact Sam on
             +256 702550557
           </Text>
+        </View>
+        <View style={{ width: "48%" }}>
+          <Image
+            style={tw("w-[200px] mt-5")}
+            src="/getlab-certifications.png"
+          />
         </View>
       </View>
     </View>
@@ -650,7 +673,6 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       {isVATRequired() ? <VAT /> : null}
       {isVATRequired() ? <TotalBillWithVAT /> : <TotalBill />}
       <AmountInWords />
-      <Payment />
       <Contact />
       <Text
         style={styles.pageNumber}

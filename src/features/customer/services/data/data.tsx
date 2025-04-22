@@ -50,26 +50,8 @@ export const statuses = [
     icon: CheckCircledIcon,
   },
   {
-    value: "cancelled",
-    label: "Cancelled",
+    value: "inactive",
+    label: "Inactive",
     icon: CrossCircledIcon,
-  },
-];
-
-export const priorities = [
-  {
-    label: "Low",
-    value: "low",
-    icon: ArrowDownIcon,
-  },
-  {
-    label: "Medium",
-    value: "medium",
-    icon: ArrowRightIcon,
-  },
-  {
-    label: "High",
-    value: "high",
-    icon: ArrowUpIcon,
   },
 ];

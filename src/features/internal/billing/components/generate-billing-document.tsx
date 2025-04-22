@@ -24,6 +24,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import React from "react";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import Loading from "@/app/loading";
+import { deleteAsset, uploadPDFDocument } from "@/lib/actions";
 
 interface GenerateBillingDocumentProps {
   labTests: Service[];
@@ -58,12 +59,13 @@ export const GenerateBillingDocument = (
     </Document>
   );
 
-  const handleOpenInNewTab = async () => {
+  const handleUploadToSanity = async () => {
     const blob = await pdf(Doc).toBlob();
-    const url = URL.createObjectURL(blob);
-    setTimeout(() => {
-      window.open(url, "_blank");
-    });
+    await uploadPDFDocument(blob, "Quotation.pdf");
+  };
+
+  const handleDeleteAsset = async () => {
+    await deleteAsset();
   };
 
   const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), {
@@ -102,6 +104,12 @@ export const GenerateBillingDocument = (
           <SheetTitle className="flex items-center gap-2 text-lg md:text-2xl">
             Quotation <Badge>Draft</Badge>
           </SheetTitle>
+          <Button type="button" size="sm" onClick={handleUploadToSanity}>
+            Upload to DB
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDeleteAsset}>
+            Delete asset
+          </Button>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <PDFViewer width="100%" height={600}>

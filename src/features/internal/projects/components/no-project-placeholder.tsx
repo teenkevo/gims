@@ -29,7 +29,10 @@ export default function NoProjectPlaceholder() {
         </p>
         <div className="mx-4 my-2">
           <Button asChild className="sm:w-auto" variant="default">
-            <Link href="/projects" className="my-2">
+            <Link
+              href="/projects"
+              className="my-2 tracking-tight underline underline-offset-4"
+            >
               <ArrowLeftIcon className="h-5 w-5 mr-2" />
               Go Back to Projects
             </Link>

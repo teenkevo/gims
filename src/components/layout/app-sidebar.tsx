@@ -190,20 +190,20 @@ const data = {
     },
     {
       title: "Services",
-      url: "#",
+      url: "/services",
       icon: LayoutList,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "All",
+          url: "/services",
         },
         {
-          title: "Explorer",
-          url: "#",
+          title: "Active",
+          url: "/services",
         },
         {
-          title: "Quantum",
-          url: "#",
+          title: "Inactive",
+          url: "/services",
         },
       ],
     },

@@ -5,7 +5,13 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { ChevronRight } from "lucide-react";
+import {
+  ChevronRight,
+  DollarSign,
+  Ellipsis,
+  ListEnd,
+  ListStart,
+} from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { getCurrentStageIndex, possibleStages } from "../constants";
@@ -13,6 +19,7 @@ import { format } from "date-fns";
 import ProjectStage from "./project-stage";
 import { ALL_PROJECTS_QUERYResult, Project } from "../../../../../sanity.types";
 import { sanitizeString } from "@/lib/utils";
+import { SetDateRangeDialog } from "./set-project-date-range";
 
 // Reusable InfoBlock component for displaying label-value pairs
 function InfoBlock({
@@ -53,18 +60,71 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
           </div>
         </div>
         <p className="text-sm my-5 tracking-tight"></p>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+        <div
+          className={`grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3`}
+        >
           {/* Using the reusable InfoBlock component */}
           <InfoBlock
             label="Start Date"
-            value={format(startDate!, "MMM do, yyyy")}
+            value={
+              startDate ? (
+                <SetDateRangeDialog
+                  icon={<ListStart className="text-orange-500 w-4 h-4 mr-2" />}
+                  buttonText={format(startDate!, "MMM do, yyyy")}
+                  project={project}
+                />
+              ) : (
+                <SetDateRangeDialog
+                  icon={<ListStart className="text-orange-500 w-4 h-4 mr-2" />}
+                  buttonText="Set start date"
+                  project={project}
+                />
+              )
+            }
           />
           <InfoBlock
             label="End Date"
-            value={format(endDate!, "MMM do, yyyy")}
+            value={
+              endDate ? (
+                <SetDateRangeDialog
+                  icon={<ListEnd className="text-red-700 w-4 h-4 mr-2" />}
+                  buttonText={format(endDate!, "MMM do, yyyy")}
+                  project={project}
+                />
+              ) : (
+                <SetDateRangeDialog
+                  icon={<ListEnd className="text-red-700 w-4 h-4 mr-2" />}
+                  buttonText="Set end date"
+                  project={project}
+                />
+              )
+            }
           />
-          <InfoBlock label="Cost" value="UGX 500,000" />
           <InfoBlock
+            label="Cost"
+            value={
+              <Button size="sm" variant="outline" className="flex items-center">
+                <Link
+                  href={`/projects/${_id}?project=${name}&tab=billing`}
+                  className="my-2 flex"
+                >
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Generate quotation
+                </Link>
+              </Button>
+            }
+          />
+          <InfoBlock
+            label="Priority"
+            value={
+              <p className="flex items-center">
+                <Ellipsis className="w-4 h-4 mr-2" />
+                No Priority
+              </p>
+            }
+          />
+
+          {/* <InfoBlock
             label="Client Satisfaction "
             value={
               <div className="flex items-center space-x-2">
@@ -72,7 +132,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
                 <span className="text-sm">Out of 100</span>
               </div>
             }
-          />
+          /> */}
         </div>
       </CardContent>
       <div className="my-4 h-[2px] w-full bg-muted"></div>

@@ -55,28 +55,6 @@ export type SanityImageCrop = {
   right?: number;
 };
 
-export type SanityFileAsset = {
-  _id: string;
-  _type: "sanity.fileAsset";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  originalFilename?: string;
-  label?: string;
-  title?: string;
-  description?: string;
-  altText?: string;
-  sha1hash?: string;
-  extension?: string;
-  mimeType?: string;
-  size?: number;
-  assetId?: string;
-  uploadId?: string;
-  path?: string;
-  url?: string;
-  source?: SanityAssetSourceData;
-};
-
 export type SanityImageAsset = {
   _id: string;
   _type: "sanity.imageAsset";
@@ -124,11 +102,335 @@ export type Slug = {
   source?: string;
 };
 
-export type SanityAssetSourceData = {
-  _type: "sanity.assetSourceData";
+export type Rfi = {
+  _id: string;
+  _type: "rfi";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  initiationType?:
+    | "internal_internal"
+    | "internal_external"
+    | "external_internal";
+  project?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "project";
+  };
+  client?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "client";
+  };
+  labInitiator?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  labReceiver?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  labInitiatorExternal?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  clientReceiver?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "contactPerson";
+  };
+  clientInitiator?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "contactPerson";
+  };
+  labReceiverExternal?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  subject?: string;
+  description?: string;
+  attachments?: Array<string>;
+  status?: "open" | "in_progress" | "resolved";
+  conversation?: Array<{
+    message?: string;
+    sentByClient?: boolean;
+    clientSender?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "contactPerson";
+    };
+    labSender?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "personnel";
+    };
+    attachments?: Array<string>;
+    timestamp?: string;
+    _key: string;
+  }>;
+  dateSubmitted?: string;
+  dateResolved?: string;
+};
+
+export type LabApprovalWorkflow = {
+  _id: string;
+  _type: "labApprovalWorkflow";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  lab?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "lab";
+  };
+  workflowType?:
+    | "equipment_release_approval"
+    | "test_result_approval"
+    | "lab_access_approval"
+    | "sop_change_approval";
+  initiatedBy?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  approvalSteps?: Array<{
+    approver?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "personnel";
+    };
+    decision?: "pending" | "approved" | "rejected";
+    approvalDate?: string;
+    notes?: string;
+    _key: string;
+  }>;
+  finalDecision?: "pending" | "approved" | "rejected";
+  finalDecisionDate?: string;
+  status?: "pending" | "in_progress" | "approved" | "rejected";
+};
+
+export type MaintenanceLog = {
+  _id: string;
+  _type: "maintenanceLog";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  equipment?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "equipment";
+  };
+  date?: string;
+  supervisedBy?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  maintenanceType?: "routine" | "repair" | "calibration" | "replacement";
+  maintenanceNotes?: string;
+  maintenanceCompany?: {
+    companyName?: string;
+    contactPerson?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+  };
+};
+
+export type Equipment = {
+  _id: string;
+  _type: "equipment";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
   name?: string;
-  id?: string;
-  url?: string;
+  serialNumber?: string;
+  status?: "available" | "in_use" | "under_maintenance" | "retired";
+  lastMaintenance?: string;
+  nextMaintenance?: string;
+  assignedPersonnel?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  }>;
+  userManuals?: Array<string>;
+  supplier?: {
+    name?: string;
+    contactPerson?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+  };
+  maintenanceCompany?: {
+    companyName?: string;
+    contactPerson?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+  };
+};
+
+export type Lab = {
+  _id: string;
+  _type: "lab";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  labSection?:
+    | "soil_testing"
+    | "rock_testing"
+    | "seismic_testing"
+    | "asphalt_lab"
+    | "concrete_testing"
+    | "general_materials";
+  status?: "available" | "under_maintenance" | "retired" | "fullCapacity";
+  location?: string;
+  capacity?: number;
+  personnel?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  }>;
+  labHead?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+  equipment?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "equipment";
+  }>;
+  projects?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "project";
+  }>;
+  sopDocuments?: Array<{
+    category?:
+      | "health_safety"
+      | "evacuation"
+      | "quality_control"
+      | "equipment_handling"
+      | "general_operations";
+    documentUrl?: string;
+    description?: string;
+    _key: string;
+  }>;
+};
+
+export type FeedbackAction = {
+  _id: string;
+  _type: "feedbackAction";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  action?: string;
+  description?: string;
+  assignedTo?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  }>;
+  dueDate?: string;
+  status?: "pending" | "completed";
+  reviewedBy?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
+};
+
+export type Personnel = {
+  _id: string;
+  _type: "personnel";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  fullName?: string;
+  roleSet?: Array<string>;
+  email?: string;
+  phone?: string;
+  departments?: Array<string>;
+  projects?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "project";
+  };
+};
+
+export type ClientFeedback = {
+  _id: string;
+  _type: "clientFeedback";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  client?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "client";
+  };
+  contactPerson?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "contactPerson";
+  };
+  date?: string;
+  feedback?: Array<{
+    category?:
+      | "enquiry"
+      | "sampleHandling"
+      | "testQuality"
+      | "technicalKnowledge"
+      | "deliveryTime"
+      | "presentation"
+      | "complaintHandling";
+    rating?: "Excellent" | "Good" | "Satisfactory" | "Average" | "Poor";
+    comments?: string;
+    _key: string;
+  }>;
+  suggestions?: string;
+  actionNeeded?: boolean;
+  actions?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "feedbackAction";
+  }>;
 };
 
 export type ContactPerson = {
@@ -176,6 +478,20 @@ export type Project = {
   priority?: "noPriority" | "urgent" | "high" | "medium" | "low";
   startDate?: string;
   endDate?: string;
+  projectPersonnel?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  }>;
+  projectSupervisors?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  }>;
   clients?: Array<{
     _ref: string;
     _type: "reference";
@@ -193,21 +509,178 @@ export type Project = {
   stagesCompleted?: Array<string>;
 };
 
+export type Service = {
+  _id: string;
+  _type: "service";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  code?: string;
+  testParameter?: string;
+  testMethods?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "testMethod";
+  }>;
+  sampleClass?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "sampleClass";
+  };
+  status?: "active" | "inactive";
+};
+
+export type FieldTest = {
+  _id: string;
+  _type: "fieldTest";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  code?: string;
+  testParameter?: string;
+  testMethods?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "testMethod";
+  }>;
+  status?: "active" | "inactive";
+};
+
+export type LabTest = {
+  _id: string;
+  _type: "labTest";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  code?: string;
+  testParameter?: string;
+  testMethods?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "testMethod";
+  }>;
+  sampleClass?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "sampleClass";
+  };
+  status?: "active" | "inactive";
+};
+
+export type TestMethod = {
+  _id: string;
+  _type: "testMethod";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  standard?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "standard";
+  };
+  code?: string;
+  description?: string;
+  documents?: Array<{
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+    };
+    name?: string;
+    _type: "file";
+    _key: string;
+  }>;
+};
+
+export type SanityFileAsset = {
+  _id: string;
+  _type: "sanity.fileAsset";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  originalFilename?: string;
+  label?: string;
+  title?: string;
+  description?: string;
+  altText?: string;
+  sha1hash?: string;
+  extension?: string;
+  mimeType?: string;
+  size?: number;
+  assetId?: string;
+  uploadId?: string;
+  path?: string;
+  url?: string;
+  source?: SanityAssetSourceData;
+};
+
+export type SanityAssetSourceData = {
+  _type: "sanity.assetSourceData";
+  name?: string;
+  id?: string;
+  url?: string;
+};
+
+export type SampleClass = {
+  _id: string;
+  _type: "sampleClass";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  description?: string;
+};
+
+export type Standard = {
+  _id: string;
+  _type: "standard";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  acronym?: string;
+  description?: string;
+};
+
 export type AllSanitySchemaTypes =
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
   | SanityImageHotspot
   | SanityImageCrop
-  | SanityFileAsset
   | SanityImageAsset
   | SanityImageMetadata
   | Geopoint
   | Slug
-  | SanityAssetSourceData
+  | Rfi
+  | LabApprovalWorkflow
+  | MaintenanceLog
+  | Equipment
+  | Lab
+  | FeedbackAction
+  | Personnel
+  | ClientFeedback
   | ContactPerson
   | Client
-  | Project;
+  | Project
+  | Service
+  | FieldTest
+  | LabTest
+  | TestMethod
+  | SanityFileAsset
+  | SanityAssetSourceData
+  | SampleClass
+  | Standard;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ./src/sanity/lib/clients/getAllClients.ts
 // Variable: ALL_CLIENTS_QUERY
@@ -271,6 +744,144 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
   }> | null;
 }>;
 
+// Source: ./src/sanity/lib/services/getAllSampleClasses.ts
+// Variable: ALL_SAMPLE_CLASSES_QUERY
+// Query: *[_type == "sampleClass"] {            _id,             name,            description        }
+export type ALL_SAMPLE_CLASSES_QUERYResult = Array<{
+  _id: string;
+  name: string | null;
+  description: string | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getAllServices.ts
+// Variable: ALL_SERVICES_QUERY
+// Query: *[_type == "service"] {            _id,             code,            testParameter,            testMethods[] -> {                _id,                code,                description,                standard -> {                    _id,                    name,                    acronym                }            },            sampleClass -> {                _id,                name,                description            },            status        }
+export type ALL_SERVICES_QUERYResult = Array<{
+  _id: string;
+  code: string | null;
+  testParameter: string | null;
+  testMethods: Array<{
+    _id: string;
+    code: string | null;
+    description: string | null;
+    standard: {
+      _id: string;
+      name: string | null;
+      acronym: string | null;
+    } | null;
+  }> | null;
+  sampleClass: {
+    _id: string;
+    name: string | null;
+    description: string | null;
+  } | null;
+  status: "active" | "inactive" | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getAllStandards.ts
+// Variable: ALL_STANDARDS_QUERY
+// Query: *[_type == "standard"] {            _id,             name,            acronym,            description        }
+export type ALL_STANDARDS_QUERYResult = Array<{
+  _id: string;
+  name: string | null;
+  acronym: string | null;
+  description: string | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getAllTestMethods.ts
+// Variable: ALL_TEST_METHODS_QUERY
+// Query: *[_type == "testMethod"] {            _id,             code,            description,            standard -> {                _id,                name,                acronym            },            documents[] {              _key,              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },              name            }        }
+export type ALL_TEST_METHODS_QUERYResult = Array<{
+  _id: string;
+  code: string | null;
+  description: string | null;
+  standard: {
+    _id: string;
+    name: string | null;
+    acronym: string | null;
+  } | null;
+  documents: Array<{
+    _key: string;
+    asset: {
+      _id: string;
+      url: string | null;
+      originalFilename: string | null;
+      size: number | null;
+      mimeType: string | null;
+    } | null;
+    name: string | null;
+  }> | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getServiceById.ts
+// Variable: SERVICE_BY_ID_QUERY
+// Query: *[_type == "service" && _id == $serviceId] {            _id,             code,            testParameter,            testMethods[] -> {                _id,                code,                description,                standard -> {                    _id,                    name,                    acronym                },                documents[] {                  _key,                  asset->{                    url,                    originalFilename,                    size,                    mimeType,                  }                }              },            sampleClass -> {                _id,                name,                description            },            status        }
+export type SERVICE_BY_ID_QUERYResult = Array<{
+  _id: string;
+  code: string | null;
+  testParameter: string | null;
+  testMethods: Array<{
+    _id: string;
+    code: string | null;
+    description: string | null;
+    standard: {
+      _id: string;
+      name: string | null;
+      acronym: string | null;
+    } | null;
+    documents: Array<{
+      _key: string;
+      asset: {
+        url: string | null;
+        originalFilename: string | null;
+        size: number | null;
+        mimeType: string | null;
+      } | null;
+    }> | null;
+  }> | null;
+  sampleClass: {
+    _id: string;
+    name: string | null;
+    description: string | null;
+  } | null;
+  status: "active" | "inactive" | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getStandardById.ts
+// Variable: STANDARD_BY_ID_QUERY
+// Query: *[_type == "standard" && _id == $standardId] {            _id,             name,            acronym,            description        }
+export type STANDARD_BY_ID_QUERYResult = Array<{
+  _id: string;
+  name: string | null;
+  acronym: string | null;
+  description: string | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getTestMethodById.ts
+// Variable: TEST_METHOD_BY_ID_QUERY
+// Query: *[_type == "testMethod" && _id == $testMethodId] {            _id,             code,            description,            standard -> {                _id,                name,                acronym            },            documents[] {              _key,              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },              name            }        }
+export type TEST_METHOD_BY_ID_QUERYResult = Array<{
+  _id: string;
+  code: string | null;
+  description: string | null;
+  standard: {
+    _id: string;
+    name: string | null;
+    acronym: string | null;
+  } | null;
+  documents: Array<{
+    _key: string;
+    asset: {
+      _id: string;
+      url: string | null;
+      originalFilename: string | null;
+      size: number | null;
+      mimeType: string | null;
+    } | null;
+    name: string | null;
+  }> | null;
+}>;
+
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
@@ -279,5 +890,12 @@ declare module "@sanity/client" {
     '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            clients[]->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
     '\n        *[_type == "project"] {\n          _id,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
+    '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
+    '\n        *[_type == "service"] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': ALL_SERVICES_QUERYResult;
+    '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;
+    '\n        *[_type == "testMethod"] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': ALL_TEST_METHODS_QUERYResult;
+    '\n        *[_type == "service" && _id == $serviceId] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                },\n                documents[] {\n                  _key,\n                  asset->{\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  }\n                }  \n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': SERVICE_BY_ID_QUERYResult;
+    '\n        *[_type == "standard" && _id == $standardId] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': STANDARD_BY_ID_QUERYResult;
+    '\n        *[_type == "testMethod" && _id == $testMethodId] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': TEST_METHOD_BY_ID_QUERYResult;
   }
 }

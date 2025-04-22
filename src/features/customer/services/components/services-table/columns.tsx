@@ -1,16 +1,27 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { v4 as uuidv4 } from "uuid";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { test_methods, statuses, sample_classes } from "../../data/data";
-import { Service } from "../../data/schema";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { DataTableRowActions } from "@/components/data-table/data-table-row-actions";
+import { DataTableRowActions } from "./data-table-row-actions";
+import type {
+  ALL_SERVICES_QUERYResult,
+  ALL_STANDARDS_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERYResult,
+  ALL_TEST_METHODS_QUERYResult,
+} from "../../../../../../sanity.types";
+import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
+import Link from "next/link";
 
-export const columns: ColumnDef<Service>[] = [
+// Convert columns to a function that accepts parameters
+export const getColumns = (
+  standards?: ALL_STANDARDS_QUERYResult,
+  sampleClasses?: ALL_SAMPLE_CLASSES_QUERYResult,
+  testMethods?: ALL_TEST_METHODS_QUERYResult
+): ColumnDef<ALL_SERVICES_QUERYResult[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -41,10 +52,12 @@ export const columns: ColumnDef<Service>[] = [
       <DataTableColumnHeader column={column} title="Code" />
     ),
     cell: ({ row }) => (
-      <div className="w-[80px] font-bold">{row.getValue("code")}</div>
+      <Link className="hover:underline" href={`/services/${row.original?._id}`}>
+        <div className="w-[80px] font-bold">{row.getValue("code")}</div>
+      </Link>
     ),
-    enableSorting: false,
-    enableHiding: false,
+    // enableSorting: false,
+    // enableHiding: false,
   },
   {
     accessorKey: "test_parameter",
@@ -53,11 +66,16 @@ export const columns: ColumnDef<Service>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <div className="flex space-x-2">
-          <span className="max-w-[500px] truncate font-normal">
-            {row.getValue("test_parameter")}
-          </span>
-        </div>
+        <Link
+          className="hover:underline"
+          href={`/services/${row.original?._id}`}
+        >
+          <div className="flex space-x-2">
+            <span className="max-w-[500px] truncate font-normal">
+              {row.original?.testParameter}
+            </span>
+          </div>
+        </Link>
       );
     },
   },
@@ -67,19 +85,17 @@ export const columns: ColumnDef<Service>[] = [
       <DataTableColumnHeader column={column} title="Test Method" />
     ),
     cell: ({ row }) => {
-      const test_methods_to_check = row.original.test_methods.map(
-        (m) => m.label
-      );
-      const filtered_test_methods = test_methods.filter((test_method) =>
-        test_methods_to_check.includes(test_method.label)
-      );
-
+      // Now you can use testMethods here if needed
       return (
         <div className="flex space-x-2">
-          {filtered_test_methods.map((method) => (
-            <Badge key={uuidv4()} variant="outline">
-              {method.label}
-            </Badge>
+          {row.original?.testMethods?.map((method) => (
+            <Link
+              key={uuidv4()}
+              className="hover:underline"
+              href={`/services/test-methods/${method._id}`}
+            >
+              <Badge variant="outline">{method.standard?.acronym}</Badge>
+            </Link>
           ))}
         </div>
       );
@@ -91,22 +107,17 @@ export const columns: ColumnDef<Service>[] = [
       <DataTableColumnHeader column={column} title="Sample Class" />
     ),
     cell: ({ row }) => {
-      const sample_class = sample_classes.find(
-        (sample_class) => sample_class.value === row.getValue("sample_class")
-      );
-
-      if (!sample_class) {
-        return null;
-      }
-
+      // Now you can use sampleClasses here if needed
       return (
         <div className="flex w-[100px] items-center">
-          <span>{sample_class.label}</span>
+          <span>{row.original?.sampleClass?.name}</span>
         </div>
       );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      return value.includes(
+        row.original?.sampleClass?.name?.toLowerCase().replace(/\s+/g, "") || ""
+      );
     },
   },
   {
@@ -115,27 +126,35 @@ export const columns: ColumnDef<Service>[] = [
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      );
-
-      if (!status) {
-        return null;
-      }
-
       return (
         <div className="flex w-[100px] items-center">
-          {status.icon && <status.icon className="mr-2 h-4 w-4 text-primary" />}
-          <span>{status.label}</span>
+          {row.original?.status === "active" && (
+            <Badge variant="outline">
+              <CheckCircledIcon className="mr-2 h-4 w-4 text-primary" />
+              Active
+            </Badge>
+          )}
+          {row.original?.status === "inactive" && (
+            <Badge variant="outline">
+              <CrossCircledIcon className="mr-2 h-4 w-4 text-orange-500" />
+              Inactive
+            </Badge>
+          )}
         </div>
       );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      return value.includes(row.getValue);
     },
   },
   {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => (
+      <DataTableRowActions
+        sampleClasses={sampleClasses || []}
+        testMethods={testMethods || []}
+        service={row.original as ALL_SERVICES_QUERYResult[number]}
+      />
+    ),
   },
 ];

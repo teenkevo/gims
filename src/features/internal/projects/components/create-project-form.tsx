@@ -49,17 +49,21 @@ export function CreateProjectForm({
     defaultValues: {
       projectName: "",
       dateRange: { from: undefined, to: undefined },
-      priority: "noPriority",
       clients: [],
     },
   });
 
   const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
+    console.log(data);
     const formData = new FormData();
     formData.append("projectName", data.projectName);
-    formData.append("dateFrom", data.dateRange.from.toISOString());
-    formData.append("dateTo", data.dateRange.to.toISOString());
-    formData.append("priority", data.priority);
+
+    // Check if dateRange.from exists and append it
+    if (data.dateRange?.from && data.dateRange?.to) {
+      formData.append("dateFrom", data.dateRange.from.toISOString());
+      formData.append("dateTo", data.dateRange.to.toISOString());
+    }
+
     data.clients.forEach((client) =>
       formData.append(
         "clients",
@@ -89,7 +93,10 @@ export function CreateProjectForm({
 
   return (
     <>
-      <Link className="mb-10 inline-flex" href="/projects">
+      <Link
+        className="mb-10 inline-flex tracking-tight underline underline-offset-4"
+        href="/projects"
+      >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>

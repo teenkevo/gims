@@ -143,6 +143,8 @@ const SwitchField = ({
 
   const isSwitchOn = form.watch(name);
 
+  console.log(form.getValues());
+
   function onSubmit(data: QuotationOptionsValues) {
     console.log(data);
   }

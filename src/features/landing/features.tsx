@@ -104,20 +104,20 @@ const features = [
       </Marquee>
     ),
   },
-  {
-    Icon: InputIcon,
-    name: "Centralized services repository",
-    description:
-      "Manage and search through all your lab's services in one place.",
-    href: "/",
-    cta: "Learn more",
-    className: "col-span-3 lg:col-span-2",
-    background: (
-      <div className="absolute right-0 h-[500px] w-[80%] p-2 mx-10 border rounded-lg bg-secondary/40 top-10 origin-top transition-all duration-300 ease-out [mask-image:linear-gradient(to_top,transparent_40%,#000_100%)]">
-        <FeatureServiceManagement />
-      </div>
-    ),
-  },
+  // {
+  //   Icon: InputIcon,
+  //   name: "Centralized services repository",
+  //   description:
+  //     "Manage and search through all your lab's services in one place.",
+  //   href: "/",
+  //   cta: "Learn more",
+  //   className: "col-span-3 lg:col-span-2",
+  //   background: (
+  //     <div className="absolute right-0 h-[500px] w-[80%] p-2 mx-10 border rounded-lg bg-secondary/40 top-10 origin-top transition-all duration-300 ease-out [mask-image:linear-gradient(to_top,transparent_40%,#000_100%)]">
+  //       <FeatureServiceManagement />
+  //     </div>
+  //   ),
+  // },
   {
     Icon: Share2Icon,
     name: "Flexible billing workflows",

@@ -62,6 +62,8 @@ export function ClientProfileForm({
     formState: { errors },
     clearErrors,
   } = useFormContext();
+
+  // Initialize with one default client
   const { fields, append, remove } = useFieldArray({
     control,
     name: "clients",
@@ -72,6 +74,15 @@ export function ClientProfileForm({
       },
     },
   });
+
+  // // Add a default client if none exist
+  // if (fields.length === 0) {
+  //   append({
+  //     clientType: "new",
+  //     existingClient: "",
+  //     newClientName: "",
+  //   });
+  // }
 
   const clientsArrayError = errors.clients?.root?.message as string;
 
@@ -224,15 +235,17 @@ export function ClientProfileForm({
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="button"
-                    disabled={isSubmitting}
-                    variant="destructive"
-                    onClick={() => remove(index)}
-                    className="mt-3 max-w-[150px]"
-                  >
-                    <Trash className="w-4 h-4 mr-2" /> Remove Client
-                  </Button>
+                  {fields.length > 1 && (
+                    <Button
+                      type="button"
+                      disabled={isSubmitting}
+                      variant="destructive"
+                      onClick={() => remove(index)}
+                      className="mt-3 max-w-[150px]"
+                    >
+                      <Trash className="w-4 h-4 mr-2" /> Remove Client
+                    </Button>
+                  )}
                 </div>
               )}
 
@@ -257,15 +270,17 @@ export function ClientProfileForm({
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="button"
-                    disabled={isSubmitting}
-                    variant="destructive"
-                    onClick={() => remove(index)}
-                    className="mt-3 max-w-[150px]"
-                  >
-                    <Trash className="w-4 h-4 mr-2" /> Remove Client
-                  </Button>
+                  {fields.length > 1 && (
+                    <Button
+                      type="button"
+                      disabled={isSubmitting}
+                      variant="destructive"
+                      onClick={() => remove(index)}
+                      className="mt-3 max-w-[150px]"
+                    >
+                      <Trash className="w-4 h-4 mr-2" /> Remove Client
+                    </Button>
+                  )}
                 </div>
               )}
             </FormItem>
@@ -275,25 +290,39 @@ export function ClientProfileForm({
 
       {/* Add More Clients Button */}
       <div className="space-y-4">
-        <Button
-          type="button"
-          disabled={isSubmitting}
-          variant="outline"
-          onClick={() =>
-            append({
-              clientType: "new",
-              existingClient: "",
-              newClientName: "",
-            })
-          }
-        >
-          <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add a Client
-        </Button>
-        {errors.clients && (
-          <p className="text-sm font-medium text-destructive">
-            {clientsArrayError}
-          </p>
-        )}
+        <div className="flex-row">
+          {fields.length === 0 && (
+            <p
+              className={cn(
+                'after:ml-0.5 after:text-destructive after:content-["*"]',
+                "my-2 text-sm font-medium"
+              )}
+            >
+              Atleast one client is required
+            </p>
+          )}
+          <Button
+            type="button"
+            disabled={isSubmitting}
+            variant="outline"
+            onClick={() =>
+              append({
+                clientType: "new",
+                existingClient: "",
+                newClientName: "",
+              })
+            }
+          >
+            <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add{" "}
+            {fields.length === 0 ? "a " : "another "}
+            client
+          </Button>
+          {errors.clients && (
+            <p className="text-sm font-medium text-destructive">
+              {clientsArrayError}
+            </p>
+          )}
+        </div>
       </div>
     </FormSpacerWrapper>
   );
