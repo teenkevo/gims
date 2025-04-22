@@ -48,8 +48,8 @@ export function NavGroup({
             disabled={item.isDisabled}
           >
             <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <a href={item.url}>
                   {item.icon && (
                     <item.icon
                       className={`${item.isDisabled ? "text-muted-foreground" : "text-primary"}`}
@@ -59,8 +59,9 @@ export function NavGroup({
                   <ChevronRight
                     className={`ml-auto transition-transform duration-200 ${item.isDisabled ? "" : "text-primary"} group-data-[state=open]/collapsible:rotate-90`}
                   />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
+                </a>
+              </SidebarMenuButton>
+
               <CollapsibleContent>
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
