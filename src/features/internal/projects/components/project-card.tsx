@@ -140,7 +140,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
         {/* Stats section refactored using StatItem */}
         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
           {/* <StatItem icon={Eye} value={20} /> */}
-          <ProjectStage {...project} />
+          {/* <ProjectStage {...project} /> */}
         </div>
         {/* View Listing Button */}
 

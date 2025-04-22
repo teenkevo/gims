@@ -2,6 +2,8 @@ import React from "react";
 import { HeroFlippingText } from "./hero-flipping-text";
 import { Announcement } from "./announcement";
 import { Features } from "./features";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 // import { LoginButton } from "@/components/auth/login-button";
 
 export function Landing() {
@@ -12,14 +14,17 @@ export function Landing() {
       <div className="pt-24 items-center justify-center px-5 md:px-28">
         <Announcement />
         <HeroFlippingText />
-        <h2 className="text-md font-normal text-muted-foreground max-w-2xl">
+        {/* <h2 className="text-md font-normal text-muted-foreground max-w-2xl">
           Reduce operational costs, grow revenue, and run your geotechnical
           laboratory more efficiently. Use GIMS to handle all your
           automation-related needs, increase data quality and accelerate R&D
-        </h2>
+        </h2> */}
         {/* <div className="my-10">
           <LoginButton variant="default" text="Get Started" />
         </div> */}
+        <Button variant="default" asChild>
+          <Link href="/projects">Go to application</Link>
+        </Button>
 
         <Features />
       </div>

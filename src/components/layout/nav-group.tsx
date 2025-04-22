@@ -31,6 +31,7 @@ export function NavGroup({
       title: string;
       url: string;
     }[];
+    isDisabled?: boolean;
   }[];
   label: string;
 }) {
@@ -44,13 +45,20 @@ export function NavGroup({
             asChild
             defaultOpen={item.isActive}
             className="group/collapsible"
+            disabled={item.isDisabled}
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
+                  {item.icon && (
+                    <item.icon
+                      className={`${item.isDisabled ? "text-muted-foreground" : "text-primary"}`}
+                    />
+                  )}
                   <span>{item.title}</span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  <ChevronRight
+                    className={`ml-auto transition-transform duration-200 ${item.isDisabled ? "" : "text-primary"} group-data-[state=open]/collapsible:rotate-90`}
+                  />
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>

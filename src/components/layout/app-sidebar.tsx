@@ -71,6 +71,7 @@ const data = {
           url: "/projects/create",
         },
       ],
+      isDisabled: false,
     },
 
     {
@@ -95,6 +96,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Equipment",
@@ -118,6 +120,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Repository",
@@ -129,6 +132,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Staff",
@@ -140,6 +144,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Billing",
@@ -151,6 +156,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Workflows",
@@ -162,6 +168,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Security",
@@ -173,6 +180,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
   ],
   navCustomer: [
@@ -187,6 +195,7 @@ const data = {
           url: "/projects/create",
         },
       ],
+      isDisabled: true,
     },
     {
       title: "Services",
@@ -197,15 +206,16 @@ const data = {
           title: "All",
           url: "/services",
         },
-        {
-          title: "Active",
-          url: "/services",
-        },
-        {
-          title: "Inactive",
-          url: "/services",
-        },
+        // {
+        //   title: "Active",
+        //   url: "/services",
+        // },
+        // {
+        //   title: "Inactive",
+        //   url: "/services",
+        // },
       ],
+      isDisabled: false,
     },
     {
       title: "Reporting",
@@ -225,6 +235,7 @@ const data = {
           url: "#",
         },
       ],
+      isDisabled: true,
     },
   ],
   projects: [

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Header } from "@/features/landing/header";
 import { Landing } from "@/features/landing/landing";
+import { Beta } from "@/features/landing/beta";
 
 export const metadata: Metadata = {
   title: "GIMS by GETLAB: Unlock the power of your geotechnical data.",
@@ -22,8 +23,9 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <section className="relative w-full">
-      <Header />
-      <Landing />
+      {/* <Header /> */}
+      {/* <Landing /> */}
+      <Beta />
     </section>
   );
 }

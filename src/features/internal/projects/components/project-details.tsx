@@ -156,7 +156,7 @@ export default function ProjectDetails({
         </TabsList>
         <TabsContent value="details">
           <div className="space-y-8 my-10">
-            <InfoCard
+            {/* <InfoCard
               title="Project Stage"
               description=""
               learnMoreLink="#"
@@ -166,7 +166,7 @@ export default function ProjectDetails({
               <p className=" text-xs my-2 text-muted-foreground">
                 Hover to jump to stage
               </p>
-            </InfoCard>
+            </InfoCard> */}
             {/* <InfoCard
               title="Project ID"
               description="Used when interacting with GIMS' services and the API"

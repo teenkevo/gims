@@ -104,12 +104,12 @@ export const getColumns = (
   //   },
   // },
 
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <DataTableRowActions
-        standard={row.original as ALL_STANDARDS_QUERYResult[number]}
-      />
-    ),
-  },
+  // {
+  //   id: "actions",
+  //   cell: ({ row }) => (
+  //     <DataTableRowActions
+  //       standard={row.original as ALL_STANDARDS_QUERYResult[number]}
+  //     />
+  //   ),
+  // },
 ];
