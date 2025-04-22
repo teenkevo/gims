@@ -65,147 +65,147 @@ const data = {
       url: "/projects",
       icon: FileStack,
       isActive: false,
-      items: [
-        {
-          title: "Create new",
-          url: "/projects/create",
-        },
-      ],
+      // items: [
+      //   {
+      //     title: "Create new",
+      //     url: "/projects/create",
+      //   },
+      // ],
       isDisabled: false,
     },
 
-    {
-      title: "Labs",
-      url: "#",
-      icon: FlaskConical,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
-    {
-      title: "Equipment",
-      url: "#",
-      icon: Cable,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
-    {
-      title: "Repository",
-      url: "#",
-      icon: DatabaseZap,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
-    {
-      title: "Staff",
-      url: "#",
-      icon: Users,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
-    {
-      title: "Billing",
-      url: "#",
-      icon: Wallet,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
-    {
-      title: "Workflows",
-      url: "#",
-      icon: FileCheck2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
-    {
-      title: "Security",
-      url: "#",
-      icon: ShieldCheck,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
+    // {
+    //   title: "Labs",
+    //   url: "#",
+    //   icon: FlaskConical,
+    //   items: [
+    //     {
+    //       title: "Introduction",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Get Started",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Tutorials",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Changelog",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
+    // {
+    //   title: "Equipment",
+    //   url: "#",
+    //   icon: Cable,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Team",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Billing",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Limits",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
+    // {
+    //   title: "Repository",
+    //   url: "#",
+    //   icon: DatabaseZap,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
+    // {
+    //   title: "Staff",
+    //   url: "#",
+    //   icon: Users,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
+    // {
+    //   title: "Billing",
+    //   url: "#",
+    //   icon: Wallet,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
+    // {
+    //   title: "Workflows",
+    //   url: "#",
+    //   icon: FileCheck2,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
+    // {
+    //   title: "Security",
+    //   url: "#",
+    //   icon: ShieldCheck,
+    //   items: [
+    //     {
+    //       title: "General",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
   ],
   navCustomer: [
-    {
-      title: "Clients",
-      url: "/clients",
-      icon: Briefcase,
+    // {
+    //   title: "Clients",
+    //   url: "/clients",
+    //   icon: Briefcase,
 
-      items: [
-        {
-          title: "Create new",
-          url: "/projects/create",
-        },
-      ],
-      isDisabled: true,
-    },
+    //   items: [
+    //     {
+    //       title: "Create new",
+    //       url: "/projects/create",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
     {
       title: "Services",
       url: "/services",
       icon: LayoutList,
       items: [
-        {
-          title: "All",
-          url: "/services",
-        },
+        // {
+        //   title: "All",
+        //   url: "/services",
+        // },
         // {
         //   title: "Active",
         //   url: "/services",
@@ -217,26 +217,26 @@ const data = {
       ],
       isDisabled: false,
     },
-    {
-      title: "Reporting",
-      url: "#",
-      icon: ScrollText,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-      isDisabled: true,
-    },
+    // {
+    //   title: "Reporting",
+    //   url: "#",
+    //   icon: ScrollText,
+    //   items: [
+    //     {
+    //       title: "Genesis",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Explorer",
+    //       url: "#",
+    //     },
+    //     {
+    //       title: "Quantum",
+    //       url: "#",
+    //     },
+    //   ],
+    //   isDisabled: true,
+    // },
   ],
   projects: [
     {
@@ -264,8 +264,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Logo icon={Rocket} name="GIMS by GETLAB" />
       </SidebarHeader>
       <SidebarContent aria-describedby={undefined}>
-        <NavGroup label="Internal" items={data.navCore} />
-        <NavGroup label="Customer" items={data.navCustomer} />
+        <NavGroup label="Internal Modules" items={data.navCore} />
+        <NavGroup label="Customer Modules" items={data.navCustomer} />
       </SidebarContent>
       <SidebarFooter>
         <ToggleLightDark />
