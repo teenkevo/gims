@@ -596,6 +596,7 @@ export type TestMethod = {
       _weak?: boolean;
       [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
     };
+    media?: unknown;
     name?: string;
     _type: "file";
     _key: string;
@@ -639,6 +640,12 @@ export type SampleClass = {
   _rev: string;
   name?: string;
   description?: string;
+  subclasses?: Array<{
+    name?: string;
+    key?: string;
+    _type: "subclass";
+    _key: string;
+  }>;
 };
 
 export type Standard = {
@@ -746,11 +753,15 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/services/getAllSampleClasses.ts
 // Variable: ALL_SAMPLE_CLASSES_QUERY
-// Query: *[_type == "sampleClass"] {            _id,             name,            description        }
+// Query: *[_type == "sampleClass"] {            _id,             name,            description,            subclasses[] {                name,                key            }        }
 export type ALL_SAMPLE_CLASSES_QUERYResult = Array<{
   _id: string;
   name: string | null;
   description: string | null;
+  subclasses: Array<{
+    name: string | null;
+    key: string | null;
+  }> | null;
 }>;
 
 // Source: ./src/sanity/lib/services/getAllServices.ts
@@ -890,7 +901,7 @@ declare module "@sanity/client" {
     '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            clients[]->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
     '\n        *[_type == "project"] {\n          _id,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
-    '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
+    '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
     '\n        *[_type == "service"] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': ALL_SERVICES_QUERYResult;
     '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;
     '\n        *[_type == "testMethod"] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': ALL_TEST_METHODS_QUERYResult;

@@ -19,9 +19,9 @@ import {
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
-import { deleteMultipleStandards } from "@/lib/actions";
+import { deleteMultipleSampleClasses } from "@/lib/actions";
 
-export function DeleteMultipleStandards({
+export function DeleteMultipleSampleClasses({
   ids,
   open,
   onClose,
@@ -33,13 +33,13 @@ export function DeleteMultipleStandards({
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const action = async (_: void | null) => {
-    const result = await deleteMultipleStandards(ids);
+    const result = await deleteMultipleSampleClasses(ids);
     if (result.status === "ok") {
-      toast.success("Standards have been deleted");
+      toast.success("Sample Classes have been deleted");
       onClose();
     } else {
       toast.error(
-        `These standards cannot be deleted. First remove all their linked test methods and try again`
+        `These sample classes cannot be deleted. First remove all their linked services and try again`
       );
     }
   };
@@ -56,10 +56,10 @@ export function DeleteMultipleStandards({
           className="sm:max-w-3xl"
         >
           <DialogHeader className="space-y-3">
-            <DialogTitle>Delete Standards</DialogTitle>
+            <DialogTitle>Delete Sample Classes</DialogTitle>
             <DialogDescription>
-              These standards will be deleted and won't be available for use in
-              future quotations and invoices
+              These sample classes will be deleted and won't be available for
+              use in future services
             </DialogDescription>
             <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
               <span className="font-bold">Warning</span>: This action is not
@@ -95,10 +95,10 @@ export function DeleteMultipleStandards({
         }}
       >
         <DrawerHeader className="gap-3 text-left">
-          <DialogTitle>Delete Standards</DialogTitle>
+          <DialogTitle>Delete Sample Classes</DialogTitle>
           <DialogDescription>
-            These standards will be deleted and won't be available for use in
-            future quotations and invoices
+            These sample classes will be deleted and won't be available for use
+            in future services
           </DialogDescription>
           <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
             <span className="font-bold">Warning</span>: This action is not

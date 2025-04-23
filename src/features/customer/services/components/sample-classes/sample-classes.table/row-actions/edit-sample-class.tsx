@@ -9,7 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,28 +26,31 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { updateStandard } from "@/lib/actions";
+import { updateSampleClass, updateStandard } from "@/lib/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil } from "lucide-react";
-import { ALL_STANDARDS_QUERYResult } from "../../../../../../../../sanity.types";
+import { Pencil, Plus } from "lucide-react";
+import {
+  ALL_SAMPLE_CLASSES_QUERYResult,
+  ALL_STANDARDS_QUERYResult,
+} from "../../../../../../../../sanity.types";
 
-interface EditStandardType {
+interface EditSampleClassType {
   name: string;
-  acronym: string;
   description: string;
+  subclasses: { name: string | null; key: string | null }[];
 }
 
-export function EditStandardDialog({
+export function EditSampleClassDialog({
   open,
   onClose,
-  standard,
+  sampleClass,
 }: {
   open: boolean;
   onClose: () => void;
-  standard: ALL_STANDARDS_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -58,13 +61,13 @@ export function EditStandardDialog({
           onInteractOutside={(e) => {
             e.preventDefault();
           }}
-          className="sm:max-w-[425px]"
+          className="sm:max-w-[500px]"
         >
           <DialogHeader>
-            <DialogTitle>Edit Standard</DialogTitle>
+            <DialogTitle>Edit Sample Class</DialogTitle>
           </DialogHeader>
 
-          <StandardForm standard={standard} onClose={onClose} />
+          <SampleClassForm sampleClass={sampleClass} onClose={onClose} />
         </DialogContent>
       </Dialog>
     );
@@ -78,10 +81,10 @@ export function EditStandardDialog({
         }}
       >
         <DrawerHeader className="text-left">
-          <DrawerTitle>Edit Standard</DrawerTitle>
+          <DrawerTitle>Edit Sample Class</DrawerTitle>
         </DrawerHeader>
 
-        <StandardForm standard={standard} onClose={onClose} />
+        <SampleClassForm sampleClass={sampleClass} onClose={onClose} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -92,16 +95,16 @@ export function EditStandardDialog({
   );
 }
 
-function StandardForm({
+function SampleClassForm({
   onClose,
-  standard,
+  sampleClass,
 }: {
   onClose: () => void;
-  standard: ALL_STANDARDS_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
 }) {
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(
-    updateStandard,
+    updateSampleClass,
     null
   );
 
@@ -109,18 +112,24 @@ function StandardForm({
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      name: standard.name || "",
-      acronym: standard.acronym || "",
-      description: standard.description || "",
+      name: sampleClass.name || "",
+      description: sampleClass.description || "",
+      subclasses: sampleClass.subclasses || [],
     },
   });
 
-  const onSubmit = (data: EditStandardType) => {
+  // Add useFieldArray after the form declaration
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "subclasses",
+  });
+
+  const onSubmit = (data: EditSampleClassType) => {
     const formData = new FormData();
     formData.append("name", data.name);
-    formData.append("acronym", data.acronym);
     formData.append("description", data.description);
-    formData.append("standardId", standard._id);
+    formData.append("sampleClassId", sampleClass._id);
+    formData.append("subclasses", JSON.stringify(data.subclasses));
     React.startTransition(() => dispatch(formData)); // Use dispatch instead of createProject
   };
 
@@ -137,7 +146,7 @@ function StandardForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={`space-y-8 h-[400px] px-4 md:px-0 py-4`}
+        className={`space-y-8 h-[500px] pb-16 px-4 md:px-1 py-4 overflow-y-auto`}
       >
         <FormField
           control={form.control}
@@ -151,25 +160,9 @@ function StandardForm({
               <FormControl>
                 <Input
                   disabled={isPending}
-                  placeholder="e.g. British Standard"
+                  placeholder="e.g. Asphalt"
                   {...field}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="acronym"
-          rules={{ required: "Acronym is required" }}
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel className="flex " required>
-                Acronym
-              </FormLabel>
-              <FormControl>
-                <Input disabled={isPending} placeholder="e.g. BS" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -193,6 +186,105 @@ function StandardForm({
             </FormItem>
           )}
         />
+
+        {/* Add the subclasses section before the FormSubmitButton in the form */}
+        {/* After the description FormField and before the FormSubmitButton, add: */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <FormLabel>Sample Subclasses</FormLabel>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append({ name: "", key: "" })}
+              disabled={isPending}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Add Subclass
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex gap-2 items-start p-3 border rounded-md"
+              >
+                <div className="flex-grow space-y-2">
+                  <FormField
+                    control={form.control}
+                    name={`subclasses.${index}.name`}
+                    rules={{ required: "Name is required" }}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-xs">Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            disabled={isPending}
+                            placeholder="Subclass name"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="w-[15%] min-w-[80px] space-y-2">
+                  <FormField
+                    control={form.control}
+                    name={`subclasses.${index}.key`}
+                    rules={{ required: "Required" }}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-xs">Key</FormLabel>
+                        <FormControl>
+                          <Input
+                            disabled={isPending}
+                            placeholder="Key"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {fields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 mt-6"
+                    onClick={() => remove(index)}
+                    disabled={isPending}
+                  >
+                    <span className="sr-only">Remove</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-red-500"
+                    >
+                      <path d="M3 6h18"></path>
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <FormSubmitButton text="Save" isSubmitting={isPending} />
       </form>
     </Form>

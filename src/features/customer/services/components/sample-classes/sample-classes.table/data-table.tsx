@@ -28,17 +28,17 @@ import {
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { getColumns } from "./columns"; // Import the function instead of the constant
-import { ALL_SERVICES_QUERYResult } from "../../../../../../../sanity.types";
-import { DeleteMultipleStandards } from "./delete-multiple-standards";
+import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../../sanity.types";
+import { DeleteMultipleSampleClasses } from "./delete-multiple-sample-classes";
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
-  services: ALL_SERVICES_QUERYResult;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
 }
 
 export function DataTable<TData, TValue>({
   data,
-  services,
+  sampleClasses,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -53,7 +53,7 @@ export function DataTable<TData, TValue>({
   // Generate columns with the provided props
 
   const columns = React.useMemo(
-    () => getColumns(services) as ColumnDef<TData, TValue>[],
+    () => getColumns(sampleClasses) as ColumnDef<TData, TValue>[],
     [data]
   );
 
@@ -79,15 +79,15 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const standardIds = table
+  const sampleClassIds = table
     .getSelectedRowModel()
     .rows.map((row) => (row.original as { _id: string })._id);
 
   return (
-    <div className="space-y-4 max-w-full md:max-w-md">
+    <div className="space-y-4">
       <DataTableToolbar table={table} openDialog={() => setOpenDialog(true)} />
-      <DeleteMultipleStandards
-        ids={standardIds}
+      <DeleteMultipleSampleClasses
+        ids={sampleClassIds}
         open={openDialog}
         onClose={() => setOpenDialog(false)}
       />

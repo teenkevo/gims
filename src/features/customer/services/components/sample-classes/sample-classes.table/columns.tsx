@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { v4 as uuidv4 } from "uuid";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -15,7 +16,7 @@ import Link from "next/link";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  services?: ALL_SERVICES_QUERYResult
+  sampleClasses?: ALL_SAMPLE_CLASSES_QUERYResult
 ): ColumnDef<ALL_SAMPLE_CLASSES_QUERYResult[number]>[] => [
   {
     id: "select",
@@ -45,9 +46,9 @@ export const getColumns = (
     accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader
-        className="text-base"
+        className="text-sm"
         column={column}
-        title="Name"
+        title="Class Name"
       />
     ),
     cell: ({ row }) => (
@@ -80,36 +81,41 @@ export const getColumns = (
   //   // enableHiding: false,
   // },
 
-  // {
-  //   accessorKey: "test_methods",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Test Methods" />
-  //   ),
-  //   cell: ({ row }) => {
-  //     const testMethodsInStandard = testMethods?.filter(
-  //       (testMethod) => testMethod.standard?._id === row.original?._id
-  //     );
-  //     return (
-  //       <div className="flex space-x-2">
-  //         <Link href={`/services/standards/${row.original?._id}`}>
-  //           <Button
-  //             className="w-16 hover:border-primary border-2 text-primary"
-  //             variant="secondary"
-  //           >
-  //             {testMethodsInStandard?.length}
-  //           </Button>
-  //         </Link>
-  //       </div>
-  //     );
-  //   },
-  // },
+  {
+    accessorKey: "subclasses",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Subclasses" />
+    ),
+    cell: ({ row }) => {
+      const subclasses = row.original?.subclasses?.map(
+        (subclass) => subclass.name
+      );
+      return (
+        <div className="flex flex-wrap gap-2">
+          {subclasses?.map((subclass) => (
+            <Link
+              key={uuidv4()}
+              href={`/services/standards/${row.original?._id}`}
+            >
+              <Button
+                className="hover:border-primary border-2 text-primary"
+                variant="secondary"
+              >
+                {subclass}
+              </Button>
+            </Link>
+          ))}
+        </div>
+      );
+    },
+  },
 
-  // {
-  //   id: "actions",
-  //   cell: ({ row }) => (
-  //     <DataTableRowActions
-  //       standard={row.original as ALL_STANDARDS_QUERYResult[number]}
-  //     />
-  //   ),
-  // },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <DataTableRowActions
+        sampleClass={row.original as ALL_SAMPLE_CLASSES_QUERYResult[number]}
+      />
+    ),
+  },
 ];

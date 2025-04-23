@@ -411,12 +411,31 @@ export async function deleteFileFromTestMethod(
 export async function addSampleClass(prevState: any, formData: FormData) {
   const name = formData.get("name");
   const description = formData.get("description");
+  const subclassesRaw = formData.get("subclasses");
+
+  let subclasses = [];
   try {
-    const result = await writeClient.create({
-      _type: "sampleClass",
-      name,
-      description,
-    });
+    subclasses = JSON.parse(subclassesRaw as string);
+  } catch (e) {
+    return { status: "error", message: "Invalid subclasses data" };
+  }
+
+  try {
+    const result = await writeClient.create(
+      {
+        _type: "sampleClass",
+        name,
+        description,
+        subclasses: subclasses.map((sc: { name: string; key: string }) => ({
+          _type: "subclass",
+          name: sc.name,
+          key: sc.key,
+        })),
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error adding sample class:", error);
@@ -428,6 +447,7 @@ export async function addSampleClass(prevState: any, formData: FormData) {
 export async function deleteSampleClass(sampleClassId: string) {
   try {
     const result = await writeClient.delete(sampleClassId);
+    revalidateTag("sampleClasses");
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error deleting sample class:", error);
@@ -435,18 +455,56 @@ export async function deleteSampleClass(sampleClassId: string) {
   }
 }
 
-// UPDATE SAMPLE CLASS
-export async function updateSampleClass(
-  sampleClassId: string,
-  formData: FormData
+// DELETE MULTIPLE SAMPLE CLASSES
+export async function deleteMultipleSampleClasses(sampleClassIds: string[]) {
+  try {
+    const results = await Promise.all(
+      sampleClassIds.map(async (sampleClassId) => {
+        const result = await writeClient.delete(sampleClassId);
+        return result;
+      })
+    );
+    revalidateTag("sampleClasses");
+    return { results, status: "ok" };
+  } catch (error) {
+    console.error("Error deleting sample classes:", error);
+    return { error, status: "error" };
+  }
+}
+
+// GET DOCUMENTS REFERENCING SAMPLE CLASS
+export async function getDocumentsReferencingSampleClass(
+  sampleClassId: string
 ) {
+  return await writeClient.fetch(
+    `*[_type != "sampleClass" && references($id)] {
+      _id,
+      _type,
+      code,
+      testParameter
+    }`,
+    { id: sampleClassId }
+  );
+}
+
+// UPDATE SAMPLE CLASS
+export async function updateSampleClass(prevState: any, formData: FormData) {
   const name = formData.get("name");
   const description = formData.get("description");
+  const subclassesRaw = formData.get("subclasses");
+  const sampleClassId = formData.get("sampleClassId");
+  let subclasses = [];
+  try {
+    subclasses = JSON.parse(subclassesRaw as string);
+  } catch (e) {
+    return { status: "error", message: "Invalid subclasses data" };
+  }
   try {
     const result = await writeClient
-      .patch(sampleClassId)
-      .set({ name, description })
+      .patch(sampleClassId as string)
+      .set({ name, description, subclasses })
       .commit();
+    revalidateTag("sampleClasses");
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error updating sample class:", error);
