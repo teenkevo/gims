@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { z } from "zod";
 import { useUpdateProjectName } from "../api/use-update-project-name";
 import { revalidateProject } from "@/lib/actions";
+import { Control, FieldValues } from "react-hook-form";
 
 interface ProjectUpdateNameFormProps {
   title: string;
@@ -70,7 +71,7 @@ export default function ProjectUpdateNameForm({
       validation={z.string().trim().min(1, "Required")}
       renderField={(form) => (
         <FormField
-          control={form.control}
+          control={form.control as Control<FieldValues, any, FieldValues>}
           name={fieldName}
           render={({ field }) => (
             <FormItem>

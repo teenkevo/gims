@@ -41,7 +41,6 @@ Font.register({
       fontWeight: 700,
     },
   ],
-  format: "truetype",
 });
 
 interface BillingDocumentProps {

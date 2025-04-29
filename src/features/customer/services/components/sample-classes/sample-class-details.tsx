@@ -4,6 +4,7 @@ import { ArrowLeftCircle } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { v4 as uuidv4 } from "uuid";
 import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +56,10 @@ export default function TestMethodDetails({
       >
         <TabsList>
           {subclasses?.map((subclass) => (
-            <TabsTrigger value={subclass.name?.toLowerCase() || ""}>
+            <TabsTrigger
+              key={uuidv4()}
+              value={subclass.name?.toLowerCase() || ""}
+            >
               {subclass.name}
             </TabsTrigger>
           ))}

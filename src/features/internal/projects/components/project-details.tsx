@@ -156,25 +156,6 @@ export default function ProjectDetails({
         </TabsList>
         <TabsContent value="details">
           <div className="space-y-8 my-10">
-            {/* <InfoCard
-              title="Project Stage"
-              description=""
-              learnMoreLink="#"
-              savable={false}
-            >
-              <ProjectStage {...project} />
-              <p className=" text-xs my-2 text-muted-foreground">
-                Hover to jump to stage
-              </p>
-            </InfoCard> */}
-            {/* <InfoCard
-              title="Project ID"
-              description="Used when interacting with GIMS' services and the API"
-              learnMoreLink="#"
-              savable={false}
-            >
-              <CopyableInput inputValue={_id} />
-            </InfoCard> */}
             <ProjectUpdateNameForm
               title="Project Name"
               description="Used to identify a project on the Dashboard"

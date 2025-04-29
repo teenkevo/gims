@@ -16,6 +16,7 @@ import React, { useState } from "react";
 import { z } from "zod";
 import { useUpdateProjectDates } from "../api/use-update-project-dates";
 import { revalidateProject } from "@/lib/actions";
+import { Control, FieldValues } from "react-hook-form";
 
 interface ProjectUpdateDatesFormProps {
   title: string;
@@ -97,7 +98,7 @@ export default function ProjectUpdateDatesForm({
         })}
       renderField={(form) => (
         <FormField
-          control={form.control}
+          control={form.control as Control<FieldValues, any, FieldValues>}
           name={fieldName}
           render={({ field }) => (
             <FormItem className="flex flex-col">
