@@ -13,18 +13,14 @@ import { Button } from "@/components/ui/button";
 import SummaryCard from "../summary-card";
 import { CreateSampleClassDialog } from "../create-sample-class";
 import { DataTable } from "./sample-classes.table/data-table";
-import { getAllServices } from "@/sanity/lib/services/getAllServices";
 export async function SampleClasses() {
   // Fetch data in parallel
-  const [sampleClasses, services] = await Promise.all([
-    getAllSampleClasses(),
-    getAllServices(),
-  ]);
+  const [sampleClasses] = await Promise.all([getAllSampleClasses()]);
 
   return (
     <main className="gap-4">
       <Link
-        className="mb-10 inline-flex tracking-tight underline underline-offset-4"
+        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
         href="/services"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
@@ -47,7 +43,7 @@ export async function SampleClasses() {
           }
         />
       </div>
-      <DataTable data={sampleClasses} services={services} />
+      <DataTable data={sampleClasses} sampleClasses={sampleClasses} />
     </main>
   );
 }

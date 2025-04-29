@@ -460,12 +460,23 @@ export async function deleteMultipleSampleClasses(sampleClassIds: string[]) {
   try {
     const results = await Promise.all(
       sampleClassIds.map(async (sampleClassId) => {
-        const result = await writeClient.delete(sampleClassId);
-        return result;
+        const documents =
+          await getDocumentsReferencingSampleClass(sampleClassId);
+        if (documents.length === 0) {
+          const result = await writeClient.delete(sampleClassId);
+          return { result, deleted: true };
+        }
+        return { deleted: false };
       })
     );
+
+    const anyDeleted = results.some((res) => res.deleted);
     revalidateTag("sampleClasses");
-    return { results, status: "ok" };
+    return {
+      results,
+      status: anyDeleted ? "ok" : "no_deletions",
+      deletedItems: results.filter((res) => res.deleted).length,
+    };
   } catch (error) {
     console.error("Error deleting sample classes:", error);
     return { error, status: "error" };
@@ -485,6 +496,27 @@ export async function getDocumentsReferencingSampleClass(
     }`,
     { id: sampleClassId }
   );
+}
+
+// GET DOCUMENTS REFERENCING MULTIPLE SAMPLE CLASSES
+export async function getDocumentsReferencingMultipleSampleClasses(
+  sampleClassIds: string[]
+) {
+  const results = await Promise.all(
+    sampleClassIds.map(async (id) => {
+      const documents = await writeClient.fetch(
+        `*[_type != "sampleClass" && references($id)] {
+          _id,
+          _type,
+          code,
+          testParameter
+        }`,
+        { id }
+      );
+      return { sampleClassId: id, documents }; // Return an object with the testMethodId and its documents
+    })
+  );
+  return results; // Return the array of objects
 }
 
 // UPDATE SAMPLE CLASS

@@ -93,12 +93,18 @@ export function DeleteMultipleTestMethods({
                     ? "methods "
                     : "method "}
                   {testMethodsWithReferencingDocs.length > 1 ? "have " : "has "}
-                  services referencing them and you may not be able to delete
-                  them
+                  services referencing{" "}
+                  {testMethodsWithReferencingDocs.length > 1
+                    ? "them "
+                    : "it "}{" "}
+                  and you may not be able to delete{" "}
+                  {testMethodsWithReferencingDocs.length > 1
+                    ? "them "
+                    : "it "}{" "}
                 </div>
                 <div className="flex flex-col gap-6">
                   {testMethodsWithReferencingDocs.map((doc) => (
-                    <>
+                    <div key={doc._id}>
                       <span className="text-sm font-bold">
                         {
                           testMethods.find((t) => t._id === doc.testMethodId)
@@ -109,7 +115,7 @@ export function DeleteMultipleTestMethods({
                           {doc.documents.length > 1 ? "services" : "service"}
                         </span>
                       </span>
-                      <div className="flex flex-col gap-4 border border-dashed border-orange-500/50 p-3 rounded text-sm">
+                      <div className="mt-1 flex flex-col gap-4 border border-dashed border-orange-500/50 p-3 rounded text-sm">
                         {doc.documents.map((doc: any) => (
                           <Link
                             className="flex items-center gap-2 hover:underline underline-offset-2"
@@ -121,7 +127,7 @@ export function DeleteMultipleTestMethods({
                           </Link>
                         ))}
                       </div>
-                    </>
+                    </div>
                   ))}
                 </div>
               </>

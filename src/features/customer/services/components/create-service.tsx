@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 import { CommandEmpty } from "@/components/ui/command";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Command } from "@/components/ui/command";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface ServiceType {
   code: string;
@@ -81,7 +82,7 @@ export function CreateServiceDialog({
           onInteractOutside={(e) => {
             e.preventDefault();
           }}
-          className="sm:max-w-[425px]"
+          className="sm:max-w-[500px]"
         >
           <DialogHeader>
             <DialogTitle>Create Service</DialogTitle>
@@ -138,9 +139,12 @@ function ServiceForm({
   sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
 }) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
-
+  const [subClassPopoverOpen, setSubClassPopoverOpen] = React.useState(false);
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(addService, null);
+
+  // Add new state for the prefix
+  const [prefix, setPrefix] = React.useState("");
 
   const form = useForm({
     mode: "onChange",
@@ -150,6 +154,7 @@ function ServiceForm({
       testParameter: "",
       testMethods: [],
       sampleClass: "",
+      sampleSubclass: "",
       status: "active",
     },
   });
@@ -171,6 +176,30 @@ function ServiceForm({
     React.startTransition(() => dispatch(formData)); // Use dispatch instead of createProject
   };
 
+  const selectedSampleClass = sampleClasses.find(
+    (s) => s._id === form.getValues("sampleClass")
+  );
+
+  const selectedSampleSubClass = selectedSampleClass?.subclasses?.find(
+    (s) => s.key === form.getValues("sampleSubclass")
+  );
+
+  console.log(selectedSampleSubClass);
+
+  // Update the prefix when standard changes
+  React.useEffect(() => {
+    setPrefix(
+      selectedSampleSubClass?.key ? `${selectedSampleSubClass.key}/` : ""
+    );
+    // If there's an existing code value, we need to handle it
+    const currentCode = form.getValues("code");
+    if (currentCode && selectedSampleClass?.name) {
+      // Remove any existing prefix and set new value
+      const codeWithoutPrefix = currentCode.replace(/^[A-Z]+ /, "");
+      form.setValue("code", `${selectedSampleClass.name} ${codeWithoutPrefix}`);
+    }
+  }, [form.watch("sampleSubclass")]);
+
   React.useEffect(() => {
     if (state?.status === "ok") {
       toast.success("Service has been added");
@@ -189,47 +218,6 @@ function ServiceForm({
         <div className="space-y-8  px-4 md:px-1 py-4 ">
           <FormField
             control={form.control}
-            name="code"
-            rules={{ required: "Code is required" }}
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="flex " required>
-                  Service Code
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    autoFocus
-                    disabled={isPending}
-                    placeholder="e.g. RO/01"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="testParameter"
-            rules={{ required: "Test parameter is required" }}
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="flex " required>
-                  Test Parameter
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    disabled={isPending}
-                    placeholder="e.g. Bulk Density / Unit weight"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
             name="sampleClass"
             rules={{ required: "Please select a sample class" }}
             render={({ field }) => (
@@ -244,7 +232,10 @@ function ServiceForm({
                         disabled={isPending}
                         variant="outline"
                         role="combobox"
-                        className={cn("w-auto justify-between")}
+                        className={cn(
+                          "w-auto justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
                       >
                         <div className="flex items-center justify-between w-full">
                           {field.value
@@ -298,6 +289,180 @@ function ServiceForm({
                     </Command>
                   </PopoverContent>
                 </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sampleSubclass"
+            rules={{ required: "Please select a sample subclass" }}
+            render={({ field }) => (
+              <AnimatePresence mode="wait">
+                {form.watch("sampleClass") && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="py-1" required>
+                        Sample Subclass
+                      </FormLabel>
+                      <Popover
+                        open={subClassPopoverOpen}
+                        onOpenChange={setSubClassPopoverOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              disabled={isPending}
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-auto justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                {field.value
+                                  ? (() => {
+                                      const selectedSampleSubClass =
+                                        selectedSampleClass?.subclasses?.find(
+                                          (s) => s.key === field.value
+                                        );
+                                      return selectedSampleSubClass?.name &&
+                                        selectedSampleSubClass.name.length > 40
+                                        ? `${selectedSampleSubClass.name.substring(0, 40)}...`
+                                        : selectedSampleSubClass?.name;
+                                    })()
+                                  : "Select a sample class"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </div>
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Command>
+                            <CommandList>
+                              <CommandInput placeholder="Search sample subclass..." />
+                              <CommandEmpty>
+                                No sample subclass found.
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {selectedSampleClass?.subclasses?.map(
+                                  (sampleSubClass) => {
+                                    return (
+                                      <CommandItem
+                                        disabled={isPending}
+                                        value={sampleSubClass.name || ""}
+                                        key={sampleSubClass.key}
+                                        onSelect={() => {
+                                          form.setValue(
+                                            "sampleSubclass",
+                                            sampleSubClass.key || ""
+                                          );
+                                          setPopoverOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            sampleSubClass.key === field.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        <span className="max-w-[300px] truncate">
+                                          {sampleSubClass.name}
+                                        </span>
+                                      </CommandItem>
+                                    );
+                                  }
+                                )}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="code"
+            rules={{ required: "Code is required" }}
+            render={({ field }) => (
+              <AnimatePresence mode="wait">
+                {form.watch("sampleSubclass") && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="flex " required>
+                        Service Code
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          {prefix && (
+                            <div className="absolute text-sm left-3 top-1/2 -translate-y-1/2 font-bold select-none">
+                              {prefix}
+                            </div>
+                          )}
+                          <Input
+                            disabled={isPending}
+                            placeholder="01"
+                            {...field}
+                            value={field.value.replace(prefix, "")}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              field.onChange(prefix + newValue);
+                            }}
+                            className={cn(
+                              prefix &&
+                                "pl-[calc(0.5rem_+_var(--prefix-length))]"
+                            )}
+                            style={
+                              {
+                                "--prefix-length": `${prefix.length}ch`,
+                              } as React.CSSProperties
+                            }
+                            autoFocus
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="testParameter"
+            rules={{ required: "Test parameter is required" }}
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel className="flex " required>
+                  Test Parameter
+                </FormLabel>
+                <FormControl>
+                  <Textarea
+                    disabled={isPending}
+                    placeholder="e.g. Bulk Density / Unit weight"
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

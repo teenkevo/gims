@@ -30,6 +30,12 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../../sanity.types";
 import { DeleteMultipleSampleClasses } from "./delete-multiple-sample-classes";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  getDocumentsReferencingMultipleSampleClasses,
+  getDocumentsReferencingSampleClass,
+} from "@/lib/actions";
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
@@ -49,6 +55,10 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [openDialog, setOpenDialog] = React.useState<boolean>(false);
+
+  const [referencingDocs, setReferencingDocs] = React.useState<
+    { sampleClassId: string; documents: any[] }[]
+  >([]);
 
   // Generate columns with the provided props
 
@@ -84,14 +94,48 @@ export function DataTable<TData, TValue>({
     .rows.map((row) => (row.original as { _id: string })._id);
 
   return (
-    <div className="space-y-4">
-      <DataTableToolbar table={table} openDialog={() => setOpenDialog(true)} />
-      <DeleteMultipleSampleClasses
-        ids={sampleClassIds}
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-      />
-      <div className="rounded-md border">
+    <div className="w-full">
+      <div className="flex flex-wrap gap-2 items-center py-4">
+        <Input
+          placeholder="Filter sample classes by name"
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("name")?.setFilterValue(event.target.value)
+          }
+          className="h-8 w-[250px] lg:w-[250px]"
+        />
+        {table.getSelectedRowModel().rows.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                const docs =
+                  await getDocumentsReferencingMultipleSampleClasses(
+                    sampleClassIds
+                  );
+                setReferencingDocs(docs);
+                setOpenDialog(true);
+              }}
+              size="sm"
+              className="h-8"
+            >
+              Delete {table.getSelectedRowModel().rows.length} selected
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {table.getSelectedRowModel().rows.length} of{" "}
+              {table.getFilteredRowModel().rows.length} row(s) selected.
+            </span>
+          </div>
+        )}
+        <DeleteMultipleSampleClasses
+          sampleClasses={sampleClasses}
+          ids={sampleClassIds}
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          referencingDocs={referencingDocs}
+        />
+      </div>
+      <div className="rounded-md border mb-2">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

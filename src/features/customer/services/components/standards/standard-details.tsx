@@ -28,7 +28,7 @@ export default function StandardDetails({
   return (
     <>
       <Link
-        className="mb-10 inline-flex tracking-tight underline underline-offset-4"
+        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
         href="/services/standards"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />

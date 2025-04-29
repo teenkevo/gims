@@ -70,7 +70,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
               startDate ? (
                 <SetDateRangeDialog
                   icon={<ListStart className="text-orange-500 w-4 h-4 mr-2" />}
-                  buttonText={format(startDate!, "MMM do, yyyy")}
+                  buttonText={format(new Date(startDate), "MMM do, yyyy")}
                   project={project}
                 />
               ) : (
@@ -88,7 +88,7 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
               endDate ? (
                 <SetDateRangeDialog
                   icon={<ListEnd className="text-red-700 w-4 h-4 mr-2" />}
-                  buttonText={format(endDate!, "MMM do, yyyy")}
+                  buttonText={format(new Date(endDate)!, "MMM do, yyyy")}
                   project={project}
                 />
               ) : (
@@ -114,25 +114,6 @@ export default function ProjectCard(project: ALL_PROJECTS_QUERYResult[number]) {
               </Button>
             }
           />
-          {/* <InfoBlock
-            label="Priority"
-            value={
-              <p className="flex items-center">
-                <Ellipsis className="w-4 h-4 mr-2" />
-                No Priority
-              </p>
-            }
-          /> */}
-
-          {/* <InfoBlock
-            label="Client Satisfaction "
-            value={
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-semibold text-primary">89%</span>
-                <span className="text-sm">Out of 100</span>
-              </div>
-            }
-          /> */}
         </div>
       </CardContent>
       <div className="my-4 h-[2px] w-full bg-muted"></div>
