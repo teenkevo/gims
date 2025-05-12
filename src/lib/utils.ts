@@ -49,3 +49,48 @@ export const pdfToBase64 = (blob: Blob): Promise<string> => {
     reader.readAsDataURL(blob);
   });
 };
+
+/**
+ * Convert an ISO currency code to its full name using Intl.DisplayNames,
+ * with a fallback map for older environments.
+ *
+ * @param {string} code - The three-letter ISO currency code (e.g. "USD").
+ * @param {string} [locale='en'] - BCP 47 language tag for localization.
+ * @returns {string} - Full currency name (e.g. "US Dollar").
+ */
+export function currencyCodeToName(code: string, locale = "en") {
+  // Fallback map for environments without Intl.DisplayNames
+  const fallback = {
+    USD: "United States Dollar",
+    EUR: "Euro",
+    JPY: "Japanese Yen",
+    GBP: "British Pound Sterling",
+    AUD: "Australian Dollar",
+    CAD: "Canadian Dollar",
+    CHF: "Swiss Franc",
+    CNY: "Chinese Yuan",
+    SEK: "Swedish Krona",
+    NZD: "New Zealand Dollar",
+    UGX: "Uganda Shilling",
+    // …add more as needed
+  };
+
+  if (typeof Intl.DisplayNames === "function") {
+    try {
+      const displayNames = new Intl.DisplayNames([locale], {
+        type: "currency",
+      });
+      const name = displayNames.of(code.toUpperCase());
+      if (name) return name;
+    } catch {
+      // silently fall through to fallback map
+    }
+  }
+
+  // Use fallback if Intl API is unavailable or returns undefined
+  return fallback[code.toUpperCase() as keyof typeof fallback] || code;
+}
+
+// Example usage:
+console.log(currencyCodeToName("USD")); // "US Dollar" (in 'en')
+console.log(currencyCodeToName("eur", "fr")); // "euro" (in French)

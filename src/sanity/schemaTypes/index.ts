@@ -16,6 +16,10 @@ import { rfi } from "./rfi";
 import { clientFeedback } from "./clientFeedback";
 import { feedbackAction } from "./feedbackAction";
 import { service } from "./service";
+import { quotation } from "./quotation";
+import { revision } from "./revision";
+import { otherItem } from "./billing-item";
+import { serviceItem } from "./billing-item";
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -35,5 +39,9 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     maintenanceLog,
     labApprovalWorkflow,
     rfi,
+    quotation,
+    serviceItem,
+    otherItem,
+    revision,
   ],
 };

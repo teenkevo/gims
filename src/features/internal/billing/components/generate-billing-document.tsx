@@ -2,7 +2,7 @@ import { Document, pdf, PDFDownloadLink } from "@react-pdf/renderer";
 import dynamic from "next/dynamic";
 
 import { Project } from "../../projects/types";
-import { Menu, Receipt } from "lucide-react";
+import { Menu, PlaneIcon, Receipt, RocketIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   FieldService,
@@ -22,15 +22,39 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React from "react";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import {
+  ALL_SERVICES_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../../../../sanity.types";
 import Loading from "@/app/loading";
-import { deleteAsset, uploadPDFDocument } from "@/lib/actions";
+import { createQuotation, deleteAsset, uploadPDFDocument } from "@/lib/actions";
 
 interface GenerateBillingDocumentProps {
-  labTests: Service[];
-  fieldTests: FieldService[];
-  reportingActivity: ReportingService;
-  mobilizationActivity: MobilizationService;
+  revisionNumber: string;
+  quotationNumber: string;
+  quotationDate: string;
+  acquisitionNumber: string;
+  currency: string;
+  paymentNotes: string;
+  vatPercentage: number;
+  labTests: (ALL_SERVICES_QUERYResult[number] & {
+    price: number;
+    quantity: number;
+  })[];
+  fieldTests: (ALL_SERVICES_QUERYResult[number] & {
+    price: number;
+    quantity: number;
+  })[];
+  reportingActivities: {
+    activity: string;
+    price: number;
+    quantity: number;
+  }[];
+  mobilizationActivities: {
+    activity: string;
+    price: number;
+    quantity: number;
+  }[];
   project: PROJECT_BY_ID_QUERYResult[number];
 }
 
@@ -38,10 +62,17 @@ export const GenerateBillingDocument = (
   billingInfo: GenerateBillingDocumentProps
 ) => {
   const {
+    revisionNumber,
+    quotationNumber,
+    quotationDate,
+    acquisitionNumber,
+    currency,
+    paymentNotes,
+    vatPercentage,
     labTests,
     fieldTests,
-    reportingActivity,
-    mobilizationActivity,
+    reportingActivities,
+    mobilizationActivities,
     project,
   } = billingInfo;
 
@@ -50,18 +81,36 @@ export const GenerateBillingDocument = (
   const Doc = (
     <Document>
       <BillingDocument
+        revisionNumber={revisionNumber}
+        quotationNumber={quotationNumber}
+        quotationDate={quotationDate}
+        acquisitionNumber={acquisitionNumber}
+        currency={currency}
         labTests={labTests}
         fieldTests={fieldTests}
-        reportingActivity={reportingActivity}
-        mobilizationActivity={mobilizationActivity}
+        reportingActivities={reportingActivities}
+        mobilizationActivities={mobilizationActivities}
         project={project}
+        paymentNotes={paymentNotes}
+        vatPercentage={vatPercentage}
       />
     </Document>
   );
 
   const handleUploadToSanity = async () => {
     const blob = await pdf(Doc).toBlob();
-    await uploadPDFDocument(blob, "Quotation.pdf");
+    const formData = new FormData();
+    formData.append("files", blob, `Quotation-${quotationNumber}.pdf`);
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    // if file fails to upload, show error message
+    await createQuotation(billingInfo, result.files[0].fileId);
+    // await uploadPDFDocument(blob, `Quotation-${quotationNumber}.pdf`);
   };
 
   const handleDeleteAsset = async () => {
@@ -102,14 +151,17 @@ export const GenerateBillingDocument = (
       >
         <SheetHeader className="text-start">
           <SheetTitle className="flex items-center gap-2 text-lg md:text-2xl">
-            Quotation <Badge>Draft</Badge>
+            Quotation <Badge variant="outline">Draft</Badge>
           </SheetTitle>
-          <Button type="button" size="sm" onClick={handleUploadToSanity}>
-            Upload to DB
-          </Button>
-          <Button variant="destructive" size="sm" onClick={handleDeleteAsset}>
-            Delete asset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" size="sm" onClick={handleUploadToSanity}>
+              <RocketIcon className="mr-2 h-4 w-4" />
+              Create Quotation
+            </Button>
+            <Button variant="secondary" size="icon" onClick={handleDeleteAsset}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <PDFViewer width="100%" height={600}>

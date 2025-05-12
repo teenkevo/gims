@@ -5,6 +5,7 @@ export const getProjectById = async (projectId: string) => {
   const PROJECT_BY_ID_QUERY = defineQuery(`
         *[_type == "project" && _id == $projectId] {
           _id,
+          internalId,
           name, 
           startDate, 
           endDate, 
@@ -22,6 +23,38 @@ export const getProjectById = async (projectId: string) => {
           clients[]->{
             _id, 
             name,
+          },
+          quotation->{
+            _id,
+            revisionNumber,
+            quotationNumber,
+            quotationDate,
+            acquisitionNumber,
+            currency,
+            items[] {
+              service,
+              unitPrice,
+              quantity,
+              lineTotal,
+            },
+            otherItems[] {
+              type,
+              activity,
+              unitPrice,
+              quantity,
+              lineTotal,
+            },
+            vatPercentage,
+            paymentNotes,
+            file {
+              asset->{
+                _id,
+                url,
+                originalFilename,
+                size,
+                mimeType,
+              },
+            },
           }
         }
   `);

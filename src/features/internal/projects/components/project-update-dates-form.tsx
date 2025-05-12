@@ -114,8 +114,8 @@ export default function ProjectUpdateDatesForm({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {field.value.from ? (
-                      field.value.to ? (
+                    {field.value?.from ? (
+                      field.value?.to ? (
                         <>
                           {format(field.value.from, isDesktop ? "PPPP" : "PP")}{" "}
                           - {format(field.value.to, isDesktop ? "PPPP" : "PP")}
@@ -124,7 +124,7 @@ export default function ProjectUpdateDatesForm({
                         format(field.value.from, isDesktop ? "PPPP" : "PP")
                       )
                     ) : (
-                      <span>Pick a date</span>
+                      <span>Set start date</span>
                     )}
                   </Button>
                 </PopoverTrigger>

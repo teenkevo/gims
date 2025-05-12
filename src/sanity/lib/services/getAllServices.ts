@@ -5,6 +5,7 @@ export const getAllServices = async () => {
   const ALL_SERVICES_QUERY = defineQuery(`
         *[_type == "service"] {
             _id, 
+            status,
             code,
             testParameter,
             testMethods[] -> {
@@ -22,7 +23,7 @@ export const getAllServices = async () => {
                 name,
                 description
             },
-            status
+            
         }
   `);
 

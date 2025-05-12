@@ -3,39 +3,34 @@
 import {
   ArrowLeftCircle,
   CircleMinus,
+  Download,
   EllipsisVerticalIcon,
+  ExternalLink,
+  FileText,
   PencilIcon,
+  Trash,
   Trash2,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import * as motion from "framer-motion/client";
-import {
-  FieldService,
-  MobilizationService,
-  ReportingService,
-  Service,
-} from "@/features/customer/services/data/schema";
 import { DeleteProject } from "./delete-project";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InfoCard } from "@/components/info-card";
-import CopyableInput from "./copyable-input";
 import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
-import ProjectStage from "./project-stage";
 import { QuotationOptions } from "../../billing/components/quotation-options";
 import SampleReceiptVerification from "./sample-receipt-verifications";
 import {
   ALL_CLIENTS_QUERYResult,
   ALL_CONTACTS_QUERYResult,
+  ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
@@ -44,40 +39,40 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RemoveClientFromProject } from "./remove-client-from-project";
 import { CreateClientDialog } from "./create-client-dialog";
+import { DeleteFile } from "@/features/customer/services/components/test-methods/delete-test-method-file";
+import mime from "mime-types";
+import { BillingLifecycle } from "../../billing/components/billing-lifecycle";
+import QuotationFile from "../../billing/components/quotation-file";
+
 export default function ProjectDetails({
   project,
   existingContacts,
   existingClients,
+  allServices,
 }: {
   project: PROJECT_BY_ID_QUERYResult[number];
   existingContacts: ALL_CONTACTS_QUERYResult;
   existingClients: ALL_CLIENTS_QUERYResult;
+  allServices: ALL_SERVICES_QUERYResult;
 }) {
-  const { _id, name, clients, contactPersons, startDate, endDate } = project;
+  const { _id, name, clients, contactPersons, startDate, endDate, quotation } =
+    project;
 
   // billing services table states
-  const [selectedLabTests, setSelectedLabTests] = useState<Service[]>([]);
-  const [selectedFieldTests, setSelectedFieldTests] = useState<FieldService[]>(
-    []
-  );
-  const [mobilizationActivity, setMobilizationActivity] =
-    useState<MobilizationService>({
-      activity: "",
-      price: 0,
-      quantity: 0,
-    });
-  const [reportingActivity, setReportingActivity] = useState<ReportingService>({
-    activity: "",
-    price: 0,
-    quantity: 0,
-  });
+  const [selectedLabTests, setSelectedLabTests] =
+    useState<ALL_SERVICES_QUERYResult>([]);
+  const [selectedFieldTests, setSelectedFieldTests] =
+    useState<ALL_SERVICES_QUERYResult>([]);
+  const [mobilizationActivities, setMobilizationActivities] = useState<
+    { activity: string; price: number; quantity: number }[]
+  >([]);
+  const [reportingActivities, setReportingActivities] = useState<
+    { activity: string; price: number; quantity: number }[]
+  >([]);
 
   // State to manage the active tab
   const [activeTab, setActiveTab] = useState("details");
@@ -93,7 +88,7 @@ export default function ProjectDetails({
   return (
     <>
       <Link
-        className="mb-10 inline-flex tracking-tight underline underline-offset-4"
+        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
         href="/projects"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
@@ -254,17 +249,34 @@ export default function ProjectDetails({
         </TabsContent>
         <TabsContent value="billing">
           <div className="space-y-8 my-10">
-            <QuotationOptions
+            <BillingLifecycle
+              currentStage={1}
+              allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
               setSelectedLabTests={setSelectedLabTests}
               selectedFieldTests={selectedFieldTests}
               setSelectedFieldTests={setSelectedFieldTests}
-              mobilizationActivity={mobilizationActivity}
-              setMobilizationActivity={setMobilizationActivity}
-              reportingActivity={reportingActivity}
-              setReportingActivity={setReportingActivity}
+              mobilizationActivities={mobilizationActivities}
+              setMobilizationActivities={setMobilizationActivities}
+              reportingActivities={reportingActivities}
+              setReportingActivities={setReportingActivities}
             />
+            {quotation && <QuotationFile quotation={quotation} />}
+            {!quotation && (
+              <QuotationOptions
+                allServices={allServices}
+                project={project}
+                selectedLabTests={selectedLabTests}
+                setSelectedLabTests={setSelectedLabTests}
+                selectedFieldTests={selectedFieldTests}
+                setSelectedFieldTests={setSelectedFieldTests}
+                mobilizationActivities={mobilizationActivities}
+                setMobilizationActivities={setMobilizationActivities}
+                reportingActivities={reportingActivities}
+                setReportingActivities={setReportingActivities}
+              />
+            )}
           </div>
         </TabsContent>
         <TabsContent value="sample-receipt">

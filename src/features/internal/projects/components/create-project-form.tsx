@@ -48,6 +48,7 @@ export function CreateProjectForm({
     reValidateMode: "onChange",
     defaultValues: {
       projectName: "",
+      internalId: "",
       dateRange: { from: undefined, to: undefined },
       clients: [],
     },
@@ -57,7 +58,7 @@ export function CreateProjectForm({
     console.log(data);
     const formData = new FormData();
     formData.append("projectName", data.projectName);
-
+    formData.append("internalId", data.internalId);
     // Check if dateRange.from exists and append it
     if (data.dateRange?.from && data.dateRange?.to) {
       formData.append("dateFrom", data.dateRange.from.toISOString());

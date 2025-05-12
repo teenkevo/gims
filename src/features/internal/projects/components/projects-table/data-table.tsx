@@ -1,9 +1,11 @@
+"use client";
+
 import * as React from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -23,22 +25,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { DataTableToolbar } from "@/features/customer/services/components/services-table/data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import { Toolbar } from "./toolbar";
-import { Service } from "@/features/customer/services/data/schema";
+import type {
+  ALL_PROJECTS_QUERYResult,
+  ALL_SERVICES_QUERYResult,
+  ALL_TEST_METHODS_QUERYResult,
+} from "../../../../../../sanity.types";
+import type { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_STANDARDS_QUERYResult } from "../../../../../../sanity.types";
+import { getColumns } from "./columns"; // Import the function instead of the constant
+import { deleteMultipleServices } from "@/lib/actions";
+import { DeleteMultipleServices } from "./delete-multiple-services";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  setSelectedLabTests: React.Dispatch<React.SetStateAction<Service[]>>;
-  onValidationChange: (isValid: boolean) => void;
+  data: ALL_PROJECTS_QUERYResult;
 }
 
-export function DataTable<TData extends Service, TValue>({
-  columns,
+export function DataTable<TData, TValue>({
   data,
-  setSelectedLabTests,
-  onValidationChange,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -47,6 +54,15 @@ export function DataTable<TData extends Service, TValue>({
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+
+  // Generate columns with the provided props
+  // Use propColumns if provided, otherwise generate columns with the function
+  const columns = React.useMemo(
+    () => getColumns(data) as ColumnDef<ALL_PROJECTS_QUERYResult[number]>[],
+    [data]
+  );
 
   const table = useReactTable({
     data,
@@ -58,7 +74,6 @@ export function DataTable<TData extends Service, TValue>({
       columnFilters,
     },
     enableRowSelection: true,
-    autoResetPageIndex: false,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -71,34 +86,23 @@ export function DataTable<TData extends Service, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  // Bubble up the selection to the parent component
-  React.useEffect(() => {
-    const selectedLabTests = table
-      .getSelectedRowModel()
-      .flatRows.map((row) => row.original);
-
-    setSelectedLabTests(selectedLabTests);
-
-    // Validation: check if all selected lab tests are valid
-    const labTestsValid =
-      selectedLabTests.length > 0
-        ? selectedLabTests.every(
-            (t) =>
-              t.price &&
-              t.price > 0 &&
-              t.quantity &&
-              t.quantity > 0 &&
-              t.test_methods.some((tm) => tm.selected)
-          )
-        : false;
-
-    // Trigger validation state change
-    onValidationChange(labTestsValid);
-  }, [table.getSelectedRowModel()]);
+  const serviceIds = table
+    .getSelectedRowModel()
+    .rows.map((row) => (row.original as { _id: string })._id);
 
   return (
-    <div className="p-4 space-y-4">
-      <Toolbar table={table} />
+    <div className="space-y-4">
+      {/* <DataTableToolbar
+        table={table}
+        sampleClasses={sampleClasses}
+        openDialog={() => setOpenDialog(true)}
+      /> */}
+      <DeleteMultipleServices
+        ids={serviceIds}
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+      />
+      {/* <Button onClick={handleDelete}>Delete Selected</Button> */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -142,7 +146,7 @@ export function DataTable<TData extends Service, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No services.
                 </TableCell>
               </TableRow>
             )}

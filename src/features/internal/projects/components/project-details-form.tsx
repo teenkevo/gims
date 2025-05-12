@@ -38,7 +38,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Priority } from "../types";
 import { DateRange } from "react-day-picker";
 
@@ -54,9 +54,54 @@ export function ProjectDetailsForm({ isSubmitting }: ProjectDetailsFormProps) {
     priorities[0]
   );
 
+  const prefix = `P${new Date().getFullYear()}-`;
+  // TODO: InternalID should be unique
+
   return (
     <FormSpacerWrapper>
       <Formheader title="Add Project Details" step={1} />
+      {/* Project ID */}
+      <FormField
+        control={form.control}
+        name="internalId"
+        rules={{ required: "Project ID is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel required>Specify Project ID</FormLabel>
+            <FormControl>
+              <div className="relative">
+                {prefix && (
+                  <div className="absolute text-sm left-3 top-1/2 -translate-y-1/2 font-bold select-none">
+                    {prefix}
+                  </div>
+                )}
+                <Input
+                  autoFocus
+                  disabled={isSubmitting}
+                  {...field}
+                  value={field.value.replace(prefix, "")}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    field.onChange(prefix + newValue);
+                  }}
+                  className={cn(
+                    prefix && "pl-[calc(0.4rem_+_var(--prefix-length))]"
+                  )}
+                  style={
+                    {
+                      "--prefix-length": `${prefix.length}ch`,
+                    } as React.CSSProperties
+                  }
+                />
+              </div>
+            </FormControl>
+            <FormDescription>
+              This is a unique identifier for the project.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       <FormField
         control={form.control}
         name="projectName"

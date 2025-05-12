@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NumericFormat } from "react-number-format";
+import { useEffect, useRef } from "react";
 
 // components
 import {
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useEffect } from "react";
 
 const activitySchema = z
   .object({
@@ -50,22 +50,24 @@ const activitySchema = z
   );
 export type ActivityValue = {
   activity: string;
-  price: number;
-  quantity: number;
+  price: number | undefined;
+  quantity: number | undefined;
   total: number | undefined;
 };
 
 interface ActivityProps {
+  currency: string;
   onSubmit: () => void;
   initialValues: Partial<ActivityValue>;
   onActivityChange: (activity: string) => void;
   onPriceChange: (price: number | undefined) => void;
   onQuantityChange: (quantity: number | undefined) => void;
   type: "Mobilization" | "Reporting";
-  onValidationChange: (isValid: boolean) => void; // New prop
+  onValidationChange: (isValid: boolean) => void;
 }
 
 export function Activity({
+  currency,
   onSubmit,
   initialValues,
   onActivityChange,
@@ -76,20 +78,29 @@ export function Activity({
 }: ActivityProps) {
   const { activity, price, quantity } = initialValues;
 
+  // Use a ref to track previous validation state
+  const prevValidRef = useRef(false);
+
   const form = useForm<ActivityValue>({
     mode: "onChange",
     reValidateMode: "onChange",
     resolver: zodResolver(activitySchema),
     defaultValues: {
-      activity,
-      price,
-      quantity,
+      activity: activity || "",
+      price: price,
+      quantity: quantity,
     },
   });
 
-  // Track form validity and notify parent
+  // Track form validity and notify parent only when it changes
   useEffect(() => {
-    onValidationChange(form.formState.isValid); // Call the parent's callback with the validation state
+    const currentIsValid = form.formState.isValid;
+
+    // Only call onValidationChange when the validation state actually changes
+    if (prevValidRef.current !== currentIsValid) {
+      prevValidRef.current = currentIsValid;
+      onValidationChange(currentIsValid);
+    }
   }, [form.formState.isValid, onValidationChange]);
 
   return (
@@ -100,7 +111,7 @@ export function Activity({
           name="activity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{type} Activity Descriptions</FormLabel>
+              <FormLabel required>Activity Description</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder={
@@ -113,6 +124,7 @@ export function Activity({
                     field.onChange(e.target.value);
                     onActivityChange(e.target.value);
                   }}
+                  autoFocus
                 />
               </FormControl>
 
@@ -126,13 +138,13 @@ export function Activity({
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Unit Price</FormLabel>
+                <FormLabel required>Unit Price</FormLabel>
                 <FormControl>
                   <NumericFormat
                     className="max-w-[150px] min-w-[130px] text-[16px] md:text-sm"
                     customInput={Input}
                     thousandSeparator={true}
-                    prefix={"UGX "}
+                    prefix={`${currency.toUpperCase()} `}
                     placeholder="Add a price"
                     value={field.value}
                     onValueChange={(target) => {
@@ -150,7 +162,7 @@ export function Activity({
             name="quantity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantity</FormLabel>
+                <FormLabel required>Quantity</FormLabel>
                 <FormControl>
                   <NumericFormat
                     className="max-w-[100px] min-w-[100px] text-[16px] md:text-sm"
@@ -179,9 +191,11 @@ export function Activity({
                     className="max-w-[150px] min-w-[140px] text-[16px] md:text-sm"
                     customInput={Input}
                     thousandSeparator={true}
-                    prefix={"UGX "}
+                    prefix={`${currency.toUpperCase()} `}
                     placeholder="Total"
-                    value={form?.watch("price") * form?.watch("quantity")}
+                    value={
+                      (form.watch("price") || 0) * (form.watch("quantity") || 0)
+                    }
                   />
                 </FormControl>
                 <FormMessage />

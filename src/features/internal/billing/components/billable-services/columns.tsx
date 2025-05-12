@@ -1,24 +1,25 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-
-import {
-  sample_classes,
-  test_methods,
-} from "@/features/customer/services/data/data";
-
 import { Checkbox } from "@/components/ui/checkbox";
-import { Service } from "@/features/customer/services/data/schema";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { PriceForm } from "./price-form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
+
+export type ExtendedService = ALL_SERVICES_QUERYResult[number] & {
+  price?: number;
+  quantity?: number;
+};
 
 interface ColumnProps {
-  setLabInvestigationsTableData: Dispatch<SetStateAction<Service[]>>;
+  setTableData: Dispatch<SetStateAction<ExtendedService[]>>;
+  currency: string;
 }
 
 export const columns = ({
-  setLabInvestigationsTableData,
-}: ColumnProps): ColumnDef<Service>[] => [
+  setTableData,
+  currency,
+}: ColumnProps): ColumnDef<ExtendedService>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -55,7 +56,7 @@ export const columns = ({
     enableHiding: false,
   },
   {
-    accessorKey: "test_parameter",
+    accessorKey: "testParameter",
     header: ({ column }) => (
       <DataTableColumnHeader
         className="text-sm"
@@ -67,67 +68,72 @@ export const columns = ({
       return (
         <div className="flex space-x-2">
           <span className="max-w-[300px] truncate font-normal">
-            {row.getValue("test_parameter")}
+            {row.getValue("testParameter")}
           </span>
         </div>
       );
     },
   },
   {
-    accessorKey: "test_method",
+    accessorKey: "testMethods",
     header: ({ column }) => (
       <DataTableColumnHeader
         className="text-sm"
         column={column}
-        title="Test Method"
+        title="Test Methods"
       />
     ),
     cell: ({ row }) => {
-      const test_methods_to_check = row.original.test_methods.map(
-        (m) => m.label
-      );
-      const filtered_test_methods = test_methods.filter((test_method) =>
-        test_methods_to_check.includes(test_method.label)
+      const testMethods = row.original?.testMethods?.map(
+        (m) => m.standard?.acronym
       );
 
-      const isATestMethodSelected = row.original.test_methods.some(
-        (m) => m.selected
+      const [selectedValue, setSelectedValue] = useState<string | null>(null);
+
+      const isATestMethodSelected = row.original?.testMethods?.some(
+        (method) => method.standard?.acronym === selectedValue
       );
 
-      const selectedTestMethod = row.original.test_methods.find(
-        (m) => m.selected
-      );
+      // selected test method is updated with a value of selected:true, the rest are set to selected:false
+      // only one test method can be selected at a time for a lab investigation
+      const updatedSelectedTestMethods = (value: string) => {
+        return (
+          row.original?.testMethods?.map((method) =>
+            method.standard?.acronym === value
+              ? { ...method, selected: true }
+              : { ...method, selected: false }
+          ) || null
+        );
+      };
 
       return (
-        <div className="space-x-2">
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            defaultValue={selectedTestMethod?.value}
-            disabled={!row.getIsSelected()} // disable toggle selection if row is not selected
-            onValueChange={(value) => {
-              setLabInvestigationsTableData((prevData) =>
-                prevData.map((item) =>
-                  item.id === row.original.id
-                    ? {
-                        ...item,
-                        test_methods: row.original.test_methods.map((method) =>
-                          method.value === value
-                            ? { ...method, selected: true }
-                            : { ...method, selected: false }
-                        ),
-                      }
-                    : item
-                )
-              );
-            }}
-          >
-            {filtered_test_methods.map((tm) => (
-              <ToggleGroupItem key={tm.value} value={tm.value}>
-                {tm.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+        <div>
+          <div className="flex items-start space-x-2">
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              disabled={!row.getIsSelected()}
+              onValueChange={(value) => {
+                setSelectedValue(value);
+                setTableData((prevData) =>
+                  prevData.map((item) =>
+                    item._id === row.original._id
+                      ? {
+                          ...item,
+                          testMethods: updatedSelectedTestMethods(value),
+                        }
+                      : item
+                  )
+                );
+              }}
+            >
+              {testMethods?.map((tm) => (
+                <ToggleGroupItem key={tm || ""} value={tm || ""}>
+                  {tm}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
           {row.getIsSelected() && !isATestMethodSelected && (
             <p className="text-destructive text-xs mt-2 font-medium">
               Choose a method
@@ -138,7 +144,7 @@ export const columns = ({
     },
   },
   {
-    accessorKey: "sample_class",
+    accessorKey: "sampleClass",
     header: ({ column }) => (
       <DataTableColumnHeader
         className="text-sm"
@@ -147,17 +153,9 @@ export const columns = ({
       />
     ),
     cell: ({ row }) => {
-      const sample_class = sample_classes.find(
-        (sample_class) => sample_class.value === row.getValue("sample_class")
-      );
-
-      if (!sample_class) {
-        return null;
-      }
-
       return (
         <div className="flex w-[100px] items-center">
-          <span>{sample_class.label}</span>
+          <span>{row.original?.sampleClass?.name}</span>
         </div>
       );
     },
@@ -175,14 +173,14 @@ export const columns = ({
       />
     ),
     cell: ({ row }) => {
-      const price = row.original.price;
-      const quantity = row.original.quantity;
+      const price = row.original?.price;
+      const quantity = row.original?.quantity;
       const onSubmit = () => null;
 
       const onPriceChange = (newPrice: number | undefined) => {
-        setLabInvestigationsTableData((prevData) =>
+        setTableData((prevData) =>
           prevData.map((item) =>
-            item.id === row.original.id
+            item._id === row.original._id
               ? {
                   ...item,
                   price: newPrice,
@@ -193,9 +191,9 @@ export const columns = ({
       };
 
       const onQuantityChange = (newQuantity: number | undefined) => {
-        setLabInvestigationsTableData((prevData) =>
+        setTableData((prevData) =>
           prevData.map((item) =>
-            item.id === row.original.id
+            item._id === row.original._id
               ? {
                   ...item,
                   quantity: newQuantity,
@@ -212,6 +210,7 @@ export const columns = ({
           onSubmit={onSubmit}
           onPriceChange={onPriceChange}
           onQuantityChange={onQuantityChange}
+          currency={currency}
         />
       );
     },

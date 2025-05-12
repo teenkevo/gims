@@ -5,6 +5,8 @@ import { Cross2Icon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import { sample_classes } from "@/features/customer/services/data/data";
+import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 
 interface ToolbarProps<TData> {
   table: Table<TData>;
@@ -19,16 +21,20 @@ export function Toolbar<TData>({ table }: ToolbarProps<TData>) {
         <Input
           placeholder="Filter services..."
           value={
-            (table.getColumn("test_parameter")?.getFilterValue() as string) ??
-            ""
+            (table.getColumn("testParameter")?.getFilterValue() as string) ?? ""
           }
           onChange={(event) =>
-            table
-              .getColumn("test_parameter")
-              ?.setFilterValue(event.target.value)
+            table.getColumn("testParameter")?.setFilterValue(event.target.value)
           }
-          className="h-8 w-full lg:w-[400px]"
+          className="h-8 w-full lg:w-[250px]"
         />
+        {/* {table.getColumn("sampleClass") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("sampleClass")}
+            title="Sample Class"
+            options={sample_classes}
+          />
+        )} */}
         {isFiltered && (
           <Button
             variant="ghost"

@@ -102,6 +102,39 @@ export type Slug = {
   source?: string;
 };
 
+export type Revision = {
+  _id: string;
+  _type: "revision";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  number?: string;
+  date?: string;
+  notes?: string;
+};
+
+export type OtherItem = {
+  _type: "otherItem";
+  type?: "mobilization" | "reporting";
+  activity?: string;
+  unitPrice?: number;
+  quantity?: number;
+  lineTotal?: number;
+};
+
+export type ServiceItem = {
+  _type: "serviceItem";
+  service?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "service";
+  };
+  unitPrice?: number;
+  quantity?: number;
+  lineTotal?: number;
+};
+
 export type Rfi = {
   _id: string;
   _type: "rfi";
@@ -474,6 +507,7 @@ export type Project = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
+  internalId?: string;
   name?: string;
   priority?: "noPriority" | "urgent" | "high" | "medium" | "low";
   startDate?: string;
@@ -507,6 +541,54 @@ export type Project = {
     [internalGroqTypeReferenceTo]?: "contactPerson";
   }>;
   stagesCompleted?: Array<string>;
+  quotation?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "quotation";
+  };
+};
+
+export type Quotation = {
+  _id: string;
+  _type: "quotation";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  quotationNumber?: string;
+  revisionNumber?: string;
+  acquisitionNumber?: string;
+  quotationDate?: string;
+  currency?: "usd" | "eur" | "gbp" | "ugx";
+  items?: Array<
+    {
+      _key: string;
+    } & ServiceItem
+  >;
+  otherItems?: Array<
+    {
+      _key: string;
+    } & OtherItem
+  >;
+  vatPercentage?: number;
+  paymentNotes?: string;
+  revisions?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "revision";
+  }>;
+  file?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+    };
+    media?: unknown;
+    _type: "file";
+  };
 };
 
 export type Service = {
@@ -669,6 +751,9 @@ export type AllSanitySchemaTypes =
   | SanityImageMetadata
   | Geopoint
   | Slug
+  | Revision
+  | OtherItem
+  | ServiceItem
   | Rfi
   | LabApprovalWorkflow
   | MaintenanceLog
@@ -680,6 +765,7 @@ export type AllSanitySchemaTypes =
   | ContactPerson
   | Client
   | Project
+  | Quotation
   | Service
   | FieldTest
   | LabTest
@@ -713,9 +799,10 @@ export type ALL_CONTACTS_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
 // Variable: ALL_PROJECTS_QUERY
-// Query: *[_type == "project"] {          _id,          name,          startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,          }        }
+// Query: *[_type == "project"] | order(internalId desc) {          _id,          internalId,          name,          startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,          }        }
 export type ALL_PROJECTS_QUERYResult = Array<{
   _id: string;
+  internalId: string | null;
   name: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -728,9 +815,10 @@ export type ALL_PROJECTS_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/projects/getProjectById.ts
 // Variable: PROJECT_BY_ID_QUERY
-// Query: *[_type == "project" && _id == $projectId] {          _id,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            clients[]->{              _id,            },          },          clients[]->{            _id,             name,          }        }
+// Query: *[_type == "project" && _id == $projectId] {          _id,          internalId,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            clients[]->{              _id,            },          },          clients[]->{            _id,             name,          },          quotation->{            _id,            revisionNumber,            quotationNumber,            quotationDate,            acquisitionNumber,            currency,            items[] {              service,              unitPrice,              quantity,              lineTotal,            },            otherItems[] {              type,              activity,              unitPrice,              quantity,              lineTotal,            },            vatPercentage,            paymentNotes,            file {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },          }        }
 export type PROJECT_BY_ID_QUERYResult = Array<{
   _id: string;
+  internalId: string | null;
   name: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -749,6 +837,43 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
     _id: string;
     name: string | null;
   }> | null;
+  quotation: {
+    _id: string;
+    revisionNumber: string | null;
+    quotationNumber: string | null;
+    quotationDate: string | null;
+    acquisitionNumber: string | null;
+    currency: "eur" | "gbp" | "ugx" | "usd" | null;
+    items: Array<{
+      service: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "service";
+      } | null;
+      unitPrice: number | null;
+      quantity: number | null;
+      lineTotal: number | null;
+    }> | null;
+    otherItems: Array<{
+      type: "mobilization" | "reporting" | null;
+      activity: string | null;
+      unitPrice: number | null;
+      quantity: number | null;
+      lineTotal: number | null;
+    }> | null;
+    vatPercentage: number | null;
+    paymentNotes: string | null;
+    file: {
+      asset: {
+        _id: string;
+        url: string | null;
+        originalFilename: string | null;
+        size: number | null;
+        mimeType: string | null;
+      } | null;
+    } | null;
+  } | null;
 }>;
 
 // Source: ./src/sanity/lib/services/getAllSampleClasses.ts
@@ -766,9 +891,10 @@ export type ALL_SAMPLE_CLASSES_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/services/getAllServices.ts
 // Variable: ALL_SERVICES_QUERY
-// Query: *[_type == "service"] {            _id,             code,            testParameter,            testMethods[] -> {                _id,                code,                description,                standard -> {                    _id,                    name,                    acronym                }            },            sampleClass -> {                _id,                name,                description            },            status        }
+// Query: *[_type == "service"] {            _id,             status,            code,            testParameter,            testMethods[] -> {                _id,                code,                description,                standard -> {                    _id,                    name,                    acronym                }            },            sampleClass -> {                _id,                name,                description            },                    }
 export type ALL_SERVICES_QUERYResult = Array<{
   _id: string;
+  status: "active" | "inactive" | null;
   code: string | null;
   testParameter: string | null;
   testMethods: Array<{
@@ -786,7 +912,6 @@ export type ALL_SERVICES_QUERYResult = Array<{
     name: string | null;
     description: string | null;
   } | null;
-  status: "active" | "inactive" | null;
 }>;
 
 // Source: ./src/sanity/lib/services/getAllStandards.ts
@@ -821,6 +946,19 @@ export type ALL_TEST_METHODS_QUERYResult = Array<{
       mimeType: string | null;
     } | null;
     name: string | null;
+  }> | null;
+}>;
+
+// Source: ./src/sanity/lib/services/getSampleClassById.ts
+// Variable: SAMPLE_CLASS_BY_ID_QUERY
+// Query: *[_type == "sampleClass" && _id == $sampleClassId] {          _id,           name,          description,          subclasses[] {              name,              key          }        }
+export type SAMPLE_CLASS_BY_ID_QUERYResult = Array<{
+  _id: string;
+  name: string | null;
+  description: string | null;
+  subclasses: Array<{
+    name: string | null;
+    key: string | null;
   }> | null;
 }>;
 
@@ -899,12 +1037,13 @@ declare module "@sanity/client" {
   interface SanityQueries {
     '\n        *[_type == "client"] {\n            _id, \n            name,\n        }\n  ': ALL_CLIENTS_QUERYResult;
     '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            clients[]->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
-    '\n        *[_type == "project"] {\n          _id,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
-    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
+    '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
+    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            items[] {\n              service,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            otherItems[] {\n              type,\n              activity,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
     '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
-    '\n        *[_type == "service"] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': ALL_SERVICES_QUERYResult;
+    '\n        *[_type == "service"] {\n            _id, \n            status,\n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            \n        }\n  ': ALL_SERVICES_QUERYResult;
     '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;
     '\n        *[_type == "testMethod"] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': ALL_TEST_METHODS_QUERYResult;
+    '\n        *[_type == "sampleClass" && _id == $sampleClassId] {\n          _id, \n          name,\n          description,\n          subclasses[] {\n              name,\n              key\n          }\n        }\n  ': SAMPLE_CLASS_BY_ID_QUERYResult;
     '\n        *[_type == "service" && _id == $serviceId] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                },\n                documents[] {\n                  _key,\n                  asset->{\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  }\n                }  \n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': SERVICE_BY_ID_QUERYResult;
     '\n        *[_type == "standard" && _id == $standardId] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': STANDARD_BY_ID_QUERYResult;
     '\n        *[_type == "testMethod" && _id == $testMethodId] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': TEST_METHOD_BY_ID_QUERYResult;

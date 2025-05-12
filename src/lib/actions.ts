@@ -1,10 +1,146 @@
 "use server";
-
 import { writeClient } from "@/sanity/lib/write-client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { sanitizePhoneNumber } from "./utils";
+import {
+  ALL_SERVICES_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../sanity.types";
 
+interface QuotationProps {
+  labTests: (ALL_SERVICES_QUERYResult[number] & {
+    price: number;
+    quantity: number;
+  })[];
+  fieldTests: (ALL_SERVICES_QUERYResult[number] & {
+    price: number;
+    quantity: number;
+  })[];
+  reportingActivities: {
+    activity: string;
+    price: number;
+    quantity: number;
+  }[];
+  mobilizationActivities: {
+    activity: string;
+    price: number;
+    quantity: number;
+  }[];
+  project: PROJECT_BY_ID_QUERYResult[number];
+  currency: string;
+  vatPercentage: number;
+  paymentNotes: string;
+  quotationNumber: string;
+  quotationDate: string;
+  acquisitionNumber: string;
+  revisionNumber: string;
+}
+
+// CREATE QUOTATION
+export async function createQuotation(
+  billingInfo: QuotationProps,
+  fileId: string
+) {
+  try {
+    const {
+      labTests,
+      fieldTests,
+      reportingActivities,
+      mobilizationActivities,
+      project,
+      currency,
+      vatPercentage,
+      paymentNotes,
+      quotationNumber,
+      quotationDate,
+      acquisitionNumber,
+      revisionNumber,
+    } = billingInfo;
+
+    const items = [
+      ...labTests.map((lab) => ({
+        _type: "serviceItem",
+        service: {
+          _type: "reference",
+          _ref: lab._id,
+        },
+        unitPrice: lab.price,
+        quantity: lab.quantity,
+        lineTotal: lab.price * lab.quantity,
+      })),
+      ...fieldTests.map((field) => ({
+        _type: "serviceItem",
+        service: {
+          _type: "reference",
+          _ref: field._id,
+        },
+        unitPrice: field.price,
+        quantity: field.quantity,
+        lineTotal: field.price * field.quantity,
+      })),
+    ];
+
+    const otherItems = [
+      ...reportingActivities.map((reporting) => ({
+        _type: "otherItem",
+        type: "reporting",
+        activity: reporting.activity,
+        unitPrice: reporting.price,
+        quantity: reporting.quantity,
+        lineTotal: reporting.price * reporting.quantity,
+      })),
+      ...mobilizationActivities.map((mobilization) => ({
+        _type: "otherItem",
+        type: "mobilization",
+        activity: mobilization.activity,
+        unitPrice: mobilization.price,
+        quantity: mobilization.quantity,
+        lineTotal: mobilization.price * mobilization.quantity,
+      })),
+    ];
+
+    const quotation = await writeClient.create(
+      {
+        _type: "quotation",
+        revisionNumber,
+        quotationNumber,
+        quotationDate,
+        acquisitionNumber,
+        currency: currency.toLowerCase(),
+        items,
+        otherItems,
+        vatPercentage,
+        paymentNotes,
+        file: {
+          _type: "file",
+          asset: {
+            _type: "reference",
+            _ref: fileId,
+          },
+        },
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
+
+    await writeClient
+      .patch(project._id)
+      .set({
+        quotation: {
+          _type: "reference",
+          _ref: quotation._id,
+        },
+      })
+      .commit();
+    revalidateTag(`project-${project._id}`);
+    return { result: quotation, status: "ok" };
+  } catch (error) {
+    console.error("Error creating quotation:", error);
+    return { error, status: "error" };
+  }
+}
 // CREATE STANDARD
 export async function addStandard(prevState: any, formData: FormData) {
   try {
@@ -722,6 +858,7 @@ export async function setProjectDateRange(prevState: any, formData: FormData) {
 
 export async function createProject(prevState: any, formData: FormData) {
   try {
+    const internalId = formData.get("internalId");
     const projectName = formData.get("projectName");
     const dateFrom = formData.get("dateFrom");
     const dateTo = formData.get("dateTo");
@@ -749,6 +886,7 @@ export async function createProject(prevState: any, formData: FormData) {
     const project = await writeClient.create(
       {
         _type: "project",
+        internalId,
         name: projectName,
         startDate: dateFrom || null,
         endDate: dateTo || null,

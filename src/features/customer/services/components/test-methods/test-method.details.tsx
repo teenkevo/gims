@@ -203,7 +203,7 @@ export default function TestMethodDetails({
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {doc.asset?.mimeType?.toUpperCase()} •{" "}
-                          {(doc.asset?.size || 0 / (1024 * 1024)).toFixed(2) +
+                          {((doc.asset?.size || 0) / (1024 * 1024)).toFixed(2) +
                             " MB"}
                         </p>
                       </Link>

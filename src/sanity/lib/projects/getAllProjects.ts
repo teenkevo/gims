@@ -3,8 +3,9 @@ import { sanityFetch } from "../client";
 
 export const getAllProjects = async () => {
   const ALL_PROJECTS_QUERY = defineQuery(`
-        *[_type == "project"] {
+        *[_type == "project"] | order(internalId desc) {
           _id,
+          internalId,
           name,
           startDate, 
           endDate, 

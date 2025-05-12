@@ -6,6 +6,12 @@ export const project = defineType({
   type: "document",
   fields: [
     defineField({
+      name: "internalId",
+      title: "Internal ID",
+      type: "string",
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: "name",
       title: "Project Name",
       type: "string",
@@ -103,6 +109,12 @@ export const project = defineType({
       title: "Stages Completed",
       type: "array",
       of: [{ type: "string" }],
+    }),
+    defineField({
+      name: "quotation",
+      title: "Quotation",
+      type: "reference",
+      to: [{ type: "quotation" }],
     }),
   ],
 });

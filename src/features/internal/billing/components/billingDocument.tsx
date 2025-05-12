@@ -9,8 +9,12 @@ import {
   Service,
 } from "@/features/customer/services/data/schema";
 import { numberToWords } from "../../projects/constants";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
-
+import {
+  ALL_SERVICES_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../../../../sanity.types";
+import { v4 as uuidv4 } from "uuid";
+import { currencyCodeToName } from "@/lib/utils";
 const tw = createTw({
   theme: {
     extend: {
@@ -44,38 +48,55 @@ Font.register({
 });
 
 interface BillingDocumentProps {
-  labTests: Service[];
-  fieldTests: FieldService[];
-  reportingActivity: ReportingService;
-  mobilizationActivity: MobilizationService;
+  labTests: ALL_SERVICES_QUERYResult;
+  fieldTests: ALL_SERVICES_QUERYResult;
+  reportingActivities: ReportingService[];
+  mobilizationActivities: MobilizationService[];
   project: PROJECT_BY_ID_QUERYResult[number];
+  currency: string;
+  paymentNotes: string;
+  vatPercentage: number;
+  quotationNumber: string;
+  quotationDate: string;
+  acquisitionNumber: string;
+  revisionNumber: string;
 }
 
 export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   const {
+    quotationNumber,
+    quotationDate,
+    acquisitionNumber,
+    currency,
+    paymentNotes,
+    vatPercentage,
     labTests,
     fieldTests,
-    reportingActivity,
-    mobilizationActivity,
+    reportingActivities,
+    mobilizationActivities,
     project,
+    revisionNumber,
   } = billingInfo;
 
   const billing_data = {
-    quotation_date: new Date(),
+    revision_number: revisionNumber,
+    acquisition_number: acquisitionNumber,
+    quotation_date: quotationDate,
+    quotation_number: quotationNumber,
     items: {
-      mobilizationActivity,
+      mobilizationActivities,
       fieldTests,
       labTests,
-      reportingActivity,
+      reportingActivities,
     },
   };
 
   const generateInvoice = false;
 
-  const mobilization = billing_data.items.mobilizationActivity;
+  const mobilization = billing_data.items.mobilizationActivities || [];
   const field = billing_data.items.fieldTests || [];
   const lab = billing_data.items.labTests || [];
-  const reporting = billing_data.items.reportingActivity;
+  const reporting = billing_data.items.reportingActivities || [];
 
   const calculateBill = (items: any) =>
     items.reduce(
@@ -83,11 +104,14 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       0
     );
 
-  const totalBill =
-    calculateBill([mobilization]) +
-    calculateBill(field) +
-    calculateBill(lab) +
-    calculateBill([reporting]);
+  const SUBTOTAL =
+    (calculateBill(mobilization) || 0) +
+    (calculateBill(field) || 0) +
+    (calculateBill(lab) || 0) +
+    (calculateBill(reporting) || 0);
+
+  const VAT_AMOUNT = Math.round((SUBTOTAL * vatPercentage) / 100);
+  const TOTAL_WITH_VAT = Math.round(SUBTOTAL + VAT_AMOUNT);
 
   const styles = StyleSheet.create({
     page: {
@@ -172,8 +196,8 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       fontSize: 7,
       fontWeight: 500,
       paddingTop: 4,
-      paddingLeft: 7,
-      paddingRight: 7,
+      paddingLeft: 5,
+      paddingRight: 5,
       flex: 1,
       height: 20,
       backgroundColor: "#E1EBE3",
@@ -341,19 +365,25 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text style={[styles.title]}>QUOTATION</Text>
         <View style={tw("flex flex-row mt-9")}>
           <Text style={styles.metaTitle}>Revision No:</Text>
-          <Text style={styles.metaDescription}> R2023-00</Text>
+          <Text style={styles.metaDescription}>
+            {" "}
+            {billing_data.revision_number}
+          </Text>
         </View>
         <View style={tw("flex flex-row")}>
           <Text style={styles.metaTitle}>Acquisition No:</Text>
-          <Text style={styles.metaDescription}> A-2024-337</Text>
+          <Text style={styles.metaDescription}> {acquisitionNumber}</Text>
         </View>
         <View style={tw("flex flex-row")}>
           <Text style={styles.metaTitle}>Quotation No:</Text>
-          <Text style={styles.metaDescription}> Q-2024-337</Text>
+          <Text style={styles.metaDescription}> {quotationNumber}</Text>
         </View>
         <View style={tw("flex flex-row")}>
           <Text style={styles.metaTitle}>Quotation Date:</Text>
-          <Text style={styles.metaDescription}> 2024-01-01</Text>
+          <Text style={styles.metaDescription}>
+            {" "}
+            {format(new Date(quotationDate), "MMM d, yyyy, h:mma")}
+          </Text>
         </View>
       </View>
     </View>
@@ -400,7 +430,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           height: "80px",
         }}
       >
-        <Text style={{ ...styles.heading, marginBottom: 15 }}>Project</Text>
+        <Text style={{ ...styles.heading, marginBottom: 15 }}>For Project</Text>
         <Text style={styles.subHeading}>{project.name}</Text>
       </View>
     </View>
@@ -418,10 +448,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text>DESCRIPTION</Text>
       </View>
       <View style={styles.theader}>
-        <Text>UNIT PRICE (UGX)</Text>
+        <Text>UNIT PRICE ({currency.toUpperCase()})</Text>
       </View>
       <View style={styles.theader}>
-        <Text>AMOUNT (UGX)</Text>
+        <Text>AMOUNT ({currency.toUpperCase()})</Text>
       </View>
     </View>
   );
@@ -430,7 +460,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <NoItems text="No items" />
     ) : (
       items?.map((item: any) => (
-        <View key={item.id} style={{ width: "100%", flexDirection: "row" }}>
+        <View key={uuidv4()} style={{ width: "100%", flexDirection: "row" }}>
           <View style={styles.tbody}>
             <Text>{item.quantity}</Text>
           </View>
@@ -438,7 +468,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
             <Text>No</Text>
           </View>
           <View style={[styles.tbody, styles.tbody2]}>
-            <Text>{item.test_parameter}</Text>
+            <Text>{item.testParameter || item.activity}</Text>
           </View>
           <View style={styles.tbodyRightAlign}>
             <Text>{item.price.toLocaleString()} </Text>
@@ -501,12 +531,11 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text>Subtotal</Text>
       </View>
       <View style={styles.tbodyTotal}>
-        <Text>{totalBill.toLocaleString()}</Text>
+        <Text>{SUBTOTAL.toLocaleString()}</Text>
       </View>
     </View>
   );
 
-  // TODO: Cater for all VAT options in-app
   const VAT = () => (
     <View style={{ width: "100%", flexDirection: "row" }}>
       <View style={styles.total}>
@@ -519,10 +548,10 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text></Text>
       </View>
       <View style={styles.tbodyTotal}>
-        <Text>VAT (18%)</Text>
+        <Text>VAT ({vatPercentage}%)</Text>
       </View>
       <View style={styles.tbodyTotal}>
-        <Text>{(totalBill * 0.18).toLocaleString()}</Text>
+        <Text>{vatPercentage ? VAT_AMOUNT.toLocaleString() : "0"}</Text>
       </View>
     </View>
   );
@@ -542,7 +571,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         <Text>TOTAL BILL</Text>
       </View>
       <View style={styles.tbodyTotalWithVAT}>
-        <Text>{(totalBill + totalBill * 0.18).toLocaleString()}</Text>
+        <Text>{TOTAL_WITH_VAT.toLocaleString()}</Text>
       </View>
     </View>
   );
@@ -555,14 +584,14 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <View style={styles.total}>
         <Text></Text>
       </View>
-      <View style={styles.total}>
+      <View style={[styles.total, styles.total2]}>
         <Text></Text>
       </View>
       <View style={styles.tbodyTotalWithVAT}>
         <Text>TOTAL BILL</Text>
       </View>
       <View style={styles.tbodyTotalWithVAT}>
-        <Text>{totalBill.toLocaleString()}</Text>
+        <Text>{SUBTOTAL.toLocaleString()}</Text>
       </View>
     </View>
   );
@@ -575,23 +604,20 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           flexDirection: "row",
           alignItems: "flex-start",
           justifyContent: "space-between",
-          flexWrap: "wrap", // Ensures text wraps properly
+          flexWrap: "wrap",
         }}
       >
         <View style={{ width: "48%" }}>
-          {" "}
-          {/* Limits each child to half the screen width */}
           <Text style={styles.heading}>Amount in words</Text>
           <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
-            {numberToWords(totalBill + totalBill * 0.18)} Uganda Shillings Only
+            {numberToWords(TOTAL_WITH_VAT)} {currencyCodeToName(currency)}s Only
           </Text>
         </View>
 
         <View style={{ width: "48%" }}>
           <Text style={styles.heading}>Payment Notes</Text>
           <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
-            We recommend 60% payment to be made before field mobilization. 40%
-            on submission of the Final Report.
+            {paymentNotes ? paymentNotes : "No extra payment notes provided"}
           </Text>
         </View>
       </View>
@@ -606,7 +632,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           flexDirection: "row",
           alignItems: "flex-start",
           justifyContent: "space-between",
-          flexWrap: "wrap", // Ensures text wraps properly
+          flexWrap: "wrap",
         }}
       >
         <View style={{ width: "48%" }}>
@@ -653,7 +679,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     </View>
   );
 
-  const isVATRequired = () => true;
+  const isVATRequired = () => vatPercentage > 0;
 
   return (
     <Page size="A4" style={styles.page}>
@@ -661,13 +687,13 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <ClientAddressAndProject />
       <TableHead />
       <Subsection text="Mobilization & Demobilization costs" />
-      <TableBodyWithSingleItem item={mobilization} />
+      <TableBodyWithListItems items={mobilization} />
       <Subsection text="Field Investigations" />
       <TableBodyWithListItems items={field} />
       <Subsection text="Laboratory tests" />
       <TableBodyWithListItems items={lab} />
       <Subsection text="Reporting" />
-      <TableBodyWithSingleItem item={reporting} />
+      <TableBodyWithListItems items={reporting} />
       <TableTotal />
       {isVATRequired() ? <VAT /> : null}
       {isVATRequired() ? <TotalBillWithVAT /> : <TotalBill />}

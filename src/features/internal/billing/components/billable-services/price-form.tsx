@@ -42,6 +42,7 @@ interface PriceProps {
   onPriceChange: (price: number | undefined) => void;
   onQuantityChange: (quantity: number | undefined) => void;
   isRowSelected: boolean;
+  currency: string;
 }
 
 export function PriceForm({
@@ -50,6 +51,7 @@ export function PriceForm({
   onPriceChange,
   onQuantityChange,
   isRowSelected,
+  currency,
 }: PriceProps) {
   const { price, quantity, total } = initialValues;
 
@@ -86,7 +88,7 @@ export function PriceForm({
                   className="max-w-[150px] min-w-[130px] text-[16px] md:text-sm"
                   customInput={Input}
                   thousandSeparator={true}
-                  prefix={"UGX "}
+                  prefix={`${currency.toUpperCase()} `}
                   placeholder="Add a price"
                   value={field.value}
                   disabled={!isRowSelected}
@@ -130,10 +132,10 @@ export function PriceForm({
               <FormControl>
                 <NumericFormat
                   disabled
-                  className="max-w-[150px] min-w-[140px] text-[16px] md:text-sm"
+                  className="max-w-[130px] min-w-[120px] text-[16px] md:text-sm"
                   customInput={Input}
                   thousandSeparator={true}
-                  prefix={"UGX "}
+                  prefix={`${currency.toUpperCase()} `}
                   placeholder="Total"
                   value={form?.watch("price") * form?.watch("quantity")}
                 />

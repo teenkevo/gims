@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const projectDetailsSchema = z.object({
+  internalId: z.string().trim().min(1, "Required"),
   projectName: z.string().trim().min(1, "Required"),
   dateRange: z
     .object(
