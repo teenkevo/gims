@@ -16,12 +16,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import * as motion from "framer-motion/client";
 import { DeleteProject } from "./delete-project";
-import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
@@ -36,11 +31,7 @@ import {
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RemoveClientFromProject } from "./remove-client-from-project";
 import { CreateClientDialog } from "./create-client-dialog";
 import { DeleteFile } from "@/features/customer/services/components/test-methods/delete-test-method-file";
@@ -59,14 +50,11 @@ export default function ProjectDetails({
   existingClients: ALL_CLIENTS_QUERYResult;
   allServices: ALL_SERVICES_QUERYResult;
 }) {
-  const { _id, name, clients, contactPersons, startDate, endDate, quotation } =
-    project;
+  const { _id, name, clients, contactPersons, startDate, endDate, quotation } = project;
 
   // billing services table states
-  const [selectedLabTests, setSelectedLabTests] =
-    useState<ALL_SERVICES_QUERYResult>([]);
-  const [selectedFieldTests, setSelectedFieldTests] =
-    useState<ALL_SERVICES_QUERYResult>([]);
+  const [selectedLabTests, setSelectedLabTests] = useState<ALL_SERVICES_QUERYResult>([]);
+  const [selectedFieldTests, setSelectedFieldTests] = useState<ALL_SERVICES_QUERYResult>([]);
   const [mobilizationActivities, setMobilizationActivities] = useState<
     { activity: string; price: number; quantity: number }[]
   >([]);
@@ -91,10 +79,7 @@ export default function ProjectDetails({
 
   return (
     <>
-      <Link
-        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/projects"
-      >
+      <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/projects">
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
@@ -254,9 +239,7 @@ export default function ProjectDetails({
         <TabsContent value="billing">
           <div className="space-y-8 my-10">
             <BillingLifecycle
-              currentStage={
-                isQuotationInReview || !quotation ? 1 : isQuotationSent ? 2 : 3
-              }
+              currentStage={isQuotationInReview || !quotation ? 1 : isQuotationSent ? 2 : 3}
               allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
@@ -280,14 +263,11 @@ export default function ProjectDetails({
           <div className="space-y-8 my-10">
             <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
               <CardHeader>
-                <CardTitle className="text-xl font-bold mb-2">
-                  Delete Project
-                </CardTitle>
+                <CardTitle className="text-xl font-bold mb-2">Delete Project</CardTitle>
 
                 <CardDescription className="text-sm text-foregeound">
-                  This project will be deleted, along with all of its Data,
-                  Files, Invoices and Quotations. This action is irreversible
-                  and can not be undone.
+                  This project will be deleted, along with all of its Data, Files, Invoices and Quotations. This action
+                  is irreversible and can not be undone.
                 </CardDescription>
               </CardHeader>
 

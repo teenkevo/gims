@@ -3,10 +3,7 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { sanitizePhoneNumber } from "./utils";
-import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
-} from "../../sanity.types";
+import { ALL_SERVICES_QUERYResult, PROJECT_BY_ID_QUERYResult } from "../../sanity.types";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERYResult[number] & {
@@ -38,10 +35,7 @@ interface QuotationProps {
 }
 
 // CREATE QUOTATION
-export async function createQuotation(
-  billingInfo: QuotationProps,
-  fileId: string
-) {
+export async function createQuotation(billingInfo: QuotationProps, fileId: string) {
   try {
     const {
       labTests,
@@ -58,13 +52,9 @@ export async function createQuotation(
       revisionNumber,
     } = billingInfo;
 
-    const labTestMethod = labTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
+    const labTestMethod = labTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
 
-    const fieldTestMethod = fieldTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
+    const fieldTestMethod = fieldTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
 
     const items = [
       ...labTests.map((test) => ({
@@ -168,7 +158,7 @@ export async function sendQuotation(projectId: string) {
         status: "sent",
       })
       .commit();
-    revalidateTag(`project-${projectId}`);
+    // revalidateTag(`project-${projectId}`);
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error sending quotation:", error);
@@ -177,11 +167,7 @@ export async function sendQuotation(projectId: string) {
 }
 
 // UPDATE QUOTATION
-export async function updateQuotation(
-  quotationId: string,
-  billingInfo: QuotationProps,
-  fileId: string
-) {
+export async function updateQuotation(quotationId: string, billingInfo: QuotationProps, fileId: string) {
   try {
     const {
       labTests,
@@ -198,13 +184,9 @@ export async function updateQuotation(
       revisionNumber,
     } = billingInfo;
 
-    const labTestMethod = labTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
+    const labTestMethod = labTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
 
-    const fieldTestMethod = fieldTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
+    const fieldTestMethod = fieldTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
 
     const items = [
       ...labTests.map((test) => ({
@@ -446,9 +428,7 @@ export async function deleteTestMethod(testMethodId: string) {
       { id: testMethodId }
     );
 
-    const assetIds: string[] = method?.documents
-      ?.map((doc: any) => doc.asset?._id)
-      .filter(Boolean);
+    const assetIds: string[] = method?.documents?.map((doc: any) => doc.asset?._id).filter(Boolean);
 
     // 2. Delete the testMethod document first
     const result = await writeClient.delete(testMethodId);
@@ -457,10 +437,7 @@ export async function deleteTestMethod(testMethodId: string) {
     if (assetIds?.length) {
       await Promise.all(
         assetIds.map(async (assetId) => {
-          const refCount = await writeClient.fetch(
-            `count(*[references($assetId)])`,
-            { assetId }
-          );
+          const refCount = await writeClient.fetch(`count(*[references($assetId)])`, { assetId });
 
           if (refCount === 0) {
             await writeClient.delete(assetId);
@@ -506,9 +483,7 @@ export async function getDocumentsReferencingTestMethod(testMethodId: string) {
 }
 
 // GET DOCUMENTS REFERENCING MULTIPLE TEST METHODS
-export async function getDocumentsReferencingMultipleTestMethods(
-  testMethodIds: string[]
-) {
+export async function getDocumentsReferencingMultipleTestMethods(testMethodIds: string[]) {
   const results = await Promise.all(
     testMethodIds.map(async (id) => {
       const documents = await writeClient.fetch(
@@ -546,9 +521,7 @@ export async function deleteMultipleTestMethods(testMethodIds: string[]) {
             { id: testMethodId }
           );
 
-          const assetIds: string[] = method?.documents
-            ?.map((doc: any) => doc.asset?._id)
-            .filter(Boolean);
+          const assetIds: string[] = method?.documents?.map((doc: any) => doc.asset?._id).filter(Boolean);
 
           // 2. Delete the testMethod document first
           const result = await writeClient.delete(testMethodId);
@@ -557,10 +530,7 @@ export async function deleteMultipleTestMethods(testMethodIds: string[]) {
           if (assetIds?.length) {
             await Promise.all(
               assetIds.map(async (assetId) => {
-                const refCount = await writeClient.fetch(
-                  `count(*[references($assetId)])`,
-                  { assetId }
-                );
+                const refCount = await writeClient.fetch(`count(*[references($assetId)])`, { assetId });
 
                 if (refCount === 0) {
                   await writeClient.delete(assetId);
@@ -589,10 +559,7 @@ export async function deleteMultipleTestMethods(testMethodIds: string[]) {
 }
 
 // REMOVE TEST METHOD FROM SERVICE
-export async function deleteTestMethodFromService(
-  serviceId: string,
-  testMethodId: string
-) {
+export async function deleteTestMethodFromService(serviceId: string, testMethodId: string) {
   try {
     const result = await writeClient
       .patch(serviceId)
@@ -606,10 +573,7 @@ export async function deleteTestMethodFromService(
 }
 
 // DELETE MULTIPLE TEST METHODS FROM SERVICE
-export async function deleteMultipleTestMethodsFromService(
-  serviceId: string,
-  testMethodIds: string[]
-) {
+export async function deleteMultipleTestMethodsFromService(serviceId: string, testMethodIds: string[]) {
   try {
     const results = await Promise.all(
       testMethodIds.map(async (testMethodId) => {
@@ -655,11 +619,7 @@ export async function addFilesToTestMethod(prevState: any, formData: FormData) {
 }
 
 // DELETE FILE
-export async function deleteFileFromTestMethod(
-  fileId: string,
-  fileKey: string,
-  currentTestMethodId: string
-) {
+export async function deleteFileFromTestMethod(fileId: string, fileKey: string, currentTestMethodId: string) {
   try {
     // Check if the file is referenced by any test method other than the current one
     const documents = await writeClient.fetch(
@@ -750,8 +710,7 @@ export async function deleteMultipleSampleClasses(sampleClassIds: string[]) {
   try {
     const results = await Promise.all(
       sampleClassIds.map(async (sampleClassId) => {
-        const documents =
-          await getDocumentsReferencingSampleClass(sampleClassId);
+        const documents = await getDocumentsReferencingSampleClass(sampleClassId);
         if (documents.length === 0) {
           const result = await writeClient.delete(sampleClassId);
           return { result, deleted: true };
@@ -774,9 +733,7 @@ export async function deleteMultipleSampleClasses(sampleClassIds: string[]) {
 }
 
 // GET DOCUMENTS REFERENCING SAMPLE CLASS
-export async function getDocumentsReferencingSampleClass(
-  sampleClassId: string
-) {
+export async function getDocumentsReferencingSampleClass(sampleClassId: string) {
   return await writeClient.fetch(
     `*[_type != "sampleClass" && references($id)] {
       _id,
@@ -789,9 +746,7 @@ export async function getDocumentsReferencingSampleClass(
 }
 
 // GET DOCUMENTS REFERENCING MULTIPLE SAMPLE CLASSES
-export async function getDocumentsReferencingMultipleSampleClasses(
-  sampleClassIds: string[]
-) {
+export async function getDocumentsReferencingMultipleSampleClasses(sampleClassIds: string[]) {
   const results = await Promise.all(
     sampleClassIds.map(async (id) => {
       const documents = await writeClient.fetch(
@@ -838,9 +793,7 @@ export async function updateSampleClass(prevState: any, formData: FormData) {
 export async function addService(prevState: any, formData: FormData) {
   const code = formData.get("code");
   const testParameter = formData.get("testParameter");
-  const testMethods = formData
-    .getAll("testMethods")
-    .map((testMethod) => JSON.parse(testMethod as string));
+  const testMethods = formData.getAll("testMethods").map((testMethod) => JSON.parse(testMethod as string));
   const sampleClass = formData.get("sampleClass");
   const status = formData.get("status");
 
@@ -876,9 +829,7 @@ export async function addService(prevState: any, formData: FormData) {
 export async function updateService(prevState: any, formData: FormData) {
   const code = formData.get("code");
   const testParameter = formData.get("testParameter");
-  const testMethods = formData
-    .getAll("testMethods")
-    .map((testMethod) => JSON.parse(testMethod as string));
+  const testMethods = formData.getAll("testMethods").map((testMethod) => JSON.parse(testMethod as string));
   const sampleClass = formData.get("sampleClass");
   const status = formData.get("status");
   const serviceId = formData.get("serviceId");
@@ -938,10 +889,7 @@ export async function deleteMultipleServices(serviceIds: string[]) {
 }
 
 // ACTIVATE DEACTIVATE SERVICE
-export async function activateDeactivateService(
-  prevState: any,
-  formData: FormData
-) {
+export async function activateDeactivateService(prevState: any, formData: FormData) {
   const serviceId = formData.get("serviceId");
   const status = formData.get("status");
   try {
@@ -976,9 +924,7 @@ export async function uploadPDFDocument(pdfBlob: Blob, filename: string) {
 
 export async function deleteAsset() {
   try {
-    const asset = await writeClient.delete(
-      "file-02b0d0933047999d4815962463e31219ca1adc6a-pdf"
-    );
+    const asset = await writeClient.delete("file-02b0d0933047999d4815962463e31219ca1adc6a-pdf");
     console.log("Asset deleted:", asset);
     return { result: asset, status: "ok" };
   } catch (error) {
@@ -1016,9 +962,7 @@ export async function createProject(prevState: any, formData: FormData) {
     const projectName = formData.get("projectName");
     const dateFrom = formData.get("dateFrom");
     const dateTo = formData.get("dateTo");
-    const clients = formData
-      .getAll("clients")
-      .map((client) => JSON.parse(client as string));
+    const clients = formData.getAll("clients").map((client) => JSON.parse(client as string));
 
     const clientIds = await Promise.all(
       clients.map(async (client) => {
@@ -1061,11 +1005,7 @@ export async function createProject(prevState: any, formData: FormData) {
   }
 }
 
-export async function updateClientName(
-  clientId: string,
-  projectId: string,
-  formData: FormData
-) {
+export async function updateClientName(clientId: string, projectId: string, formData: FormData) {
   try {
     const clientName = formData.get("clientName");
     const result = await writeClient
@@ -1080,11 +1020,7 @@ export async function updateClientName(
   }
 }
 
-export async function updateContactPerson(
-  contactId: string,
-  projectId: string,
-  formData: FormData
-) {
+export async function updateContactPerson(contactId: string, projectId: string, formData: FormData) {
   try {
     const name = formData.get("name");
     const email = formData.get("email");
@@ -1107,10 +1043,7 @@ export async function updateContactPerson(
   }
 }
 
-export async function removeContactFromProject(
-  contactId: string,
-  projectId: string
-) {
+export async function removeContactFromProject(contactId: string, projectId: string) {
   try {
     const result = await writeClient
       .patch(projectId)
@@ -1124,10 +1057,7 @@ export async function removeContactFromProject(
   }
 }
 
-export async function removeClientFromProject(
-  clientId: string,
-  projectId: string
-) {
+export async function removeClientFromProject(clientId: string, projectId: string) {
   try {
     const result = await writeClient
       .patch(projectId)

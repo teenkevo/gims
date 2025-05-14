@@ -10,20 +10,11 @@ import { getAllClients } from "@/sanity/lib/clients/getAllClients";
 import { getAllServices } from "@/sanity/lib/services/getAllServices";
 import Loading from "./loading";
 
-export default async function ProjectPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   // Fetch data in parallel
-  const [
-    projectData,
-    existingContactsData,
-    existingClientsData,
-    allServicesData,
-  ] = await Promise.all([
+  const [projectData, existingContactsData, existingClientsData, allServicesData] = await Promise.all([
     getProjectById(id),
     getAllContacts(),
     getAllClients(),

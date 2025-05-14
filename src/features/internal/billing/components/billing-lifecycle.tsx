@@ -14,10 +14,7 @@ import {
   ReceiptText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
-} from "../../../../../sanity.types";
+import { ALL_SERVICES_QUERYResult, PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { QuotationDrawer } from "./quotation-drawer";
 import { SendQuotationDialog } from "./send-quotation-dialog";
 type Stage = {
@@ -41,13 +38,9 @@ interface BillingLifecycleProps {
     price: number;
     quantity: number;
   }[];
-  setMobilizationActivities: Dispatch<
-    SetStateAction<{ activity: string; price: number; quantity: number }[]>
-  >;
+  setMobilizationActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
   reportingActivities: { activity: string; price: number; quantity: number }[];
-  setReportingActivities: Dispatch<
-    SetStateAction<{ activity: string; price: number; quantity: number }[]>
-  >;
+  setReportingActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
 }
 
 export function BillingLifecycle({
@@ -92,12 +85,7 @@ export function BillingLifecycle({
     {
       id: 3,
       title: "Client Response",
-      icon:
-        rejectionStage === 3 ? (
-          <XCircle className="h-6 w-6" />
-        ) : (
-          <CheckCircle className="h-6 w-6" />
-        ),
+      icon: rejectionStage === 3 ? <XCircle className="h-6 w-6" /> : <CheckCircle className="h-6 w-6" />,
       description:
         rejectionStage === 3
           ? "Quotation was rejected by the client"
@@ -155,7 +143,7 @@ export function BillingLifecycle({
   return (
     <div className="w-full">
       {/* Horizontal progress bar (md screens and up) */}
-      <div className="hidden lg:block">
+      <div className="hidden xl:block">
         <div className="relative h-1 bg-gray-200 rounded-full mb-10 mt-6 flex items-center">
           <div
             className="absolute h-1 bg-primary rounded-full transition-all duration-1000 ease-in-out top-0 left-0"
@@ -187,9 +175,7 @@ export function BillingLifecycle({
                           ? "bg-destructive text-destructive-foreground"
                           : "bg-primary text-primary-foreground"
                         : "bg-gray-200 text-gray-400",
-                  stage.id === currentStage &&
-                    animationComplete &&
-                    !rejectionStage
+                  stage.id === currentStage && animationComplete && !rejectionStage
                     ? "ring-4 ring-emerald-100"
                     : stage.id === rejectionStage && animationComplete
                       ? "ring-4 ring-red-100"
@@ -235,9 +221,7 @@ export function BillingLifecycle({
                 </div>
                 <h3 className="font-semibold text-sm">{stage.title}</h3>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {stage.description}
-              </p>
+              <p className="text-xs text-muted-foreground">{stage.description}</p>
 
               {stage.id < currentStage && quotation && (
                 <div className="mt-4 flex items-center text-primary text-xs">
@@ -299,7 +283,7 @@ export function BillingLifecycle({
       </div>
 
       {/* Vertical progress bar with cards for small screens */}
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         <div className="relative">
           {/* Vertical progress line */}
           <div className="absolute left-3 top-0 bottom-0 w-1 bg-gray-200 rounded-full">
@@ -328,9 +312,7 @@ export function BillingLifecycle({
                               ? "bg-destructive text-destructive-foreground"
                               : "bg-primary text-primary-foreground"
                             : "bg-gray-200 text-gray-400",
-                      stage.id === currentStage &&
-                        animationComplete &&
-                        !rejectionStage
+                      stage.id === currentStage && animationComplete && !rejectionStage
                         ? "ring-4 ring-emerald-100"
                         : stage.id === rejectionStage && animationComplete
                           ? "ring-4 ring-red-100"
@@ -371,9 +353,7 @@ export function BillingLifecycle({
                     </div>
                     <h3 className="font-semibold text-sm">{stage.title}</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {stage.description}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{stage.description}</p>
 
                   {stage.id < currentStage && quotation && (
                     <div className="mt-4 flex items-center text-primary text-xs">
@@ -391,25 +371,21 @@ export function BillingLifecycle({
                     </div>
                   )}
 
-                  {quotation &&
-                    stage.id === 1 &&
-                    quotation.status === "draft" && (
-                      <div className="mt-4 flex items-center text-orange-600 text-xs">
-                        <ReceiptText className="h-3 w-3 mr-1" />
-                        <span>Draft</span>
-                      </div>
-                    )}
+                  {quotation && stage.id === 1 && quotation.status === "draft" && (
+                    <div className="mt-4 flex items-center text-orange-600 text-xs">
+                      <ReceiptText className="h-3 w-3 mr-1" />
+                      <span>Draft</span>
+                    </div>
+                  )}
 
                   {/* STAGE 2 */}
 
-                  {quotation &&
-                    stage.id === 2 &&
-                    quotation.status === "sent" && (
-                      <div className="mt-4 flex items-center text-primary text-xs">
-                        <CircleDashed className="animate-spin h-3 w-3 mr-1" />
-                        <span>Awaiting client response</span>
-                      </div>
-                    )}
+                  {quotation && stage.id === 2 && quotation.status === "sent" && (
+                    <div className="mt-4 flex items-center text-primary text-xs">
+                      <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                      <span>Awaiting client response</span>
+                    </div>
+                  )}
 
                   {stage.id === rejectionStage && (
                     <div className="mt-4 flex items-center text-red-600 text-xs">
