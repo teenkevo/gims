@@ -260,7 +260,7 @@ export function BillingLifecycle({
                 </div>
               )}
 
-              {stage.id === 1 && quotation?.status === "draft" && (
+              {stage.id === 1 && (
                 <div className="mt-5 flex flex-wrap gap-2 items-center">
                   <QuotationDrawer
                     allServices={allServices}
@@ -394,7 +394,7 @@ export function BillingLifecycle({
                     </div>
                   )}
 
-                  {stage.id === 1 && quotation?.status === "draft" && (
+                  {stage.id === 1 && (
                     <div className="mt-5 flex flex-wrap gap-2 items-center">
                       <QuotationDrawer
                         allServices={allServices}

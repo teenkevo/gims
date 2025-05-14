@@ -16,14 +16,7 @@ import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import type { SetStateAction } from "react";
 import type { Dispatch } from "react";
 import type { ALL_SERVICES_QUERYResult } from "../../../../../sanity.types";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export function QuotationDrawer({
   allServices,
@@ -48,13 +41,9 @@ export function QuotationDrawer({
     price: number;
     quantity: number;
   }[];
-  setMobilizationActivities: Dispatch<
-    SetStateAction<{ activity: string; price: number; quantity: number }[]>
-  >;
+  setMobilizationActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
   reportingActivities: { activity: string; price: number; quantity: number }[];
-  setReportingActivities: Dispatch<
-    SetStateAction<{ activity: string; price: number; quantity: number }[]>
-  >;
+  setReportingActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
@@ -66,7 +55,7 @@ export function QuotationDrawer({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
-            disabled={quotation?.status !== "draft"}
+            disabled={Boolean(quotation) && quotation?.status !== "draft"}
             size="sm"
             className="shadow-md"
             variant={quotation ? "outline" : "default"}
@@ -76,9 +65,7 @@ export function QuotationDrawer({
         </SheetTrigger>
         <SheetContent className="w-full sm:max-w-7xl flex flex-col h-full">
           <SheetHeader className="flex-shrink-0 border-b border-border pb-5">
-            <SheetTitle>
-              {quotation ? "Review Quotation" : "Create Quotation"}
-            </SheetTitle>
+            <SheetTitle>{quotation ? "Review Quotation" : "Create Quotation"}</SheetTitle>
             <SheetDescription>
               {quotation
                 ? "Review the quotation and make changes if necessary."
@@ -109,7 +96,7 @@ export function QuotationDrawer({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button
-          disabled={quotation?.status !== "draft"}
+          disabled={quotation?.status === "sent"}
           size="sm"
           className="shadow-md"
           variant={quotation ? "outline" : "default"}
@@ -119,13 +106,9 @@ export function QuotationDrawer({
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left flex-shrink-0">
-          <DrawerTitle>
-            {quotation ? "Review Quotation" : "Create Quotation"}
-          </DrawerTitle>
+          <DrawerTitle>{quotation ? "Review Quotation" : "Create Quotation"}</DrawerTitle>
           <DrawerDescription>
-            {quotation
-              ? "Review the quotation and make changes if necessary."
-              : "Create a quotation for the project."}
+            {quotation ? "Review the quotation and make changes if necessary." : "Create a quotation for the project."}
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 overflow-y-auto max-h-[calc(80vh-10rem)]">

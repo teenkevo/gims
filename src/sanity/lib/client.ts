@@ -17,7 +17,7 @@ export const client = createClient({
 export async function sanityFetch<const QueryString extends string>({
   query,
   params = {},
-  revalidate = 10, // default revalidation time in seconds
+  revalidate = 0, // default revalidation time in seconds
   tags = [],
 }: {
   query: QueryString;
