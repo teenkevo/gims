@@ -3,6 +3,7 @@ import React, {
   Dispatch,
   SetStateAction,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -52,6 +53,7 @@ interface QuotationOptionsProps {
   setReportingActivities: Dispatch<
     SetStateAction<{ activity: string; price: number; quantity: number }[]>
   >;
+  setDrawerOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 // TODO: work on toggle state upon changing tabs
@@ -64,15 +66,9 @@ const quotationOptionsSchema = z.object({
 
 type QuotationOptionsValues = z.infer<typeof quotationOptionsSchema>;
 
-const defaultValues: Partial<QuotationOptionsValues> = {
-  mobilization: false,
-  field: false,
-  lab: false,
-  reporting: false,
-};
-
 type SwitchFieldProps = {
   name: keyof QuotationOptionsValues;
+  defaultOn: boolean;
   label: string;
   description: string;
   disabled?: boolean;
@@ -92,6 +88,7 @@ type SwitchFieldProps = {
 
 const SwitchField = ({
   name,
+  defaultOn = false,
   label,
   description,
   disabled = false,
@@ -106,11 +103,13 @@ const SwitchField = ({
   isLabTestsValid,
   isReportingValid,
 }: SwitchFieldProps) => {
-  const lab = quotationOptionsProps.allServices.filter(
+  const { project, allServices } = quotationOptionsProps;
+
+  const lab = allServices.filter(
     (service) => service.sampleClass?.name !== "Field"
   );
 
-  const field = quotationOptionsProps.allServices.filter(
+  const field = allServices.filter(
     (service) => service.sampleClass?.name === "Field"
   );
 
@@ -123,6 +122,7 @@ const SwitchField = ({
       columns({
         setTableData: setFieldTestsTableData,
         currency,
+        quotation: project.quotation,
       }),
     [setFieldTestsTableData, currency]
   );
@@ -132,6 +132,7 @@ const SwitchField = ({
       columns({
         setTableData: setLabTestsTableData,
         currency,
+        quotation: project.quotation,
       }),
     [setLabTestsTableData, currency]
   );
@@ -164,7 +165,7 @@ const SwitchField = ({
 
   const form = useForm<QuotationOptionsValues>({
     resolver: zodResolver(quotationOptionsSchema),
-    defaultValues,
+    defaultValues: { [name]: defaultOn } as Partial<QuotationOptionsValues>,
   });
 
   // Determine the validity of the switch field
@@ -256,6 +257,7 @@ const SwitchField = ({
           onActivitiesChange={handleMobilizationActivitiesChange}
           onValidationChange={handleMobilizationValidationChange}
           currency={currency}
+          quotation={quotationOptionsProps.project.quotation}
         />
       )}
 
@@ -266,7 +268,6 @@ const SwitchField = ({
           onValidationChange={handleFieldsValidationChange}
           columns={fieldInvestigationsColumns}
           data={fieldTestsTableData}
-          quotation={quotationOptionsProps.project.quotation}
         />
       )}
 
@@ -277,7 +278,6 @@ const SwitchField = ({
           onValidationChange={handleLabTestsValidationChange}
           columns={labInvestigationsColumns}
           data={labTestsTableData}
-          quotation={quotationOptionsProps.project.quotation}
         />
       )}
 
@@ -288,6 +288,7 @@ const SwitchField = ({
           onActivitiesChange={handleReportingActivitiesChange}
           onValidationChange={handleReportingValidationChange}
           currency={currency}
+          quotation={quotationOptionsProps.project.quotation}
         />
       )}
     </div>
@@ -301,16 +302,35 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     selectedFieldTests,
     mobilizationActivities,
     reportingActivities,
+    setDrawerOpen,
   } = quotationOptionsProps;
+
+  const { quotation } = project;
+
+  const quotationVat = quotation?.vatPercentage;
+  const quotationPaymentNotes = quotation?.paymentNotes;
+  const quotationHasMobilization = quotation?.otherItems?.some(
+    (item) => item.type === "mobilization"
+  );
+  const quotationHasReporting = quotation?.otherItems?.some(
+    (item) => item.type === "reporting"
+  );
+
+  const quotationCurrency = quotation?.currency;
 
   const [isMobilizationValid, setIsMobilizationValid] = useState(false);
   const [isFieldsValid, setIsFieldsValid] = useState(false);
   const [isLabTestsValid, setIsLabTestsValid] = useState(false);
   const [isReportingValid, setIsReportingValid] = useState(false);
-  const [currency, setCurrency] = React.useState("ugx");
-  const [paymentNotes, setPaymentNotes] = useState("");
-  const [vatPercentage, setVatPercentage] = useState("18");
-  const [vatEnabled, setVatEnabled] = useState(false);
+  const [currency, setCurrency] = React.useState(
+    quotationCurrency?.toLocaleLowerCase() || "ugx"
+  );
+  const [paymentNotes, setPaymentNotes] = useState(quotationPaymentNotes || "");
+  const [notesEnabled, setNotesEnabled] = useState(
+    quotationPaymentNotes ? true : false
+  );
+  const [vatPercentage, setVatPercentage] = useState(quotationVat || "18");
+  const [vatEnabled, setVatEnabled] = useState(quotationVat ? true : false);
 
   const handleMobilizationValidationChange = (isValid: boolean) => {
     setIsMobilizationValid(isValid);
@@ -367,8 +387,6 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     project,
   };
 
-  console.log(billingInfo);
-
   return (
     <>
       <div className="space-y-8">
@@ -381,6 +399,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
             Choose the items to add to the client's quotation
           </p>
           <SwitchField
+            defaultOn={quotationHasMobilization || false}
             currency={currency}
             handleMobilizationValidationChange={
               handleMobilizationValidationChange
@@ -398,6 +417,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
             description="Mobilization activities for work to be done outside the laboratory"
           />
           <SwitchField
+            defaultOn={Boolean(quotation)}
             currency={currency}
             handleMobilizationValidationChange={
               handleMobilizationValidationChange
@@ -415,6 +435,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
             description="Work to be done in the field"
           />
           <SwitchField
+            defaultOn={Boolean(quotation)}
             currency={currency}
             handleMobilizationValidationChange={
               handleMobilizationValidationChange
@@ -432,6 +453,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
             description="Investigations to be carried out in the laboratory"
           />
           <SwitchField
+            defaultOn={quotationHasReporting || false}
             currency={currency}
             handleMobilizationValidationChange={
               handleMobilizationValidationChange
@@ -449,20 +471,27 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
             description="Receive emails about your account activity and security."
           />
           <div className="mt-5 md:mt-0">
-            <GenerateBillingDocument {...billingInfo} />
+            <GenerateBillingDocument
+              billingInfo={billingInfo}
+              setDrawerOpen={setDrawerOpen}
+            />
           </div>
           <p className="text-sm font-medium tracking-tight pt-5">
             Extra options
           </p>
           <div className="border justify-end grid grid-cols-1 lg:grid-cols-2 gap-4 bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
             <VATToggle
-              value={vatPercentage}
+              value={vatPercentage?.toString()}
               onChange={setVatPercentage}
               vatEnabled={vatEnabled}
               setVatEnabled={setVatEnabled}
             />
-
-            <PaymentNotes value={paymentNotes} onChange={setPaymentNotes} />
+            <PaymentNotes
+              value={paymentNotes}
+              onChange={setPaymentNotes}
+              notesEnabled={notesEnabled}
+              setNotesEnabled={setNotesEnabled}
+            />
           </div>
         </div>
       </div>

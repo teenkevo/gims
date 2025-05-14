@@ -25,16 +25,11 @@ import {
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { Toolbar } from "./toolbar";
-import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
-} from "../../../../../../sanity.types";
+import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
 import { ExtendedService } from "./columns";
-
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  quotation?: PROJECT_BY_ID_QUERYResult[number]["quotation"];
   setSelectedServices: React.Dispatch<
     React.SetStateAction<ALL_SERVICES_QUERYResult>
   >;
@@ -47,11 +42,9 @@ export function DataTable<
 >({
   columns,
   data,
-  quotation,
   setSelectedServices,
   onValidationChange,
 }: DataTableProps<TData, TValue>) {
-  const [tableData, setTableData] = React.useState(data);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -60,36 +53,8 @@ export function DataTable<
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
-  React.useEffect(() => {
-    if (quotation && quotation.items) {
-      const itemMap = Object.fromEntries(
-        quotation.items.map((item) => [item.service?._ref, item])
-      );
-      const updatedData = data.map((row) => {
-        const item = itemMap[row._id];
-        return item
-          ? {
-              ...row,
-              price: item.unitPrice,
-              quantity: item.quantity,
-            }
-          : row;
-      });
-      setTableData(updatedData);
-
-      const selection: Record<string, boolean> = {};
-      updatedData.forEach((row, idx) => {
-        if (itemMap[row._id]) selection[idx] = true;
-      });
-      setRowSelection(selection);
-    } else {
-      setTableData(data);
-      setRowSelection({});
-    }
-  }, [quotation, data]);
-
   const table = useReactTable({
-    data: tableData,
+    data,
     columns,
     state: {
       sorting,
@@ -110,13 +75,6 @@ export function DataTable<
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
-
-  const tableRows = table.getRowModel().flatRows.map((row) => row.original);
-  const selectedTableRows = table
-    .getSelectedRowModel()
-    .flatRows.map((row) => row.original);
-
-  console.log(selectedTableRows);
 
   // Bubble up the selection to the parent component
   React.useEffect(() => {

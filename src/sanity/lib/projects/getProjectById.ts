@@ -31,11 +31,19 @@ export const getProjectById = async (projectId: string) => {
             quotationDate,
             acquisitionNumber,
             currency,
+            status,
             items[] {
               service,
               unitPrice,
               quantity,
               lineTotal,
+              testMethod->{
+                _id,
+                standard->{
+                  _id,
+                  acronym,
+                },
+              },
             },
             otherItems[] {
               type,

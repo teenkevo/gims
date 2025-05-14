@@ -85,6 +85,10 @@ export default function ProjectDetails({
     }
   }, []);
 
+  const isQuotationInReview = quotation?.status === "draft";
+
+  const isQuotationSent = quotation?.status === "sent";
+
   return (
     <>
       <Link
@@ -250,7 +254,9 @@ export default function ProjectDetails({
         <TabsContent value="billing">
           <div className="space-y-8 my-10">
             <BillingLifecycle
-              currentStage={1}
+              currentStage={
+                isQuotationInReview || !quotation ? 1 : isQuotationSent ? 2 : 3
+              }
               allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
@@ -263,20 +269,6 @@ export default function ProjectDetails({
               setReportingActivities={setReportingActivities}
             />
             {quotation && <QuotationFile quotation={quotation} />}
-            {!quotation && (
-              <QuotationOptions
-                allServices={allServices}
-                project={project}
-                selectedLabTests={selectedLabTests}
-                setSelectedLabTests={setSelectedLabTests}
-                selectedFieldTests={selectedFieldTests}
-                setSelectedFieldTests={setSelectedFieldTests}
-                mobilizationActivities={mobilizationActivities}
-                setMobilizationActivities={setMobilizationActivities}
-                reportingActivities={reportingActivities}
-                setReportingActivities={setReportingActivities}
-              />
-            )}
           </div>
         </TabsContent>
         <TabsContent value="sample-receipt">

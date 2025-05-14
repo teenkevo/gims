@@ -13,7 +13,6 @@ import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
-import { v4 as uuidv4 } from "uuid";
 import { currencyCodeToName } from "@/lib/utils";
 const tw = createTw({
   theme: {
@@ -459,8 +458,8 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     items.length === 0 ? (
       <NoItems text="No items" />
     ) : (
-      items?.map((item: any) => (
-        <View key={uuidv4()} style={{ width: "100%", flexDirection: "row" }}>
+      items?.map((item: any, index: number) => (
+        <View key={index} style={{ width: "100%", flexDirection: "row" }}>
           <View style={styles.tbody}>
             <Text>{item.quantity}</Text>
           </View>

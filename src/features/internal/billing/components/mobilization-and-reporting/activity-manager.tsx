@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Activity, type ActivityValue } from "./Activity";
-
+import { PROJECT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import { v4 as uuidv4 } from "uuid";
 interface ActivityItem extends ActivityValue {
   id: string;
   isValid: boolean;
@@ -13,24 +14,57 @@ export interface ActivityManagerProps {
   onActivitiesChange: (activities: Array<Partial<ActivityValue>>) => void;
   onValidationChange: (isValid: boolean) => void;
   currency: string;
+  quotation?: PROJECT_BY_ID_QUERYResult[number]["quotation"];
 }
 
 export function ActivityManager({
+  quotation,
   type,
   onActivitiesChange,
   onValidationChange,
   currency,
 }: ActivityManagerProps) {
-  const [activities, setActivities] = useState<ActivityItem[]>([
-    {
-      id: `${type}-${Date.now()}`,
-      activity: "",
-      price: undefined,
-      quantity: undefined,
-      total: undefined,
-      isValid: false,
-    },
-  ]);
+  const existingMobilizationActivities =
+    quotation?.otherItems
+      ?.filter((item) => item.type === "mobilization")
+      .map((item) => ({
+        id: `${item.type}-${uuidv4()}`,
+        activity: item.activity ?? "",
+        price: item.unitPrice ?? 0,
+        quantity: item.quantity ?? 0,
+        total: item.lineTotal ?? 0,
+        isValid: true,
+      })) || [];
+
+  const existingReportingActivities =
+    quotation?.otherItems
+      ?.filter((item) => item.type === "reporting")
+      .map((item) => ({
+        id: `${item.type}-${uuidv4()}`,
+        activity: item.activity ?? "",
+        price: item.unitPrice ?? 0,
+        quantity: item.quantity ?? 0,
+        total: item.lineTotal ?? 0,
+        isValid: true,
+      })) || [];
+
+  const defaultActivities = quotation
+    ? type === "Mobilization"
+      ? existingMobilizationActivities
+      : existingReportingActivities
+    : [
+        {
+          id: `${type}-${Date.now()}`,
+          activity: "",
+          price: undefined,
+          quantity: undefined,
+          total: undefined,
+          isValid: false,
+        },
+      ];
+
+  const [activities, setActivities] =
+    useState<ActivityItem[]>(defaultActivities);
 
   // Calculate isAllValid once and use it consistently
   const isAllValid = useMemo(() => {
@@ -61,7 +95,7 @@ export function ActivityManager({
     setActivities([
       ...activities,
       {
-        id: `${type}-${Date.now()}`,
+        id: `${type}-${uuidv4()}`,
         activity: "",
         price: undefined,
         quantity: undefined,

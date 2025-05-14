@@ -58,22 +58,38 @@ export async function createQuotation(
       revisionNumber,
     } = billingInfo;
 
+    const labTestMethod = labTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
+
+    const fieldTestMethod = fieldTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
+
     const items = [
-      ...labTests.map((lab) => ({
+      ...labTests.map((test) => ({
         _type: "serviceItem",
         service: {
           _type: "reference",
-          _ref: lab._id,
+          _ref: test._id,
         },
-        unitPrice: lab.price,
-        quantity: lab.quantity,
-        lineTotal: lab.price * lab.quantity,
+        testMethod: {
+          _type: "reference",
+          _ref: labTestMethod,
+        },
+        unitPrice: test.price,
+        quantity: test.quantity,
+        lineTotal: test.price * test.quantity,
       })),
       ...fieldTests.map((field) => ({
         _type: "serviceItem",
         service: {
           _type: "reference",
           _ref: field._id,
+        },
+        testMethod: {
+          _type: "reference",
+          _ref: fieldTestMethod,
         },
         unitPrice: field.price,
         quantity: field.quantity,
@@ -108,6 +124,7 @@ export async function createQuotation(
         quotationDate,
         acquisitionNumber,
         currency: currency.toLowerCase(),
+        status: "draft",
         items,
         otherItems,
         vatPercentage,
@@ -141,6 +158,143 @@ export async function createQuotation(
     return { error, status: "error" };
   }
 }
+
+// SEND QUOTATION
+export async function sendQuotation(projectId: string) {
+  try {
+    await writeClient
+      .patch(projectId as string)
+      .set({
+        status: "sent",
+      })
+      .commit();
+    revalidateTag(`project-${projectId}`);
+    return { result: "ok", status: "ok" };
+  } catch (error) {
+    console.error("Error sending quotation:", error);
+    return { error, status: "error" };
+  }
+}
+
+// UPDATE QUOTATION
+export async function updateQuotation(
+  quotationId: string,
+  billingInfo: QuotationProps,
+  fileId: string
+) {
+  try {
+    const {
+      labTests,
+      fieldTests,
+      reportingActivities,
+      mobilizationActivities,
+      project,
+      currency,
+      vatPercentage,
+      paymentNotes,
+      quotationNumber,
+      quotationDate,
+      acquisitionNumber,
+      revisionNumber,
+    } = billingInfo;
+
+    const labTestMethod = labTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
+
+    const fieldTestMethod = fieldTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
+
+    const items = [
+      ...labTests.map((test) => ({
+        _type: "serviceItem",
+        service: {
+          _type: "reference",
+          _ref: test._id,
+        },
+        testMethod: {
+          _type: "reference",
+          _ref: labTestMethod,
+        },
+        unitPrice: test.price,
+        quantity: test.quantity,
+        lineTotal: test.price * test.quantity,
+      })),
+      ...fieldTests.map((field) => ({
+        _type: "serviceItem",
+        service: {
+          _type: "reference",
+          _ref: field._id,
+        },
+        testMethod: {
+          _type: "reference",
+          _ref: fieldTestMethod,
+        },
+        unitPrice: field.price,
+        quantity: field.quantity,
+        lineTotal: field.price * field.quantity,
+      })),
+    ];
+
+    const otherItems = [
+      ...reportingActivities.map((reporting) => ({
+        _type: "otherItem",
+        type: "reporting",
+        activity: reporting.activity,
+        unitPrice: reporting.price,
+        quantity: reporting.quantity,
+        lineTotal: reporting.price * reporting.quantity,
+      })),
+      ...mobilizationActivities.map((mobilization) => ({
+        _type: "otherItem",
+        type: "mobilization",
+        activity: mobilization.activity,
+        unitPrice: mobilization.price,
+        quantity: mobilization.quantity,
+        lineTotal: mobilization.price * mobilization.quantity,
+      })),
+    ];
+
+    // If the file is referenced, unlink it from the quotation
+    await writeClient
+      .patch(quotationId as string)
+      .unset(["file"])
+      .commit();
+
+    // first delete the old pdf file from the quotation
+    await writeClient.delete(project.quotation?.file?.asset?._id || "");
+
+    await writeClient
+      .patch(quotationId as string)
+      .set({
+        status: "draft",
+        revisionNumber,
+        quotationNumber,
+        quotationDate,
+        acquisitionNumber,
+        currency: currency.toLowerCase(),
+        items,
+        otherItems,
+        vatPercentage,
+        paymentNotes,
+        file: {
+          _type: "file",
+          asset: {
+            _type: "reference",
+            _ref: fileId,
+          },
+        },
+      })
+      .commit({ autoGenerateArrayKeys: true });
+    revalidateTag(`project-${project._id}`);
+    return { result: "ok", status: "ok" };
+  } catch (error) {
+    console.error("Error sending quotation:", error);
+    return { error, status: "error" };
+  }
+}
+
 // CREATE STANDARD
 export async function addStandard(prevState: any, formData: FormData) {
   try {

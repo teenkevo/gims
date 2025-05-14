@@ -25,7 +25,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-export function QuotationReviewDrawer({
+export function QuotationDrawer({
   allServices,
   project,
   selectedLabTests,
@@ -59,21 +59,35 @@ export function QuotationReviewDrawer({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
 
+  const { quotation } = project;
+
   if (isDesktop) {
     return (
-      <Sheet>
+      <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button size="sm">Review Quotation</Button>
+          <Button
+            disabled={quotation?.status !== "draft"}
+            size="sm"
+            className="shadow-md"
+            variant={quotation ? "outline" : "default"}
+          >
+            {quotation ? "Review" : "Create Quotation"}
+          </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-6xl flex flex-col h-full">
-          <SheetHeader className="flex-shrink-0">
-            <SheetTitle>Quotation Review</SheetTitle>
+        <SheetContent className="w-full sm:max-w-7xl flex flex-col h-full">
+          <SheetHeader className="flex-shrink-0 border-b border-border pb-5">
+            <SheetTitle>
+              {quotation ? "Review Quotation" : "Create Quotation"}
+            </SheetTitle>
             <SheetDescription>
-              Review the quotation and make changes if necessary.
+              {quotation
+                ? "Review the quotation and make changes if necessary."
+                : "Create a quotation for the project."}
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto py-4">
             <QuotationOptions
+              setDrawerOpen={setOpen}
               allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
@@ -94,17 +108,29 @@ export function QuotationReviewDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button size="sm">Review Quotation</Button>
+        <Button
+          disabled={quotation?.status !== "draft"}
+          size="sm"
+          className="shadow-md"
+          variant={quotation ? "outline" : "default"}
+        >
+          {quotation ? "Review" : "Create Quotation"}
+        </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left flex-shrink-0">
-          <DrawerTitle>Quotation Review</DrawerTitle>
+          <DrawerTitle>
+            {quotation ? "Review Quotation" : "Create Quotation"}
+          </DrawerTitle>
           <DrawerDescription>
-            Review the quotation and make changes if necessary.
+            {quotation
+              ? "Review the quotation and make changes if necessary."
+              : "Create a quotation for the project."}
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 overflow-y-auto max-h-[calc(80vh-10rem)]">
           <QuotationOptions
+            setDrawerOpen={setOpen}
             allServices={allServices}
             project={project}
             selectedLabTests={selectedLabTests}

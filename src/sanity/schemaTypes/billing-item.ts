@@ -33,6 +33,13 @@ export const serviceItem = defineType({
       type: "number",
       readOnly: true,
     }),
+    defineField({
+      name: "testMethod",
+      title: "Test Method",
+      type: "reference",
+      to: [{ type: "testMethod" }],
+      validation: (Rule) => Rule.required(),
+    }),
   ],
   // Automatically compute lineTotal in Studio
   preview: {

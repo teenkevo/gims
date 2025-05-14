@@ -9,13 +9,17 @@ import {
   FileIcon as FileInvoice,
   DollarSign,
   Clock,
+  Plus,
+  CircleDashed,
+  ReceiptText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
-import { QuotationReviewDrawer } from "./quotation-review-drawer";
+import { QuotationDrawer } from "./quotation-drawer";
+import { SendQuotationDialog } from "./send-quotation-dialog";
 type Stage = {
   id: number;
   title: string;
@@ -63,13 +67,22 @@ export function BillingLifecycle({
   const [progress, setProgress] = useState(0);
   const [animationComplete, setAnimationComplete] = useState(false);
 
+  const { quotation } = project;
+
   const stages: Stage[] = [
-    {
-      id: 1,
-      title: "Quotation Created",
-      icon: <FileText className="h-6 w-6" />,
-      description: "Initial quotation has been created in the system",
-    },
+    quotation
+      ? {
+          id: 1,
+          title: "Quotation Created",
+          icon: <FileText className="h-6 w-6" />,
+          description: "Initial quotation has been created in the system",
+        }
+      : {
+          id: 1,
+          title: "Create Quotation",
+          icon: <Plus className="h-6 w-6" />,
+          description: "A quotation is needed to initiate the billing pipeline",
+        },
     {
       id: 2,
       title: "Sent to Client",
@@ -88,7 +101,7 @@ export function BillingLifecycle({
       description:
         rejectionStage === 3
           ? "Quotation was rejected by the client"
-          : "Quotation was accepted by the client",
+          : "Revisions are possible at this stage if needed",
     },
     {
       id: 4,
@@ -190,7 +203,7 @@ export function BillingLifecycle({
         </div>
 
         {/* Stage details for md+ screens */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {stages.map((stage) => (
             <div
               key={stage.id}
@@ -226,30 +239,46 @@ export function BillingLifecycle({
                 {stage.description}
               </p>
 
-              {stage.id < currentStage && (
-                <div className="mt-2 flex items-center text-primary text-xs">
+              {stage.id < currentStage && quotation && (
+                <div className="mt-4 flex items-center text-primary text-xs">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   <span>Completed</span>
                 </div>
               )}
 
-              {/* {stage.id === currentStage && !rejectionStage && (
-                <div className="mt-2 flex items-center text-orange-600 text-xs">
-                  <Clock className="h-3 w-3 mr-1" />
-                  <span>Current stage</span>
+              {/* STAGE 1 */}
+              {!quotation && stage.id === 1 && (
+                <div className="mt-4 flex items-center text-orange-600 text-xs">
+                  <CircleDashed className="h-3 w-3 mr-1" />
+                  <span>Pending</span>
                 </div>
-              )} */}
+              )}
+
+              {quotation && stage.id === 1 && quotation.status === "draft" && (
+                <div className="mt-4 flex items-center text-orange-600 text-xs">
+                  <ReceiptText className="h-3 w-3 mr-1" />
+                  <span>Draft</span>
+                </div>
+              )}
+
+              {/* STAGE 2 */}
+              {quotation && stage.id === 2 && quotation.status === "sent" && (
+                <div className="mt-4 flex items-center text-orange-600 text-xs">
+                  <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                  <span>Awaiting client response</span>
+                </div>
+              )}
 
               {stage.id === rejectionStage && (
-                <div className="mt-2 flex items-center text-destructive text-xs">
+                <div className="mt-4 flex items-center text-destructive text-xs">
                   <XCircle className="h-3 w-3 mr-1" />
                   <span>Process stopped</span>
                 </div>
               )}
 
-              {stage.id === 1 && (
+              {stage.id === 1 && quotation?.status === "draft" && (
                 <div className="mt-5 flex flex-wrap gap-2 items-center">
-                  <QuotationReviewDrawer
+                  <QuotationDrawer
                     allServices={allServices}
                     project={project}
                     selectedLabTests={selectedLabTests}
@@ -261,6 +290,7 @@ export function BillingLifecycle({
                     reportingActivities={reportingActivities}
                     setReportingActivities={setReportingActivities}
                   />
+                  {quotation && <SendQuotationDialog project={project} />}
                 </div>
               )}
             </div>
@@ -345,29 +375,52 @@ export function BillingLifecycle({
                     {stage.description}
                   </p>
 
-                  {stage.id < currentStage && (
-                    <div className="mt-2 flex items-center text-primary text-xs">
+                  {stage.id < currentStage && quotation && (
+                    <div className="mt-4 flex items-center text-primary text-xs">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       <span>Completed</span>
                     </div>
                   )}
 
-                  {/* {stage.id === currentStage && !rejectionStage && (
-                    <div className="mt-2 flex items-center text-orange-600 text-xs">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>Current stage</span>
+                  {/* STAGE 1 */}
+
+                  {!quotation && stage.id === 1 && (
+                    <div className="mt-4 flex items-center text-orange-600 text-xs">
+                      <CircleDashed className="h-3 w-3 mr-1" />
+                      <span>Pending</span>
                     </div>
-                  )} */}
+                  )}
+
+                  {quotation &&
+                    stage.id === 1 &&
+                    quotation.status === "draft" && (
+                      <div className="mt-4 flex items-center text-orange-600 text-xs">
+                        <ReceiptText className="h-3 w-3 mr-1" />
+                        <span>Draft</span>
+                      </div>
+                    )}
+
+                  {/* STAGE 2 */}
+
+                  {quotation &&
+                    stage.id === 2 &&
+                    quotation.status === "sent" && (
+                      <div className="mt-4 flex items-center text-primary text-xs">
+                        <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                        <span>Awaiting client response</span>
+                      </div>
+                    )}
 
                   {stage.id === rejectionStage && (
-                    <div className="mt-2 flex items-center text-red-600 text-xs">
+                    <div className="mt-4 flex items-center text-red-600 text-xs">
                       <XCircle className="h-3 w-3 mr-1" />
                       <span>Process stopped</span>
                     </div>
                   )}
-                  {stage.id === 1 && (
+
+                  {stage.id === 1 && quotation?.status === "draft" && (
                     <div className="mt-5 flex flex-wrap gap-2 items-center">
-                      <QuotationReviewDrawer
+                      <QuotationDrawer
                         allServices={allServices}
                         project={project}
                         selectedLabTests={selectedLabTests}
@@ -379,6 +432,7 @@ export function BillingLifecycle({
                         reportingActivities={reportingActivities}
                         setReportingActivities={setReportingActivities}
                       />
+                      {quotation && <SendQuotationDialog project={project} />}
                     </div>
                   )}
                 </div>

@@ -1,10 +1,13 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { PriceForm } from "./price-form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
+import {
+  ALL_SERVICES_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../../../../../sanity.types";
 
 export type ExtendedService = ALL_SERVICES_QUERYResult[number] & {
   price?: number;
@@ -14,11 +17,13 @@ export type ExtendedService = ALL_SERVICES_QUERYResult[number] & {
 interface ColumnProps {
   setTableData: Dispatch<SetStateAction<ExtendedService[]>>;
   currency: string;
+  quotation?: PROJECT_BY_ID_QUERYResult[number]["quotation"];
 }
 
 export const columns = ({
   setTableData,
   currency,
+  quotation,
 }: ColumnProps): ColumnDef<ExtendedService>[] => [
   {
     id: "select",
@@ -33,14 +38,24 @@ export const columns = ({
         className="translate-y-[2px]"
       />
     ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
+    cell: ({ row }) => {
+      const quotationItem = quotation?.items?.find(
+        (item) => item.service?._ref === row.original._id
+      );
+
+      useEffect(() => {
+        if (quotationItem) row.toggleSelected(true);
+      }, [quotationItem]);
+
+      return (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-[2px]"
+        />
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -88,7 +103,15 @@ export const columns = ({
         (m) => m.standard?.acronym
       );
 
-      const [selectedValue, setSelectedValue] = useState<string | null>(null);
+      const quotationItem = quotation?.items?.find(
+        (item) => item.service?._ref === row.original._id
+      );
+
+      const quotationTestMethod = quotationItem?.testMethod?.standard?.acronym;
+
+      const [selectedValue, setSelectedValue] = useState<string | null>(
+        quotationTestMethod || null
+      );
 
       const isATestMethodSelected = row.original?.testMethods?.some(
         (method) => method.standard?.acronym === selectedValue
@@ -106,6 +129,23 @@ export const columns = ({
         );
       };
 
+      // Run once on mount to inject table data with the selected test method "selected:true"
+      useEffect(() => {
+        if (quotationTestMethod) {
+          setTableData((prev) =>
+            prev.map((item) =>
+              item._id === row.original._id
+                ? {
+                    ...item,
+                    testMethods:
+                      updatedSelectedTestMethods(quotationTestMethod),
+                  }
+                : item
+            )
+          );
+        }
+      }, [quotationTestMethod]);
+
       return (
         <div>
           <div className="flex items-start space-x-2">
@@ -113,6 +153,7 @@ export const columns = ({
               type="single"
               variant="outline"
               disabled={!row.getIsSelected()}
+              defaultValue={quotationTestMethod || ""}
               onValueChange={(value) => {
                 setSelectedValue(value);
                 setTableData((prevData) =>
@@ -173,8 +214,12 @@ export const columns = ({
       />
     ),
     cell: ({ row }) => {
-      const price = row.original?.price;
-      const quantity = row.original?.quantity;
+      const quotationItem = quotation?.items?.find(
+        (item) => item.service?._ref === row.original._id
+      );
+
+      const price = quotationItem?.unitPrice;
+      const quantity = quotationItem?.quantity;
       const onSubmit = () => null;
 
       const onPriceChange = (newPrice: number | undefined) => {
@@ -203,9 +248,29 @@ export const columns = ({
         );
       };
 
+      // Run once on mount to inject table data with the selected test method "selected:true"
+      useEffect(() => {
+        if (quotationItem?.unitPrice && quotationItem?.quantity) {
+          setTableData((prev) =>
+            prev.map((item) =>
+              item._id === row.original._id
+                ? {
+                    ...item,
+                    price: quotationItem?.unitPrice || 0,
+                    quantity: quotationItem?.quantity || 0,
+                  }
+                : item
+            )
+          );
+        }
+      }, [quotationItem]);
+
       return (
         <PriceForm
-          initialValues={{ price, quantity }}
+          initialValues={{
+            price: price ?? undefined,
+            quantity: quantity ?? undefined,
+          }}
           isRowSelected={row.getIsSelected()}
           onSubmit={onSubmit}
           onPriceChange={onPriceChange}

@@ -1,33 +1,28 @@
-import { Document, pdf, PDFDownloadLink } from "@react-pdf/renderer";
+import { Document, pdf } from "@react-pdf/renderer";
 import dynamic from "next/dynamic";
 
-import { Project } from "../../projects/types";
-import { Menu, PlaneIcon, Receipt, RocketIcon, Trash2 } from "lucide-react";
+import { Receipt, RocketIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  FieldService,
-  MobilizationService,
-  ReportingService,
-  Service,
-} from "@/features/customer/services/data/schema";
+
 import { BillingDocument } from "./billingDocument";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import React from "react";
+import React, { Dispatch, SetStateAction, useMemo } from "react";
 import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
 import Loading from "@/app/loading";
-import { createQuotation, deleteAsset, uploadPDFDocument } from "@/lib/actions";
+import { createQuotation, updateQuotation } from "@/lib/actions";
+import { toast } from "sonner";
+import { ButtonLoading } from "@/components/button-loading";
 
 interface GenerateBillingDocumentProps {
   revisionNumber: string;
@@ -58,9 +53,13 @@ interface GenerateBillingDocumentProps {
   project: PROJECT_BY_ID_QUERYResult[number];
 }
 
-export const GenerateBillingDocument = (
-  billingInfo: GenerateBillingDocumentProps
-) => {
+export const GenerateBillingDocument = ({
+  setDrawerOpen,
+  billingInfo,
+}: {
+  setDrawerOpen: Dispatch<SetStateAction<boolean>>;
+  billingInfo: GenerateBillingDocumentProps;
+}) => {
   const {
     revisionNumber,
     quotationNumber,
@@ -76,45 +75,96 @@ export const GenerateBillingDocument = (
     project,
   } = billingInfo;
 
+  const { quotation } = project;
+
   const isMobile = useMediaQuery("(max-width: 640px)");
 
-  const Doc = (
-    <Document>
-      <BillingDocument
-        revisionNumber={revisionNumber}
-        quotationNumber={quotationNumber}
-        quotationDate={quotationDate}
-        acquisitionNumber={acquisitionNumber}
-        currency={currency}
-        labTests={labTests}
-        fieldTests={fieldTests}
-        reportingActivities={reportingActivities}
-        mobilizationActivities={mobilizationActivities}
-        project={project}
-        paymentNotes={paymentNotes}
-        vatPercentage={vatPercentage}
-      />
-    </Document>
+  const [open, setOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const Doc = useMemo(
+    () => (
+      <Document>
+        <BillingDocument
+          revisionNumber={revisionNumber}
+          quotationNumber={quotationNumber}
+          quotationDate={quotationDate}
+          acquisitionNumber={acquisitionNumber}
+          currency={currency}
+          labTests={labTests}
+          fieldTests={fieldTests}
+          reportingActivities={reportingActivities}
+          mobilizationActivities={mobilizationActivities}
+          project={project}
+          paymentNotes={paymentNotes}
+          vatPercentage={vatPercentage}
+        />
+      </Document>
+    ),
+    [billingInfo]
   );
 
-  const handleUploadToSanity = async () => {
-    const blob = await pdf(Doc).toBlob();
-    const formData = new FormData();
-    formData.append("files", blob, `Quotation-${quotationNumber}.pdf`);
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const result = await response.json();
-
-    // if file fails to upload, show error message
-    await createQuotation(billingInfo, result.files[0].fileId);
-    // await uploadPDFDocument(blob, `Quotation-${quotationNumber}.pdf`);
+  // CREATE QUOTATION
+  const handleCreateQuotation = async () => {
+    setIsLoading(true);
+    try {
+      const blob = await pdf(Doc).toBlob();
+      const formData = new FormData();
+      formData.append("files", blob, `Quotation-${quotationNumber}.pdf`);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const fileResult = await response.json();
+      // if file fails to upload, show error message
+      const result = await createQuotation(
+        billingInfo,
+        fileResult.files[0].fileId
+      );
+      if (result.status === "ok") {
+        setIsLoading(false);
+        toast.success("Quotation has been created");
+        setOpen(false);
+        setDrawerOpen(false);
+      } else {
+        setIsLoading(false);
+        toast.error("Something went wrong");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Something went wrong");
+    }
   };
 
-  const handleDeleteAsset = async () => {
-    await deleteAsset();
+  // UPDATE QUOTATION
+  const handleUpdateQuotation = async () => {
+    setIsLoading(true);
+    try {
+      const blob = await pdf(Doc).toBlob();
+      const formData = new FormData();
+      formData.append("files", blob, `Quotation-${quotationNumber}.pdf`);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const fileResult = await response.json();
+      const result = await updateQuotation(
+        project.quotation?._id || "",
+        billingInfo,
+        fileResult.files[0].fileId
+      );
+      if (result.status === "ok") {
+        setIsLoading(false);
+        toast.success("Quotation has been updated");
+        setOpen(false);
+        setDrawerOpen(false);
+      } else {
+        setIsLoading(false);
+        toast.error("Something went wrong");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Something went wrong");
+    }
   };
 
   const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), {
@@ -123,16 +173,7 @@ export const GenerateBillingDocument = (
   });
 
   return (
-    // <Button type="button" size="sm" onClick={handleOpenInNewTab}>
-    //   <Receipt className="mr-2" strokeWidth={1} />
-    //   <PDFDownloadLink document={Doc} fileName="Quotation.pdf">
-    //     {({ blob, url, loading, error }) =>
-    //       loading ? "Loading document..." : "Generate quotation"
-    //     }
-    //   </PDFDownloadLink>
-    // </Button>
-
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           type="button"
@@ -154,20 +195,33 @@ export const GenerateBillingDocument = (
             Quotation <Badge variant="outline">Draft</Badge>
           </SheetTitle>
           <div className="flex items-center gap-2">
-            <Button type="button" size="sm" onClick={handleUploadToSanity}>
-              <RocketIcon className="mr-2 h-4 w-4" />
-              Create Quotation
-            </Button>
-            <Button variant="secondary" size="icon" onClick={handleDeleteAsset}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {isLoading ? (
+              <ButtonLoading />
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                onClick={
+                  quotation ? handleUpdateQuotation : handleCreateQuotation
+                }
+              >
+                <RocketIcon className="mr-2 h-4 w-4" />
+                {quotation ? "Update Quotation" : "Create Quotation"}
+              </Button>
+            )}
           </div>
         </SheetHeader>
-        <div className="mt-6 space-y-4">
-          <PDFViewer width="100%" height={600}>
-            {Doc}
-          </PDFViewer>
-        </div>
+        {!isLoading ? (
+          <div className="mt-6 space-y-4">
+            <PDFViewer width="100%" height={600}>
+              {Doc}
+            </PDFViewer>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            <Loading text="Generating Quotation..." />
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

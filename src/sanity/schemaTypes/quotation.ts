@@ -108,6 +108,15 @@ export const quotation = defineType({
         accept: "application/pdf",
       },
     }),
+    defineField({
+      name: "status",
+      title: "Status",
+      type: "string",
+      options: {
+        list: ["draft", "sent", "accepted", "rejected"],
+      },
+      initialValue: "draft",
+    }),
   ],
   // Initial value template to seed the first revision
   initialValue: () => {

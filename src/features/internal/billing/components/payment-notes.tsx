@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 
 import { useEffect, useState } from "react";
@@ -12,13 +10,16 @@ import { FileText } from "lucide-react";
 interface PaymentNotesProps {
   value?: string;
   onChange?: (value: string) => void;
+  notesEnabled: boolean;
+  setNotesEnabled: (value: boolean) => void;
 }
 
 export default function PaymentNotes({
   value: propValue,
   onChange,
+  notesEnabled,
+  setNotesEnabled,
 }: PaymentNotesProps) {
-  const [notesEnabled, setNotesEnabled] = useState(false);
   const [internalValue, setInternalValue] = useState(propValue || "");
   const [error, setError] = useState("");
 

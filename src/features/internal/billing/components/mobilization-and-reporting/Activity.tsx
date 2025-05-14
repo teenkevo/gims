@@ -124,7 +124,6 @@ export function Activity({
                     field.onChange(e.target.value);
                     onActivityChange(e.target.value);
                   }}
-                  autoFocus
                 />
               </FormControl>
 

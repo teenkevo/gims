@@ -90,7 +90,3 @@ export function currencyCodeToName(code: string, locale = "en") {
   // Use fallback if Intl API is unavailable or returns undefined
   return fallback[code.toUpperCase() as keyof typeof fallback] || code;
 }
-
-// Example usage:
-console.log(currencyCodeToName("USD")); // "US Dollar" (in 'en')
-console.log(currencyCodeToName("eur", "fr")); // "euro" (in French)

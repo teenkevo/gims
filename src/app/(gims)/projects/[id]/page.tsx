@@ -3,11 +3,12 @@ export const dynamic = "force-dynamic";
 import NoProjectPlaceholder from "@/features/internal/projects/components/no-project-placeholder";
 import ProjectDetails from "@/features/internal/projects/components/project-details";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { getProjectById } from "@/sanity/lib/projects/getProjectById";
 import { getAllContacts } from "@/sanity/lib/clients/getAllContacts";
 import { getAllClients } from "@/sanity/lib/clients/getAllClients";
 import { getAllServices } from "@/sanity/lib/services/getAllServices";
+import Loading from "./loading";
 
 export default async function ProjectPage({
   params,
@@ -35,11 +36,13 @@ export default async function ProjectPage({
   }
 
   return (
-    <ProjectDetails
-      project={projectData[0]}
-      existingContacts={existingContactsData}
-      existingClients={existingClientsData}
-      allServices={allServicesData}
-    />
+    <Suspense fallback={<Loading />}>
+      <ProjectDetails
+        project={projectData[0]}
+        existingContacts={existingContactsData}
+        existingClients={existingClientsData}
+        allServices={allServicesData}
+      />
+    </Suspense>
   );
 }
