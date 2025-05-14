@@ -10,29 +10,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerFooter, DrawerHeader } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import {
-  ButtonLoading,
-  DestructiveButtonLoading,
-} from "@/components/button-loading";
+import { ButtonLoading, DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { sendQuotation } from "@/lib/actions";
 import { Send } from "lucide-react";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 
-export function SendQuotationDialog({
-  project,
-}: {
-  project: PROJECT_BY_ID_QUERYResult[number];
-}) {
+export function SendQuotationDialog({ project }: { project: PROJECT_BY_ID_QUERYResult[number] }) {
   const [open, setOpen] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -65,12 +53,10 @@ export function SendQuotationDialog({
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader className="space-y-3">
             <DialogTitle>Send Quotation</DialogTitle>
-            <DialogDescription>
-              This quotation will be sent to the client.
-            </DialogDescription>
-            <div className="bg-primary/10 text-primary p-3 rounded text-sm">
-              <span className="font-bold">Warning</span>: This action will
-              finalize the quotation and send it to the client.
+            <DialogDescription>This quotation will be sent to the client.</DialogDescription>
+            <div className="bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
+              <span className="font-bold">Warning</span>: This action will finalize the quotation and send it to the
+              client.
             </div>
           </DialogHeader>
 
@@ -81,10 +67,7 @@ export function SendQuotationDialog({
             {isPending ? (
               <ButtonLoading />
             ) : (
-              <Button
-                onClick={() => React.startTransition(() => dispatch())}
-                type="submit"
-              >
+              <Button onClick={() => React.startTransition(() => dispatch())} type="submit">
                 <Send className="w-4 h-4 mr-2" />
                 Send
               </Button>
@@ -105,12 +88,10 @@ export function SendQuotationDialog({
       <DrawerContent>
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Send Quotation</DialogTitle>
-          <DialogDescription>
-            This quotation will be sent to the client.
-          </DialogDescription>
-          <div className="bg-primary/10 text-primary p-3 rounded text-sm">
-            <span className="font-bold">Warning</span>: This action will
-            finalize the quotation and send it to the client.
+          <DialogDescription>This quotation will be sent to the client.</DialogDescription>
+          <div className="bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
+            <span className="font-bold">Warning</span>: This action will finalize the quotation and send it to the
+            client.
           </div>
         </DrawerHeader>
 
@@ -121,10 +102,7 @@ export function SendQuotationDialog({
           {isPending ? (
             <ButtonLoading />
           ) : (
-            <Button
-              onClick={() => React.startTransition(() => dispatch())}
-              type="submit"
-            >
+            <Button onClick={() => React.startTransition(() => dispatch())} type="submit">
               <Send className="w-4 h-4 mr-2" />
               Send
             </Button>
