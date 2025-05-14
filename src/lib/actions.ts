@@ -158,7 +158,7 @@ export async function sendQuotation(projectId: string) {
         status: "sent",
       })
       .commit();
-    // revalidateTag(`project-${projectId}`);
+    revalidateTag(`project-${projectId}`);
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error sending quotation:", error);
