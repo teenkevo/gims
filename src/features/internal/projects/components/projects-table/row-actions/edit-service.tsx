@@ -1,31 +1,11 @@
 import * as React from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { updateService } from "@/lib/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { toast } from "sonner";
@@ -38,7 +18,6 @@ import {
   ALL_STANDARDS_QUERYResult,
   ALL_TEST_METHODS_QUERYResult,
 } from "../../../../../../../sanity.types";
-import { MultiSelectTestMethodField } from "../../multi-select-test-methods";
 import { CommandItem } from "@/components/ui/command";
 import { CommandGroup } from "@/components/ui/command";
 import { CommandInput, CommandList } from "@/components/ui/command";
@@ -47,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { CommandEmpty } from "@/components/ui/command";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Command } from "@/components/ui/command";
+import { MultiSelectTestMethodField } from "@/features/customer/services/components/multi-select-test-methods";
 
 interface EditServiceType {
   code: string;
@@ -84,12 +64,7 @@ export function EditServiceDialog({
           <DialogHeader>
             <DialogTitle>Edit Service</DialogTitle>
           </DialogHeader>
-          <ServiceForm
-            onClose={onClose}
-            testMethods={testMethods}
-            sampleClasses={sampleClasses}
-            service={service}
-          />
+          <ServiceForm onClose={onClose} testMethods={testMethods} sampleClasses={sampleClasses} service={service} />
         </DialogContent>
       </Dialog>
     );
@@ -106,12 +81,7 @@ export function EditServiceDialog({
           <DrawerTitle>Create Service</DrawerTitle>
         </DrawerHeader>
 
-        <ServiceForm
-          onClose={onClose}
-          testMethods={testMethods}
-          sampleClasses={sampleClasses}
-          service={service}
-        />
+        <ServiceForm onClose={onClose} testMethods={testMethods} sampleClasses={sampleClasses} service={service} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -136,10 +106,7 @@ function ServiceForm({
   const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   // Restored useActionState
-  const [state, dispatch, isPending] = React.useActionState(
-    updateService,
-    null
-  );
+  const [state, dispatch, isPending] = React.useActionState(updateService, null);
 
   const form = useForm({
     mode: "onChange",
@@ -147,8 +114,7 @@ function ServiceForm({
     defaultValues: {
       code: service?.code || "",
       testParameter: service?.testParameter || "",
-      testMethods:
-        service?.testMethods?.map((testMethod) => testMethod._id) || [],
+      testMethods: service?.testMethods?.map((testMethod) => testMethod._id) || [],
       sampleClass: service?.sampleClass?._id || "",
       status: service?.status || "active",
     },
@@ -183,10 +149,7 @@ function ServiceForm({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={`max-h-[500px] overflow-y-auto`}
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className={`max-h-[500px] overflow-y-auto`}>
         <div className="space-y-8  px-4 md:px-1 py-4 ">
           <FormField
             control={form.control}
@@ -198,12 +161,7 @@ function ServiceForm({
                   Service Code
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    autoFocus
-                    disabled={isPending}
-                    placeholder="e.g. RO/01"
-                    {...field}
-                  />
+                  <Input autoFocus disabled={isPending} placeholder="e.g. RO/01" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -219,11 +177,7 @@ function ServiceForm({
                   Test Parameter
                 </FormLabel>
                 <FormControl>
-                  <Textarea
-                    disabled={isPending}
-                    placeholder="e.g. Bulk Density / Unit weight"
-                    {...field}
-                  />
+                  <Textarea disabled={isPending} placeholder="e.g. Bulk Density / Unit weight" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -250,11 +204,8 @@ function ServiceForm({
                         <div className="flex items-center justify-between w-full">
                           {field.value
                             ? (() => {
-                                const selectedSampleClass = sampleClasses.find(
-                                  (s) => s._id === field.value
-                                );
-                                return selectedSampleClass?.name &&
-                                  selectedSampleClass.name.length > 35
+                                const selectedSampleClass = sampleClasses.find((s) => s._id === field.value);
+                                return selectedSampleClass?.name && selectedSampleClass.name.length > 35
                                   ? `${selectedSampleClass.name.substring(0, 35)}...`
                                   : selectedSampleClass?.name;
                               })()
@@ -284,14 +235,10 @@ function ServiceForm({
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  sampleClass._id === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
+                                  sampleClass._id === field.value ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              <span className="max-w-[300px] truncate">
-                                {sampleClass.name}
-                              </span>
+                              <span className="max-w-[300px] truncate">{sampleClass.name}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>

@@ -14,14 +14,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { Toolbar } from "./toolbar";
@@ -30,28 +23,34 @@ import { ExtendedService } from "./columns";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  setSelectedServices: React.Dispatch<
-    React.SetStateAction<ALL_SERVICES_QUERYResult>
-  >;
+  setSelectedServices: React.Dispatch<React.SetStateAction<ALL_SERVICES_QUERYResult>>;
   onValidationChange: (isValid: boolean) => void;
 }
 
-export function DataTable<
-  TData extends ALL_SERVICES_QUERYResult[number],
-  TValue,
->({
+export function DataTable<TData extends ExtendedService, TValue>({
   columns,
   data,
   setSelectedServices,
   onValidationChange,
 }: DataTableProps<TData, TValue>) {
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  /* ------------------------------------------------------------- */
+  /*  1 ▸ build initial selection from row.preSelected             */
+  /* ------------------------------------------------------------- */
+  const initialRowSelection = React.useMemo(() => {
+    const sel: Record<string, boolean> = {};
+    data.forEach((d, idx) => {
+      if (d.preSelected) sel[idx] = true;
+    });
+    return sel;
+  }, [data]);
+
+  const [rowSelection, setRowSelection] = React.useState(initialRowSelection);
+
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  console.log(rowSelection);
 
   const table = useReactTable({
     data,
@@ -78,9 +77,7 @@ export function DataTable<
 
   // Bubble up the selection to the parent component
   React.useEffect(() => {
-    const selectedServices = table
-      .getSelectedRowModel()
-      .flatRows.map((row) => row.original);
+    const selectedServices = table.getSelectedRowModel().flatRows.map((row) => row.original);
 
     setSelectedServices(selectedServices);
 
@@ -93,9 +90,7 @@ export function DataTable<
               t.price > 0 &&
               t.quantity &&
               t.quantity > 0 &&
-              t.testMethods?.some(
-                (tm) => (tm as { selected?: boolean }).selected
-              )
+              t.testMethods?.some((tm) => (tm as { selected?: boolean }).selected)
           )
         : false;
 
@@ -114,12 +109,7 @@ export function DataTable<
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -129,26 +119,15 @@ export function DataTable<
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>
