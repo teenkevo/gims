@@ -77,6 +77,21 @@ export default function ProjectDetails({
 
   const isQuotationSent = quotation?.status === "sent";
 
+  const isQuotationAccepted = quotation?.status === "accepted";
+
+  const isQuotationRejected = quotation?.status === "rejected";
+
+  const stage =
+    isQuotationInReview || !Boolean(quotation)
+      ? 1
+      : isQuotationSent
+        ? 2
+        : isQuotationAccepted
+          ? 3
+          : isQuotationRejected
+            ? 4
+            : 5;
+
   return (
     <>
       <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/projects">
@@ -239,7 +254,7 @@ export default function ProjectDetails({
         <TabsContent value="billing">
           <div className="space-y-8 my-10">
             <BillingLifecycle
-              currentStage={isQuotationInReview || !quotation ? 1 : isQuotationSent ? 2 : 3}
+              currentStage={stage}
               allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
