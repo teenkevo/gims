@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { parseBody } from "next-sanity/webhook";
 
 type WebhookPayload = {
-  _type: string;
+  tags: string[];
 };
 
 export async function POST(req: NextRequest) {
@@ -12,21 +12,21 @@ export async function POST(req: NextRequest) {
       return new Response("Missing environment variable SANITY_REVALIDATE_SECRET", { status: 500 });
     }
 
-    const { isValidSignature, body } = await parseBody<WebhookPayload>(req, process.env.SANITY_REVALIDATE_SECRET);
+    const { isValidSignature, body } = await parseBody<WebhookPayload>(req, process.env.SANITY_REVALIDATE_SECRET, true);
 
     if (!isValidSignature) {
       const message = "Invalid signature";
       return new Response(JSON.stringify({ message, isValidSignature, body }), {
         status: 401,
       });
-    } else if (!body?._type) {
+    } else if (!Array.isArray(body?.tags) || !body.tags.length) {
       const message = "Bad Request";
       return new Response(JSON.stringify({ message, body }), { status: 400 });
     }
 
-    // If the `_type` is `post`, then all `client.fetch` calls with
-    // `{next: {tags: ['post']}}` will be revalidated
-    revalidateTag(body._type);
+    body.tags.forEach((tag) => {
+      revalidateTag(tag);
+    });
 
     return NextResponse.json({ body });
   } catch (err) {
