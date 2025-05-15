@@ -73,23 +73,14 @@ export default function ProjectDetails({
     }
   }, []);
 
-  const isQuotationInReview = quotation?.status === "draft";
-
-  const isQuotationSent = quotation?.status === "sent";
-
-  const isQuotationAccepted = quotation?.status === "accepted";
-
-  const isQuotationRejected = quotation?.status === "rejected";
-
   const statusStageMap: Record<string, number> = {
     draft: 1,
     sent: 2,
-    accepted: 4,
-    rejected: 3,
+    accepted: 3,
+    rejected: 4,
   };
 
-  const stage =
-    quotation && quotation.status && statusStageMap[quotation.status] ? statusStageMap[quotation.status] : 1;
+  const stage = statusStageMap[quotation?.status as keyof typeof statusStageMap] ?? 1;
 
   console.log(stage);
 
