@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return new Response("Missing environment variable SANITY_REVALIDATE_SECRET", { status: 500 });
     }
 
-    const { isValidSignature, body } = await parseBody<WebhookPayload>(req, process.env.SANITY_REVALIDATE_SECRET, true);
+    const { isValidSignature, body } = await parseBody<WebhookPayload>(req, process.env.SANITY_REVALIDATE_SECRET);
 
     if (!isValidSignature) {
       const message = "Invalid signature";
