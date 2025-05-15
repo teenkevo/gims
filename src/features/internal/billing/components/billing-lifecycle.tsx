@@ -1,6 +1,9 @@
+// ===========================
+// File: billing-lifecycle.tsx
+// ===========================
 import type React from "react";
 
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useRef } from "react";
 import {
   FileText,
   Send,
@@ -8,7 +11,6 @@ import {
   XCircle,
   FileIcon as FileInvoice,
   DollarSign,
-  Clock,
   Plus,
   CircleDashed,
   ReceiptText,
@@ -17,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { ALL_SERVICES_QUERYResult, PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { QuotationDrawer } from "./quotation-drawer";
 import { SendQuotationDialog } from "./send-quotation-dialog";
+
 type Stage = {
   id: number;
   title: string;
@@ -59,6 +62,7 @@ export function BillingLifecycle({
 }: BillingLifecycleProps) {
   const [progress, setProgress] = useState(0);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const { quotation } = project;
 
@@ -105,39 +109,38 @@ export function BillingLifecycle({
     },
   ];
 
-  // Calculate progress percentage
+  // -----------------------------
+  // Progress bar & focus logic
+  // -----------------------------
   useEffect(() => {
-    if (rejectionStage) {
-      // If rejected, progress stops at rejection stage
-      const targetProgress = ((rejectionStage - 1) / (stages.length - 1)) * 100;
+    // Reset previous timers on every run
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
 
-      const timer = setTimeout(() => {
-        setAnimationComplete(true);
-      }, 1000);
+    // Restart animation cycle
+    setAnimationComplete(false);
 
-      setProgress(targetProgress);
-      return () => clearTimeout(timer);
-    } else {
-      // Normal progress animation
-      const targetProgress = ((currentStage - 1) / (stages.length - 1)) * 100;
+    const isRejected = typeof rejectionStage === "number";
+    const effectiveStage = isRejected ? rejectionStage : currentStage;
 
-      // Start with 0 progress
-      setProgress(0);
+    const target = ((effectiveStage - 1) / (stages.length - 1)) * 100;
 
-      // Animate to target progress
-      const timer = setTimeout(() => {
-        setProgress(targetProgress);
-
-        // Mark animation as complete after transition
-        const completeTimer = setTimeout(() => {
-          setAnimationComplete(true);
-        }, 1000); // Match this with the CSS transition time
-
-        return () => clearTimeout(completeTimer);
-      }, 300);
-
-      return () => clearTimeout(timer);
+    if (isRejected) {
+      setProgress(target);
+      // Only one timer to mark animation done
+      timers.current.push(setTimeout(() => setAnimationComplete(true), 1000));
+      return;
     }
+
+    // Normal flow: start from 0 then animate to target
+    setProgress(0);
+
+    timers.current.push(
+      setTimeout(() => {
+        setProgress(target);
+        timers.current.push(setTimeout(() => setAnimationComplete(true), 1000));
+      }, 300)
+    );
   }, [currentStage, rejectionStage, stages.length]);
 
   return (

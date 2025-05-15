@@ -52,6 +52,22 @@ export default function ProjectDetails({
 }) {
   const { _id, name, clients, contactPersons, startDate, endDate, quotation } = project;
 
+  // ---------------------------------------------
+  // 🔑  Derive stage indices **once** per render
+  // ---------------------------------------------
+  const statusStageMap: Record<"draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid", number> = {
+    draft: 1,
+    sent: 2,
+    accepted: 3,
+    rejected: 3,
+    invoiced: 4,
+    paid: 5,
+  };
+
+  const status = quotation?.status ?? "draft";
+  const currentStage = statusStageMap[status] ?? 1;
+  const rejectionStage = status === "rejected" ? currentStage : undefined;
+
   // billing services table states
   const [selectedLabTests, setSelectedLabTests] = useState<ALL_SERVICES_QUERYResult>([]);
   const [selectedFieldTests, setSelectedFieldTests] = useState<ALL_SERVICES_QUERYResult>([]);
@@ -73,18 +89,7 @@ export default function ProjectDetails({
     }
   }, []);
 
-  const statusStageMap: Record<string, number> = {
-    draft: 1,
-    sent: 2,
-    accepted: 3,
-    rejected: 3,
-    invoiced: 4,
-    paid: 5,
-  };
-
-  const stage = statusStageMap[quotation?.status as keyof typeof statusStageMap];
-
-  console.log(stage);
+  console.log(currentStage);
 
   return (
     <>
@@ -248,7 +253,7 @@ export default function ProjectDetails({
         <TabsContent value="billing">
           <div className="space-y-8 my-10">
             <BillingLifecycle
-              currentStage={stage}
+              currentStage={currentStage}
               allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
