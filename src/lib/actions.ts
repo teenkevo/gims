@@ -150,15 +150,15 @@ export async function createQuotation(billingInfo: QuotationProps, fileId: strin
 }
 
 // SEND QUOTATION
-export async function sendQuotation(projectId: string) {
+export async function sendQuotation(quotationId: string) {
   try {
     await writeClient
-      .patch(projectId as string)
+      .patch(quotationId as string)
       .set({
         status: "sent",
       })
       .commit();
-    revalidateTag(`project-${projectId}`);
+    revalidateTag("quotation");
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error sending quotation:", error);
