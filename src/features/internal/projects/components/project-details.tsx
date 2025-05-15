@@ -81,18 +81,15 @@ export default function ProjectDetails({
 
   const isQuotationRejected = quotation?.status === "rejected";
 
-  const stage =
-    isQuotationInReview || !Boolean(quotation)
-      ? 1
-      : isQuotationSent
-        ? 2
-        : isQuotationAccepted
-          ? 4
-          : isQuotationRejected
-            ? 3
-            : 1;
+  const statusStageMap: Record<string, number> = {
+    draft: 1,
+    sent: 2,
+    accepted: 4,
+    rejected: 3,
+  };
 
-  console.log(stage);
+  const stage =
+    quotation && quotation.status && statusStageMap[quotation.status] ? statusStageMap[quotation.status] : 1;
 
   return (
     <>
