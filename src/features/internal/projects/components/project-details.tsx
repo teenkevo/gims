@@ -87,10 +87,10 @@ export default function ProjectDetails({
       : isQuotationSent
         ? 2
         : isQuotationAccepted
-          ? 3
+          ? 4
           : isQuotationRejected
-            ? 4
-            : 5;
+            ? 3
+            : 1;
 
   console.log(stage);
 
