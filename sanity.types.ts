@@ -147,10 +147,7 @@ export type Rfi = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  initiationType?:
-    | "internal_internal"
-    | "internal_external"
-    | "external_internal";
+  initiationType?: "internal_internal" | "internal_external" | "external_internal";
   project?: {
     _ref: string;
     _type: "reference";
@@ -238,11 +235,7 @@ export type LabApprovalWorkflow = {
     _weak?: boolean;
     [internalGroqTypeReferenceTo]?: "lab";
   };
-  workflowType?:
-    | "equipment_release_approval"
-    | "test_result_approval"
-    | "lab_access_approval"
-    | "sop_change_approval";
+  workflowType?: "equipment_release_approval" | "test_result_approval" | "lab_access_approval" | "sop_change_approval";
   initiatedBy?: {
     _ref: string;
     _type: "reference";
@@ -373,12 +366,7 @@ export type Lab = {
     [internalGroqTypeReferenceTo]?: "project";
   }>;
   sopDocuments?: Array<{
-    category?:
-      | "health_safety"
-      | "evacuation"
-      | "quality_control"
-      | "equipment_handling"
-      | "general_operations";
+    category?: "health_safety" | "evacuation" | "quality_control" | "equipment_handling" | "general_operations";
     documentUrl?: string;
     description?: string;
     _key: string;
@@ -595,7 +583,7 @@ export type Quotation = {
     media?: unknown;
     _type: "file";
   };
-  status?: "draft" | "sent" | "accepted" | "rejected";
+  status?: "draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid";
 };
 
 export type Service = {
@@ -851,7 +839,7 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
     quotationDate: string | null;
     acquisitionNumber: string | null;
     currency: "eur" | "gbp" | "ugx" | "usd" | null;
-    status: "accepted" | "draft" | "rejected" | "sent" | null;
+    status: "accepted" | "draft" | "invoiced" | "paid" | "rejected" | "sent" | null;
     items: Array<{
       service: {
         _ref: string;

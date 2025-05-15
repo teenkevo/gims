@@ -77,10 +77,12 @@ export default function ProjectDetails({
     draft: 1,
     sent: 2,
     accepted: 3,
-    rejected: 4,
+    rejected: 3,
+    invoiced: 4,
+    paid: 5,
   };
 
-  const stage = statusStageMap[quotation?.status as keyof typeof statusStageMap] ?? 1;
+  const stage = statusStageMap[quotation?.status as keyof typeof statusStageMap];
 
   console.log(stage);
 

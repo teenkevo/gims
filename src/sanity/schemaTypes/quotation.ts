@@ -62,9 +62,7 @@ export const quotation = defineType({
             const uniqueServiceIds = new Set(serviceIds);
             if (serviceIds.length !== uniqueServiceIds.size) {
               // Find the duplicate service ID
-              const duplicateId = serviceIds.find(
-                (id, index) => serviceIds.indexOf(id) !== index
-              );
+              const duplicateId = serviceIds.find((id, index) => serviceIds.indexOf(id) !== index);
               // Fetch the service details
               const client = context.getClient({ apiVersion: "2025-05-06" });
               const service = await client.fetch(`*[_id == $id][0]`, {
@@ -113,7 +111,7 @@ export const quotation = defineType({
       title: "Status",
       type: "string",
       options: {
-        list: ["draft", "sent", "accepted", "rejected"],
+        list: ["draft", "sent", "accepted", "rejected", "invoiced", "paid"],
       },
       initialValue: "draft",
     }),
@@ -126,8 +124,7 @@ export const quotation = defineType({
         {
           number: `R${year}-00`,
           date: new Date().toISOString().substr(0, 10),
-          notes:
-            "This revision is automatically created when the quotation is created.",
+          notes: "This revision is automatically created when the quotation is created.",
         },
       ],
     };

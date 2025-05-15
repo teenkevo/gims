@@ -3489,6 +3489,14 @@
             {
               "type": "string",
               "value": "rejected"
+            },
+            {
+              "type": "string",
+              "value": "invoiced"
+            },
+            {
+              "type": "string",
+              "value": "paid"
             }
           ]
         },
