@@ -91,6 +91,8 @@ export default function ProjectDetails({
   const stage =
     quotation && quotation.status && statusStageMap[quotation.status] ? statusStageMap[quotation.status] : 1;
 
+  console.log(stage);
+
   return (
     <>
       <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/projects">
