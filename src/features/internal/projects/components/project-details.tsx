@@ -92,6 +92,8 @@ export default function ProjectDetails({
             ? 4
             : 5;
 
+  console.log(stage);
+
   return (
     <>
       <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/projects">
