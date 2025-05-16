@@ -131,6 +131,7 @@ export default function ProjectDetails({
             Billing
           </TabsTrigger>
           <TabsTrigger
+            disabled
             value="sample-receipt"
             onClick={() => {
               const url = new URL(window.location.href);
@@ -229,7 +230,7 @@ export default function ProjectDetails({
                         title="Client Name"
                         initialValue={client?.name || ""}
                         clientId={client?._id || ""}
-                        projectId={_id}
+                        projectId={_id || ""}
                       />
 
                       <ContactTable

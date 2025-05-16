@@ -19,6 +19,7 @@ export const getAllContacts = async () => {
   try {
     const contacts = await sanityFetch({
       query: ALL_CONTACTS_QUERY,
+      tags: ["contacts"],
     });
 
     // return data or empty array if no data is found

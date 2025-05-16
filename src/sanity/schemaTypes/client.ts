@@ -6,6 +6,12 @@ export const client = defineType({
   title: "Clients",
   fields: [
     defineField({
+      name: "internalId",
+      title: "Internal ID",
+      type: "string",
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: "name",
       title: "Client Name",
       type: "string",

@@ -7,54 +7,25 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Icons
-import {
-  BriefcaseBusiness,
-  Check,
-  ChevronsUpDown,
-  Plus,
-  PlusCircle,
-  Trash,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { BriefcaseBusiness, Check, ChevronsUpDown, Plus, PlusCircle, Trash, UserPlus, Users } from "lucide-react";
 
 // Components
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Formheader from "@/components/form-header";
 import FormSpacerWrapper from "@/components/form-spacer-wrapper";
 import type { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
-import { CardSelector } from "./card-selector";
+import { CardSelector } from "../../../internal/projects/components/card-selector";
 
 interface ClientProfileFormProps {
   isSubmitting: boolean;
   clients: ALL_CLIENTS_QUERYResult;
 }
 
-export function ClientProfileForm({
-  isSubmitting,
-  clients,
-}: ClientProfileFormProps) {
+export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormProps) {
   const {
     control,
     watch,
@@ -87,9 +58,7 @@ export function ClientProfileForm({
   const clientsArrayError = errors.clients?.root?.message as string;
 
   // Manage open state for each client
-  const [openStates, setOpenStates] = useState<boolean[]>(
-    Array(fields.length).fill(false)
-  );
+  const [openStates, setOpenStates] = useState<boolean[]>(Array(fields.length).fill(false));
 
   const togglePopover = (index: number) => {
     setOpenStates((prev) => {
@@ -113,10 +82,7 @@ export function ClientProfileForm({
             exit={{ opacity: 0 }}
             className="border-b"
           >
-            <FormItem
-              key={clientField.id}
-              className="mb-10 border px-4 rounded-lg border-dashed"
-            >
+            <FormItem key={clientField.id} className="mb-10 border px-4 rounded-lg border-dashed">
               {/* Client Type Selection */}
               <FormField
                 control={control}
@@ -154,23 +120,15 @@ export function ClientProfileForm({
                     rules={{ required: "Please select an existing client" }}
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel className="py-1">
-                          Existing contacts
-                        </FormLabel>
-                        <Popover
-                          open={openStates[index]}
-                          onOpenChange={() => togglePopover(index)}
-                        >
+                        <FormLabel className="py-1">Existing contacts</FormLabel>
+                        <Popover open={openStates[index]} onOpenChange={() => togglePopover(index)}>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 disabled={isSubmitting}
                                 variant="outline"
                                 role="combobox"
-                                className={cn(
-                                  "w-auto justify-between",
-                                  !field.value && "text-muted-foreground"
-                                )}
+                                className={cn("w-auto justify-between", !field.value && "text-muted-foreground")}
                               >
                                 <AnimatePresence mode="wait">
                                   <motion.div
@@ -182,9 +140,7 @@ export function ClientProfileForm({
                                     className="flex items-center justify-between w-full"
                                   >
                                     {field.value
-                                      ? clients.find(
-                                          (c) => c._id === field.value
-                                        )?.name
+                                      ? clients.find((c) => c._id === field.value)?.name
                                       : "Select an existing client"}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                   </motion.div>
@@ -205,22 +161,15 @@ export function ClientProfileForm({
                                       value={client.name || ""}
                                       key={client._id}
                                       onSelect={() => {
-                                        setValue(
-                                          `clients.${index}.existingClient`,
-                                          client._id
-                                        );
+                                        setValue(`clients.${index}.existingClient`, client._id);
                                         togglePopover(index);
-                                        clearErrors(
-                                          `clients.${index}.existingClient`
-                                        );
+                                        clearErrors(`clients.${index}.existingClient`);
                                       }}
                                     >
                                       <Check
                                         className={cn(
                                           "mr-2 h-4 w-4",
-                                          client._id === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
+                                          client._id === field.value ? "opacity-100" : "opacity-0"
                                         )}
                                       />
                                       {client.name}
@@ -260,11 +209,7 @@ export function ClientProfileForm({
                       <FormItem>
                         <FormLabel>Client Name</FormLabel>
                         <FormControl>
-                          <Input
-                            disabled={isSubmitting}
-                            placeholder="e.g. Acme Corporation"
-                            {...field}
-                          />
+                          <Input disabled={isSubmitting} placeholder="e.g. Acme Corporation" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -292,12 +237,7 @@ export function ClientProfileForm({
       <div className="space-y-4">
         <div className="flex-row">
           {fields.length === 0 && (
-            <p
-              className={cn(
-                'after:ml-0.5 after:text-destructive after:content-["*"]',
-                "my-2 text-sm font-medium"
-              )}
-            >
+            <p className={cn('after:ml-0.5 after:text-destructive after:content-["*"]', "my-2 text-sm font-medium")}>
               Atleast one client is required
             </p>
           )}
@@ -313,15 +253,10 @@ export function ClientProfileForm({
               })
             }
           >
-            <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add{" "}
-            {fields.length === 0 ? "a " : "another "}
+            <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add {fields.length === 0 ? "a " : "another "}
             client
           </Button>
-          {errors.clients && (
-            <p className="text-sm font-medium text-destructive">
-              {clientsArrayError}
-            </p>
-          )}
+          {errors.clients && <p className="text-sm font-medium text-destructive">{clientsArrayError}</p>}
         </div>
       </div>
     </FormSpacerWrapper>

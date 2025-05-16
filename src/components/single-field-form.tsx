@@ -16,10 +16,11 @@ interface SingleFieldFormProps {
   savable: boolean;
   fieldName: string;
   initialValue: any;
-  onSubmit: (value: any) => Promise<void>;
+  onSubmit?: (value: any) => Promise<void>;
   isSubmitting: boolean;
   validation?: z.ZodType<any, any>;
   renderField?: (form: ReturnType<typeof useForm>) => React.ReactNode; // <-- New renderField prop
+  action?: string | ((formData: FormData) => void | Promise<void>); // <-- Optional action prop
 }
 
 export function SingleFieldForm({
@@ -33,6 +34,7 @@ export function SingleFieldForm({
   isSubmitting,
   validation = z.string().min(1),
   renderField, // <-- Accept renderField prop
+  action, // <-- Accept action prop
 }: SingleFieldFormProps) {
   const schema = z.object({
     [fieldName]: validation,
@@ -51,8 +53,10 @@ export function SingleFieldForm({
 
   const handleFormSubmit = async (data: any) => {
     try {
-      await onSubmit(data[fieldName]);
-      form.reset(data); // reset to updated data if success
+      if (onSubmit) {
+        await onSubmit(data[fieldName]);
+        form.reset(data); // reset to updated data if success
+      }
     } catch (error) {
       console.log("Error has been caught and form has been reset");
       form.reset(); // reset to original form data if error
@@ -67,10 +71,7 @@ export function SingleFieldForm({
       <CardContent className="pb-0">
         {description && <p className="text-sm mb-4">{description}</p>}
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleFormSubmit)}
-            className="space-y-6"
-          >
+          <form {...(action ? { action } : { onSubmit: form.handleSubmit(handleFormSubmit) })} className="space-y-6">
             {/* Use the renderField prop */}
             {renderField && renderField(form)}
 
@@ -80,8 +81,7 @@ export function SingleFieldForm({
                 <a
                   onClick={() =>
                     toast("🧑‍🍳 In the kitchen...", {
-                      description:
-                        "GIMS documentation is still in active development. Check back later",
+                      description: "GIMS documentation is still in active development. Check back later",
                     })
                   }
                   href={undefined}

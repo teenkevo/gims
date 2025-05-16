@@ -17,35 +17,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  ArrowRightCircle,
-  BriefcaseBusiness,
-  ChevronsUpDown,
-  PlusCircleIcon,
-} from "lucide-react";
+import { ArrowRightCircle, BriefcaseBusiness, ChevronsUpDown, PlusCircleIcon } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { motion } from "framer-motion";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AnimatePresence } from "framer-motion";
 import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERYResult, PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
 import { revalidateProject } from "@/lib/actions";
@@ -71,10 +55,7 @@ const formSchema = z
   })
   .refine(
     (data) => {
-      if (
-        data.clientType === "new" &&
-        (data.newClientName === undefined || data.newClientName === "")
-      ) {
+      if (data.clientType === "new" && (data.newClientName === undefined || data.newClientName === "")) {
         return false;
       }
       return true;
@@ -104,7 +85,7 @@ export function CreateClientDialog({
 }: {
   projectId: string;
   existingClients: ALL_CLIENTS_QUERYResult;
-  projectClients: ALL_CLIENTS_QUERYResult;
+  projectClients: PROJECT_BY_ID_QUERYResult[number]["clients"];
 }) {
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -128,10 +109,8 @@ export function CreateClientDialog({
     const formattedData = {
       projectId,
       clientType: values.clientType,
-      existingClient:
-        values.clientType === "existing" ? values.existingClient : undefined,
-      newClientName:
-        values.clientType === "new" ? values.newClientName : undefined,
+      existingClient: values.clientType === "existing" ? values.existingClient : undefined,
+      newClientName: values.clientType === "new" ? values.newClientName : undefined,
     };
 
     const result = await mutation.mutateAsync({ json: formattedData });
@@ -173,39 +152,27 @@ export function CreateClientDialog({
                 >
                   <FormItem className="w-1/2">
                     <FormControl>
-                      <RadioGroupItem
-                        value="new"
-                        className="sr-only peer"
-                        id="new-client"
-                      />
+                      <RadioGroupItem value="new" className="sr-only peer" id="new-client" />
                     </FormControl>
                     <FormLabel
                       htmlFor="new-client"
                       className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <PlusCircleIcon className="h-8 w-8 mb-2" />
-                      <span className="text-sm text-center font-medium">
-                        Create New
-                      </span>
+                      <span className="text-sm text-center font-medium">Create New</span>
                     </FormLabel>
                   </FormItem>
 
                   <FormItem className="w-1/2">
                     <FormControl>
-                      <RadioGroupItem
-                        value="existing"
-                        className="sr-only peer"
-                        id="existing-client"
-                      />
+                      <RadioGroupItem value="existing" className="sr-only peer" id="existing-client" />
                     </FormControl>
                     <FormLabel
                       htmlFor="existing-client"
                       className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <BriefcaseBusiness className="h-8 w-8 mb-2" />
-                      <span className="text-sm font-medium">
-                        Choose Existing
-                      </span>
+                      <span className="text-sm font-medium">Choose Existing</span>
                     </FormLabel>
                   </FormItem>
                 </RadioGroup>
@@ -222,10 +189,7 @@ export function CreateClientDialog({
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel className="py-1">Existing contacts</FormLabel>
-                <Popover
-                  open={popoverOpen}
-                  onOpenChange={() => setPopoverOpen(!popoverOpen)}
-                >
+                <Popover open={popoverOpen} onOpenChange={() => setPopoverOpen(!popoverOpen)}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -248,9 +212,7 @@ export function CreateClientDialog({
                           >
                             <span className="truncate">
                               {field.value
-                                ? existingClients.find(
-                                    (c) => c._id === field.value
-                                  )?.name
+                                ? existingClients.find((c) => c._id === field.value)?.name
                                 : "Select an existing client"}
                             </span>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -260,19 +222,14 @@ export function CreateClientDialog({
                     </FormControl>
                   </PopoverTrigger>
 
-                  <PopoverContent
-                    className="w-[350px] md:w-[400px] p-0"
-                    align="start"
-                  >
+                  <PopoverContent className="w-[350px] md:w-[400px] p-0" align="start">
                     <Command>
                       <CommandList>
                         <CommandInput placeholder="Search client..." />
                         <CommandEmpty>No client found.</CommandEmpty>
                         <CommandGroup>
                           {existingClients.map((client) => {
-                            const isAdded = projectClients.some(
-                              (c) => c._id === client._id
-                            );
+                            const isAdded = projectClients?.some((c) => c._id === client._id);
                             return (
                               <CommandItem
                                 disabled={isSubmitting || isAdded}
@@ -287,10 +244,7 @@ export function CreateClientDialog({
                               >
                                 <span className="truncate">{client.name}</span>
                                 {isAdded && (
-                                  <Badge
-                                    className="text-primary"
-                                    variant="secondary"
-                                  >
+                                  <Badge className="text-primary" variant="secondary">
                                     Already added
                                   </Badge>
                                 )}
@@ -315,11 +269,7 @@ export function CreateClientDialog({
                 <FormItem>
                   <FormLabel>Client name</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="e.g. Paragon Construction (SG) Limited"
-                      {...field}
-                    />
+                    <Input disabled={isSubmitting} placeholder="e.g. Paragon Construction (SG) Limited" {...field} />
                   </FormControl>
 
                   <FormMessage />
@@ -362,9 +312,7 @@ export function CreateClientDialog({
         <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Add Client To Project</DialogTitle>
-            <DialogDescription>
-              Associate a new / existing client with this project
-            </DialogDescription>
+            <DialogDescription>Associate a new / existing client with this project</DialogDescription>
           </DialogHeader>
           {content}
         </DialogContent>
@@ -386,9 +334,7 @@ export function CreateClientDialog({
       <DrawerContent aria-describedby={undefined}>
         <DrawerHeader className="gap-3 text-left">
           <DrawerTitle>Add Client To Project</DrawerTitle>
-          <DrawerDescription>
-            Associate a new / existing client with this project
-          </DrawerDescription>
+          <DrawerDescription>Associate a new / existing client with this project</DrawerDescription>
         </DrawerHeader>
         <div className=" py-4 px-4">{content}</div>
       </DrawerContent>

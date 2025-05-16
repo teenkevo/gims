@@ -2,13 +2,7 @@ import { FormProvider } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { ExternalLink } from "lucide-react";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import React, { useActionState } from "react";
@@ -22,15 +16,10 @@ interface ClientNameFormProps {
   projectId: string;
 }
 
-export default function ClientNameForm({
-  title,
-  initialValue,
-  clientId,
-  projectId,
-}: ClientNameFormProps) {
+export default function ClientNameForm({ title, initialValue, clientId, projectId }: ClientNameFormProps) {
   const action = async (_: void | null, formData: FormData) => {
     const clientName = formData.get("clientName");
-    const result = await updateClientName(clientId, projectId, formData);
+    const result = await updateClientName(clientId, formData, projectId);
     if (result.status === "ok") {
       form.reset({ clientName: clientName as string });
       toast.success("Client name has been updated");

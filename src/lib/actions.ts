@@ -277,6 +277,26 @@ export async function updateQuotation(quotationId: string, billingInfo: Quotatio
   }
 }
 
+// CREATE CLIENT
+export async function createClient(prevState: any, formData: FormData) {
+  try {
+    const clientName = formData.get("clientName");
+    const internalId = formData.get("internalId");
+
+    const client = await writeClient.create({
+      _type: "client",
+      name: clientName,
+      internalId,
+    });
+
+    revalidateTag("clients");
+    return { result: client, status: "ok" };
+  } catch (error) {
+    console.error("Error creating client:", error);
+    return { error, status: "error" };
+  }
+}
+
 // CREATE STANDARD
 export async function addStandard(prevState: any, formData: FormData) {
   try {
@@ -1005,22 +1025,30 @@ export async function createProject(prevState: any, formData: FormData) {
   }
 }
 
-export async function updateClientName(clientId: string, projectId: string, formData: FormData) {
+export async function updateClientName(clientId: string, formData: FormData, projectId?: string) {
   try {
     const clientName = formData.get("clientName");
+    console.log(clientName);
     const result = await writeClient
       .patch(clientId as string)
       .set({ name: clientName as string })
       .commit();
-    // TODO: Possible bug, no tag is specified but revalidateTag seems to update cache
-    revalidateTag(`project-${projectId}`);
+    if (projectId) {
+      revalidateTag(`project-${projectId}`);
+    }
+    revalidateTag(`client-${clientId}`);
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
   }
 }
 
-export async function updateContactPerson(contactId: string, projectId: string, formData: FormData) {
+export async function updateContactPerson(
+  contactId: string,
+  formData: FormData,
+  projectId?: string,
+  clientId?: string
+) {
   try {
     const name = formData.get("name");
     const email = formData.get("email");
@@ -1035,8 +1063,49 @@ export async function updateContactPerson(contactId: string, projectId: string, 
         designation,
       })
       .commit();
-    // TODO: Possible bug, no tag is specified but revalidateTag seems to update cache
-    revalidateTag(`project-${projectId}`);
+    if (projectId) {
+      revalidateTag(`project-${projectId}`);
+    }
+    if (clientId) {
+      revalidateTag(`client-${clientId}`);
+    }
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+// CREATE CONTACT PERSON
+export async function createContactPerson(prevState: any, formData: FormData) {
+  try {
+    const name = formData.get("name");
+    const email = formData.get("email");
+    const phone = formData.get("phone");
+    const designation = formData.get("designation");
+    const clientId = formData.get("clientId");
+    const result = await writeClient.create({
+      _type: "contactPerson",
+      name,
+      email,
+      phone: sanitizePhoneNumber(phone as string),
+      designation,
+      client: {
+        _type: "reference",
+        _ref: clientId,
+      },
+    });
+    revalidateTag(`client-${clientId}`);
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+// DELETE CONTACT PERSON
+export async function deleteContactPerson(contactId: string, clientId: string) {
+  try {
+    const result = await writeClient.delete(contactId);
+    revalidateTag(`client-${clientId}`);
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };

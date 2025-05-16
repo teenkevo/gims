@@ -25,13 +25,7 @@ import {
 import { NavGroup } from "./nav-group";
 import { NavUser } from "./nav-user";
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
 import { Logo } from "./logo";
 import { ToggleLightDark } from "./toggle-light-dark";
 
@@ -71,6 +65,13 @@ const data = {
       //     url: "/projects/create",
       //   },
       // ],
+      isDisabled: false,
+    },
+    {
+      title: "Clients",
+      url: "/clients",
+      icon: Briefcase,
+      isActive: false,
       isDisabled: false,
     },
 

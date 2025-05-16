@@ -1,5 +1,3 @@
-"use client";
-
 import { useActionState, useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +23,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 import { ButtonLoading } from "@/components/button-loading";
-import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import type { CLIENT_BY_ID_QUERYResult } from "../../../../../../../sanity.types";
 import { updateContactPerson } from "@/lib/actions";
 
 const formSchema = z.object({
@@ -55,12 +53,15 @@ const useMediaQuery = (query: string) => {
 
 export function UpdateContactDialog({
   contact,
-  projectId,
+  clientId,
+  open,
+  onClose,
 }: {
-  contact: ALL_CONTACTS_QUERYResult[number];
-  projectId: string;
+  contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
+  clientId: string;
+  open: boolean;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 640px)");
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -76,10 +77,10 @@ export function UpdateContactDialog({
 
   const action = async (_: void | null, formData: FormData) => {
     console.log("clicked");
-    const result = await updateContactPerson(contact._id, formData, projectId);
+    const result = await updateContactPerson(contact._id, formData, clientId);
     if (result.status === "ok") {
       form.reset();
-      setOpen(false);
+      onClose();
       toast.success("Contact has been updated");
     } else {
       toast.error("Something went wrong");
@@ -163,21 +164,12 @@ export function UpdateContactDialog({
 
   if (isMobile) {
     return (
-      <Drawer
-        open={open}
-        onOpenChange={(isOpen) => {
-          setOpen(isOpen);
-          if (isOpen) {
-            form.reset();
-          }
-        }}
-      >
-        <DrawerTrigger asChild>
-          <Button size="icon" variant="outline">
-            <PencilIcon className="h-4 w-4" />
-          </Button>
-        </DrawerTrigger>
-        <DrawerContent>
+      <Drawer open={open} onOpenChange={onClose}>
+        <DrawerContent
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+        >
           <DrawerHeader className="gap-3 text-left">
             <DrawerTitle>Update Contact Person</DrawerTitle>
           </DrawerHeader>
@@ -193,22 +185,13 @@ export function UpdateContactDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen) {
-          form.reset();
-        }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button size="icon" variant="outline">
-          <PencilIcon className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent aria-describedby={undefined}>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        aria-describedby={undefined}
+      >
         <DialogHeader className="gap-3 text-left">
           <DialogTitle>Update Contact Person</DialogTitle>
         </DialogHeader>

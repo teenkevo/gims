@@ -33,11 +33,7 @@ const formVariants = {
   exit: { opacity: 0, x: 50, transition: { ease: "easeOut" } },
 };
 
-export function CreateProjectForm({
-  clients,
-}: {
-  clients: ALL_CLIENTS_QUERYResult;
-}) {
+export function CreateProjectForm({ clients }: { clients: ALL_CLIENTS_QUERYResult }) {
   const router = useRouter();
 
   // Restored useActionState
@@ -70,12 +66,8 @@ export function CreateProjectForm({
         "clients",
         JSON.stringify({
           clientType: client.clientType,
-          existingClient:
-            client.clientType === "existing"
-              ? client.existingClient
-              : undefined,
-          newClientName:
-            client.clientType === "new" ? client.newClientName : undefined,
+          existingClient: client.clientType === "existing" ? client.existingClient : undefined,
+          newClientName: client.clientType === "new" ? client.newClientName : undefined,
         })
       )
     );
@@ -94,22 +86,14 @@ export function CreateProjectForm({
 
   return (
     <>
-      <Link
-        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/projects"
-      >
+      <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/projects">
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
       <FormProvider {...form}>
         <ScrollToFieldError />
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <motion.div
-            variants={formVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
+          <motion.div variants={formVariants} initial="hidden" animate="visible" exit="exit">
             <ProjectDetailsForm isSubmitting={isPending} />
             <ClientProfileForm clients={clients} isSubmitting={isPending} />
           </motion.div>

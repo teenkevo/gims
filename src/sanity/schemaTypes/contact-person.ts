@@ -30,10 +30,10 @@ export const contactPerson = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "clients",
-      title: "Clients",
-      type: "array",
-      of: [{ type: "reference", to: [{ type: "client" }] }],
+      name: "client",
+      title: "Client",
+      type: "reference",
+      to: [{ type: "client" }],
     }),
   ],
 });

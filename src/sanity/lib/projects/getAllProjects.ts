@@ -13,6 +13,19 @@ export const getAllProjects = async () => {
           clients[]->{
             _id, 
             name,
+            internalId
+          },
+          quotation->{
+            _id,
+            currency,
+            status,
+            items[] {
+              lineTotal,
+            },
+            otherItems[] {
+              lineTotal,
+            },
+            vatPercentage,
           }
         }
   `);

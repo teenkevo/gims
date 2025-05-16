@@ -1,5 +1,9 @@
 "use client";
-import { CheckCircledIcon, CrossCircledIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
+import {
+  CheckCircledIcon,
+  CrossCircledIcon,
+  DotsHorizontalIcon,
+} from "@radix-ui/react-icons";
 import { Row } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
@@ -8,9 +12,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type {
+  ALL_STANDARDS_QUERYResult,
   ALL_SAMPLE_CLASSES_QUERYResult,
   ALL_TEST_METHODS_QUERYResult,
   ALL_SERVICES_QUERYResult,
@@ -27,7 +33,11 @@ interface DataTableRowActionsProps<TData> {
   service?: ALL_SERVICES_QUERYResult[number];
 }
 
-export function DataTableRowActions<TData>({ sampleClasses, testMethods, service }: DataTableRowActionsProps<TData>) {
+export function DataTableRowActions<TData>({
+  sampleClasses,
+  testMethods,
+  service,
+}: DataTableRowActionsProps<TData>) {
   const [openDialog, setOpenDialog] = useState<string | null>(null);
 
   const handleOpenDialog = (dialogId: string) => {
@@ -41,7 +51,10 @@ export function DataTableRowActions<TData>({ sampleClasses, testMethods, service
     <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
+          <Button
+            variant="outline"
+            className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+          >
             <DotsHorizontalIcon className="h-4 w-4" />
             <span className="sr-only">Open menu</span>
           </Button>
@@ -64,7 +77,9 @@ export function DataTableRowActions<TData>({ sampleClasses, testMethods, service
             ) : (
               <CheckCircledIcon className=" h-4 w-4 mr-2" />
             )}
-            <span>{service?.status === "active" ? "Deactivate" : "Activate"}</span>
+            <span>
+              {service?.status === "active" ? "Deactivate" : "Activate"}
+            </span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -88,7 +103,11 @@ export function DataTableRowActions<TData>({ sampleClasses, testMethods, service
         open={openDialog === "dialog2"}
         onClose={handleCloseDialog}
       />
-      <DeleteService id={service?._id || ""} open={openDialog === "dialog3"} onClose={handleCloseDialog} />
+      <DeleteService
+        id={service?._id || ""}
+        open={openDialog === "dialog3"}
+        onClose={handleCloseDialog}
+      />
     </div>
   );
 }
