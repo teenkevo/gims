@@ -76,7 +76,7 @@ export function UpdateContactDialog({
 
   const action = async (_: void | null, formData: FormData) => {
     console.log("clicked");
-    const result = await updateContactPerson(contact._id, formData, projectId);
+    const result = await updateContactPerson(contact._id, formData);
     if (result.status === "ok") {
       form.reset();
       setOpen(false);
