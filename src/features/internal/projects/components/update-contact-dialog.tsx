@@ -27,6 +27,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { ButtonLoading } from "@/components/button-loading";
 import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
 import { updateContactPerson } from "@/lib/actions";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const formSchema = z.object({
   name: z.string().min(1, "Required"),
@@ -37,29 +38,7 @@ const formSchema = z.object({
   designation: z.string().min(1, "Required"),
 });
 
-const useMediaQuery = (query: string) => {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia(query);
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
-    const listener = () => setMatches(media.matches);
-    media.addListener(listener);
-    return () => media.removeListener(listener);
-  }, [matches, query]);
-
-  return matches;
-};
-
-export function UpdateContactDialog({
-  contact,
-  projectId,
-}: {
-  contact: ALL_CONTACTS_QUERYResult[number];
-  projectId: string;
-}) {
+export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYResult[number] }) {
   const [open, setOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 640px)");
 

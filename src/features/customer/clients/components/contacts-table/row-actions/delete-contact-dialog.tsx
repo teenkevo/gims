@@ -19,7 +19,6 @@ import { deleteContactPerson, removeContactFromProject } from "@/lib/actions";
 import { startTransition, useActionState } from "react";
 
 export function DeleteContactDialog({
-  clientId,
   contactId,
   open,
   onClose,
@@ -32,7 +31,7 @@ export function DeleteContactDialog({
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const action = async (_: void | null) => {
-    const result = await deleteContactPerson(contactId, clientId);
+    const result = await deleteContactPerson(contactId);
     if (result.status === "ok") {
       onClose();
       toast.success("Contact has been deleted");

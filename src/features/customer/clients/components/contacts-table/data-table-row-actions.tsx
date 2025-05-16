@@ -57,12 +57,7 @@ export function DataTableRowActions<TData>({ clientId, contact }: DataTableRowAc
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <UpdateContactDialog
-        contact={contact}
-        clientId={clientId}
-        open={openDialog === "dialog1"}
-        onClose={handleCloseDialog}
-      />
+      <UpdateContactDialog contact={contact} open={openDialog === "dialog1"} onClose={handleCloseDialog} />
       <DeleteContactDialog
         clientId={clientId}
         contactId={contact._id}

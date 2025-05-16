@@ -1092,7 +1092,7 @@ export async function createContactPerson(prevState: any, formData: FormData) {
 }
 
 // DELETE CONTACT PERSON
-export async function deleteContactPerson(contactId: string, clientId: string) {
+export async function deleteContactPerson(contactId: string) {
   try {
     const result = await writeClient.delete(contactId);
     revalidateTag("contactPerson");

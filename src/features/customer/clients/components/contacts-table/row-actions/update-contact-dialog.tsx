@@ -53,12 +53,10 @@ const useMediaQuery = (query: string) => {
 
 export function UpdateContactDialog({
   contact,
-  clientId,
   open,
   onClose,
 }: {
   contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
-  clientId: string;
   open: boolean;
   onClose: () => void;
 }) {
@@ -76,7 +74,6 @@ export function UpdateContactDialog({
   });
 
   const action = async (_: void | null, formData: FormData) => {
-    console.log("clicked");
     const result = await updateContactPerson(contact._id, formData);
     if (result.status === "ok") {
       form.reset();
