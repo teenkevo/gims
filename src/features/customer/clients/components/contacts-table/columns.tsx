@@ -36,7 +36,7 @@ export const getColumns = (): ColumnDef<CLIENT_BY_ID_QUERYResult[number]["contac
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (
       <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
-        <div className="w-[100px] font-bold">{row.original?.name}</div>
+        <div className="w-[150px] font-bold">{row.original?.name}</div>
       </Link>
     ),
     // enableSorting: false,

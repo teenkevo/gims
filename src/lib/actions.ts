@@ -1084,7 +1084,7 @@ export async function createContactPerson(prevState: any, formData: FormData) {
         _ref: clientId,
       },
     });
-    revalidateTag(`client-${clientId}`);
+    revalidateTag("contactPerson");
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
@@ -1095,6 +1095,7 @@ export async function createContactPerson(prevState: any, formData: FormData) {
 export async function deleteContactPerson(contactId: string, clientId: string) {
   try {
     const result = await writeClient.delete(contactId);
+    revalidateTag("contactPerson");
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
