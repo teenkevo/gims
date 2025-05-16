@@ -146,7 +146,7 @@ export function UpdateContactDialog({
         />
         <div className="py-2">
           <div className="flex items-center">
-            <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition w-full">
+            <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition w-full md:w-fit">
               {isPending ? (
                 <ButtonLoading />
               ) : (
