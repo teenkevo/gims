@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     // If the `_type` is `post`, then all `client.fetch` calls with
     // `{next: {tags: ['post']}}` will be revalidated
     revalidateTag(body._type);
+    console.log("revalidated", body._type);
 
     return NextResponse.json({ body });
   } catch (err) {

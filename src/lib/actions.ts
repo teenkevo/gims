@@ -1043,12 +1043,7 @@ export async function updateClientName(clientId: string, formData: FormData, pro
   }
 }
 
-export async function updateContactPerson(
-  contactId: string,
-  formData: FormData,
-  projectId?: string,
-  clientId?: string
-) {
+export async function updateContactPerson(contactId: string, formData: FormData) {
   try {
     const name = formData.get("name");
     const email = formData.get("email");
@@ -1063,12 +1058,7 @@ export async function updateContactPerson(
         designation,
       })
       .commit();
-    if (projectId) {
-      revalidateTag(`project-${projectId}`);
-    }
-    if (clientId) {
-      revalidateTag(`client-${clientId}`);
-    }
+    revalidateTag("contactPerson");
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
@@ -1105,7 +1095,6 @@ export async function createContactPerson(prevState: any, formData: FormData) {
 export async function deleteContactPerson(contactId: string, clientId: string) {
   try {
     const result = await writeClient.delete(contactId);
-    revalidateTag(`client-${clientId}`);
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };

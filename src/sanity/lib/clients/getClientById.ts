@@ -31,7 +31,7 @@ export const getClientById = async (clientId: string) => {
     const client = await sanityFetch({
       query: CLIENT_BY_ID_QUERY,
       params: { clientId },
-      tags: [`client-${clientId}`],
+      tags: [`client-${clientId}`, "contactPerson"],
     });
 
     // return data or empty array if no data is found
