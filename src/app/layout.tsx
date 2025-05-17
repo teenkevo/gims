@@ -8,6 +8,7 @@ import { SanityLive } from "@/sanity/lib/live";
 import { Suspense } from "react";
 import Loading from "./loading";
 import ScrollToTop from "@/components/scroll-to-top";
+import { RBACProvider } from "@/components/rbac-context";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -35,11 +36,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={<Loading />}>
-            <QueryProvider>
-              <ScrollToTop />
-              {children}
-              <SanityLive />
-            </QueryProvider>
+            <RBACProvider initialRole="viewer">
+              <QueryProvider>
+                <ScrollToTop />
+                {children}
+                <SanityLive />
+              </QueryProvider>
+            </RBACProvider>
           </Suspense>
 
           <Toaster />
