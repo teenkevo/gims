@@ -15,14 +15,18 @@ export const getClientById = async (clientId: string) => {
                 _id,
                 name,
                 internalId,
-                endDate
+                endDate,
             },
             "contacts": *[_type == "contactPerson" && references(^._id)] {
                 _id,
                 name,
                 email,
                 designation,
-                phone
+                phone,
+                "projects": *[_type == "project" && references(^._id)] {
+                    _id,
+                    name,
+                }
             }
         }
   `);

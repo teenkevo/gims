@@ -17,21 +17,21 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { deleteContactPerson, removeContactFromProject } from "@/lib/actions";
 import { startTransition, useActionState } from "react";
+import { CLIENT_BY_ID_QUERYResult } from "../../../../../../../sanity.types";
 
 export function DeleteContactDialog({
-  contactId,
+  contact,
   open,
   onClose,
 }: {
-  clientId: string;
-  contactId: string;
+  contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
   open: boolean;
   onClose: () => void;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const action = async (_: void | null) => {
-    const result = await deleteContactPerson(contactId);
+    const result = await deleteContactPerson(contact._id);
     if (result.status === "ok") {
       onClose();
       toast.success("Contact has been deleted");
@@ -55,10 +55,12 @@ export function DeleteContactDialog({
           <DialogHeader className="space-y-3">
             <DialogTitle>Delete Contact Person</DialogTitle>
             <DialogDescription>
-              This contact will be deleted. All correspondences will be sent to the remaining contact persons.
+              This contact will be deleted. All correspondences will be sent to the remaining
+              contact persons.
             </DialogDescription>
             <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-              <span className="font-bold">Warning</span>: This action is not reversible. Please be certain.
+              <span className="font-bold">Warning</span>: This action is not reversible. Please be
+              certain.
             </div>
           </DialogHeader>
           <DialogFooter>
@@ -90,10 +92,12 @@ export function DeleteContactDialog({
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Delete Contact Person</DialogTitle>
           <DialogDescription>
-            This contact will be deleted. All correspondences will be sent to the remaining contact persons.
+            This contact will be deleted. All correspondences will be sent to the remaining contact
+            persons.
           </DialogDescription>
           <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-            <span className="font-bold">Warning</span>: This action is not reversible. Please be certain
+            <span className="font-bold">Warning</span>: This action is not reversible. Please be
+            certain
           </div>
         </DrawerHeader>
 

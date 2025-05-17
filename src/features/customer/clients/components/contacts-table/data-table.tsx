@@ -16,11 +16,21 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type { CLIENT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
 import { getColumns } from "./columns"; // Import the function instead of the constant
+import { DataTableToolbar } from "./data-table-toolbar";
+import { DeleteMultipleContacts } from "./delete-multiple-contacts";
+import { toast } from "sonner";
 
 interface DataTableProps<TData, TValue> {
   data: CLIENT_BY_ID_QUERYResult[number]["contacts"];
@@ -31,6 +41,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [openDialog, setOpenDialog] = React.useState<boolean>(false);
 
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
@@ -61,20 +72,32 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const serviceIds = table.getSelectedRowModel().rows.map((row) => (row.original as { _id: string })._id);
+  const selectedContacts = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
 
   return (
     <div className="space-y-4">
-      {/* <DataTableToolbar
+      <DataTableToolbar
         table={table}
-        sampleClasses={sampleClasses}
-        openDialog={() => setOpenDialog(true)}
-      /> */}
-      {/* <DeleteMultipleServices
-        ids={serviceIds}
+        openDialog={() => {
+          const contactsNotInProjects = selectedContacts.filter(
+            (contact) => contact.projects.length === 0
+          );
+          if (contactsNotInProjects.length > 0) {
+            setOpenDialog(true);
+          } else {
+            toast.warning(
+              selectedContacts.length > 1
+                ? "These contacts are used in 1 or more projects and cannot be deleted."
+                : "This contact is used in 1 or more projects and cannot be deleted."
+            );
+          }
+        }}
+      />
+      <DeleteMultipleContacts
+        contacts={selectedContacts}
         open={openDialog}
         onClose={() => setOpenDialog(false)}
-      /> */}
+      />
       {/* <Button onClick={handleDelete}>Delete Selected</Button> */}
       <div className="rounded-md border">
         <Table>
@@ -84,7 +107,9 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -96,7 +121,9 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))

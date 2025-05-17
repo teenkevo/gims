@@ -52,9 +52,13 @@ export async function createQuotation(billingInfo: QuotationProps, fileId: strin
       revisionNumber,
     } = billingInfo;
 
-    const labTestMethod = labTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
+    const labTestMethod = labTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
 
-    const fieldTestMethod = fieldTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
+    const fieldTestMethod = fieldTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
 
     const items = [
       ...labTests.map((test) => ({
@@ -167,7 +171,11 @@ export async function sendQuotation(quotationId: string) {
 }
 
 // UPDATE QUOTATION
-export async function updateQuotation(quotationId: string, billingInfo: QuotationProps, fileId: string) {
+export async function updateQuotation(
+  quotationId: string,
+  billingInfo: QuotationProps,
+  fileId: string
+) {
   try {
     const {
       labTests,
@@ -184,9 +192,13 @@ export async function updateQuotation(quotationId: string, billingInfo: Quotatio
       revisionNumber,
     } = billingInfo;
 
-    const labTestMethod = labTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
+    const labTestMethod = labTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
 
-    const fieldTestMethod = fieldTests.map((test) => test.testMethods?.find((method: any) => method.selected))[0]?._id;
+    const fieldTestMethod = fieldTests.map((test) =>
+      test.testMethods?.find((method: any) => method.selected)
+    )[0]?._id;
 
     const items = [
       ...labTests.map((test) => ({
@@ -541,7 +553,9 @@ export async function deleteMultipleTestMethods(testMethodIds: string[]) {
             { id: testMethodId }
           );
 
-          const assetIds: string[] = method?.documents?.map((doc: any) => doc.asset?._id).filter(Boolean);
+          const assetIds: string[] = method?.documents
+            ?.map((doc: any) => doc.asset?._id)
+            .filter(Boolean);
 
           // 2. Delete the testMethod document first
           const result = await writeClient.delete(testMethodId);
@@ -550,7 +564,9 @@ export async function deleteMultipleTestMethods(testMethodIds: string[]) {
           if (assetIds?.length) {
             await Promise.all(
               assetIds.map(async (assetId) => {
-                const refCount = await writeClient.fetch(`count(*[references($assetId)])`, { assetId });
+                const refCount = await writeClient.fetch(`count(*[references($assetId)])`, {
+                  assetId,
+                });
 
                 if (refCount === 0) {
                   await writeClient.delete(assetId);
@@ -593,7 +609,10 @@ export async function deleteTestMethodFromService(serviceId: string, testMethodI
 }
 
 // DELETE MULTIPLE TEST METHODS FROM SERVICE
-export async function deleteMultipleTestMethodsFromService(serviceId: string, testMethodIds: string[]) {
+export async function deleteMultipleTestMethodsFromService(
+  serviceId: string,
+  testMethodIds: string[]
+) {
   try {
     const results = await Promise.all(
       testMethodIds.map(async (testMethodId) => {
@@ -639,7 +658,11 @@ export async function addFilesToTestMethod(prevState: any, formData: FormData) {
 }
 
 // DELETE FILE
-export async function deleteFileFromTestMethod(fileId: string, fileKey: string, currentTestMethodId: string) {
+export async function deleteFileFromTestMethod(
+  fileId: string,
+  fileKey: string,
+  currentTestMethodId: string
+) {
   try {
     // Check if the file is referenced by any test method other than the current one
     const documents = await writeClient.fetch(
@@ -813,7 +836,9 @@ export async function updateSampleClass(prevState: any, formData: FormData) {
 export async function addService(prevState: any, formData: FormData) {
   const code = formData.get("code");
   const testParameter = formData.get("testParameter");
-  const testMethods = formData.getAll("testMethods").map((testMethod) => JSON.parse(testMethod as string));
+  const testMethods = formData
+    .getAll("testMethods")
+    .map((testMethod) => JSON.parse(testMethod as string));
   const sampleClass = formData.get("sampleClass");
   const status = formData.get("status");
 
@@ -849,7 +874,9 @@ export async function addService(prevState: any, formData: FormData) {
 export async function updateService(prevState: any, formData: FormData) {
   const code = formData.get("code");
   const testParameter = formData.get("testParameter");
-  const testMethods = formData.getAll("testMethods").map((testMethod) => JSON.parse(testMethod as string));
+  const testMethods = formData
+    .getAll("testMethods")
+    .map((testMethod) => JSON.parse(testMethod as string));
   const sampleClass = formData.get("sampleClass");
   const status = formData.get("status");
   const serviceId = formData.get("serviceId");
@@ -1097,6 +1124,19 @@ export async function deleteContactPerson(contactId: string) {
     const result = await writeClient.delete(contactId);
     revalidateTag("contactPerson");
     return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+// DELETE MULTIPLE CONTACT PERSONS
+export async function deleteMultipleContacts(contactIds: string[]) {
+  try {
+    const results = await Promise.all(
+      contactIds.map(async (contactId) => await writeClient.delete(contactId))
+    );
+    revalidateTag("contactPerson");
+    return { results, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
   }

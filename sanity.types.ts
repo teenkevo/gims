@@ -235,7 +235,11 @@ export type LabApprovalWorkflow = {
     _weak?: boolean;
     [internalGroqTypeReferenceTo]?: "lab";
   };
-  workflowType?: "equipment_release_approval" | "test_result_approval" | "lab_access_approval" | "sop_change_approval";
+  workflowType?:
+    | "equipment_release_approval"
+    | "test_result_approval"
+    | "lab_access_approval"
+    | "sop_change_approval";
   initiatedBy?: {
     _ref: string;
     _type: "reference";
@@ -366,7 +370,12 @@ export type Lab = {
     [internalGroqTypeReferenceTo]?: "project";
   }>;
   sopDocuments?: Array<{
-    category?: "health_safety" | "evacuation" | "quality_control" | "equipment_handling" | "general_operations";
+    category?:
+      | "health_safety"
+      | "evacuation"
+      | "quality_control"
+      | "equipment_handling"
+      | "general_operations";
     documentUrl?: string;
     description?: string;
     _key: string;
@@ -470,13 +479,12 @@ export type ContactPerson = {
   email?: string;
   designation?: string;
   phone?: string;
-  clients?: Array<{
+  client?: {
     _ref: string;
     _type: "reference";
     _weak?: boolean;
-    _key: string;
     [internalGroqTypeReferenceTo]?: "client";
-  }>;
+  };
 };
 
 export type Client = {
@@ -795,14 +803,12 @@ export type ALL_CONTACTS_QUERYResult = Array<{
   email: string | null;
   designation: string | null;
   phone: string | null;
-  clients: Array<{
-    _id: string;
-  }> | null;
+  clients: null;
 }>;
 
 // Source: ./src/sanity/lib/clients/getClientById.ts
 // Variable: CLIENT_BY_ID_QUERY
-// Query: *[_type == "client" && _id == $clientId] {            _id,            name,            internalId,            // Reverse‐lookup: find projects that reference this client            "projects": *[                _type == "project"                 && references(^._id)            ] {                _id,                name,                internalId,                endDate            },            "contacts": *[_type == "contactPerson" && references(^._id)] {                _id,                name,                email,                designation,                phone            }        }
+// Query: *[_type == "client" && _id == $clientId] {            _id,            name,            internalId,            // Reverse‐lookup: find projects that reference this client            "projects": *[                _type == "project"                 && references(^._id)            ] {                _id,                name,                internalId,                endDate,            },            "contacts": *[_type == "contactPerson" && references(^._id)] {                _id,                name,                email,                designation,                phone,                "projects": *[_type == "project" && references(^._id)] {                    _id,                    name,                }            }        }
 export type CLIENT_BY_ID_QUERYResult = Array<{
   _id: string;
   name: string | null;
@@ -819,6 +825,10 @@ export type CLIENT_BY_ID_QUERYResult = Array<{
     email: string | null;
     designation: string | null;
     phone: string | null;
+    projects: Array<{
+      _id: string;
+      name: string | null;
+    }>;
   }>;
 }>;
 
@@ -867,9 +877,7 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
     email: string | null;
     phone: string | null;
     designation: string | null;
-    clients: Array<{
-      _id: string;
-    }> | null;
+    clients: null;
   }> | null;
   clients: Array<{
     _id: string;
@@ -1083,7 +1091,7 @@ declare module "@sanity/client" {
   interface SanityQueries {
     '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate\n      }\n    }\n  ': ALL_CLIENTS_QUERYResult;
     '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            clients[]->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
-    '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n                _id,\n                name,\n                internalId,\n                endDate\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone\n            }\n        }\n  ': CLIENT_BY_ID_QUERYResult;
+    '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n                _id,\n                name,\n                internalId,\n                endDate,\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERYResult;
     '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          quotation->{\n            _id,\n            currency,\n            status,\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            items[] {\n              service,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
     '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;

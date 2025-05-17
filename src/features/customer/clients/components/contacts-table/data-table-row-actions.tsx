@@ -14,13 +14,13 @@ import { useState } from "react";
 import { Delete, Pencil, Trash } from "lucide-react";
 import { UpdateContactDialog } from "./row-actions/update-contact-dialog";
 import { DeleteContactDialog } from "./row-actions/delete-contact-dialog";
+import { toast } from "sonner";
 
 interface DataTableRowActionsProps<TData> {
-  clientId: string;
   contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
 }
 
-export function DataTableRowActions<TData>({ clientId, contact }: DataTableRowActionsProps<TData>) {
+export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps<TData>) {
   const [openDialog, setOpenDialog] = useState<string | null>(null);
 
   const handleOpenDialog = (dialogId: string) => {
@@ -50,17 +50,27 @@ export function DataTableRowActions<TData>({ clientId, contact }: DataTableRowAc
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
-            onClick={() => handleOpenDialog("dialog2")}
+            onClick={() => {
+              const contactsInProjects = contact.projects.length > 0;
+              if (contactsInProjects) {
+                toast.warning("This contact is used in 1 or more projects and cannot be deleted.");
+              } else {
+                handleOpenDialog("dialog2");
+              }
+            }}
           >
             <Trash className="h-4 w-4 mr-2 text-destructive" />
             <span>Delete Contact</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <UpdateContactDialog contact={contact} open={openDialog === "dialog1"} onClose={handleCloseDialog} />
+      <UpdateContactDialog
+        contact={contact}
+        open={openDialog === "dialog1"}
+        onClose={handleCloseDialog}
+      />
       <DeleteContactDialog
-        clientId={clientId}
-        contactId={contact._id}
+        contact={contact}
         open={openDialog === "dialog2"}
         onClose={handleCloseDialog}
       />

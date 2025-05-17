@@ -5,7 +5,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
-import type { ALL_CLIENTS_QUERYResult, CLIENT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import type {
+  ALL_CLIENTS_QUERYResult,
+  CLIENT_BY_ID_QUERYResult,
+} from "../../../../../../sanity.types";
 import Link from "next/link";
 
 // Convert columns to a function that accepts parameters
@@ -14,7 +17,9 @@ export const getColumns = (): ColumnDef<CLIENT_BY_ID_QUERYResult[number]["contac
     id: "select",
     header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
         className="translate-y-[2px]"
@@ -83,9 +88,22 @@ export const getColumns = (): ColumnDef<CLIENT_BY_ID_QUERYResult[number]["contac
       );
     },
   },
+  {
+    accessorKey: "projects",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Projects" />,
+    cell: ({ row }) => {
+      return (
+        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
+          <div className="flex space-x-2">
+            <span className="font-normal">{row.original?.projects.length}</span>
+          </div>
+        </Link>
+      );
+    },
+  },
 
   {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions clientId={row.original?._id} contact={row.original} />,
+    cell: ({ row }) => <DataTableRowActions contact={row.original} />,
   },
 ];

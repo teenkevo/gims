@@ -49,21 +49,15 @@ export function DeleteMultipleTestMethods({
       );
       onClose();
     } else if (result.status === "no_deletions") {
-      toast.warning(
-        `These test methods cannot be deleted as they have services referencing them `
-      );
+      toast.warning(`These test methods cannot be deleted as they have services referencing them `);
     } else {
-      toast.warning(
-        `Some test methods cannot be deleted as they have services referencing them `
-      );
+      toast.warning(`Some test methods cannot be deleted as they have services referencing them `);
     }
   };
 
   const [_, dispatch, isPending] = useActionState(action, null);
 
-  const testMethodsWithReferencingDocs = referencingDocs.filter(
-    (doc) => doc.documents.length > 0
-  );
+  const testMethodsWithReferencingDocs = referencingDocs.filter((doc) => doc.documents.length > 0);
 
   console.log(testMethodsWithReferencingDocs);
 
@@ -80,8 +74,8 @@ export function DeleteMultipleTestMethods({
             <DialogTitle>Delete Test Methods</DialogTitle>
             {testMethodsWithReferencingDocs.length === 0 && (
               <DialogDescription>
-                This test method will be deleted and won't be available for use
-                in future standards
+                These test methods will be deleted and won't be available for use in future
+                standards
               </DialogDescription>
             )}
             {testMethodsWithReferencingDocs.length > 0 ? (
@@ -89,27 +83,19 @@ export function DeleteMultipleTestMethods({
                 <div className="flex items-center gap-2 bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
                   <AlertTriangle className="h-5 w-5 mr-2" />
                   {testMethodsWithReferencingDocs.length} test{" "}
-                  {testMethodsWithReferencingDocs.length > 1
-                    ? "methods "
-                    : "method "}
+                  {testMethodsWithReferencingDocs.length > 1 ? "methods " : "method "}
                   {testMethodsWithReferencingDocs.length > 1 ? "have " : "has "}
-                  services referencing{" "}
-                  {testMethodsWithReferencingDocs.length > 1
+                  services referencing {testMethodsWithReferencingDocs.length > 1
                     ? "them "
                     : "it "}{" "}
                   and you may not be able to delete{" "}
-                  {testMethodsWithReferencingDocs.length > 1
-                    ? "them "
-                    : "it "}{" "}
+                  {testMethodsWithReferencingDocs.length > 1 ? "them " : "it "}{" "}
                 </div>
                 <div className="flex flex-col gap-6">
                   {testMethodsWithReferencingDocs.map((doc) => (
                     <div key={doc._id}>
                       <span className="text-sm font-bold">
-                        {
-                          testMethods.find((t) => t._id === doc.testMethodId)
-                            ?.code
-                        }{" "}
+                        {testMethods.find((t) => t._id === doc.testMethodId)?.code}{" "}
                         <span className="text-muted-foreground font-normal">
                           is referenced by the following{" "}
                           {doc.documents.length > 1 ? "services" : "service"}
@@ -134,8 +120,8 @@ export function DeleteMultipleTestMethods({
             ) : (
               <>
                 <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-                  <span className="font-bold">Warning</span>: This action is not
-                  reversible. Please be certain
+                  <span className="font-bold">Warning</span>: This action is not reversible. Please
+                  be certain
                 </div>
               </>
             )}
@@ -171,12 +157,11 @@ export function DeleteMultipleTestMethods({
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Delete Test Methods</DialogTitle>
           <DialogDescription>
-            These test methods will be deleted and won't be available for use in
-            future standards
+            These test methods will be deleted and won't be available for use in future standards
           </DialogDescription>
           <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-            <span className="font-bold">Warning</span>: This action is not
-            reversible. Please be certain
+            <span className="font-bold">Warning</span>: This action is not reversible. Please be
+            certain
           </div>
         </DrawerHeader>
 

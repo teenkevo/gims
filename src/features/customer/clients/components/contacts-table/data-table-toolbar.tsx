@@ -10,42 +10,22 @@ import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
-  statuses: string[];
   openDialog: () => void;
 }
 
-export function DataTableToolbar<TData>({ table, sampleClasses, statuses, openDialog }: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({ table, openDialog }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
-
-  const sample_classes = sampleClasses.map((sampleClass) => ({
-    value: sampleClass?.name?.toLowerCase().replace(/\s+/g, "") || "",
-    label: sampleClass?.name || "",
-  }));
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-wrap gap-2 flex-1 items-center">
         <Input
-          placeholder="Filter services by code"
-          value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("code")?.setFilterValue(event.target.value)}
+          placeholder="Filter contacts by name"
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn("sample_class") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("sample_class")}
-            title="Sample Class"
-            options={sample_classes}
-          />
-        )}
-        {/* {table.getColumn("status") && (
-          <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
-          />
-        )} */}
+
         {isFiltered && (
           <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
             Reset
