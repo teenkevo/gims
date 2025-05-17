@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -22,7 +21,6 @@ import { toast } from "sonner";
 import { useActionState } from "react";
 import { activateDeactivateService } from "@/lib/actions";
 import { ALL_SERVICES_QUERYResult } from "../../../../../../../sanity.types";
-import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 
 export function ActivateDeactivateService({
   open,
@@ -35,27 +33,19 @@ export function ActivateDeactivateService({
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const [state, dispatch, isPending] = useActionState(
-    activateDeactivateService,
-    null
-  );
+  const [state, dispatch, isPending] = useActionState(activateDeactivateService, null);
 
   const onActivateDeactivateService = () => {
     const formData = new FormData();
     formData.append("serviceId", service?._id);
-    formData.append(
-      "status",
-      service?.status === "active" ? "inactive" : "active"
-    );
+    formData.append("status", service?.status === "active" ? "inactive" : "active");
     React.startTransition(() => dispatch(formData));
   };
 
   React.useEffect(() => {
     if (state?.status === "ok") {
       toast.success(
-        `Service has been ${
-          service?.status === "active" ? "activated" : "deactivated"
-        }`
+        `Service has been ${service?.status === "active" ? "activated" : "deactivated"}`
       );
       onClose();
     } else if (state?.status === "error") {
@@ -81,13 +71,11 @@ export function ActivateDeactivateService({
               <span className="font-bold text-foreground">
                 {service?.code} - {service.testParameter}
               </span>{" "}
-              will be{" "}
-              {service?.status === "active" ? "deactivated" : "activated"}
+              will be {service?.status === "active" ? "deactivated" : "activated"}
             </DialogDescription>
             <div className="bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
-              <span className="font-bold">Warning</span>: You can activate this
-              service later and it will be available for use in future invoices
-              and quotations
+              <span className="font-bold">Warning</span>: You can activate this service later and it
+              will be available for use in future invoices and quotations
             </div>
           </DialogHeader>
           <DialogFooter>
@@ -123,13 +111,11 @@ export function ActivateDeactivateService({
             {service?.status === "active" ? "Deactivate" : "Activate"} Service
           </DialogTitle>
           <DialogDescription>
-            The service will be{" "}
-            {service?.status === "active" ? "deactivated" : "activated"}
+            The service will be {service?.status === "active" ? "deactivated" : "activated"}
           </DialogDescription>
           <div className="bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
-            <span className="font-bold">Warning</span>: You can activate this
-            service later and it will be available for use in future invoices
-            and quotations
+            <span className="font-bold">Warning</span>: You can activate this service later and it
+            will be available for use in future invoices and quotations
           </div>
         </DrawerHeader>
 

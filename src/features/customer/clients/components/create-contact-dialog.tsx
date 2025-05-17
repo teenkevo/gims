@@ -24,7 +24,14 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ArrowRightCircle } from "lucide-react";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -51,7 +58,9 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
     },
   });
 
-  const onSubmit = (data: Omit<CLIENT_BY_ID_QUERYResult[number]["contacts"][number], "_id">) => {
+  const onSubmit = (
+    data: Omit<CLIENT_BY_ID_QUERYResult[number]["contacts"][number], "_id" | "projects">
+  ) => {
     const formData = new FormData();
     formData.append("name", data.name || "");
     formData.append("email", data.email || "");
