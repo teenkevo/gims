@@ -31,7 +31,11 @@ import {
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { RemoveClientFromProject } from "./remove-client-from-project";
 import { CreateClientDialog } from "./create-client-dialog";
 import { DeleteFile } from "@/features/customer/services/components/test-methods/delete-test-method-file";
@@ -55,7 +59,10 @@ export default function ProjectDetails({
   // ---------------------------------------------
   // 🔑  Derive stage indices **once** per render
   // ---------------------------------------------
-  const statusStageMap: Record<"draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid", number> = {
+  const statusStageMap: Record<
+    "draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid",
+    number
+  > = {
     draft: 1,
     sent: 2,
     accepted: 3,
@@ -93,7 +100,10 @@ export default function ProjectDetails({
 
   return (
     <>
-      <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/projects">
+      <Link
+        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
+        href="/projects"
+      >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
@@ -185,8 +195,8 @@ export default function ProjectDetails({
             <AnimatePresence mode="popLayout">
               {/* Map through clients and filter contacts by client id */}
               {clients?.map((client, key) => {
-                const clientContacts = contactPersons?.filter((contact) =>
-                  contact.clients?.some((c) => c._id === client?._id)
+                const clientContacts = contactPersons?.filter(
+                  (contact) => contact.client?._id === client?._id
                 );
                 return (
                   <motion.div
@@ -281,8 +291,8 @@ export default function ProjectDetails({
                 <CardTitle className="text-xl font-bold mb-2">Delete Project</CardTitle>
 
                 <CardDescription className="text-sm text-foregeound">
-                  This project will be deleted, along with all of its Data, Files, Invoices and Quotations. This action
-                  is irreversible and can not be undone.
+                  This project will be deleted, along with all of its Data, Files, Invoices and
+                  Quotations. This action is irreversible and can not be undone.
                 </CardDescription>
               </CardHeader>
 

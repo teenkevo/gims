@@ -47,84 +47,63 @@ const addClientToProjectSchema = z.object({
 
 const app = new Hono()
   // Update client name
-  .post(
-    "/update-name",
-    zValidator("json", updateClientNameSchema),
-    async (c) => {
-      const { clientId, clientName } = c.req.valid("json");
+  .post("/update-name", zValidator("json", updateClientNameSchema), async (c) => {
+    const { clientId, clientName } = c.req.valid("json");
 
-      const updatedClient = await writeClient
-        .patch(clientId)
-        .set({ name: clientName })
-        .commit();
+    const updatedClient = await writeClient.patch(clientId).set({ name: clientName }).commit();
 
-      return c.json({ updatedClient });
-    }
-  )
+    return c.json({ updatedClient });
+  })
 
-  .post(
-    "/create-contact",
-    zValidator("json", createContactSchema),
-    async (c) => {
-      const {
-        projectId,
-        clientId,
-        contactType,
-        existingContact,
-        name,
-        email,
-        phone,
-        designation,
-      } = c.req.valid("json");
+  .post("/create-contact", zValidator("json", createContactSchema), async (c) => {
+    const { projectId, clientId, contactType, existingContact, name, email, phone, designation } =
+      c.req.valid("json");
 
-      if (contactType === "new") {
-        const newContactPerson = await writeClient.create(
-          {
-            _type: "contactPerson",
-            name,
-            email,
-            phone,
-            designation,
-            clients: [
-              {
-                _type: "reference",
-                _ref: clientId,
-              },
-            ],
+    if (contactType === "new") {
+      const newContactPerson = await writeClient.create(
+        {
+          _type: "contactPerson",
+          name,
+          email,
+          phone,
+          designation,
+          client: {
+            _type: "reference",
+            _ref: clientId,
           },
+        },
+        {
+          autoGenerateArrayKeys: true,
+        }
+      );
+
+      const updatedProject = await writeClient
+        .patch(projectId)
+        .setIfMissing({ contactPersons: [] })
+        .append("contactPersons", [
           {
-            autoGenerateArrayKeys: true,
-          }
-        );
+            _type: "reference",
+            _ref: newContactPerson._id,
+          },
+        ])
+        .commit({ autoGenerateArrayKeys: true });
 
-        const updatedProject = await writeClient
-          .patch(projectId)
-          .setIfMissing({ contactPersons: [] })
-          .append("contactPersons", [
-            {
-              _type: "reference",
-              _ref: newContactPerson._id,
-            },
-          ])
-          .commit({ autoGenerateArrayKeys: true });
+      return c.json({ updatedProject });
+    } else {
+      const updatedProject = await writeClient
+        .patch(projectId)
+        .setIfMissing({ contactPersons: [] })
+        .append("contactPersons", [
+          {
+            _type: "reference",
+            _ref: existingContact,
+          },
+        ])
+        .commit({ autoGenerateArrayKeys: true });
 
-        return c.json({ updatedProject });
-      } else {
-        const updatedProject = await writeClient
-          .patch(projectId)
-          .setIfMissing({ contactPersons: [] })
-          .append("contactPersons", [
-            {
-              _type: "reference",
-              _ref: existingContact,
-            },
-          ])
-          .commit({ autoGenerateArrayKeys: true });
-
-        return c.json({ updatedProject });
-      }
+      return c.json({ updatedProject });
     }
-  )
+  })
   .post(
     "/remove-contact-from-project",
     zValidator("json", removeContactFromProjectSchema),
@@ -138,20 +117,15 @@ const app = new Hono()
       return c.json({ updatedProject });
     }
   )
-  .post(
-    "/update-contact",
-    zValidator("json", updateContactSchema),
-    async (c) => {
-      const { contactId, name, email, phone, designation } =
-        c.req.valid("json");
+  .post("/update-contact", zValidator("json", updateContactSchema), async (c) => {
+    const { contactId, name, email, phone, designation } = c.req.valid("json");
 
-      const updatedContact = await writeClient
-        .patch(contactId)
-        .set({ name, email, phone, designation })
-        .commit();
-      return c.json({ updatedContact });
-    }
-  )
+    const updatedContact = await writeClient
+      .patch(contactId)
+      .set({ name, email, phone, designation })
+      .commit();
+    return c.json({ updatedContact });
+  })
   // Contact persons might also not to be desociated from project after client is dissociated from project because contact persons are linked to a client.
   .post(
     "/remove-client-from-project",
@@ -166,47 +140,42 @@ const app = new Hono()
       return c.json({ updatedProject });
     }
   )
-  .post(
-    "/add-client-to-project",
-    zValidator("json", addClientToProjectSchema),
-    async (c) => {
-      const { projectId, clientType, existingClient, newClientName } =
-        c.req.valid("json");
+  .post("/add-client-to-project", zValidator("json", addClientToProjectSchema), async (c) => {
+    const { projectId, clientType, existingClient, newClientName } = c.req.valid("json");
 
-      if (clientType === "new") {
-        // Create the new client
-        const newClient = await writeClient.create({
-          _type: "client",
-          name: newClientName,
-        });
+    if (clientType === "new") {
+      // Create the new client
+      const newClient = await writeClient.create({
+        _type: "client",
+        name: newClientName,
+      });
 
-        const updatedProject = await writeClient
-          .patch(projectId)
-          .setIfMissing({ clients: [] })
-          .append("clients", [
-            {
-              _type: "reference",
-              _ref: newClient._id,
-            },
-          ])
-          .commit();
+      const updatedProject = await writeClient
+        .patch(projectId)
+        .setIfMissing({ clients: [] })
+        .append("clients", [
+          {
+            _type: "reference",
+            _ref: newClient._id,
+          },
+        ])
+        .commit();
 
-        return c.json({ updatedProject });
-      } else {
-        const updatedProject = await writeClient
-          .patch(projectId)
-          .setIfMissing({ clients: [] })
-          .append("clients", [
-            {
-              _type: "reference",
-              _ref: existingClient,
-            },
-          ])
-          .commit();
+      return c.json({ updatedProject });
+    } else {
+      const updatedProject = await writeClient
+        .patch(projectId)
+        .setIfMissing({ clients: [] })
+        .append("clients", [
+          {
+            _type: "reference",
+            _ref: existingClient,
+          },
+        ])
+        .commit();
 
-        return c.json({ updatedProject });
-      }
+      return c.json({ updatedProject });
     }
-  );
+  });
 
 export default app;

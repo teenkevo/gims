@@ -8,7 +8,14 @@ import { toast } from "sonner";
 
 // Components
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -18,7 +25,14 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ArrowRightCircle, PencilIcon } from "lucide-react";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -103,7 +117,11 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
             <FormItem>
               <FormLabel>Phone number</FormLabel>
               <FormControl>
-                <PhoneInput disabled={isPending} placeholder="Enter a phone number e.g. +256 792 445002" {...field} />
+                <PhoneInput
+                  disabled={isPending}
+                  placeholder="Enter a phone number e.g. +256 792 445002"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

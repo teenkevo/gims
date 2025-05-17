@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, ReactNode, useState } from "react";
 
 // Define roles type and context shape
@@ -34,8 +36,10 @@ export const useRBAC = () => {
 
 // Higher-order component for pages or components
 export const withRBAC = <P extends object>(Component: React.ComponentType<P>) => {
-  return (props: P) => {
+  const WrappedComponent = (props: P) => {
     const { role } = useRBAC();
     return <Component {...props} currentRole={role} />;
   };
+  WrappedComponent.displayName = `withRBAC(${Component.displayName || Component.name || "Component"})`;
+  return WrappedComponent;
 };

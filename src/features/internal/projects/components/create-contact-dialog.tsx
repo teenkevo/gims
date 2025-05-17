@@ -41,11 +41,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { motion } from "framer-motion";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AnimatePresence } from "framer-motion";
 import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
@@ -82,10 +78,7 @@ const formSchema = z
   })
   .refine(
     (data) => {
-      if (
-        data.contactType === "new" &&
-        (data.name === undefined || data.name === "")
-      ) {
+      if (data.contactType === "new" && (data.name === undefined || data.name === "")) {
         return false;
       }
       return true;
@@ -97,10 +90,7 @@ const formSchema = z
   )
   .refine(
     (data) => {
-      if (
-        data.contactType === "new" &&
-        (data.email === undefined || data.email === "")
-      ) {
+      if (data.contactType === "new" && (data.email === undefined || data.email === "")) {
         return false;
       }
       return true;
@@ -112,10 +102,7 @@ const formSchema = z
   )
   .refine(
     (data) => {
-      if (
-        data.contactType === "new" &&
-        (data.phone === undefined || data.phone === "")
-      ) {
+      if (data.contactType === "new" && (data.phone === undefined || data.phone === "")) {
         return false;
       }
       return true;
@@ -127,10 +114,7 @@ const formSchema = z
   )
   .refine(
     (data) => {
-      if (
-        data.contactType === "existing" &&
-        data.existingContact === undefined
-      ) {
+      if (data.contactType === "existing" && data.existingContact === undefined) {
         return false;
       }
       return true;
@@ -192,13 +176,11 @@ export function CreateContactDialog({
       projectId,
       clientId,
       contactType: values.contactType,
-      existingContact:
-        values.contactType === "existing" ? values.existingContact : undefined,
+      existingContact: values.contactType === "existing" ? values.existingContact : undefined,
       name: values.contactType === "new" ? values.name : undefined,
       email: values.contactType === "new" ? values.email : undefined,
       phone: values.contactType === "new" ? values.phone : undefined,
-      designation:
-        values.contactType === "new" ? values.designation : undefined,
+      designation: values.contactType === "new" ? values.designation : undefined,
     };
 
     const result = await mutation.mutateAsync({ json: formattedData });
@@ -218,6 +200,19 @@ export function CreateContactDialog({
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
+  // 1. Filter contacts that belong to the current client
+  const contactsForCurrentClient =
+    existingContacts?.filter((contact) => contact.client?._id === clientId) ?? [];
+
+  // 2. Get IDs of contacts already added to the project
+  const addedContactIds = new Set(projectContacts.map((c) => c._id));
+
+  // 3. Prepare the list of selectable contacts with their "isAdded" status
+  const selectableContacts = contactsForCurrentClient.map((contact) => ({
+    ...contact,
+    isAdded: addedContactIds.has(contact._id),
+  }));
+
   const content = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -235,20 +230,14 @@ export function CreateContactDialog({
                 >
                   <FormItem className="w-1/2">
                     <FormControl>
-                      <RadioGroupItem
-                        value="new"
-                        className="sr-only peer"
-                        id="new-contact"
-                      />
+                      <RadioGroupItem value="new" className="sr-only peer" id="new-contact" />
                     </FormControl>
                     <FormLabel
                       htmlFor="new-contact"
                       className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <PlusCircleIcon className="h-8 w-8 mb-2" />
-                      <span className="text-sm text-center font-medium">
-                        Create New
-                      </span>
+                      <span className="text-sm text-center font-medium">Create New</span>
                     </FormLabel>
                   </FormItem>
                   <FormItem className="w-1/2">
@@ -264,9 +253,7 @@ export function CreateContactDialog({
                       className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <Users className="h-8 w-8 mb-2" />
-                      <span className="text-sm font-medium">
-                        Choose Existing
-                      </span>
+                      <span className="text-sm font-medium">Choose Existing</span>
                     </FormLabel>
                   </FormItem>
                 </RadioGroup>
@@ -306,9 +293,8 @@ export function CreateContactDialog({
                           >
                             <span className="truncate">
                               {field.value !== undefined
-                                ? existingContacts?.find(
-                                    (contact) => contact._id === field.value
-                                  )?.name
+                                ? existingContacts?.find((contact) => contact._id === field.value)
+                                    ?.name
                                 : "Select an existing contact"}
                             </span>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -324,40 +310,21 @@ export function CreateContactDialog({
                         <CommandInput placeholder="Search contact..." />
                         <CommandEmpty>No contact found.</CommandEmpty>
                         <CommandGroup>
-                          {existingContacts
-                            ?.filter((contact) =>
-                              contact.clients?.some(
-                                (client) => client._id === clientId
-                              )
-                            )
-                            .map((contact) => {
-                              const isAdded = projectContacts.some(
-                                (projectContact) =>
-                                  projectContact._id === contact._id
-                              );
-                              return (
-                                <CommandItem
-                                  disabled={isSubmitting || isAdded}
-                                  value={contact.name || ""}
-                                  key={contact._id}
-                                  className="flex items-center justify-between"
-                                  onSelect={() => {
-                                    form.setValue(
-                                      "existingContact",
-                                      contact._id
-                                    );
-                                    setPopoverOpen(false);
-                                  }}
-                                >
-                                  <span className="truncate">
-                                    {contact.name}
-                                  </span>
-                                  {isAdded && (
-                                    <Badge variant="secondary">Added</Badge>
-                                  )}
-                                </CommandItem>
-                              );
-                            })}
+                          {selectableContacts.map((contact) => (
+                            <CommandItem
+                              disabled={isSubmitting || contact.isAdded}
+                              value={contact.name || ""}
+                              key={contact._id}
+                              className="flex items-center justify-between"
+                              onSelect={() => {
+                                form.setValue("existingContact", contact._id);
+                                setPopoverOpen(false);
+                              }}
+                            >
+                              <span className="truncate">{contact.name}</span>
+                              {contact.isAdded && <Badge variant="secondary">Added</Badge>}
+                            </CommandItem>
+                          ))}
                         </CommandGroup>
                       </CommandList>
                     </Command>
@@ -376,11 +343,7 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="John Doe"
-                      {...field}
-                    />
+                    <Input disabled={isSubmitting} placeholder="John Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -393,11 +356,7 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="contact@email.com"
-                      {...field}
-                    />
+                    <Input disabled={isSubmitting} placeholder="contact@email.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -428,11 +387,7 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Designation</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="Technical Engineer"
-                      {...field}
-                    />
+                    <Input disabled={isSubmitting} placeholder="Technical Engineer" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

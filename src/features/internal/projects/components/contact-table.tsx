@@ -37,41 +37,35 @@ export function ContactTable({
   projectContacts: ALL_CONTACTS_QUERYResult;
   existingContacts: ALL_CONTACTS_QUERYResult;
 }) {
+  const existingContactsForClient = existingContacts.filter(
+    (contact) => contact.client?._id === clientId
+  );
+
+  console.log(existingContactsForClient);
   // Update the column helper to use the new type
   const columnHelper = createColumnHelper<ExtendedContact>();
 
   const columns = [
     columnHelper.accessor("name", {
-      cell: (info) => (
-        <span className="max-w-[300px] truncate">{info.getValue()}</span>
-      ),
+      cell: (info) => <span className="max-w-[300px] truncate">{info.getValue()}</span>,
       header: () => <span>Name</span>,
     }),
     columnHelper.accessor("email", {
-      cell: (info) => (
-        <span className="max-w-[300px] truncate">{info.getValue()}</span>
-      ),
+      cell: (info) => <span className="max-w-[300px] truncate">{info.getValue()}</span>,
       header: () => <span>Email</span>,
     }),
     columnHelper.accessor("phone", {
-      cell: (info) => (
-        <span className="max-w-[300px] truncate">{info.getValue()}</span>
-      ),
+      cell: (info) => <span className="max-w-[300px] truncate">{info.getValue()}</span>,
       header: () => <span>Phone Number</span>,
     }),
     columnHelper.accessor("designation", {
-      cell: (info) => (
-        <span className="max-w-[300px] truncate italic">{info.getValue()}</span>
-      ),
+      cell: (info) => <span className="max-w-[300px] truncate italic">{info.getValue()}</span>,
       header: () => <span>Designation</span>,
     }),
     columnHelper.accessor("actions", {
       cell: (info) => (
         <div className="flex items-center gap-2">
-          <UpdateContactDialog
-            contact={info.row.original}
-            projectId={projectId}
-          />
+          <UpdateContactDialog contact={info.row.original} />
           <RemoveContactFromProject
             email={info.row.original.email!}
             projectId={projectId}
@@ -109,10 +103,7 @@ export function ContactTable({
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -131,20 +122,14 @@ export function ContactTable({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </motion.tr>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No contact persons present.
                 </TableCell>
               </TableRow>
@@ -157,8 +142,7 @@ export function ContactTable({
         <a
           onClick={() =>
             toast("🧑‍🍳 In the kitchen...", {
-              description:
-                "GIMS documentation is still in active development. Check back later",
+              description: "GIMS documentation is still in active development. Check back later",
             })
           }
           href={undefined}

@@ -796,14 +796,16 @@ export type ALL_CLIENTS_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/clients/getAllContacts.ts
 // Variable: ALL_CONTACTS_QUERY
-// Query: *[_type == "contactPerson"] {            _id,             name,            email,            designation,            phone,            clients[]->{              _id,            },        }
+// Query: *[_type == "contactPerson"] {            _id,             name,            email,            designation,            phone,            client->{              _id,            },        }
 export type ALL_CONTACTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
   email: string | null;
   designation: string | null;
   phone: string | null;
-  clients: null;
+  client: {
+    _id: string;
+  } | null;
 }>;
 
 // Source: ./src/sanity/lib/clients/getClientById.ts
@@ -863,7 +865,7 @@ export type ALL_PROJECTS_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/projects/getProjectById.ts
 // Variable: PROJECT_BY_ID_QUERY
-// Query: *[_type == "project" && _id == $projectId] {          _id,          internalId,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            clients[]->{              _id,            },          },          clients[]->{            _id,             name,          },          quotation->{            _id,            revisionNumber,            quotationNumber,            quotationDate,            acquisitionNumber,            currency,            status,            items[] {              service,              unitPrice,              quantity,              lineTotal,              testMethod->{                _id,                standard->{                  _id,                  acronym,                },              },            },            otherItems[] {              type,              activity,              unitPrice,              quantity,              lineTotal,            },            vatPercentage,            paymentNotes,            file {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },          }        }
+// Query: *[_type == "project" && _id == $projectId] {          _id,          internalId,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            client->{              _id,            },          },          clients[]->{            _id,             name,          },          quotation->{            _id,            revisionNumber,            quotationNumber,            quotationDate,            acquisitionNumber,            currency,            status,            items[] {              service,              unitPrice,              quantity,              lineTotal,              testMethod->{                _id,                standard->{                  _id,                  acronym,                },              },            },            otherItems[] {              type,              activity,              unitPrice,              quantity,              lineTotal,            },            vatPercentage,            paymentNotes,            file {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },          }        }
 export type PROJECT_BY_ID_QUERYResult = Array<{
   _id: string;
   internalId: string | null;
@@ -877,7 +879,9 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
     email: string | null;
     phone: string | null;
     designation: string | null;
-    clients: null;
+    client: {
+      _id: string;
+    } | null;
   }> | null;
   clients: Array<{
     _id: string;
@@ -1090,10 +1094,10 @@ import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
     '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate\n      }\n    }\n  ': ALL_CLIENTS_QUERYResult;
-    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            clients[]->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
+    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            client->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
     '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n                _id,\n                name,\n                internalId,\n                endDate,\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERYResult;
     '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          quotation->{\n            _id,\n            currency,\n            status,\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
-    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            clients[]->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            items[] {\n              service,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
+    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            items[] {\n              service,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
     '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
     '\n        *[_type == "service"] {\n            _id, \n            status,\n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            \n        }\n  ': ALL_SERVICES_QUERYResult;
     '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;

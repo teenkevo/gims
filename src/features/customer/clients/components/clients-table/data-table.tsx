@@ -16,7 +16,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type { ALL_CLIENTS_QUERYResult } from "../../../../../../sanity.types";
@@ -37,7 +44,10 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
 
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
-  const columns = React.useMemo(() => getColumns(data) as ColumnDef<ALL_CLIENTS_QUERYResult[number]>[], [data]);
+  const columns = React.useMemo(
+    () => getColumns(data) as ColumnDef<ALL_CLIENTS_QUERYResult[number]>[],
+    [data]
+  );
 
   const table = useReactTable({
     data,
@@ -61,7 +71,9 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const serviceIds = table.getSelectedRowModel().rows.map((row) => (row.original as { _id: string })._id);
+  const serviceIds = table
+    .getSelectedRowModel()
+    .rows.map((row) => (row.original as { _id: string })._id);
 
   return (
     <div className="space-y-4">
@@ -84,7 +96,9 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -96,14 +110,16 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No clients.
+                  No contacts.
                 </TableCell>
               </TableRow>
             )}
