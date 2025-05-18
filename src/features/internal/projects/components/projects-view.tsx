@@ -23,7 +23,8 @@ export function ProjectsView({
 }) {
   const { role } = useRBAC();
 
-  console.log(role);
+  const quotedProjects = projects.filter((project) => project.quotation);
+
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Projects</h1>
@@ -31,8 +32,8 @@ export function ProjectsView({
         <div className="flex items-center justify-between">
           <TabsList>
             <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="quoted">Quoted</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
           <Button asChild className="sm:w-auto" variant="default">
             <Link href="/projects/create" className="my-2 flex items-center">
@@ -45,6 +46,15 @@ export function ProjectsView({
           {projects.length > 0 ? (
             <div className="mt-5">
               <DataTable data={projects} />
+            </div>
+          ) : (
+            <NoProjectsPlaceholder />
+          )}
+        </TabsContent>
+        <TabsContent value="quoted">
+          {quotedProjects.length > 0 ? (
+            <div className="mt-5">
+              <DataTable data={quotedProjects} />
             </div>
           ) : (
             <NoProjectsPlaceholder />
