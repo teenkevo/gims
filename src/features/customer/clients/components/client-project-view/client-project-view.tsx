@@ -10,6 +10,8 @@ import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
 import { useParams } from "next/navigation";
 import ProjectHeader from "./project-header";
+import { useQuotation } from "@/features/internal/billing/components/useQuotation";
+import { useRBAC } from "@/components/rbac-context";
 
 export default function ClientProjectView({
   project,
@@ -39,19 +41,15 @@ export default function ClientProjectView({
     paid: 5,
   };
 
-  const parentQuotation = project?.quotation;
-  const parentQuotationHasRevisions =
-    (parentQuotation?.revisions?.length ?? 0) > 0;
+  const { role } = useRBAC();
 
-  const quotation = parentQuotationHasRevisions
-    ? parentQuotation?.revisions?.[0]
-    : parentQuotation;
+  const { quotation } = useQuotation(project, role);
+
+  console.log(quotation);
 
   const status = quotation?.status ?? "draft";
   const currentStage = statusStageMap[status] ?? 1;
   const rejectionStage = status === "rejected" ? currentStage : undefined;
-
-  console.log("currentStage", currentStage);
 
   // billing services table states
   const [selectedLabTests, setSelectedLabTests] =

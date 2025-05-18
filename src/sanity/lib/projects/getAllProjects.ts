@@ -17,8 +17,24 @@ export const getAllProjects = async () => {
           },
           quotation->{
             _id,
+            revisionNumber,
             currency,
             status,
+            rejectionNotes,
+            revisions[]->|order(revisionNumber desc){
+              _id,
+              revisionNumber,
+              currency,
+              status,
+              rejectionNotes,
+              items[] {
+                lineTotal,
+              },
+              otherItems[] {
+                lineTotal,
+              },
+              vatPercentage,
+            },
             items[] {
               lineTotal,
             },

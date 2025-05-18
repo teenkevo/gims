@@ -24,7 +24,8 @@ export const getColumns = (
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
@@ -44,7 +45,9 @@ export const getColumns = (
   },
   {
     accessorKey: "internalId",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Project ID" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Project ID" />
+    ),
     cell: ({ row }) => (
       <Link
         className="hover:underline"
@@ -56,7 +59,9 @@ export const getColumns = (
   },
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Project Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Project Name" />
+    ),
     cell: ({ row }) => {
       return (
         <Link
@@ -64,7 +69,9 @@ export const getColumns = (
           href={`/clients/${client._id}/projects/${row.original?._id}`}
         >
           <div className="flex space-x-2">
-            <span className="max-w-[350px] truncate font-normal">{row.original?.name}</span>
+            <span className="max-w-[350px] truncate font-normal">
+              {row.original?.name}
+            </span>
           </div>
         </Link>
       );
@@ -72,12 +79,16 @@ export const getColumns = (
   },
   {
     accessorKey: "startDate",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Start Date" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Start Date" />
+    ),
     cell: ({ row }) =>
       row.original?.startDate ? (
         <div className="flex items-center">
           <ListStart className="text-primary w-4 h-4 mr-2" />
-          <span className="text-sm">{format(new Date(row.original?.startDate), "dd/LL/yy")}</span>
+          <span className="text-sm">
+            {format(new Date(row.original?.startDate), "dd/LL/yy")}
+          </span>
         </div>
       ) : (
         <div className="flex items-center">
@@ -88,12 +99,16 @@ export const getColumns = (
 
   {
     accessorKey: "endDate",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="End Date" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="End Date" />
+    ),
     cell: ({ row }) =>
       row.original?.endDate ? (
         <div className="flex items-center">
           <ListEnd className="text-primary w-4 h-4 mr-2" />
-          <span className="text-sm">{format(new Date(row.original?.endDate), "dd/LL/yy")}</span>
+          <span className="text-sm">
+            {format(new Date(row.original?.endDate), "dd/LL/yy")}
+          </span>
         </div>
       ) : (
         <div className="flex items-center">
@@ -103,9 +118,17 @@ export const getColumns = (
   },
   {
     accessorKey: "projectBilling",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Project Billing" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Project Billing" />
+    ),
     cell: ({ row }) => {
-      const quotation = row.original?.quotation;
+      const parentQuotation = row.original?.quotation;
+      const parentQuotationHasRevisions =
+        (parentQuotation?.revisions?.length ?? 0) > 0;
+      const quotation = parentQuotationHasRevisions
+        ? parentQuotation?.revisions?.[0]
+        : parentQuotation;
+
       const total = quotationTotal(quotation as Quotation);
       const currency = quotation?.currency;
 
@@ -130,11 +153,17 @@ export const getColumns = (
             {status}
           </Badge>
         ) : quotation?.status === "sent" ? (
-          <Badge variant="outline" className="mr-2 bg-primary/10 border-dashed border-primary">
+          <Badge
+            variant="outline"
+            className="mr-2 bg-primary/10 border-dashed border-primary"
+          >
             {status}
           </Badge>
         ) : quotation?.status === "accepted" ? (
-          <Badge variant="outline" className="mr-2 bg-primary/10 border-dashed border-primary">
+          <Badge
+            variant="outline"
+            className="mr-2 bg-primary/10 border-dashed border-primary"
+          >
             {status}
           </Badge>
         ) : quotation?.status === "rejected" ? (
@@ -145,15 +174,24 @@ export const getColumns = (
             {status}
           </Badge>
         ) : quotation?.status === "invoiced" ? (
-          <Badge variant="outline" className="mr-2 bg-primary/10 border-dashed border-primary">
+          <Badge
+            variant="outline"
+            className="mr-2 bg-primary/10 border-dashed border-primary"
+          >
             {status}
           </Badge>
         ) : quotation?.status === "paid" ? (
-          <Badge variant="outline" className="mr-2 bg-primary/10 border-dashed border-primary">
+          <Badge
+            variant="outline"
+            className="mr-2 bg-primary/10 border-dashed border-primary"
+          >
             {status}
           </Badge>
         ) : (
-          <Badge variant="outline" className="mr-2 bg-primary/10 border-dashed border-orange-500">
+          <Badge
+            variant="outline"
+            className="mr-2 bg-primary/10 border-dashed border-orange-500"
+          >
             {status}
           </Badge>
         );

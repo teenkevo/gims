@@ -8,6 +8,7 @@ import mime from "mime-types";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import { Badge } from "@/components/ui/badge";
 
 export default function QuotationFile({
   project,
@@ -15,20 +16,47 @@ export default function QuotationFile({
   project: PROJECT_BY_ID_QUERYResult[number];
 }) {
   const { role } = useRBAC();
-  const { quotation } = useQuotation(project, role);
+  const { quotation, parent_revisions } = useQuotation(project, role);
+
+  const all_revisions = [...parent_revisions];
+  // remove latest version
+  all_revisions.shift();
+
+  const final_revision = all_revisions?.[all_revisions?.length - 1];
   return (
     <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg ">
       <CardHeader>
-        <CardTitle className="text-xl">Quotation</CardTitle>
+        <CardTitle className="text-xl">Quotation Files</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground mb-6">
-          Access and download the quotation related to this project.
-        </p>
         <div className="space-y-4 mb-4">
-          <div className="flex flex-wrap items-center justify-between bg-muted/50 p-4 rounded-lg gap-4">
+          <div className="flex gap-2">
+            <p className="tracking-tight">Final revision</p>
+            <Badge
+              variant="outline"
+              className={`text-xs ${
+                quotation?.status === "accepted"
+                  ? "bg-primary text-primary-foreground"
+                  : quotation?.status === "rejected"
+                    ? "bg-destructive text-destructive-foreground"
+                    : quotation?.status === "invoiced"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-orange-500 text-orange-foreground"
+              }`}
+            >
+              {quotation?.status === "accepted"
+                ? "Accepted"
+                : quotation?.status === "rejected"
+                  ? "Rejected"
+                  : quotation?.status === "invoiced"
+                    ? "Invoiced"
+                    : "Pending"}
+            </Badge>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between dark:bg-muted/50 bg-muted shadow-md p-4 rounded-lg gap-4">
             <div className="flex items-center">
-              <div className="bg-red-600 dark:bg-red-500 p-2 rounded mr-4">
+              <div className="bg-red-600 dark:bg-red-500 p-2 item-start rounded mr-4">
                 <FileText className="h-6 w-6 text-white" />
               </div>
               <Link
@@ -46,6 +74,9 @@ export default function QuotationFile({
                     (1024 * 1024)
                   ).toFixed(2) + " MB"}
                 </p>
+                <Badge variant="outline" className="my-2 text-xs">
+                  {quotation?.revisionNumber}
+                </Badge>
               </Link>
             </div>
             <div className="flex items-center gap-2">
@@ -68,29 +99,63 @@ export default function QuotationFile({
                   Download
                 </Link>
               </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                // onClick={async () => {
-                //   const docs = await getTestMethodsReferencingFile(
-                //     doc.asset?._id || ""
-                //   );
-                //   setReferencingDocs(docs);
-                //   setOpenDeleteFileDialog(true);
-                // }}
-              >
-                <Trash className="h-4 w-4 text-destructive" />
-              </Button>
-              {/* <DeleteFile
-                        id={quotation?.file?.asset?._id || ""}
-                        open={openDeleteFileDialog}
-                        onClose={() => setOpenDeleteFileDialog(false)}
-                        referencingDocs={referencingDocs}
-                        currentTestMethodId={testMethod._id}
-                        fileKey={quotation?.file?._key}
-                      /> */}
             </div>
           </div>
+
+          <p className=" mb-6">{parent_revisions.length} revisions</p>
+          {/* ALL minus latest version */}
+          {all_revisions?.map((revision) => (
+            <div
+              key={revision?._id}
+              className="flex flex-wrap items-center justify-between dark:bg-muted/50 bg-muted shadow-md p-4 rounded-lg gap-4"
+            >
+              <div className="flex items-center">
+                <div className="bg-gray-600 dark:bg-gray-500 p-2 rounded mr-4">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <Link
+                  className="hover:underline underline-offset-2 transition-all"
+                  href={revision?.file?.asset?.url || ""}
+                  target="_blank"
+                >
+                  <p className="font-medium">
+                    {revision?.file?.asset?.originalFilename}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {revision?.file?.asset?.mimeType?.toUpperCase()} •{" "}
+                    {(
+                      (revision?.file?.asset?.size || 0) /
+                      (1024 * 1024)
+                    ).toFixed(2) + " MB"}
+                  </p>
+                  <Badge variant="outline" className="my-2 text-xs">
+                    {revision?.revisionNumber}
+                  </Badge>
+                </Link>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Link
+                    className="flex items-center"
+                    href={revision?.file?.asset?.url || ""}
+                    target="_blank"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Link
+                    className="flex items-center"
+                    href={`${revision?.file?.asset?.url || ""}?dl=${revision?.file?.asset?.originalFilename}.${mime.extension(revision?.file?.asset?.mimeType || "")}`}
+                  >
+                    <Download className="h-4 w-4 mr-2 text-primary" />
+                    Download
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </div>

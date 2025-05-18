@@ -6,7 +6,12 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import * as motion from "framer-motion/client";
 
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import ClientUpdateNameForm from "./client-update-name-form";
@@ -15,8 +20,12 @@ import { DataTable as ProjectsDataTable } from "./projects-table/data-table";
 import { CreateContactDialog } from "./create-contact-dialog";
 import NoProjectsPlaceholder from "@/features/internal/projects/components/no-projects-placeholder";
 
-export default function ClientDetails({ client }: { client: CLIENT_BY_ID_QUERYResult[number] }) {
-  const { _id, name, internalId, projects, contacts } = client;
+export default function ClientDetails({
+  client,
+}: {
+  client: CLIENT_BY_ID_QUERYResult[number];
+}) {
+  const { _id, name, projects, contacts } = client;
 
   // State to manage the active tab
   const [activeTab, setActiveTab] = useState("client_profile");
@@ -124,11 +133,14 @@ export default function ClientDetails({ client }: { client: CLIENT_BY_ID_QUERYRe
           <div className="space-y-8 my-10">
             <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
               <CardHeader>
-                <CardTitle className="text-xl font-bold mb-2">Delete Client</CardTitle>
+                <CardTitle className="text-xl font-bold mb-2">
+                  Delete Client
+                </CardTitle>
 
                 <CardDescription className="text-sm text-foregeound">
-                  This client will be deleted, along with all of their Data, Files, Invoices and
-                  Quotations. This action is irreversible and can not be undone.
+                  This client will be deleted, along with all of their Data,
+                  Files, Invoices and Quotations. This action is irreversible
+                  and can not be undone.
                 </CardDescription>
               </CardHeader>
 

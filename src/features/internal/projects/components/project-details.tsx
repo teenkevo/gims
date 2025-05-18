@@ -46,6 +46,8 @@ import { DeleteFile } from "@/features/customer/services/components/test-methods
 import mime from "mime-types";
 import { BillingLifecycle } from "../../billing/components/billing-lifecycle";
 import QuotationFile from "../../billing/components/quotation-file";
+import { useQuotation } from "../../billing/components/useQuotation";
+import { useRBAC } from "@/components/rbac-context";
 
 export default function ProjectDetails({
   project,
@@ -58,8 +60,7 @@ export default function ProjectDetails({
   existingClients: ALL_CLIENTS_QUERYResult;
   allServices: ALL_SERVICES_QUERYResult;
 }) {
-  const { _id, name, clients, contactPersons, startDate, endDate, quotation } =
-    project;
+  const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
   // ---------------------------------------------
   // 🔑  Derive stage indices **once** per render
@@ -75,6 +76,10 @@ export default function ProjectDetails({
     invoiced: 4,
     paid: 5,
   };
+
+  const { role } = useRBAC();
+
+  const { quotation } = useQuotation(project, role);
 
   const status = quotation?.status ?? "draft";
   const currentStage = statusStageMap[status] ?? 1;

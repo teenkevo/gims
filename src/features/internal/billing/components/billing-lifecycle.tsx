@@ -89,8 +89,6 @@ export function BillingLifecycle({
     quotationNeedsRevision,
   } = useQuotation(project, role);
 
-  console.log(quotation);
-
   // Define stage configurations
   // TODO: Work on roles here
   const stages: Stage[] = [

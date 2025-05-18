@@ -25,9 +25,24 @@ export const getClientById = async (clientId: string) => {
               },
               quotation->{
                 _id,
+                revisionNumber,
                 currency,
                 status,
                 rejectionNotes,
+                revisions[]->|order(revisionNumber desc){
+                  _id,
+                  revisionNumber,
+                  currency,
+                  status,
+                  rejectionNotes,
+                  items[] {
+                    lineTotal,
+                  },
+                  otherItems[] {
+                    lineTotal,
+                  },
+                  vatPercentage,
+                },
                 items[] {
                   lineTotal,
                 },
