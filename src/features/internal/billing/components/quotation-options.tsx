@@ -1,14 +1,30 @@
 "use client";
-import React, { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { GenerateBillingDocument } from "./generate-billing-document";
 import ValidityChecker from "./validity-checker";
-import { ALL_SERVICES_QUERYResult, PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import {
+  ALL_SERVICES_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../../../../sanity.types";
 import { ActivityValue } from "./mobilization-and-reporting/Activity";
 import { ActivityManager } from "./mobilization-and-reporting/activity-manager";
 import { DataTable } from "./billable-services/data-table";
@@ -16,6 +32,8 @@ import { columns } from "./billable-services/columns";
 import { CurrencyToggle } from "./currency-toggle";
 import PaymentNotes from "./payment-notes";
 import VATToggle from "./vat";
+import { useQuotation } from "./useQuotation";
+import { useRBAC } from "@/components/rbac-context";
 
 // -----------------------------------------------------------------------------
 // Helper ▸ merge the quotation info into each service BEFORE the UI renders.
@@ -104,18 +122,24 @@ const SwitchField = ({
    *   Derive the table‑data only once (no effect required)
    * -----------------------------------------------------------*/
   const labData = useMemo(() => {
-    const labRaw = allServices.filter((svc) => svc.sampleClass?.name !== "Field");
+    const labRaw = allServices.filter(
+      (svc) => svc.sampleClass?.name !== "Field"
+    );
     return mergeQuotation(labRaw, quotation);
   }, [allServices, quotation]);
 
   const fieldData = useMemo(() => {
-    const fieldRaw = allServices.filter((svc) => svc.sampleClass?.name === "Field");
+    const fieldRaw = allServices.filter(
+      (svc) => svc.sampleClass?.name === "Field"
+    );
     return mergeQuotation(fieldRaw, quotation);
   }, [allServices, quotation]);
 
   // The table data is state because the user can edit it later
-  const [labTestsTableData, setLabTestsTableData] = useState<ALL_SERVICES_QUERYResult>(labData);
-  const [fieldTestsTableData, setFieldTestsTableData] = useState<ALL_SERVICES_QUERYResult>(fieldData);
+  const [labTestsTableData, setLabTestsTableData] =
+    useState<ALL_SERVICES_QUERYResult>(labData);
+  const [fieldTestsTableData, setFieldTestsTableData] =
+    useState<ALL_SERVICES_QUERYResult>(fieldData);
 
   // Column definitions (no hooks inside thanks to separate cell components)
   const fieldInvestigationsColumns = useMemo(
@@ -168,24 +192,30 @@ const SwitchField = ({
   /* ------------------------------------------------------------------------- */
   //   Activity‑manager callbacks
   /* ------------------------------------------------------------------------- */
-  const handleMobilizationActivitiesChange = useCallback((activities: Array<Partial<ActivityValue>>) => {
-    quotationOptionsProps.setMobilizationActivities(
-      activities.map((a) => ({
-        activity: a.activity || "",
-        price: a.price || 0,
-        quantity: a.quantity || 0,
-      }))
-    );
-  }, []);
-  const handleReportingActivitiesChange = useCallback((activities: Array<Partial<ActivityValue>>) => {
-    quotationOptionsProps.setReportingActivities(
-      activities.map((a) => ({
-        activity: a.activity || "",
-        price: a.price || 0,
-        quantity: a.quantity || 0,
-      }))
-    );
-  }, []);
+  const handleMobilizationActivitiesChange = useCallback(
+    (activities: Array<Partial<ActivityValue>>) => {
+      quotationOptionsProps.setMobilizationActivities(
+        activities.map((a) => ({
+          activity: a.activity || "",
+          price: a.price || 0,
+          quantity: a.quantity || 0,
+        }))
+      );
+    },
+    []
+  );
+  const handleReportingActivitiesChange = useCallback(
+    (activities: Array<Partial<ActivityValue>>) => {
+      quotationOptionsProps.setReportingActivities(
+        activities.map((a) => ({
+          activity: a.activity || "",
+          price: a.price || 0,
+          quantity: a.quantity || 0,
+        }))
+      );
+    },
+    []
+  );
 
   function onSubmit(data: QuotationOptionsValues) {
     console.log(data);
@@ -305,22 +335,38 @@ interface QuotationOptionsProps {
     price: number;
     quantity: number;
   }[];
-  setMobilizationActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
+  setMobilizationActivities: Dispatch<
+    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+  >;
   reportingActivities: { activity: string; price: number; quantity: number }[];
-  setReportingActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
+  setReportingActivities: Dispatch<
+    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+  >;
   setDrawerOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
-  const { project, selectedLabTests, selectedFieldTests, mobilizationActivities, reportingActivities, setDrawerOpen } =
-    quotationOptionsProps;
+  const {
+    project,
+    selectedLabTests,
+    selectedFieldTests,
+    mobilizationActivities,
+    reportingActivities,
+    setDrawerOpen,
+  } = quotationOptionsProps;
 
-  const { quotation } = project;
+  const { role } = useRBAC();
+
+  const { quotation } = useQuotation(project, role);
 
   const quotationVat = quotation?.vatPercentage;
   const quotationPaymentNotes = quotation?.paymentNotes;
-  const quotationHasMobilization = quotation?.otherItems?.some((item) => item.type === "mobilization");
-  const quotationHasReporting = quotation?.otherItems?.some((item) => item.type === "reporting");
+  const quotationHasMobilization = quotation?.otherItems?.some(
+    (item) => item.type === "mobilization"
+  );
+  const quotationHasReporting = quotation?.otherItems?.some(
+    (item) => item.type === "reporting"
+  );
   const quotationCurrency = quotation?.currency;
 
   // ---------------------------------------------------------------------------
@@ -330,7 +376,9 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
   const [isFieldsValid, setIsFieldsValid] = useState(false);
   const [isLabTestsValid, setIsLabTestsValid] = useState(false);
   const [isReportingValid, setIsReportingValid] = useState(false);
-  const [currency, setCurrency] = useState(quotationCurrency?.toLocaleLowerCase() || "ugx");
+  const [currency, setCurrency] = useState(
+    quotationCurrency?.toLocaleLowerCase() || "ugx"
+  );
   const [paymentNotes, setPaymentNotes] = useState(quotationPaymentNotes || "");
   const [notesEnabled, setNotesEnabled] = useState(Boolean(paymentNotes));
   const [vatPercentage, setVatPercentage] = useState(quotationVat || "18");
@@ -339,33 +387,30 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
   // ---------------------------------------------------------------------------
   //   Validation handlers
   // ---------------------------------------------------------------------------
-  const handleMobilizationValidationChange = (v: boolean) => setIsMobilizationValid(v);
+  const handleMobilizationValidationChange = (v: boolean) =>
+    setIsMobilizationValid(v);
   const handleFieldsValidationChange = (v: boolean) => setIsFieldsValid(v);
   const handleLabTestsValidationChange = (v: boolean) => setIsLabTestsValid(v);
-  const handleReportingValidationChange = (v: boolean) => setIsReportingValid(v);
+  const handleReportingValidationChange = (v: boolean) =>
+    setIsReportingValid(v);
 
   // ---------------------------------------------------------------------------
   //   Derived billing info (unchanged)
   // ---------------------------------------------------------------------------
-  const date = new Date();
-  const year = date.getFullYear();
-  const uniqueNumber = `${year}-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000)
-    .toString()
-    .padStart(3, "0")}`;
 
   const billingInfo = {
-    revisionNumber: `R${year}-00`,
-    quotationNumber: `Q${uniqueNumber}`,
-    quotationDate: date.toISOString(),
-    acquisitionNumber: `A${uniqueNumber}`,
     currency,
     paymentNotes,
     vatPercentage: Number(vatEnabled ? vatPercentage : "0"),
-    labTests: (isLabTestsValid ? selectedLabTests : []) as (ALL_SERVICES_QUERYResult[number] & {
+    labTests: (isLabTestsValid
+      ? selectedLabTests
+      : []) as (ALL_SERVICES_QUERYResult[number] & {
       price: number;
       quantity: number;
     })[],
-    fieldTests: (isFieldsValid ? selectedFieldTests : []) as (ALL_SERVICES_QUERYResult[number] & {
+    fieldTests: (isFieldsValid
+      ? selectedFieldTests
+      : []) as (ALL_SERVICES_QUERYResult[number] & {
       price: number;
       quantity: number;
     })[],
@@ -384,12 +429,16 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
       </div>
 
       <div className="space-y-4">
-        <p className="text-sm font-medium tracking-tight">Choose the items to add to the client's quotation</p>
+        <p className="text-sm font-medium tracking-tight">
+          Choose the items to add to the client's quotation
+        </p>
         {/* Mobilization */}
         <SwitchField
           defaultOn={Boolean(quotationHasMobilization)}
           currency={currency}
-          handleMobilizationValidationChange={handleMobilizationValidationChange}
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
           handleFieldsValidationChange={handleFieldsValidationChange}
           handleLabTestsValidationChange={handleLabTestsValidationChange}
           handleReportingValidationChange={handleReportingValidationChange}
@@ -406,7 +455,9 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
         <SwitchField
           defaultOn={Boolean(quotation)}
           currency={currency}
-          handleMobilizationValidationChange={handleMobilizationValidationChange}
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
           handleFieldsValidationChange={handleFieldsValidationChange}
           handleLabTestsValidationChange={handleLabTestsValidationChange}
           handleReportingValidationChange={handleReportingValidationChange}
@@ -423,7 +474,9 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
         <SwitchField
           defaultOn={Boolean(quotation)}
           currency={currency}
-          handleMobilizationValidationChange={handleMobilizationValidationChange}
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
           handleFieldsValidationChange={handleFieldsValidationChange}
           handleLabTestsValidationChange={handleLabTestsValidationChange}
           handleReportingValidationChange={handleReportingValidationChange}
@@ -440,7 +493,9 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
         <SwitchField
           defaultOn={Boolean(quotationHasReporting)}
           currency={currency}
-          handleMobilizationValidationChange={handleMobilizationValidationChange}
+          handleMobilizationValidationChange={
+            handleMobilizationValidationChange
+          }
           handleFieldsValidationChange={handleFieldsValidationChange}
           handleLabTestsValidationChange={handleLabTestsValidationChange}
           handleReportingValidationChange={handleReportingValidationChange}
@@ -455,7 +510,10 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
         />
 
         <div className="mt-5 md:mt-0">
-          <GenerateBillingDocument billingInfo={billingInfo} setDrawerOpen={setDrawerOpen} />
+          <GenerateBillingDocument
+            billingInfo={billingInfo}
+            setDrawerOpen={setDrawerOpen}
+          />
         </div>
         <p className="text-sm font-medium tracking-tight pt-5">Extra options</p>
         <div className="border justify-end grid grid-cols-1 lg:grid-cols-2 gap-4 bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">

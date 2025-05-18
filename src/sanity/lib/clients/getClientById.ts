@@ -12,10 +12,30 @@ export const getClientById = async (clientId: string) => {
                 _type == "project" 
                 && references(^._id)
             ] {
-                _id,
+              _id,
+              internalId,
+              name,
+              startDate, 
+              endDate, 
+              stagesCompleted, 
+              clients[]->{
+                _id, 
                 name,
-                internalId,
-                endDate,
+                internalId
+              },
+              quotation->{
+                _id,
+                currency,
+                status,
+                rejectionNotes,
+                items[] {
+                  lineTotal,
+                },
+                otherItems[] {
+                  lineTotal,
+                },
+                vatPercentage,
+              }
             },
             "contacts": *[_type == "contactPerson" && references(^._id)] {
                 _id,

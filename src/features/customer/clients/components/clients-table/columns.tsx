@@ -32,12 +32,16 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 // Convert columns to a function that accepts parameters
-export const getColumns = (clients: ALL_CLIENTS_QUERYResult): ColumnDef<ALL_CLIENTS_QUERYResult[number]>[] => [
+export const getColumns = (
+  clients: ALL_CLIENTS_QUERYResult
+): ColumnDef<ALL_CLIENTS_QUERYResult[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
         className="translate-y-[2px]"
@@ -80,11 +84,11 @@ export const getColumns = (clients: ALL_CLIENTS_QUERYResult): ColumnDef<ALL_CLIE
   },
   {
     accessorKey: "projects",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Projects" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Number of Projects" />,
     cell: ({ row }) => {
       const num_of_projects = row.original?.projects.length;
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
+        <Link className="hover:underline" href={`/clients/${row.original?._id}?tab=projects`}>
           <div className="flex space-x-2">
             <span className="font-normal">{num_of_projects}</span>
           </div>
@@ -94,14 +98,22 @@ export const getColumns = (clients: ALL_CLIENTS_QUERYResult): ColumnDef<ALL_CLIE
   },
   {
     accessorKey: "latest_project",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Project" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Project ID" />,
     cell: ({ row }) => {
-      const latest_project = row.original?.projects[0];
+      const latest_project_id = row.original?.projects[0]?._id;
+      const latest_project_internal_id = row.original?.projects[0]?.internalId;
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
+        <Link
+          className="hover:underline"
+          href={
+            latest_project_id
+              ? `/clients/${row.original?._id}/projects/${latest_project_id}`
+              : `/clients/${row.original?._id}?tab=projects`
+          }
+        >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">
-              <span className="font-bold text-primary">{latest_project?.internalId}</span> - {latest_project?.name}
+              <span>{latest_project_internal_id ? latest_project_internal_id : "-"}</span>
             </span>
           </div>
         </Link>
@@ -110,21 +122,33 @@ export const getColumns = (clients: ALL_CLIENTS_QUERYResult): ColumnDef<ALL_CLIE
   },
   {
     accessorKey: "latest_project_due_date",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Project Due Date" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Latest Project Due Date" />
+    ),
     cell: ({ row }) => {
       const latest_project_due_date = row.original?.projects[0]?.endDate;
+      const latest_project_id = row.original?.projects[0]?._id;
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
+        <Link
+          className="hover:underline"
+          href={
+            latest_project_id
+              ? `/clients/${row.original?._id}/projects/${latest_project_id}`
+              : `/clients/${row.original?._id}?tab=projects`
+          }
+        >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">
               {latest_project_due_date ? (
-                <span
-                  className={`font-bold ${new Date(latest_project_due_date) < new Date() ? "text-destructive" : "text-primary"}`}
-                >
+                <Button variant="outline" size="sm">
+                  <ListEnd className="text-primary w-4 h-4 mr-2" />
                   {format(new Date(latest_project_due_date), "dd/LL/yy")}
-                </span>
+                </Button>
               ) : (
-                "-"
+                <Button variant="outline" size="sm">
+                  <TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />
+                  Not yet set
+                </Button>
               )}
             </span>
           </div>

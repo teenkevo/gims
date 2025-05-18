@@ -11,7 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import ClientUpdateNameForm from "./client-update-name-form";
 import { DataTable } from "./contacts-table/data-table";
+import { DataTable as ProjectsDataTable } from "./projects-table/data-table";
 import { CreateContactDialog } from "./create-contact-dialog";
+import NoProjectsPlaceholder from "@/features/internal/projects/components/no-projects-placeholder";
 
 export default function ClientDetails({ client }: { client: CLIENT_BY_ID_QUERYResult[number] }) {
   const { _id, name, internalId, projects, contacts } = client;
@@ -29,7 +31,10 @@ export default function ClientDetails({ client }: { client: CLIENT_BY_ID_QUERYRe
 
   return (
     <>
-      <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/clients">
+      <Link
+        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
+        href="/clients"
+      >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
@@ -106,7 +111,13 @@ export default function ClientDetails({ client }: { client: CLIENT_BY_ID_QUERYRe
           </div>
         </TabsContent>
         <TabsContent value="projects">
-          <div className="space-y-8 my-10"></div>
+          {projects.length > 0 ? (
+            <div className="mt-5">
+              <ProjectsDataTable data={projects} client={client} />
+            </div>
+          ) : (
+            <NoProjectsPlaceholder />
+          )}
         </TabsContent>
 
         <TabsContent value="danger">
@@ -116,8 +127,8 @@ export default function ClientDetails({ client }: { client: CLIENT_BY_ID_QUERYRe
                 <CardTitle className="text-xl font-bold mb-2">Delete Client</CardTitle>
 
                 <CardDescription className="text-sm text-foregeound">
-                  This client will be deleted, along with all of their Data, Files, Invoices and Quotations. This action
-                  is irreversible and can not be undone.
+                  This client will be deleted, along with all of their Data, Files, Invoices and
+                  Quotations. This action is irreversible and can not be undone.
                 </CardDescription>
               </CardHeader>
 

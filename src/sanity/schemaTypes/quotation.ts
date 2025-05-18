@@ -95,7 +95,7 @@ export const quotation = defineType({
       name: "revisions",
       title: "Revisions",
       type: "array",
-      of: [{ type: "reference", to: [{ type: "revision" }] }],
+      of: [{ type: "reference", to: [{ type: "quotation" }] }],
       validation: (Rule) => Rule.unique(),
     }),
     defineField({
@@ -114,6 +114,11 @@ export const quotation = defineType({
         list: ["draft", "sent", "accepted", "rejected", "invoiced", "paid"],
       },
       initialValue: "draft",
+    }),
+    defineField({
+      name: "rejectionNotes",
+      title: "Rejection Notes",
+      type: "text",
     }),
   ],
   // Initial value template to seed the first revision

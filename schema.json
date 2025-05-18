@@ -561,13 +561,6 @@
         },
         "optional": true
       },
-      "date": {
-        "type": "objectAttribute",
-        "value": {
-          "type": "string"
-        },
-        "optional": true
-      },
       "notes": {
         "type": "objectAttribute",
         "value": {
@@ -3393,7 +3386,7 @@
                 "optional": true
               }
             },
-            "dereferencesTo": "revision",
+            "dereferencesTo": "quotation",
             "rest": {
               "type": "object",
               "attributes": {
@@ -3492,6 +3485,13 @@
               "value": "paid"
             }
           ]
+        },
+        "optional": true
+      },
+      "rejectionNotes": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
         },
         "optional": true
       }

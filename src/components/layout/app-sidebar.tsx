@@ -25,9 +25,17 @@ import {
 import { NavGroup } from "./nav-group";
 import { NavUser } from "./nav-user";
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from "@/components/ui/sidebar";
 import { Logo } from "./logo";
 import { ToggleLightDark } from "./toggle-light-dark";
+import { Button } from "../ui/button";
+import { useRBAC } from "../rbac-context";
 
 // This is sample data.
 const data = {
@@ -259,6 +267,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { setRole } = useRBAC();
   return (
     <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader>
@@ -270,6 +279,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <ToggleLightDark />
+        <Button variant="outline" onClick={() => setRole("client")} size="icon">
+          C
+        </Button>
+        <Button variant="outline" onClick={() => setRole("admin")} size="icon">
+          A
+        </Button>
         {/* <NavUser user={data.user} /> */}
       </SidebarFooter>
       <SidebarRail />

@@ -4,39 +4,20 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { DataTableRowActions } from "./data-table-row-actions";
 import type {
-  ALL_SERVICES_QUERYResult,
   ALL_PROJECTS_QUERYResult,
+  CLIENT_BY_ID_QUERYResult,
   Quotation,
 } from "../../../../../../sanity.types";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  CalendarIcon,
-  CheckCircle,
-  DollarSign,
-  ListEnd,
-  ListStart,
-  ReceiptText,
-  Send,
-  XCircle,
-  CreditCard,
-  FileIcon as FileInvoice,
-  CircleDashed,
-  PlusCircle,
-  TriangleAlert,
-} from "lucide-react";
+import { ListEnd, ListStart } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { SetDateRangeDialog } from "../set-project-date-range";
-import { quotationTotal } from "../../constants";
-import { NumericFormat } from "react-number-format";
+import { quotationTotal } from "@/features/internal/projects/constants";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  projects: ALL_PROJECTS_QUERYResult,
-  role: string
+  client: CLIENT_BY_ID_QUERYResult[number]
 ): ColumnDef<ALL_PROJECTS_QUERYResult[number]>[] => [
   {
     id: "select",
@@ -65,19 +46,23 @@ export const getColumns = (
     accessorKey: "internalId",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Project ID" />,
     cell: ({ row }) => (
-      <Link className="hover:underline" href={`/projects/${row.original?._id}`}>
+      <Link
+        className="hover:underline"
+        href={`/clients/${client._id}/projects/${row.original?._id}`}
+      >
         <div className="w-[100px] font-bold">{row.original?.internalId}</div>
       </Link>
     ),
-    // enableSorting: false,
-    // enableHiding: false,
   },
   {
     accessorKey: "name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Project Name" />,
     cell: ({ row }) => {
       return (
-        <Link className="hover:underline" href={`/projects/${row.original?._id}`}>
+        <Link
+          className="hover:underline"
+          href={`/clients/${client._id}/projects/${row.original?._id}`}
+        >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">{row.original?.name}</span>
           </div>
@@ -90,19 +75,14 @@ export const getColumns = (
     header: ({ column }) => <DataTableColumnHeader column={column} title="Start Date" />,
     cell: ({ row }) =>
       row.original?.startDate ? (
-        <SetDateRangeDialog
-          role={role}
-          icon={<ListStart className="text-primary w-4 h-4 mr-2" />}
-          buttonText={format(new Date(row.original?.startDate), "dd/LL/yy")}
-          project={row.original}
-        />
+        <div className="flex items-center">
+          <ListStart className="text-primary w-4 h-4 mr-2" />
+          <span className="text-sm">{format(new Date(row.original?.startDate), "dd/LL/yy")}</span>
+        </div>
       ) : (
-        <SetDateRangeDialog
-          role={role}
-          icon={<TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />}
-          buttonText={role === "admin" ? "Set start date" : "Not yet set"}
-          project={row.original}
-        />
+        <div className="flex items-center">
+          <span className="text-sm">Not yet set</span>
+        </div>
       ),
   },
 
@@ -111,19 +91,14 @@ export const getColumns = (
     header: ({ column }) => <DataTableColumnHeader column={column} title="End Date" />,
     cell: ({ row }) =>
       row.original?.endDate ? (
-        <SetDateRangeDialog
-          role={role}
-          icon={<ListEnd className="text-primary w-4 h-4 mr-2" />}
-          buttonText={format(new Date(row.original?.endDate), "dd/LL/yy")}
-          project={row.original}
-        />
+        <div className="flex items-center">
+          <ListEnd className="text-primary w-4 h-4 mr-2" />
+          <span className="text-sm">{format(new Date(row.original?.endDate), "dd/LL/yy")}</span>
+        </div>
       ) : (
-        <SetDateRangeDialog
-          role={role}
-          icon={<TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />}
-          buttonText={role === "admin" ? "Set end date" : "Not yet set"}
-          project={row.original}
-        />
+        <div className="flex items-center">
+          <span className="text-sm">Not yet set</span>
+        </div>
       ),
   },
   {
@@ -138,7 +113,7 @@ export const getColumns = (
         quotation?.status === "draft"
           ? "Quotation created"
           : quotation?.status === "sent"
-            ? "Quotation sent"
+            ? "Quotation received"
             : quotation?.status === "accepted"
               ? "Quotation accepted"
               : quotation?.status === "rejected"
@@ -184,8 +159,8 @@ export const getColumns = (
         );
       return (
         <Link
-          href={`/projects/${row.original?._id}?project=${row.original?.name}&tab=billing`}
-          className="text-xs flex items-center p-1 border rounded-md hover:bg-muted w-[250px]"
+          href={`/clients/${client._id}/projects/${row.original?._id}`}
+          className="text-xs flex items-center p-1 border rounded-md hover:bg-muted"
         >
           {/* {icon} */}
           {badgeVariant}
@@ -196,60 +171,4 @@ export const getColumns = (
       );
     },
   },
-
-  // {
-  //   accessorKey: "stagesCompleted",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Stages Completed" />
-  //   ),
-  //   cell: ({ row }) => {
-  //     // Now you can use sampleClasses here if needed
-  //     return (
-  //       <div className="flex space-x-2">
-  //         {row.original?.stagesCompleted?.map((stage) => (
-  //           <Badge key={stage} variant="outline">
-  //             {stage}
-  //           </Badge>
-  //         ))}
-  //       </div>
-  //     );
-  //   },
-  // },
-  // {
-  //   accessorKey: "status",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Status" />
-  //   ),
-  //   cell: ({ row }) => {
-  //     return (
-  //       <div className="flex w-[100px] items-center">
-  //         {row.original?.status === "active" && (
-  //           <Badge variant="outline">
-  //             <CheckCircledIcon className="mr-2 h-4 w-4 text-primary" />
-  //             Active
-  //           </Badge>
-  //         )}
-  //         {row.original?.status === "inactive" && (
-  //           <Badge variant="outline">
-  //             <CrossCircledIcon className="mr-2 h-4 w-4 text-orange-500" />
-  //             Inactive
-  //           </Badge>
-  //         )}
-  //       </div>
-  //     );
-  //   },
-  //   filterFn: (row, id, value) => {
-  //     return value.includes(row.getValue);
-  //   },
-  // },
-  // {
-  //   id: "actions",
-  //   cell: ({ row }) => (
-  //     <DataTableRowActions
-  //       sampleClasses={sampleClasses || []}
-  //       testMethods={testMethods || []}
-  //       service={row.original as ALL_SERVICES_QUERYResult[number]}
-  //     />
-  //   ),
-  // },
 ];

@@ -36,7 +36,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={<Loading />}>
-            <RBACProvider initialRole="viewer">
+            <RBACProvider initialRole="admin">
               <QueryProvider>
                 <ScrollToTop />
                 {children}

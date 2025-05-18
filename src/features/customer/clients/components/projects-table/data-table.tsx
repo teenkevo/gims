@@ -24,24 +24,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { DataTableToolbar } from "@/features/customer/services/components/services-table/data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import type { ALL_PROJECTS_QUERYResult } from "../../../../../../sanity.types";
-import type { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
-import type { ALL_STANDARDS_QUERYResult } from "../../../../../../sanity.types";
-import { getColumns } from "./columns"; // Import the function instead of the constant
-import { deleteMultipleServices } from "@/lib/actions";
+import type {
+  ALL_PROJECTS_QUERYResult,
+  CLIENT_BY_ID_QUERYResult,
+} from "../../../../../../sanity.types";
+import { getColumns } from "./columns";
 import { DeleteMultipleServices } from "./delete-multiple-services";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useRBAC } from "@/components/rbac-context";
 
 interface DataTableProps<TData, TValue> {
   data: ALL_PROJECTS_QUERYResult;
+  client: CLIENT_BY_ID_QUERYResult[number];
 }
 
-export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ data, client }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -54,7 +52,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns(data, role) as ColumnDef<ALL_PROJECTS_QUERYResult[number]>[],
+    () => getColumns(client) as ColumnDef<ALL_PROJECTS_QUERYResult[number]>[],
     [data, role]
   );
 
@@ -86,11 +84,6 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
 
   return (
     <div className="space-y-4">
-      {/* <DataTableToolbar
-        table={table}
-        sampleClasses={sampleClasses}
-        openDialog={() => setOpenDialog(true)}
-      /> */}
       <DeleteMultipleServices
         ids={serviceIds}
         open={openDialog}
@@ -128,7 +121,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No services.
+                  No projects.
                 </TableCell>
               </TableRow>
             )}

@@ -24,6 +24,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useRBAC } from "@/components/rbac-context";
+import { useQuotation } from "./useQuotation";
 
 export function QuotationDrawer({
   allServices,
@@ -59,24 +61,33 @@ export function QuotationDrawer({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
 
-  const { quotation } = project;
+  const { role } = useRBAC();
+
+  const { quotation, quotationNeedsRevision } = useQuotation(project, role);
 
   if (isDesktop) {
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
-            disabled={Boolean(quotation) && quotation?.status !== "draft"}
             size="sm"
             className="shadow-md"
-            variant={quotation ? "outline" : "default"}
+            variant={
+              quotation && !quotationNeedsRevision ? "outline" : "default"
+            }
           >
-            {quotation ? "Review" : "Create Quotation"}
+            {quotation && !quotationNeedsRevision
+              ? "Review"
+              : quotation && quotationNeedsRevision
+                ? "Revise Quotation"
+                : "Create Quotation"}
           </Button>
         </SheetTrigger>
         <SheetContent className="w-full sm:max-w-7xl flex flex-col h-full">
           <SheetHeader className="flex-shrink-0 border-b border-border pb-5">
-            <SheetTitle>{quotation ? "Review Quotation" : "Create Quotation"}</SheetTitle>
+            <SheetTitle>
+              {quotation ? "Review Quotation" : "Create Quotation"}
+            </SheetTitle>
             <SheetDescription>
               {quotation
                 ? "Review the quotation and make changes if necessary."
@@ -107,7 +118,6 @@ export function QuotationDrawer({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button
-          disabled={quotation?.status === "sent"}
           size="sm"
           className="shadow-md"
           variant={quotation ? "outline" : "default"}
@@ -117,7 +127,9 @@ export function QuotationDrawer({
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left flex-shrink-0">
-          <DrawerTitle>{quotation ? "Review Quotation" : "Create Quotation"}</DrawerTitle>
+          <DrawerTitle>
+            {quotation ? "Review Quotation" : "Create Quotation"}
+          </DrawerTitle>
           <DrawerDescription>
             {quotation
               ? "Review the quotation and make changes if necessary."

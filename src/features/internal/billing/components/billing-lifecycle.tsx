@@ -1,43 +1,42 @@
+// ===========================
+// File: billing-lifecycle.tsx
+// ===========================
 import type React from "react";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useRef } from "react";
 import {
-  CheckCircle,
-  CircleDashed,
-  DollarSign,
-  ExternalLink,
-  FileIcon,
   FileText,
-  Plus,
-  ReceiptText,
   Send,
+  CheckCircle,
   XCircle,
+  FileIcon as FileInvoice,
+  DollarSign,
+  Plus,
+  CircleDashed,
+  ReceiptText,
+  FileIcon,
+  ExternalLink,
+  GitPullRequest,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { QuotationDrawer } from "./quotation-drawer";
-import { SendQuotationDialog } from "./send-quotation-dialog";
-import { useRBAC } from "@/components/rbac-context";
-import type {
+import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
-import { RespondToQuotationDialog } from "./respond-to-quotation";
+import { QuotationDrawer } from "./quotation-drawer";
+import { SendQuotationDialog } from "./send-quotation-dialog";
+import { useRBAC } from "@/components/rbac-context";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { RespondToQuotationDialog } from "./respond-to-quotation";
+import { useQuotation } from "./useQuotation";
 
-// Types
-interface Stage {
+type Stage = {
   id: number;
   title: string;
-  icon: ReactNode;
+  icon: React.ReactNode;
   description: string;
-}
-
-interface Activity {
-  activity: string;
-  price: number;
-  quantity: number;
-}
+};
 
 interface BillingLifecycleProps {
   currentStage?: number;
@@ -45,13 +44,21 @@ interface BillingLifecycleProps {
   allServices: ALL_SERVICES_QUERYResult;
   project: PROJECT_BY_ID_QUERYResult[number];
   selectedLabTests: ALL_SERVICES_QUERYResult;
-  setSelectedLabTests: React.Dispatch<React.SetStateAction<ALL_SERVICES_QUERYResult>>;
+  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
   selectedFieldTests: ALL_SERVICES_QUERYResult;
-  setSelectedFieldTests: React.Dispatch<React.SetStateAction<ALL_SERVICES_QUERYResult>>;
-  mobilizationActivities: Activity[];
-  setMobilizationActivities: React.Dispatch<React.SetStateAction<Activity[]>>;
-  reportingActivities: Activity[];
-  setReportingActivities: React.Dispatch<React.SetStateAction<Activity[]>>;
+  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
+  mobilizationActivities: {
+    activity: string;
+    price: number;
+    quantity: number;
+  }[];
+  setMobilizationActivities: Dispatch<
+    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+  >;
+  reportingActivities: { activity: string; price: number; quantity: number }[];
+  setReportingActivities: Dispatch<
+    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+  >;
 }
 
 export function BillingLifecycle({
@@ -70,32 +77,40 @@ export function BillingLifecycle({
 }: BillingLifecycleProps) {
   const [progress, setProgress] = useState(0);
   const [animationComplete, setAnimationComplete] = useState(false);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const { quotation } = project;
   const { role } = useRBAC();
 
-  const isClient = role === "client";
-  const isAdmin = role === "admin";
+  const {
+    isClientWaitingForParentQuotation,
+    isAdminWaitingToCreateQuotation,
+    isParentQuotationCreated,
+    quotation,
+    quotationNeedsRevision,
+  } = useQuotation(project, role);
+
+  console.log(quotation);
 
   // Define stage configurations
   // TODO: Work on roles here
   const stages: Stage[] = [
     {
       id: 1,
-      title:
-        !quotation && isClient
-          ? "Waiting for Quotation"
-          : !quotation && isAdmin
-            ? "Create Quotation"
-            : "Quotation Created",
-      icon: quotation ? <FileText className="h-3 w-3" /> : <Plus className="h-3 w-3" />,
-      description:
-        !quotation && isClient
-          ? "Waiting for quotation to be created by GETLAB"
-          : !quotation && isAdmin
-            ? "A quotation is needed to initiate the billing pipeline"
-            : "A quotation has been created by GETLAB",
+      title: isClientWaitingForParentQuotation
+        ? "Waiting for Quotation"
+        : isAdminWaitingToCreateQuotation
+          ? "Create Quotation"
+          : "Quotation Created",
+      icon: isParentQuotationCreated ? (
+        <FileText className="h-3 w-3" />
+      ) : (
+        <Plus className="h-3 w-3" />
+      ),
+      description: isClientWaitingForParentQuotation
+        ? "Waiting for quotation to be created by GETLAB"
+        : isAdminWaitingToCreateQuotation
+          ? "A quotation is needed to initiate the billing pipeline"
+          : "A quotation has been created by GETLAB",
     },
     {
       id: 2,
@@ -113,9 +128,11 @@ export function BillingLifecycle({
           <CheckCircle className="h-3 w-3" />
         ),
       description:
-        rejectionStage === 3
+        rejectionStage === 3 && !quotationNeedsRevision
           ? "Quotation was rejected by the client"
-          : "Revisions are possible at this stage if needed",
+          : rejectionStage === 3 && quotationNeedsRevision
+            ? "Quotation was rejected by the client with revisions requested"
+            : "Revisions are possible at this stage if needed",
     },
     {
       id: 4,
@@ -131,266 +148,461 @@ export function BillingLifecycle({
     },
   ];
 
-  // Handle progress animation
+  // -----------------------------
+  // Progress bar & focus logic
+  // -----------------------------
   useEffect(() => {
-    // Clear any existing timers
-    timersRef.current.forEach(clearTimeout);
-    timersRef.current = [];
+    // Reset previous timers on every run
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+
+    // Restart animation cycle
     setAnimationComplete(false);
 
     const isRejected = typeof rejectionStage === "number";
     const effectiveStage = isRejected ? rejectionStage : currentStage;
-    const targetProgress = ((effectiveStage - 1) / (stages.length - 1)) * 100;
 
-    // Set up animation sequence
+    const target = ((effectiveStage - 1) / (stages.length - 1)) * 100;
+
+    if (isRejected) {
+      setProgress(target);
+      // Only one timer to mark animation done
+      timers.current.push(setTimeout(() => setAnimationComplete(true), 1000));
+      return;
+    }
+
+    // Normal flow: start from 0 then animate to target
     setProgress(0);
 
-    const animationTimer = setTimeout(
-      () => {
-        setProgress(targetProgress);
-
-        const completionTimer = setTimeout(() => {
-          setAnimationComplete(true);
-        }, 1000);
-
-        timersRef.current.push(completionTimer);
-      },
-      isRejected ? 0 : 300
+    timers.current.push(
+      setTimeout(() => {
+        setProgress(target);
+        timers.current.push(setTimeout(() => setAnimationComplete(true), 1000));
+      }, 300)
     );
-
-    timersRef.current.push(animationTimer);
-
-    // Cleanup timers on unmount
-    return () => {
-      timersRef.current.forEach(clearTimeout);
-    };
   }, [currentStage, rejectionStage, stages.length]);
-
-  // Determine stage status
-  const getStageStatus = (stageId: number) => {
-    const isRejected = rejectionStage !== undefined && stageId <= rejectionStage;
-    const isCurrentStage = stageId === currentStage && !isRejected;
-    const isCompleted = stageId < currentStage && !isRejected;
-
-    return { isRejected, isCurrentStage, isCompleted };
-  };
-
-  // Render status badge based on stage state
-  const renderStatusBadge = (stageId: number) => {
-    // Special case: Process stopped at rejection stage
-    if (stageId === rejectionStage) {
-      return (
-        <div className="mt-4 flex items-center text-destructive text-xs">
-          <XCircle className="h-3 w-3 mr-1" />
-          <span>Process stopped</span>
-        </div>
-      );
-    }
-
-    // Special case: Stage 1 without quotation
-    if (stageId === 1 && !quotation) {
-      return (
-        <div className="mt-4 flex items-center text-orange-600 text-xs">
-          <CircleDashed className="h-3 w-3 mr-1" />
-          <span>Pending</span>
-        </div>
-      );
-    }
-
-    // Special case: Stage 1 with draft quotation
-    if (quotation && stageId === 1 && quotation.status === "draft") {
-      return (
-        <div className="mt-4 flex items-center text-orange-600 text-xs">
-          <ReceiptText className="h-3 w-3 mr-1" />
-          <span>Draft not yet sent</span>
-        </div>
-      );
-    }
-
-    // Special case: Stage 2 with sent quotation
-    if (quotation && stageId === 3 && quotation.status !== "draft") {
-      return (
-        <div className="mt-4 flex items-center text-orange-600 text-xs">
-          <CircleDashed className="animate-spin h-3 w-3 mr-1" />
-          <span>Awaiting client response</span>
-        </div>
-      );
-    }
-
-    // Completed stage
-    const { isCompleted } = getStageStatus(stageId);
-    if (isCompleted) {
-      return (
-        <div className="mt-4 flex items-center text-primary text-xs">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          <span>Completed</span>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  // Render stage marker (number indicator)
-  const StageMarker = ({ stageId }: { stageId: number }) => {
-    const { isRejected, isCurrentStage, isCompleted } = getStageStatus(stageId);
-
-    // Determine marker styling based on stage status
-    const markerClasses = cn(
-      "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 ease-in-out",
-      isCompleted
-        ? "bg-primary text-primary-foreground"
-        : isCurrentStage
-          ? "bg-primary text-white"
-          : stageId === rejectionStage
-            ? "bg-destructive text-destructive-foreground"
-            : isRejected
-              ? "bg-primary text-primary-foreground"
-              : "bg-gray-200 text-gray-400",
-
-      // Animation ring
-      isCurrentStage && animationComplete
-        ? "ring-4 ring-emerald-100"
-        : stageId === rejectionStage && animationComplete
-          ? "ring-4 ring-red-100"
-          : ""
-    );
-
-    return (
-      <div className={markerClasses}>
-        <span className="text-xs font-bold">{stageId}</span>
-      </div>
-    );
-  };
-
-  // Render stage card with content
-  const StageCard = ({ stage, isVertical = false }: { stage: Stage; isVertical?: boolean }) => {
-    const { isRejected, isCurrentStage, isCompleted } = getStageStatus(stage.id);
-
-    // Determine card styling based on stage status
-    const cardClasses = cn(
-      "bg-gradient-to-b from-muted/20 to-muted/40 p-4 rounded-lg transition-all duration-500 border",
-      isCurrentStage
-        ? "border-primary bg-primary/10"
-        : stage.id === rejectionStage
-          ? "bg-destructive/10 border-destructive"
-          : isCompleted
-            ? "border-primary"
-            : ""
-    );
-
-    // Determine icon container styling
-    const iconContainerClasses = cn(
-      "p-2 rounded-full mr-2",
-      isCurrentStage
-        ? "bg-primary/10"
-        : stage.id === rejectionStage
-          ? "bg-destructive/10"
-          : "bg-muted-foreground/10"
-    );
-
-    return (
-      <div className={cardClasses}>
-        <div className="flex items-center mb-2">
-          <div className={iconContainerClasses}>{stage.icon}</div>
-          <h3 className="font-semibold text-sm">{stage.title}</h3>
-        </div>
-        <p className="text-xs text-muted-foreground">{stage.description}</p>
-        {renderStatusBadge(stage.id)}
-
-        {/* TODO: Work on roles here */}
-        {/* Quotation actions for stage 1 */}
-        {stage.id === 1 && role === "admin" && (
-          <div className="mt-5 flex flex-wrap gap-2 items-center">
-            <QuotationDrawer
-              allServices={allServices}
-              project={project}
-              selectedLabTests={selectedLabTests}
-              setSelectedLabTests={setSelectedLabTests}
-              selectedFieldTests={selectedFieldTests}
-              setSelectedFieldTests={setSelectedFieldTests}
-              mobilizationActivities={mobilizationActivities}
-              setMobilizationActivities={setMobilizationActivities}
-              reportingActivities={reportingActivities}
-              setReportingActivities={setReportingActivities}
-            />
-            {quotation && <SendQuotationDialog project={project} />}
-          </div>
-        )}
-        {stage.id === 2 && quotation?.status === "sent" && (
-          <div className="mt-5 flex flex-wrap gap-2 items-center">
-            <Button variant="secondary" size="sm">
-              <Link
-                className="flex items-center"
-                href={quotation?.file?.asset?.url || ""}
-                target="_blank"
-              >
-                <ExternalLink className="text-primary h-4 w-4 mr-2" />
-                View quotation
-              </Link>
-            </Button>
-          </div>
-        )}
-        {stage.id === 3 && role === "client" && quotation?.status === "sent" && (
-          <div className="mt-5 flex flex-wrap gap-2 items-center">
-            <RespondToQuotationDialog project={project} />
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className="w-full">
-      {/* Desktop View */}
+      {/* Horizontal progress bar (md screens and up) */}
       <div className="hidden xl:block">
-        {/* Progress bar */}
         <div className="relative h-1 bg-gray-200 rounded-full mb-10 mt-6 flex items-center">
           <div
             className="absolute h-1 bg-primary rounded-full transition-all duration-1000 ease-in-out top-0 left-0"
             style={{ width: `${progress}%` }}
           />
 
-          {/* Stage markers */}
+          {/* Stage markers (horizontal) */}
           {stages.map((stage) => (
             <div
               key={stage.id}
-              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${((stage.id - 1) / (stages.length - 1)) * 100}%` }}
+              className={cn(
+                "absolute top-1/2 -translate-x-1/2 -translate-y-1/2",
+                "transition-all duration-500 ease-in-out"
+              )}
+              style={{
+                left: `${((stage.id - 1) / (stages.length - 1)) * 100}%`,
+              }}
             >
-              <StageMarker stageId={stage.id} />
+              <div
+                className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center",
+                  "transition-all duration-500 ease-in-out",
+                  stage.id < currentStage && !rejectionStage
+                    ? "bg-primary text-primary-foreground"
+                    : stage.id === currentStage && !rejectionStage
+                      ? "bg-primary text-white"
+                      : rejectionStage && stage.id <= rejectionStage
+                        ? stage.id === rejectionStage && !quotationNeedsRevision
+                          ? "bg-destructive text-destructive-foreground"
+                          : stage.id === rejectionStage &&
+                              quotationNeedsRevision
+                            ? "bg-orange-500 border border-orange-500"
+                            : "bg-primary text-primary-foreground"
+                        : "bg-gray-200 text-gray-400",
+                  stage.id === currentStage &&
+                    animationComplete &&
+                    !rejectionStage
+                    ? "ring-4 ring-emerald-100"
+                    : stage.id === rejectionStage && animationComplete
+                      ? "ring-4 ring-red-100"
+                      : ""
+                )}
+              >
+                <span className="text-xs font-bold">{stage.id}</span>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Stage cards */}
-        <div className="grid grid-cols-5 gap-4">
+        {/* Stage details for md+ screens */}
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {stages.map((stage) => (
-            <StageCard key={stage.id} stage={stage} />
+            <div
+              key={stage.id}
+              className={cn(
+                "bg-gradient-to-b from-muted/20 to-muted/40 p-4 rounded-lg transition-all duration-500",
+                stage.id === currentStage && !rejectionStage
+                  ? "border border-primary bg-primary/10"
+                  : stage.id === rejectionStage && !quotationNeedsRevision
+                    ? "bg-destructive/10 border border-destructive"
+                    : stage.id === 3 && quotationNeedsRevision
+                      ? "bg-orange-500/10 border border-orange-500"
+                      : stage.id < currentStage && !rejectionStage
+                        ? "border border-muted-foreground" // Add border-primary to completed stages
+                        : "bg-gradient-to-b from-muted/20 to-muted/40 border"
+              )}
+            >
+              <div className="flex items-center mb-2">
+                <div
+                  className={cn(
+                    "p-2 rounded-full mr-2",
+                    stage.id === currentStage && !rejectionStage
+                      ? "bg-primary/10"
+                      : stage.id === rejectionStage && !quotationNeedsRevision
+                        ? "bg-destructive/10"
+                        : stage.id === 3 && quotationNeedsRevision
+                          ? "bg-orange-500/10"
+                          : stage.id < currentStage && !rejectionStage
+                            ? "bg-primary/10" // Add primary background to completed stages
+                            : "bg-muted-foreground/10"
+                  )}
+                >
+                  {stage.icon}
+                </div>
+                <h3 className="font-semibold text-sm">{stage.title}</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {stage.description}
+              </p>
+              {/* ALL FINISHED STAGES AFTER QUOTATION IS SENT */}
+              {stage.id < currentStage && (
+                <div className="mt-4 flex items-center text-primary text-xs">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  <span>Completed</span>
+                </div>
+              )}
+              {/* STAGE 1 */}
+              {!quotation && stage.id === 1 && (
+                <div className="mt-4 flex items-center text-orange-600 text-xs">
+                  <CircleDashed className="h-3 w-3 mr-1" />
+                  <span>Pending</span>
+                </div>
+              )}
+              {quotation && stage.id === 1 && quotation.status === "draft" && (
+                <div className="mt-4 flex items-center text-orange-600 text-xs">
+                  <ReceiptText className="h-3 w-3 mr-1" />
+                  <span>
+                    {role === "client"
+                      ? "Waiting for GETLAB to send"
+                      : "Draft created but not sent"}
+                  </span>
+                </div>
+              )}
+              {stage.id === 1 && currentStage === 1 && role !== "client" && (
+                <div className="mt-5 flex flex-wrap gap-2 items-center">
+                  <QuotationDrawer
+                    allServices={allServices}
+                    project={project}
+                    selectedLabTests={selectedLabTests}
+                    setSelectedLabTests={setSelectedLabTests}
+                    selectedFieldTests={selectedFieldTests}
+                    setSelectedFieldTests={setSelectedFieldTests}
+                    mobilizationActivities={mobilizationActivities}
+                    setMobilizationActivities={setMobilizationActivities}
+                    reportingActivities={reportingActivities}
+                    setReportingActivities={setReportingActivities}
+                  />
+                  {quotation && <SendQuotationDialog project={project} />}
+                </div>
+              )}
+              {/* STAGE 2 */}
+              {/* TODO: Might need to restrict this to Client only */}
+              {quotation && quotation.status === "sent" && stage.id === 2 && (
+                <div className="mt-5 flex flex-wrap gap-2 items-center">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="border border-primary/30"
+                  >
+                    <Link
+                      className="flex items-center"
+                      href={quotation?.file?.asset?.url || ""}
+                      target="_blank"
+                    >
+                      <ExternalLink className="text-primary h-4 w-4 mr-2" />
+                      View Quotation
+                    </Link>
+                  </Button>
+                </div>
+              )}
+              {/* STAGE 3 */}
+              {quotation && stage.id === 3 && quotation.status === "sent" && (
+                <div className="mt-4 flex items-center text-orange-500 text-xs">
+                  <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                  <span>Awaiting client response</span>
+                </div>
+              )}
+              {quotation &&
+                stage.id === 3 &&
+                quotation.status === "sent" &&
+                role === "client" && (
+                  <div className="mt-4 flex items-center text-orange-500 text-xs">
+                    <RespondToQuotationDialog project={project} />
+                  </div>
+                )}
+              {stage.id === rejectionStage && !quotationNeedsRevision && (
+                <div className="mt-4 flex items-center text-destructive text-xs">
+                  <XCircle className="h-3 w-3 mr-1" />
+                  <span>Process stopped</span>
+                </div>
+              )}
+              {quotation && stage.id === 3 && quotationNeedsRevision && (
+                <div className="mt-4 flex items-center text-orange-500 text-xs">
+                  <GitPullRequest className="h-3 w-3 mr-1" />
+                  <span>Revisions requested</span>
+                </div>
+              )}
+              {/* STAGE 3 */}
+              {quotation &&
+                stage.id === 3 &&
+                quotationNeedsRevision &&
+                role === "client" && (
+                  <div className="mt-2 flex items-center text-orange-500 text-xs">
+                    <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                    <span>Awaiting GETLAB's response</span>
+                  </div>
+                )}
+              {quotation &&
+                stage.id === 3 &&
+                quotationNeedsRevision &&
+                role !== "client" && (
+                  <div className="mt-4 flex items-center text-orange-500 text-xs">
+                    <QuotationDrawer
+                      allServices={allServices}
+                      project={project}
+                      selectedLabTests={selectedLabTests}
+                      setSelectedLabTests={setSelectedLabTests}
+                      selectedFieldTests={selectedFieldTests}
+                      setSelectedFieldTests={setSelectedFieldTests}
+                      mobilizationActivities={mobilizationActivities}
+                      setMobilizationActivities={setMobilizationActivities}
+                      reportingActivities={reportingActivities}
+                      setReportingActivities={setReportingActivities}
+                    />
+                  </div>
+                )}
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Mobile View */}
-      <div className="xl:hidden relative">
-        {/* Vertical progress bar */}
-        <div className="absolute left-3 top-0 bottom-0 w-1 bg-gray-200 rounded-full">
-          <div
-            className="absolute w-1 bg-primary rounded-full transition-all duration-1000 ease-in-out left-0 top-0"
-            style={{ height: `${progress}%` }}
-          />
-        </div>
+      {/* Vertical progress bar with cards for small screens */}
+      <div className="xl:hidden">
+        <div className="relative">
+          {/* Vertical progress line */}
+          <div className="absolute left-3 top-0 bottom-0 w-1 bg-gray-200 rounded-full">
+            <div
+              className="absolute w-1 bg-primary rounded-full transition-all duration-1000 ease-in-out left-0 top-0"
+              style={{ height: `${progress}%` }}
+            />
+          </div>
 
-        {/* Vertical stage cards */}
-        <div className="space-y-4 pl-10">
-          {stages.map((stage) => (
-            <div key={stage.id} className="relative">
-              <div className="absolute -left-10 top-1/2 -translate-y-1/2">
-                <StageMarker stageId={stage.id} />
+          {/* Cards with aligned dots */}
+          <div className="space-y-4 pl-10">
+            {stages.map((stage) => (
+              <div key={stage.id} className="relative">
+                {/* Dot marker aligned with card */}
+                <div className="absolute -left-10 top-1/2 -translate-y-1/2">
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center",
+                      "transition-all duration-500 ease-in-out",
+                      stage.id < currentStage && !rejectionStage
+                        ? "bg-primary text-primary-foreground"
+                        : stage.id === currentStage && !rejectionStage
+                          ? "bg-primary text-white"
+                          : rejectionStage && stage.id <= rejectionStage
+                            ? stage.id === rejectionStage
+                              ? "bg-destructive text-destructive-foreground"
+                              : "bg-primary text-primary-foreground"
+                            : "bg-gray-200 text-gray-400",
+                      stage.id === currentStage &&
+                        animationComplete &&
+                        !rejectionStage
+                        ? "ring-4 ring-emerald-100"
+                        : stage.id === rejectionStage && animationComplete
+                          ? "ring-4 ring-red-100"
+                          : ""
+                    )}
+                  >
+                    <span className="text-xs font-bold">{stage.id}</span>
+                  </div>
+                </div>
+
+                {/* Card */}
+                <div
+                  className={cn(
+                    "bg-gradient-to-b from-muted/20 to-muted/40 p-4 rounded-lg transition-all duration-500",
+                    stage.id === currentStage && !rejectionStage
+                      ? "border border-primary"
+                      : stage.id === rejectionStage
+                        ? "bg-destructive/10 border border-destructive"
+                        : stage.id < currentStage && !rejectionStage
+                          ? "border border-primary" // Add border-primary to completed stages
+                          : "bg-gradient-to-b from-muted/20 to-muted/40 border"
+                  )}
+                >
+                  <div className="flex items-center mb-2">
+                    <div
+                      className={cn(
+                        "p-2 rounded-full mr-2 text-foreground",
+                        stage.id === currentStage && !rejectionStage
+                          ? "bg-primary/10"
+                          : stage.id === rejectionStage
+                            ? "bg-destructive/10"
+                            : stage.id < currentStage && !rejectionStage
+                              ? "bg-primary/10" // Add primary background to completed stages
+                              : "bg-muted-foreground/10"
+                      )}
+                    >
+                      {stage.icon}
+                    </div>
+                    <h3 className="font-semibold text-sm">{stage.title}</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {stage.description}
+                  </p>
+
+                  {/* ALL FINISHED STAGES AFTER QUOTATION IS SENT */}
+                  {stage.id < currentStage && (
+                    <div className="mt-4 flex items-center text-primary text-xs">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      <span>Completed</span>
+                    </div>
+                  )}
+                  {/* STAGE 1 */}
+                  {!quotation && stage.id === 1 && (
+                    <div className="mt-4 flex items-center text-orange-600 text-xs">
+                      <CircleDashed className="h-3 w-3 mr-1" />
+                      <span>Pending</span>
+                    </div>
+                  )}
+                  {quotation &&
+                    stage.id === 1 &&
+                    quotation.status === "draft" && (
+                      <div className="mt-4 flex items-center text-orange-600 text-xs">
+                        <ReceiptText className="h-3 w-3 mr-1" />
+                        <span>
+                          {role === "client"
+                            ? "Waiting for GETLAB to send"
+                            : "Draft created but not sent"}
+                        </span>
+                      </div>
+                    )}
+                  {stage.id === 1 &&
+                    currentStage === 1 &&
+                    role !== "client" && (
+                      <div className="mt-5 flex flex-wrap gap-2 items-center">
+                        <QuotationDrawer
+                          allServices={allServices}
+                          project={project}
+                          selectedLabTests={selectedLabTests}
+                          setSelectedLabTests={setSelectedLabTests}
+                          selectedFieldTests={selectedFieldTests}
+                          setSelectedFieldTests={setSelectedFieldTests}
+                          mobilizationActivities={mobilizationActivities}
+                          setMobilizationActivities={setMobilizationActivities}
+                          reportingActivities={reportingActivities}
+                          setReportingActivities={setReportingActivities}
+                        />
+                        {quotation && <SendQuotationDialog project={project} />}
+                      </div>
+                    )}
+                  {/* STAGE 2 */}
+                  {/* TODO: Might need to restrict this to Client only */}
+                  {quotation &&
+                    quotation.status === "sent" &&
+                    stage.id === 2 && (
+                      <div className="mt-5 flex flex-wrap gap-2 items-center">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="border border-primary/30"
+                        >
+                          <Link
+                            className="flex items-center"
+                            href={quotation?.file?.asset?.url || ""}
+                            target="_blank"
+                          >
+                            <ExternalLink className="text-primary h-4 w-4 mr-2" />
+                            View Quotation
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  {/* STAGE 3 */}
+                  {quotation &&
+                    stage.id === 3 &&
+                    quotation.status === "sent" && (
+                      <div className="mt-4 flex items-center text-orange-500 text-xs">
+                        <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                        <span>Awaiting client response</span>
+                      </div>
+                    )}
+                  {quotation &&
+                    stage.id === 3 &&
+                    quotation.status === "sent" &&
+                    role === "client" && (
+                      <div className="mt-4 flex items-center text-orange-500 text-xs">
+                        <RespondToQuotationDialog project={project} />
+                      </div>
+                    )}
+                  {stage.id === rejectionStage && !quotationNeedsRevision && (
+                    <div className="mt-4 flex items-center text-destructive text-xs">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      <span>Process stopped</span>
+                    </div>
+                  )}
+                  {quotation && stage.id === 3 && quotationNeedsRevision && (
+                    <div className="mt-4 flex items-center text-orange-500 text-xs">
+                      <GitPullRequest className="h-3 w-3 mr-1" />
+                      <span>Revisions requested</span>
+                    </div>
+                  )}
+                  {/* STAGE 3 */}
+                  {quotation &&
+                    stage.id === 3 &&
+                    quotationNeedsRevision &&
+                    role === "client" && (
+                      <div className="mt-2 flex items-center text-orange-500 text-xs">
+                        <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                        <span>Awaiting GETLAB's response</span>
+                      </div>
+                    )}
+                  {quotation &&
+                    stage.id === 3 &&
+                    quotationNeedsRevision &&
+                    role !== "client" && (
+                      <div className="mt-4 flex items-center text-orange-500 text-xs">
+                        <QuotationDrawer
+                          allServices={allServices}
+                          project={project}
+                          selectedLabTests={selectedLabTests}
+                          setSelectedLabTests={setSelectedLabTests}
+                          selectedFieldTests={selectedFieldTests}
+                          setSelectedFieldTests={setSelectedFieldTests}
+                          mobilizationActivities={mobilizationActivities}
+                          setMobilizationActivities={setMobilizationActivities}
+                          reportingActivities={reportingActivities}
+                          setReportingActivities={setReportingActivities}
+                        />
+                      </div>
+                    )}
+                </div>
               </div>
-              <StageCard stage={stage} isVertical />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

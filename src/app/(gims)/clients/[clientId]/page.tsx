@@ -9,16 +9,17 @@ import { getClientById } from "@/sanity/lib/clients/getClientById";
 import NoClientPlaceholder from "@/features/customer/clients/components/no-client-placeholder";
 import ClientDetails from "@/features/customer/clients/components/client-details";
 
-export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function ClientPage({ params }: { params: Promise<{ clientId: string }> }) {
+  const { clientId } = await params;
 
   // Fetch data in parallel
-  const [clientData, existingContactsData, existingClientsData, allServicesData] = await Promise.all([
-    getClientById(id),
-    getAllContacts(),
-    getAllClients(),
-    getAllServices(),
-  ]);
+  const [clientData, existingContactsData, existingClientsData, allServicesData] =
+    await Promise.all([
+      getClientById(clientId),
+      getAllContacts(),
+      getAllClients(),
+      getAllServices(),
+    ]);
 
   // If project is not found, show 404 placeholder
   if (!clientData || clientData.length === 0) {

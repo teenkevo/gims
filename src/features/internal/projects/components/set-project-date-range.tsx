@@ -12,11 +12,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
 import type { DateRange } from "react-day-picker";
@@ -54,10 +50,12 @@ export function SetDateRangeDialog({
   buttonText,
   icon,
   project,
+  role,
 }: {
   buttonText: string;
   icon: React.ReactNode;
   project: ALL_PROJECTS_QUERYResult[number];
+  role: string;
 }) {
   const [open, setOpen] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -66,7 +64,12 @@ export function SetDateRangeDialog({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button size="sm" variant="outline" className="flex items-center">
+          <Button
+            disabled={role !== "admin"}
+            size="sm"
+            variant="outline"
+            className="flex items-center"
+          >
             {icon}
             {buttonText}
           </Button>
@@ -75,8 +78,7 @@ export function SetDateRangeDialog({
           <DialogHeader>
             <DialogTitle>Set Project Dates</DialogTitle>
             <DrawerDescription>
-              This configuration allows you to track the progression of your
-              project
+              This configuration allows you to track the progression of your project
             </DrawerDescription>
           </DialogHeader>
 
@@ -89,7 +91,12 @@ export function SetDateRangeDialog({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="flex items-center">
+        <Button
+          disabled={role !== "admin"}
+          size="sm"
+          variant="outline"
+          className="flex items-center"
+        >
           {icon}
           {buttonText}
         </Button>
@@ -98,8 +105,7 @@ export function SetDateRangeDialog({
         <DrawerHeader className="text-left">
           <DrawerTitle>Set Project Dates</DrawerTitle>
           <DrawerDescription>
-            This configuration allows you to track the progression of your
-            project
+            This configuration allows you to track the progression of your project
           </DrawerDescription>
         </DrawerHeader>
 
@@ -123,14 +129,11 @@ function DateRangeForm({
 }) {
   const { _id, startDate, endDate } = project;
   // Restored useActionState
-  const [state, dispatch, isPending] = React.useActionState(
-    setProjectDateRange,
-    null
-  );
+  const [state, dispatch, isPending] = React.useActionState(setProjectDateRange, null);
 
   const form = useForm({
     mode: "onChange",
-    reValidateMode: "onChange",
+    reValidateMode: "onBlur",
     defaultValues: {
       dateRange: {
         from: startDate ? new Date(startDate) : undefined,
@@ -162,10 +165,7 @@ function DateRangeForm({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={`space-y-8 h-40 px-4 md:px-0 py-4`}
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className={`space-y-8 h-40 px-4 md:px-0 py-4`}>
         <FormField
           control={form.control}
           name="dateRange"
@@ -225,9 +225,7 @@ function DateRangeForm({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() =>
-                        field.onChange({ from: undefined, to: undefined })
-                      }
+                      onClick={() => field.onChange({ from: undefined, to: undefined })}
                       className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6"
                       title="Clear dates"
                     >

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useState } from "react";
 
 // Define roles type and context shape
-type Role = "admin" | "editor" | "viewer" | string;
+type Role = "admin" | "editor" | "viewer" | "client" | string;
 interface RBACContextProps {
   role: Role;
   setRole: (role: Role) => void;
@@ -15,7 +15,7 @@ const RBACContext = createContext<RBACContextProps | undefined>(undefined);
 // Provider wrapper
 export const RBACProvider = ({
   children,
-  initialRole = "viewer",
+  initialRole = "admin",
 }: {
   children: ReactNode;
   initialRole?: Role;
@@ -32,14 +32,4 @@ export const useRBAC = () => {
     throw new Error("useRBAC must be used within an RBACProvider");
   }
   return context;
-};
-
-// Higher-order component for pages or components
-export const withRBAC = <P extends object>(Component: React.ComponentType<P>) => {
-  const WrappedComponent = (props: P) => {
-    const { role } = useRBAC();
-    return <Component {...props} currentRole={role} />;
-  };
-  WrappedComponent.displayName = `withRBAC(${Component.displayName || Component.name || "Component"})`;
-  return WrappedComponent;
 };

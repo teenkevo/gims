@@ -6,12 +6,16 @@ import Link from "next/link";
 import React from "react";
 import mime from "mime-types";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { useQuotation } from "./useQuotation";
+import { useRBAC } from "@/components/rbac-context";
 
-interface QuotationFileProps {
-  quotation: PROJECT_BY_ID_QUERYResult[number]["quotation"];
-}
-
-export default function QuotationFile({ quotation }: QuotationFileProps) {
+export default function QuotationFile({
+  project,
+}: {
+  project: PROJECT_BY_ID_QUERYResult[number];
+}) {
+  const { role } = useRBAC();
+  const { quotation } = useQuotation(project, role);
   return (
     <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg ">
       <CardHeader>

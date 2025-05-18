@@ -44,9 +44,7 @@ const NextBreadcrumb = ({
           const parentSegment = pathNames[index - 1]; // Previous segment (e.g., 'clients')
           const href = `/${pathNames.slice(0, index + 1).join("/")}`;
 
-          let displayText = capitalizeLinks
-            ? link[0].toUpperCase() + link.slice(1)
-            : link;
+          let displayText = capitalizeLinks ? link[0].toUpperCase() + link.slice(1) : link;
 
           // Replace ID with query parameter value if available
           if (isLast && parentSegment && pathToQueryParam[parentSegment]) {

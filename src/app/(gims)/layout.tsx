@@ -31,7 +31,7 @@ export default function Layout({ children }: LayoutProps) {
               separator={
                 <BreadcrumbSeparator className="text-foreground flex justify-center space-x-2 items-center" />
               }
-              activeClasses="transition-all text-sm font-semibold text-foreground mx-2"
+              activeClasses="transition-all text-sm font-semibold text-primary mx-2"
               containerClasses="flex py-5"
               listClasses="transition-all text-sm font-semibold text-muted-foreground hover:text-foreground mx-2"
               capitalizeLinks

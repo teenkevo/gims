@@ -20,15 +20,17 @@ import {
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
 import Loading from "@/app/loading";
-import { createQuotation, updateQuotation } from "@/lib/actions";
+import {
+  createQuotation,
+  createRevision,
+  updateQuotation,
+} from "@/lib/actions";
 import { toast } from "sonner";
 import { ButtonLoading } from "@/components/button-loading";
+import { useQuotation } from "./useQuotation";
+import { useRBAC } from "@/components/rbac-context";
 
 interface GenerateBillingDocumentProps {
-  revisionNumber: string;
-  quotationNumber: string;
-  quotationDate: string;
-  acquisitionNumber: string;
   currency: string;
   paymentNotes: string;
   vatPercentage: number;
@@ -61,10 +63,6 @@ export const GenerateBillingDocument = ({
   billingInfo: GenerateBillingDocumentProps;
 }) => {
   const {
-    revisionNumber,
-    quotationNumber,
-    quotationDate,
-    acquisitionNumber,
     currency,
     paymentNotes,
     vatPercentage,
@@ -75,7 +73,40 @@ export const GenerateBillingDocument = ({
     project,
   } = billingInfo;
 
-  const { quotation } = project;
+  const date = new Date();
+  const year = date.getFullYear();
+  const uniqueNumber = `${year}-${Date.now().toString().slice(-6)}${Math.floor(
+    Math.random() * 1000
+  )
+    .toString()
+    .padStart(3, "0")}`;
+
+  const { role } = useRBAC();
+
+  const { quotation, quotationNeedsRevision, number_parent_revisions } =
+    useQuotation(project, role);
+
+  const revisionNumber = quotationNeedsRevision
+    ? `R${year}-${String(number_parent_revisions + 1).padStart(2, "0")}`
+    : `R${year}-00`;
+
+  const quotationNumber =
+    quotationNeedsRevision || quotation
+      ? quotation?.quotationNumber
+      : `Q${uniqueNumber}`;
+  const acquisitionNumber =
+    quotationNeedsRevision || quotation
+      ? quotation?.quotationNumber
+      : `A${uniqueNumber}`;
+  const quotationDate = date.toISOString();
+
+  const finalBillingInfo = {
+    ...billingInfo,
+    quotationNumber: quotationNumber || "",
+    acquisitionNumber: acquisitionNumber || "",
+    quotationDate: quotationDate || "",
+    revisionNumber: revisionNumber || "",
+  };
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
@@ -86,9 +117,9 @@ export const GenerateBillingDocument = ({
       <Document>
         <BillingDocument
           revisionNumber={revisionNumber}
-          quotationNumber={quotationNumber}
+          quotationNumber={quotationNumber || ""}
           quotationDate={quotationDate}
-          acquisitionNumber={acquisitionNumber}
+          acquisitionNumber={acquisitionNumber || ""}
           currency={currency}
           labTests={labTests}
           fieldTests={fieldTests}
@@ -117,7 +148,7 @@ export const GenerateBillingDocument = ({
       const fileResult = await response.json();
       // if file fails to upload, show error message
       const result = await createQuotation(
-        billingInfo,
+        finalBillingInfo,
         fileResult.files[0].fileId
       );
       if (result.status === "ok") {
@@ -149,12 +180,44 @@ export const GenerateBillingDocument = ({
       const fileResult = await response.json();
       const result = await updateQuotation(
         project.quotation?._id || "",
-        billingInfo,
+        finalBillingInfo,
         fileResult.files[0].fileId
       );
       if (result.status === "ok") {
         setIsLoading(false);
         toast.success("Quotation has been updated");
+        setOpen(false);
+        setDrawerOpen(false);
+      } else {
+        setIsLoading(false);
+        toast.error("Something went wrong");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Something went wrong");
+    }
+  };
+
+  // CREATE REVISION
+  const handleCreateRevision = async () => {
+    setIsLoading(true);
+    try {
+      const blob = await pdf(Doc).toBlob();
+      const formData = new FormData();
+      formData.append("files", blob, `Quotation-${quotationNumber}.pdf`);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const fileResult = await response.json();
+      // if file fails to upload, show error message
+      const result = await createRevision(
+        finalBillingInfo,
+        fileResult.files[0].fileId
+      );
+      if (result.status === "ok") {
+        setIsLoading(false);
+        toast.success("Quotation has been created");
         setOpen(false);
         setDrawerOpen(false);
       } else {
@@ -202,11 +265,19 @@ export const GenerateBillingDocument = ({
                 type="button"
                 size="sm"
                 onClick={
-                  quotation ? handleUpdateQuotation : handleCreateQuotation
+                  quotation && !quotationNeedsRevision
+                    ? handleUpdateQuotation
+                    : quotation && quotationNeedsRevision
+                      ? handleCreateRevision
+                      : handleCreateQuotation
                 }
               >
                 <RocketIcon className="mr-2 h-4 w-4" />
-                {quotation ? "Update Quotation" : "Create Quotation"}
+                {quotation && !quotationNeedsRevision
+                  ? "Update Quotation"
+                  : quotation && quotationNeedsRevision
+                    ? "Send Revised Quotation"
+                    : "Create Quotation"}
               </Button>
             )}
           </div>

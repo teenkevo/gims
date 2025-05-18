@@ -11,17 +11,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // custom
 import NoProjectsPlaceholder from "./no-projects-placeholder";
-import ProjectCard from "./project-card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusCircleIcon } from "lucide-react";
 import { DataTable } from "./projects-table/data-table";
-
+import { useRBAC } from "@/components/rbac-context";
 export function ProjectsView({
   projects,
 }: {
   projects: ALL_PROJECTS_QUERYResult;
 }) {
+  const { role } = useRBAC();
+
+  console.log(role);
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Projects</h1>
@@ -41,11 +43,6 @@ export function ProjectsView({
         </div>
         <TabsContent value="in-progress">
           {projects.length > 0 ? (
-            // <div className="grid grid-cols-1 gap-6 mt-5 lg:grid-cols-2">
-            //   {projects.map((project) => (
-            //     <ProjectCard key={project._id} {...project} />
-            //   ))}
-            // </div>
             <div className="mt-5">
               <DataTable data={projects} />
             </div>

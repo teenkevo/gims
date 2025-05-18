@@ -39,7 +39,8 @@ export function NavGroup({
       <SidebarMenu>
         {items.map((item) => {
           // Check if this item is active
-          const isItemActive = item.isActive || pathname === item.url;
+          const isItemActive =
+            item.isActive || pathname === item.url || pathname.startsWith(item.url + "/");
 
           return (
             <div key={item.title}>
@@ -65,10 +66,7 @@ export function NavGroup({
 
                     return (
                       <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={isSubItemActive}
-                        >
+                        <SidebarMenuSubButton asChild isActive={isSubItemActive}>
                           <a href={subItem.url}>
                             <span>{subItem.title}</span>
                           </a>

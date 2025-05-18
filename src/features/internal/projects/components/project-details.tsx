@@ -16,11 +16,15 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import * as motion from "framer-motion/client";
 import { DeleteProject } from "./delete-project";
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
-import { QuotationOptions } from "../../billing/components/quotation-options";
 import SampleReceiptVerification from "./sample-receipt-verifications";
 import {
   ALL_CLIENTS_QUERYResult,
@@ -54,7 +58,8 @@ export default function ProjectDetails({
   existingClients: ALL_CLIENTS_QUERYResult;
   allServices: ALL_SERVICES_QUERYResult;
 }) {
-  const { _id, name, clients, contactPersons, startDate, endDate, quotation } = project;
+  const { _id, name, clients, contactPersons, startDate, endDate, quotation } =
+    project;
 
   // ---------------------------------------------
   // 🔑  Derive stage indices **once** per render
@@ -76,8 +81,10 @@ export default function ProjectDetails({
   const rejectionStage = status === "rejected" ? currentStage : undefined;
 
   // billing services table states
-  const [selectedLabTests, setSelectedLabTests] = useState<ALL_SERVICES_QUERYResult>([]);
-  const [selectedFieldTests, setSelectedFieldTests] = useState<ALL_SERVICES_QUERYResult>([]);
+  const [selectedLabTests, setSelectedLabTests] =
+    useState<ALL_SERVICES_QUERYResult>([]);
+  const [selectedFieldTests, setSelectedFieldTests] =
+    useState<ALL_SERVICES_QUERYResult>([]);
   const [mobilizationActivities, setMobilizationActivities] = useState<
     { activity: string; price: number; quantity: number }[]
   >([]);
@@ -95,8 +102,6 @@ export default function ProjectDetails({
       setActiveTab(tab);
     }
   }, []);
-
-  console.log(currentStage);
 
   return (
     <>
@@ -264,6 +269,7 @@ export default function ProjectDetails({
         <TabsContent value="billing">
           <div className="space-y-8 my-10">
             <BillingLifecycle
+              rejectionStage={rejectionStage}
               currentStage={currentStage}
               allServices={allServices}
               project={project}
@@ -276,7 +282,7 @@ export default function ProjectDetails({
               reportingActivities={reportingActivities}
               setReportingActivities={setReportingActivities}
             />
-            {quotation && <QuotationFile quotation={quotation} />}
+            {quotation && <QuotationFile project={project} />}
           </div>
         </TabsContent>
         <TabsContent value="sample-receipt">
@@ -288,11 +294,14 @@ export default function ProjectDetails({
           <div className="space-y-8 my-10">
             <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
               <CardHeader>
-                <CardTitle className="text-xl font-bold mb-2">Delete Project</CardTitle>
+                <CardTitle className="text-xl font-bold mb-2">
+                  Delete Project
+                </CardTitle>
 
                 <CardDescription className="text-sm text-foregeound">
-                  This project will be deleted, along with all of its Data, Files, Invoices and
-                  Quotations. This action is irreversible and can not be undone.
+                  This project will be deleted, along with all of its Data,
+                  Files, Invoices and Quotations. This action is irreversible
+                  and can not be undone.
                 </CardDescription>
               </CardHeader>
 
