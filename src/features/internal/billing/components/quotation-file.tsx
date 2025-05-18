@@ -22,7 +22,6 @@ export default function QuotationFile({
   // remove latest version
   all_revisions.shift();
 
-  const final_revision = all_revisions?.[all_revisions?.length - 1];
   return (
     <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg ">
       <CardHeader>
