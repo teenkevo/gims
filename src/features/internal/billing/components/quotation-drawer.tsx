@@ -16,7 +16,14 @@ import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import type { SetStateAction } from "react";
 import type { Dispatch } from "react";
 import type { ALL_SERVICES_QUERYResult } from "../../../../../sanity.types";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export function QuotationDrawer({
   allServices,
@@ -41,9 +48,13 @@ export function QuotationDrawer({
     price: number;
     quantity: number;
   }[];
-  setMobilizationActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
+  setMobilizationActivities: Dispatch<
+    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+  >;
   reportingActivities: { activity: string; price: number; quantity: number }[];
-  setReportingActivities: Dispatch<SetStateAction<{ activity: string; price: number; quantity: number }[]>>;
+  setReportingActivities: Dispatch<
+    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+  >;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
@@ -108,7 +119,9 @@ export function QuotationDrawer({
         <DrawerHeader className="text-left flex-shrink-0">
           <DrawerTitle>{quotation ? "Review Quotation" : "Create Quotation"}</DrawerTitle>
           <DrawerDescription>
-            {quotation ? "Review the quotation and make changes if necessary." : "Create a quotation for the project."}
+            {quotation
+              ? "Review the quotation and make changes if necessary."
+              : "Create a quotation for the project."}
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 overflow-y-auto max-h-[calc(80vh-10rem)]">
