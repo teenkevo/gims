@@ -52,12 +52,12 @@ export const getColumns = (
       />
     ),
     cell: ({ row }) => (
-      <Link
-        className="hover:underline"
-        href={`/services/sample-classes/${row.original?._id}`}
-      >
-        <div className="w-[100px]">{row.getValue("name")}</div>
-      </Link>
+      // <Link
+      //   className="hover:underline"
+      //   href={`/services/sample-classes/${row.original?._id}`}
+      // >
+      <div className="w-[100px]">{row.getValue("name")}</div>
+      // </Link>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -93,17 +93,17 @@ export const getColumns = (
       return (
         <div className="flex flex-wrap gap-2">
           {subclasses?.map((subclass) => (
-            <Link
-              key={uuidv4()}
-              href={`/services/standards/${row.original?._id}`}
+            // <Link
+            //   key={uuidv4()}
+            //   href={`/services/standards/${row.original?._id}`}
+            // >
+            <Button
+              className="hover:border-primary border-2 text-primary"
+              variant="secondary"
             >
-              <Button
-                className="hover:border-primary border-2 text-primary"
-                variant="secondary"
-              >
-                {subclass}
-              </Button>
-            </Link>
+              {subclass}
+            </Button>
+            // </Link>
           ))}
         </div>
       );

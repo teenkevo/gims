@@ -5,6 +5,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -208,84 +209,93 @@ function StandardForm({
               onClick={() => append({ name: "", key: "" })}
               disabled={isPending}
             >
-              <Plus className="h-3.5 w-3.5 mr-1" />
+              <Plus className="h-3.5 w-3.5 mr-1 text-primary" />
               Add Subclass
             </Button>
           </div>
 
           <div className="space-y-3">
             {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="flex gap-2 items-start p-3 border rounded-md"
-              >
-                <div className="flex-grow space-y-2">
-                  <FormField
-                    control={form.control}
-                    name={`subclasses.${index}.name`}
-                    rules={{ required: "Name is required" }}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel className="text-xs">Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            disabled={isPending}
-                            placeholder="Subclass name"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="w-[15%] min-w-[80px] space-y-2">
-                  <FormField
-                    control={form.control}
-                    name={`subclasses.${index}.key`}
-                    rules={{ required: "Required" }}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel className="text-xs">Key</FormLabel>
-                        <FormControl>
-                          <Input
-                            disabled={isPending}
-                            placeholder="Key"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 mt-6"
-                    onClick={() => remove(index)}
-                    disabled={isPending}
-                  >
-                    <span className="sr-only">Remove</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-red-500"
+              <div key={field.id}>
+                <div className="flex gap-2 items-start p-3 border rounded-md">
+                  <div className="flex-grow space-y-2">
+                    <FormField
+                      control={form.control}
+                      name={`subclasses.${index}.name`}
+                      rules={{ required: "Name is required" }}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-xs">Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              disabled={isPending}
+                              placeholder="Subclass name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="w-[15%] min-w-[80px] space-y-2">
+                    <FormField
+                      control={form.control}
+                      name={`subclasses.${index}.key`}
+                      rules={{ required: "Required" }}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-xs">Key</FormLabel>
+                          <FormControl>
+                            <Input
+                              disabled={isPending}
+                              placeholder="Key"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 mt-6"
+                      onClick={() => remove(index)}
+                      disabled={isPending}
                     >
-                      <path d="M3 6h18"></path>
-                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                  </Button>
+                      <span className="sr-only">Remove</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-red-500"
+                      >
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                      </svg>
+                    </Button>
+                  )}
+                </div>
+                {index === 0 && (
+                  <FormDescription className="my-2">
+                    An example of a sample subclass for the{" "}
+                    <span className="font-bold text-foreground">Asphalt</span>{" "}
+                    sample class is{" "}
+                    <span className="font-bold text-foreground">Bitumen</span>,
+                    which has the key{" "}
+                    <span className="font-bold text-foreground">BIT</span>.
+                  </FormDescription>
                 )}
               </div>
             ))}
