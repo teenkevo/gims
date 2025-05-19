@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
@@ -16,6 +16,15 @@ export const metadata: Metadata = {
 };
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  // Next .js already supports this field
+  viewportFit: "cover",
+  // `shrinkToFit` isn’t part of the spec anymore, so skip it
+};
 
 export default function RootLayout({
   children,
