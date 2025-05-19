@@ -23,8 +23,8 @@ export function ClientsView({ clients }: { clients: ALL_CLIENTS_QUERYResult }) {
         <div className="flex items-center justify-between">
           <Button asChild className="sm:w-auto" variant="default">
             <Link href="/clients/create" className="my-2 flex items-center">
-              <PlusCircleIcon className="h-5 w-5 md:mr-2" />
-              <span className="hidden sm:inline">Add New Client</span>
+              <PlusCircleIcon className="h-5 w-5 mr-2" />
+              <span>Add New Client</span>
             </Link>
           </Button>
         </div>
