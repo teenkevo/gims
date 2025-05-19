@@ -140,7 +140,7 @@ export function Activity({
                 <FormLabel required>Unit Price</FormLabel>
                 <FormControl>
                   <NumericFormat
-                    className="max-w-[150px] min-w-[130px] text-[16px] md:text-sm"
+                    className="max-w-[150px] min-w-[130px]"
                     customInput={Input}
                     thousandSeparator={true}
                     prefix={`${currency.toUpperCase()} `}
@@ -164,7 +164,7 @@ export function Activity({
                 <FormLabel required>Quantity</FormLabel>
                 <FormControl>
                   <NumericFormat
-                    className="max-w-[100px] min-w-[100px] text-[16px] md:text-sm"
+                    className="max-w-[100px] min-w-[100px]"
                     customInput={Input}
                     placeholder="Quantity"
                     value={field.value}
@@ -187,7 +187,7 @@ export function Activity({
                 <FormControl>
                   <NumericFormat
                     disabled
-                    className="max-w-[150px] min-w-[140px] text-[16px] md:text-sm"
+                    className="max-w-[150px] min-w-[140px]"
                     customInput={Input}
                     thousandSeparator={true}
                     prefix={`${currency.toUpperCase()} `}

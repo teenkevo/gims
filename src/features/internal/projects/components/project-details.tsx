@@ -122,7 +122,7 @@ export default function ProjectDetails({
         <Badge variant="outline" className="text-xs text-muted-foreground mb-2">
           Project-<span className="font-bold">{project.internalId}</span>
         </Badge>
-        <h1 className="text-lg md:text-3xl font-extrabold mb-6">{name}</h1>
+        <h1 className="text-xl md:text-3xl font-extrabold mb-6">{name}</h1>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

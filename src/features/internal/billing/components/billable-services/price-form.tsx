@@ -85,7 +85,7 @@ export function PriceForm({
             <FormItem>
               <FormControl>
                 <NumericFormat
-                  className="max-w-[150px] min-w-[130px] text-[16px] md:text-sm"
+                  className="max-w-[150px] min-w-[130px]"
                   customInput={Input}
                   thousandSeparator={true}
                   prefix={`${currency.toUpperCase()} `}
@@ -109,7 +109,7 @@ export function PriceForm({
             <FormItem>
               <FormControl>
                 <NumericFormat
-                  className="max-w-[100px] min-w-[100px] text-[16px] md:text-sm"
+                  className="max-w-[100px] min-w-[100px]"
                   customInput={Input}
                   placeholder="Quantity"
                   value={field.value}
@@ -132,7 +132,7 @@ export function PriceForm({
               <FormControl>
                 <NumericFormat
                   disabled
-                  className="max-w-[130px] min-w-[120px] text-[16px] md:text-sm"
+                  className="max-w-[130px] min-w-[120px]"
                   customInput={Input}
                   thousandSeparator={true}
                   prefix={`${currency.toUpperCase()} `}

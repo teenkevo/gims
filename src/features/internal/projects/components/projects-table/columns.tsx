@@ -31,7 +31,6 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { SetDateRangeDialog } from "../set-project-date-range";
 import { quotationTotal } from "../../constants";
-import { NumericFormat } from "react-number-format";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
