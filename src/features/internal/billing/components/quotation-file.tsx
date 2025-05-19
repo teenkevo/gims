@@ -63,7 +63,7 @@ export default function QuotationFile({
                 href={quotation?.file?.asset?.url || ""}
                 target="_blank"
               >
-                <p className="font-medium">
+                <p className="font-medium text-sm">
                   {quotation?.file?.asset?.originalFilename}
                 </p>
                 <p className="text-xs text-muted-foreground">

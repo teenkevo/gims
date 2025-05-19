@@ -279,12 +279,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <ToggleLightDark />
-        <Button variant="outline" onClick={() => setRole("client")} size="icon">
+        {/* <Button variant="outline" onClick={() => setRole("client")} size="icon">
           C
         </Button>
         <Button variant="outline" onClick={() => setRole("admin")} size="icon">
           A
-        </Button>
+        </Button> */}
         {/* <NavUser user={data.user} /> */}
       </SidebarFooter>
       <SidebarRail />
