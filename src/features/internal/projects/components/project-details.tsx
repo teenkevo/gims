@@ -48,6 +48,7 @@ import { BillingLifecycle } from "../../billing/components/billing-lifecycle";
 import QuotationFile from "../../billing/components/quotation-file";
 import { useQuotation } from "../../billing/components/useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProjectDetails({
   project,
@@ -117,7 +118,13 @@ export default function ProjectDetails({
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
-      <h1 className="text-2xl md:text-3xl font-extrabold mb-6">{name}</h1>
+      <div className="mb-6">
+        <Badge variant="outline" className="text-xs text-muted-foreground mb-2">
+          Project-<span className="font-bold">{project.internalId}</span>
+        </Badge>
+        <h1 className="text-lg md:text-3xl font-extrabold mb-6">{name}</h1>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger
