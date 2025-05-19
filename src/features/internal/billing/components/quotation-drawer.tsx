@@ -153,7 +153,9 @@ export function QuotationDrawer({
         </div>
         <DrawerFooter className="pt-2 flex-shrink-0">
           <DrawerClose asChild>
-            <Button size="sm">Cancel</Button>
+            <Button variant="secondary" className="w-[100px]" size="sm">
+              Cancel
+            </Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
