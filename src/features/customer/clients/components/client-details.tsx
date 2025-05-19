@@ -19,13 +19,14 @@ import { DataTable } from "./contacts-table/data-table";
 import { DataTable as ProjectsDataTable } from "./projects-table/data-table";
 import { CreateContactDialog } from "./create-contact-dialog";
 import NoProjectsPlaceholder from "@/features/internal/projects/components/no-projects-placeholder";
+import { Badge } from "@/components/ui/badge";
 
 export default function ClientDetails({
   client,
 }: {
   client: CLIENT_BY_ID_QUERYResult[number];
 }) {
-  const { _id, name, projects, contacts } = client;
+  const { _id, internalId, name, projects, contacts } = client;
 
   // State to manage the active tab
   const [activeTab, setActiveTab] = useState("client_profile");
@@ -47,7 +48,12 @@ export default function ClientDetails({
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
-      <h1 className="text-2xl md:text-3xl font-extrabold mb-6">{name}</h1>
+      <div className="mb-6">
+        <Badge variant="outline" className="text-xs text-muted-foreground mb-2">
+          <span className="font-bold">{internalId}</span>
+        </Badge>
+        <h1 className="text-xl md:text-3xl font-extrabold mb-6">{name}</h1>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger
@@ -109,7 +115,7 @@ export default function ClientDetails({
                   />
                   <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
                     <div className="flex mb-5 justify-between items-center">
-                      <p className="text-xl font-bold mb-4">Contact Persons</p>
+                      <p className="text-xl font-bold">Contact Persons</p>
                       <CreateContactDialog clientId={_id} />
                     </div>
                     <DataTable data={contacts} />

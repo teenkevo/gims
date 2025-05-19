@@ -45,7 +45,10 @@ import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 export function CreateContactDialog({ clientId }: { clientId: string }) {
   const [open, setOpen] = useState(false);
 
-  const [state, dispatch, isPending] = useActionState(createContactPerson, null);
+  const [state, dispatch, isPending] = useActionState(
+    createContactPerson,
+    null
+  );
 
   const form = useForm({
     mode: "onChange",
@@ -59,7 +62,10 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
   });
 
   const onSubmit = (
-    data: Omit<CLIENT_BY_ID_QUERYResult[number]["contacts"][number], "_id" | "projects">
+    data: Omit<
+      CLIENT_BY_ID_QUERYResult[number]["contacts"][number],
+      "_id" | "projects"
+    >
   ) => {
     const formData = new FormData();
     formData.append("name", data.name || "");
@@ -103,13 +109,20 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
           name="email"
           rules={{
             required: "Required",
-            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter valid email" },
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: "Enter valid email",
+            },
           }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input disabled={isPending} placeholder="contact@email.com" {...field} />
+                <Input
+                  disabled={isPending}
+                  placeholder="contact@email.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,7 +133,8 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
           name="phone"
           rules={{
             required: "Required",
-            validate: (value) => isValidPhoneNumber(value || "") || "Enter valid phone number",
+            validate: (value) =>
+              isValidPhoneNumber(value || "") || "Enter valid phone number",
           }}
           render={({ field }) => (
             <FormItem>
@@ -145,7 +159,11 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
             <FormItem>
               <FormLabel>Designation</FormLabel>
               <FormControl>
-                <Input disabled={isPending} placeholder="Technical Engineer" {...field} />
+                <Input
+                  disabled={isPending}
+                  placeholder="Technical Engineer"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -182,13 +200,15 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
       <DrawerTrigger asChild>
         <Button variant="outline">
           <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
-          Add Contact Person
+          Add Contact
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>Add Contact Person</DrawerTitle>
-          <DrawerDescription>Add a new contact person to the client profile</DrawerDescription>
+          <DrawerDescription>
+            Add a new contact person to the client profile
+          </DrawerDescription>
         </DrawerHeader>
         <div className="p-4 pb-0">{content}</div>
         <DrawerFooter className="pt-2">
@@ -211,14 +231,16 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <PlusCircleIcon className="h-5 w-5 mr-2 text-primary" />
-          Add Contact Person
+          Add Contact
         </Button>
       </DialogTrigger>
 
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Create Contact Person</DialogTitle>
-          <DialogDescription>Add a new contact person to the client profile</DialogDescription>
+          <DialogDescription>
+            Add a new contact person to the client profile
+          </DialogDescription>
         </DialogHeader>
         {content}
       </DialogContent>
