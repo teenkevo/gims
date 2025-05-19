@@ -30,8 +30,8 @@ export function InfoCard({
         {description && <p className="text-sm mb-4">{description}</p>}
         {children}
         <div className="mt-6 -mx-6 -mb-6 px-6 py-4 flex rounded-b-xl bg-muted/50 justify-between border-t items-center">
-          <span className="text-sm sm:flex">
-            Learn more about
+          <span className="text-sm flex gap-2 flex-wrap">
+            Learn about
             <a
               href={undefined}
               className="text-primary text-sm flex items-center hover:underline sm:ml-1"

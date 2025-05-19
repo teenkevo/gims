@@ -80,8 +80,8 @@ export function SingleField({
           )}
         </div>
 
-        <span className="text-sm text-muted-foreground flex">
-          Learn more about
+        <span className="text-sm text-muted-foreground flex gap-2 flex-wrap">
+          Learn about
           <a
             onClick={() =>
               toast("🧑‍🍳 In the kitchen...", {

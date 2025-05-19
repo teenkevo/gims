@@ -71,17 +71,23 @@ export function SingleFieldForm({
       <CardContent className="pb-0">
         {description && <p className="text-sm mb-4">{description}</p>}
         <Form {...form}>
-          <form {...(action ? { action } : { onSubmit: form.handleSubmit(handleFormSubmit) })} className="space-y-6">
+          <form
+            {...(action
+              ? { action }
+              : { onSubmit: form.handleSubmit(handleFormSubmit) })}
+            className="space-y-6"
+          >
             {/* Use the renderField prop */}
             {renderField && renderField(form)}
 
             <div className="mt-6 -mx-6 -mb-6 px-6 py-4 flex rounded-b-xl bg-muted/50 justify-between border-t items-center">
-              <span className="text-sm sm:flex">
-                Learn more about
+              <span className="text-sm flex gap-2 flex-wrap">
+                Learn about
                 <a
                   onClick={() =>
                     toast("🧑‍🍳 In the kitchen...", {
-                      description: "GIMS documentation is still in active development. Check back later",
+                      description:
+                        "GIMS documentation is still in active development. Check back later",
                     })
                   }
                   href={undefined}
