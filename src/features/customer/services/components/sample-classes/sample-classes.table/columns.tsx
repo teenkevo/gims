@@ -98,6 +98,7 @@ export const getColumns = (
             //   href={`/services/standards/${row.original?._id}`}
             // >
             <Button
+              key={uuidv4()}
               className="hover:border-primary border-2 text-primary"
               variant="secondary"
             >
