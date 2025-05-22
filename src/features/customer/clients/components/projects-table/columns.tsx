@@ -198,7 +198,7 @@ export const getColumns = (
       return (
         <Link
           href={`/clients/${client._id}/projects/${row.original?._id}`}
-          className="text-xs flex items-center p-1 border rounded-md hover:bg-muted w-[250px]"
+          className="text-xs flex items-center p-1 border rounded-md hover:bg-muted w-[300px]"
         >
           {/* {icon} */}
           {badgeVariant}
