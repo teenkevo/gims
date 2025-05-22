@@ -146,8 +146,10 @@ export const getColumns = (
     ),
     cell: ({ row }) => {
       const parentQuotation = row.original?.quotation;
+
       const parentQuotationHasRevisions =
         (parentQuotation?.revisions?.length ?? 0) > 0;
+
       const quotation = parentQuotationHasRevisions
         ? parentQuotation?.revisions?.[0]
         : parentQuotation;

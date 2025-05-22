@@ -1,8 +1,20 @@
-import { CircleAlert, Ellipsis, SignalHigh, SignalLow, SignalMedium } from "lucide-react";
+import {
+  CircleAlert,
+  Ellipsis,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
+} from "lucide-react";
 import { ALL_PROJECTS_QUERYResult, Quotation } from "../../../../sanity.types";
 import { Priority, ProjectStage } from "./types";
 
-export const possibleStages: ProjectStage[] = ["BILLING", "SAMPLING", "TESTING", "ANALYSIS", "REPORTING"];
+export const possibleStages: ProjectStage[] = [
+  "BILLING",
+  "SAMPLING",
+  "TESTING",
+  "ANALYSIS",
+  "REPORTING",
+];
 
 export const priorities: Priority[] = [
   {
@@ -32,8 +44,12 @@ export const priorities: Priority[] = [
   },
 ];
 
-export const getCurrentStageIndex = (project: ALL_PROJECTS_QUERYResult[number]): number => {
-  const currentStage = project.stagesCompleted![project.stagesCompleted!.length - 1] as ProjectStage;
+export const getCurrentStageIndex = (
+  project: ALL_PROJECTS_QUERYResult[number]
+): number => {
+  const currentStage = project.stagesCompleted![
+    project.stagesCompleted!.length - 1
+  ] as ProjectStage;
   return possibleStages.indexOf(currentStage);
 };
 
@@ -63,16 +79,39 @@ export function numberToWords(num: number): string {
     "Nineteen",
   ];
 
-  const tens: string[] = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  const tens: string[] = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
 
-  const thousands: string[] = ["", "Thousand", "Million", "Billion", "Trillion"];
+  const thousands: string[] = [
+    "",
+    "Thousand",
+    "Million",
+    "Billion",
+    "Trillion",
+  ];
 
   // Helper function to convert numbers below 1000 into words
   function helper(n: number): string {
     if (n === 0) return "";
     else if (n < 20) return belowTwenty[n] + " ";
-    else if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? "-" + belowTwenty[n % 10] : "") + " ";
-    else return belowTwenty[Math.floor(n / 100)] + " Hundred " + helper(n % 100);
+    else if (n < 100)
+      return (
+        tens[Math.floor(n / 10)] +
+        (n % 10 !== 0 ? "-" + belowTwenty[n % 10] : "") +
+        " "
+      );
+    else
+      return belowTwenty[Math.floor(n / 100)] + " Hundred " + helper(n % 100);
   }
 
   let word: string = "";
@@ -95,10 +134,17 @@ export function numberToWords(num: number): string {
 }
 
 export function quotationTotal(quotation: Quotation): number {
-  const totalCost = quotation?.items?.reduce((acc, item) => acc + (item.lineTotal || 0), 0);
-  const totalOtherCost = quotation?.otherItems?.reduce((acc, item) => acc + (item.lineTotal || 0), 0);
+  const totalCost = quotation?.items?.reduce(
+    (acc, item) => acc + (item.lineTotal || 0),
+    0
+  );
+  const totalOtherCost = quotation?.otherItems?.reduce(
+    (acc, item) => acc + (item.lineTotal || 0),
+    0
+  );
   const total = (totalCost || 0) + (totalOtherCost || 0);
   const hasVat = quotation?.vatPercentage && quotation?.vatPercentage > 0;
-  const totalVat = hasVat ? total * (quotation?.vatPercentage || 0 / 100) : 0;
+  const totalVat = hasVat ? total * ((quotation?.vatPercentage || 0) / 100) : 0;
+
   return total + totalVat;
 }
