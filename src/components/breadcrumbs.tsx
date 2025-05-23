@@ -56,7 +56,7 @@ const NextBreadcrumb = ({
             const queryParam = pathToQueryParam[parentSegment]; // 'client' or 'project'
             const queryValue = searchParams.get(queryParam);
             if (queryValue) {
-              const maxLength = isDesktop ? 100 : 4;
+              const maxLength = isDesktop ? 40 : 4;
               displayText =
                 queryValue.length > maxLength
                   ? capitalizeWords(queryValue.slice(0, maxLength) + "…")
