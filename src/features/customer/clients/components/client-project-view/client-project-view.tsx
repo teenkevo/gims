@@ -45,8 +45,6 @@ export default function ClientProjectView({
 
   const { quotation } = useQuotation(project, role);
 
-  console.log(quotation);
-
   const status = quotation?.status ?? "draft";
   const currentStage = statusStageMap[status] ?? 1;
   const rejectionStage = status === "rejected" ? currentStage : undefined;
@@ -67,7 +65,7 @@ export default function ClientProjectView({
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href={`/clients/${clientId}?tab=projects`}
+        href={`/clients/${clientId}?tab=projects&client=${client?.name}`}
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back

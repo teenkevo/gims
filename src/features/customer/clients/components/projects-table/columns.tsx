@@ -51,7 +51,7 @@ export const getColumns = (
     cell: ({ row }) => (
       <Link
         className="hover:underline"
-        href={`/clients/${client._id}/projects/${row.original?._id}`}
+        href={`/clients/${client._id}/projects/${row.original?._id}?client=${client.name}&project=${row.original?.name}`}
       >
         <div className="w-[100px] font-bold">{row.original?.internalId}</div>
       </Link>
@@ -66,7 +66,7 @@ export const getColumns = (
       return (
         <Link
           className="hover:underline"
-          href={`/clients/${client._id}/projects/${row.original?._id}`}
+          href={`/clients/${client._id}/projects/${row.original?._id}?client=${client.name}&project=${row.original?.name}`}
         >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">
@@ -197,7 +197,7 @@ export const getColumns = (
         );
       return (
         <Link
-          href={`/clients/${client._id}/projects/${row.original?._id}`}
+          href={`/clients/${client._id}/projects/${row.original?._id}?client=${client.name}&project=${row.original?.name}`}
           className="text-xs flex items-center p-1 border rounded-md hover:bg-muted w-[300px]"
         >
           {/* {icon} */}

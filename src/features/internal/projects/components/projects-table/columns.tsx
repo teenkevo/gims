@@ -83,7 +83,7 @@ export const getColumns = (
       return (
         <Link
           className="hover:underline"
-          href={`/projects/${row.original?._id}`}
+          href={`/projects/${row.original?._id}?project=${row.original?.name}`}
         >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">

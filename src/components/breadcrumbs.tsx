@@ -4,6 +4,7 @@ import React, { ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { capitalizeWords } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 type TBreadCrumbProps = {
   homeElement: ReactNode;
@@ -26,6 +27,8 @@ const NextBreadcrumb = ({
   const pathNames = paths.split("/").filter((path) => path);
   const searchParams = useSearchParams();
 
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
   // Define mappings of path segments to query params
   const pathToQueryParam: Record<string, string> = {
     projects: "project",
@@ -41,26 +44,26 @@ const NextBreadcrumb = ({
         {pathNames.length > 0 && separator}
         {pathNames.map((link, index) => {
           const isLast = index === pathNames.length - 1;
-          const parentSegment = pathNames[index - 1]; // Previous segment (e.g., 'clients')
+          const parentSegment = pathNames[index - 1]; // e.g. 'clients' or 'projects'
           const href = `/${pathNames.slice(0, index + 1).join("/")}`;
 
-          let displayText = capitalizeLinks ? link[0].toUpperCase() + link.slice(1) : link;
+          let displayText = capitalizeLinks
+            ? link[0].toUpperCase() + link.slice(1)
+            : link;
 
-          // Replace ID with query parameter value if available
-          if (isLast && parentSegment && pathToQueryParam[parentSegment]) {
-            const queryParam = pathToQueryParam[parentSegment];
+          // 🔄  Run for *any* link that follows a mapped parent segment
+          if (parentSegment && pathToQueryParam[parentSegment]) {
+            const queryParam = pathToQueryParam[parentSegment]; // 'client' or 'project'
             const queryValue = searchParams.get(queryParam);
             if (queryValue) {
-              // Truncate long query value and add ellipsis
-              const maxLength = 20; // Set your desired max length
+              const maxLength = isDesktop ? 100 : 4;
               displayText =
                 queryValue.length > maxLength
-                  ? capitalizeWords(queryValue.slice(0, maxLength) + "...")
+                  ? capitalizeWords(queryValue.slice(0, maxLength) + "…")
                   : capitalizeWords(queryValue);
             }
           }
 
-          // Always preserve the original query parameters in the breadcrumb URL
           const queryParams = searchParams.toString();
           const fullHref = queryParams ? `${href}?${queryParams}` : href;
 

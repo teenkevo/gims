@@ -4,32 +4,11 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { DataTableRowActions } from "./data-table-row-actions";
-import type {
-  ALL_SERVICES_QUERYResult,
-  ALL_PROJECTS_QUERYResult,
-  Quotation,
-  ALL_CLIENTS_QUERYResult,
-} from "../../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERYResult } from "../../../../../../sanity.types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  CalendarIcon,
-  CheckCircle,
-  DollarSign,
-  ListEnd,
-  ListStart,
-  ReceiptText,
-  Send,
-  XCircle,
-  CreditCard,
-  FileIcon as FileInvoice,
-  CircleDashed,
-  PlusCircle,
-  TriangleAlert,
-} from "lucide-react";
+import { ListEnd, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
@@ -40,7 +19,8 @@ export const getColumns = (
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
@@ -60,9 +40,14 @@ export const getColumns = (
   },
   {
     accessorKey: "internalId",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Client ID" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Client ID" />
+    ),
     cell: ({ row }) => (
-      <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
+      <Link
+        className="hover:underline"
+        href={`/clients/${row.original?._id}?client=${row.original?.name}`}
+      >
         <div className="w-[100px] font-bold">{row.original?.internalId}</div>
       </Link>
     ),
@@ -71,12 +56,19 @@ export const getColumns = (
   },
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Client Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Client Name" />
+    ),
     cell: ({ row }) => {
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
+        <Link
+          className="hover:underline"
+          href={`/clients/${row.original?._id}?client=${row.original?.name}`}
+        >
           <div className="flex space-x-2">
-            <span className="max-w-[350px] truncate font-normal">{row.original?.name}</span>
+            <span className="max-w-[350px] truncate font-normal">
+              {row.original?.name}
+            </span>
           </div>
         </Link>
       );
@@ -84,11 +76,16 @@ export const getColumns = (
   },
   {
     accessorKey: "projects",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Number of Projects" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Number of Projects" />
+    ),
     cell: ({ row }) => {
       const num_of_projects = row.original?.projects.length;
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}?tab=projects`}>
+        <Link
+          className="hover:underline"
+          href={`/clients/${row.original?._id}?client=${row.original?.name}&tab=projects`}
+        >
           <div className="flex space-x-2">
             <span className="font-normal">{num_of_projects}</span>
           </div>
@@ -98,22 +95,27 @@ export const getColumns = (
   },
   {
     accessorKey: "latest_project",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Latest Project ID" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Latest Project ID" />
+    ),
     cell: ({ row }) => {
       const latest_project_id = row.original?.projects[0]?._id;
       const latest_project_internal_id = row.original?.projects[0]?.internalId;
+      const latest_project_name = row.original?.projects[0]?.name;
       return (
         <Link
           className="hover:underline"
           href={
             latest_project_id
-              ? `/clients/${row.original?._id}/projects/${latest_project_id}`
-              : `/clients/${row.original?._id}?tab=projects`
+              ? `/clients/${row.original?._id}/projects/${latest_project_id}?client=${row.original?.name}&project=${latest_project_name}`
+              : `/clients/${row.original?._id}?client=${row.original?.name}&tab=projects`
           }
         >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">
-              <span>{latest_project_internal_id ? latest_project_internal_id : "-"}</span>
+              <span>
+                {latest_project_internal_id ? latest_project_internal_id : "-"}
+              </span>
             </span>
           </div>
         </Link>
