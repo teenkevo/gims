@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, MessageSquareMore } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -13,21 +14,19 @@ import {
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 
 interface RevisionNotesDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   revisionText: string;
 }
 
 export function RevisionNotesDialog({
-  open,
-  onOpenChange,
   revisionText,
 }: RevisionNotesDialogProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     function handleResize() {
@@ -41,7 +40,12 @@ export function RevisionNotesDialog({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          <Button variant="secondary" size="icon">
+            <MessageSquareMore className="h-4 w-4 animate-bounce" />
+          </Button>
+        </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader className="text-left">
             <div className="flex items-center gap-2">
@@ -59,7 +63,7 @@ export function RevisionNotesDialog({
               </p>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button onClick={() => onOpenChange(false)}>Got it</Button>
+              <Button onClick={() => setOpen(false)}>Got it</Button>
             </div>
           </div>
         </DrawerContent>
@@ -68,7 +72,12 @@ export function RevisionNotesDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="secondary" size="icon">
+          <MessageSquareMore className="h-4 w-4 animate-bounce" />
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -86,7 +95,7 @@ export function RevisionNotesDialog({
             </p>
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => onOpenChange(false)}>Got it</Button>
+            <Button onClick={() => setOpen(false)}>Got it</Button>
           </div>
         </div>
       </DialogContent>

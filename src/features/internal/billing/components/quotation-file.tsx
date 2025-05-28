@@ -9,6 +9,7 @@ import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
 import { Badge } from "@/components/ui/badge";
+import { RevisionNotesDialog } from "./revision-notes-dialog";
 
 interface FileActionsProps {
   fileUrl: string;
@@ -52,12 +53,14 @@ interface QuotationFileDisplayProps {
     } | null;
   } | null;
   isLatest?: boolean;
+  rejectionNotes?: string;
 }
 
 const QuotationFileDisplay: React.FC<QuotationFileDisplayProps> = ({
   revisionNumber,
   file,
   isLatest = false,
+  rejectionNotes,
 }) => {
   const fileUrl = file?.asset?.url || "";
   const fileName = file?.asset?.originalFilename;
@@ -90,12 +93,16 @@ const QuotationFileDisplay: React.FC<QuotationFileDisplayProps> = ({
           </Link>
         </div>
       </div>
-
-      <FileActions
-        fileUrl={fileUrl}
-        fileName={fileName || ""}
-        mimeType={mimeType || ""}
-      />
+      <div className="flex items-center gap-2">
+        {rejectionNotes && (
+          <RevisionNotesDialog revisionText={rejectionNotes} />
+        )}
+        <FileActions
+          fileUrl={fileUrl}
+          fileName={fileName || ""}
+          mimeType={mimeType || ""}
+        />
+      </div>
     </div>
   );
 };
@@ -141,7 +148,6 @@ export default function QuotationFile({
                     : "Pending"}
             </Badge>
           </div>
-
           {quotation && (
             <QuotationFileDisplay
               revisionNumber={quotation.revisionNumber || ""}
@@ -163,6 +169,7 @@ export default function QuotationFile({
                     key={revision?._id}
                     revisionNumber={revision?.revisionNumber || ""}
                     file={revision?.file}
+                    rejectionNotes={revision?.rejectionNotes || ""}
                   />
                 )
             )}
