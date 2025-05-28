@@ -17,6 +17,7 @@ import {
   FileIcon,
   ExternalLink,
   GitPullRequest,
+  MessageSquareMore,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +31,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { RespondToQuotationDialog } from "./respond-to-quotation";
 import { useQuotation } from "./useQuotation";
+import { ChatBubbleIcon } from "@radix-ui/react-icons";
+import { RevisionNotesDialog } from "./revision-notes-dialog";
 
 type Stage = {
   id: number;
@@ -78,7 +81,7 @@ export function BillingLifecycle({
   const [progress, setProgress] = useState(0);
   const [animationComplete, setAnimationComplete] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
+  const [showRevisionComments, setShowRevisionComments] = useState(false);
   const { role } = useRBAC();
 
   const {
@@ -375,7 +378,16 @@ export function BillingLifecycle({
                 stage.id === 3 &&
                 quotationNeedsRevision &&
                 role !== "client" && (
-                  <div className="mt-4 flex items-center text-orange-500 text-xs">
+                  <div className="mt-4 flex gap-2 items-center text-orange-500 text-xs">
+                    <Button
+                      onClick={() =>
+                        setShowRevisionComments(!showRevisionComments)
+                      }
+                      variant="secondary"
+                      size="icon"
+                    >
+                      <MessageSquareMore className="h-4 w-4 animate-bounce" />
+                    </Button>
                     <QuotationDrawer
                       allServices={allServices}
                       project={project}
@@ -595,6 +607,13 @@ export function BillingLifecycle({
                           reportingActivities={reportingActivities}
                           setReportingActivities={setReportingActivities}
                         />
+                        {showRevisionComments && (
+                          <RevisionNotesDialog
+                            open={showRevisionComments}
+                            onOpenChange={setShowRevisionComments}
+                            revisionText={quotation?.rejectionNotes || ""}
+                          />
+                        )}
                       </div>
                     )}
                 </div>

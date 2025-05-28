@@ -79,7 +79,7 @@ export function QuotationDrawer({
             {quotation && !quotationNeedsRevision
               ? "Review"
               : quotation && quotationNeedsRevision
-                ? "Revise Quotation"
+                ? "Revise"
                 : "Create Quotation"}
           </Button>
         </SheetTrigger>
