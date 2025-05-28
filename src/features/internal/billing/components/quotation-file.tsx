@@ -66,7 +66,7 @@ const QuotationFileDisplay: React.FC<QuotationFileDisplayProps> = ({
 
   return (
     <div
-      className={`flex flex-wrap justify-between items-center ${isLatest ? "dark:bg-muted/50 bg-muted" : "dark:bg-muted/20 bg-muted"} shadow-md p-4 rounded-lg gap-4`}
+      className={`flex flex-wrap justify-between items-center ${isLatest ? "dark:bg-muted/50 bg-muted" : "dark:bg-muted/20 bg-muted border border-destructive/50"} shadow-md p-4 rounded-lg gap-4`}
     >
       <div>
         <Badge variant="secondary" className="text-xs">
@@ -106,11 +106,10 @@ export default function QuotationFile({
   project: PROJECT_BY_ID_QUERYResult[number];
 }) {
   const { role } = useRBAC();
-  const { quotation, parent_revisions } = useQuotation(project, role);
-
-  const all_revisions = [...parent_revisions];
-  // remove latest version
-  all_revisions.shift();
+  const { quotation, number_parent_revisions, rejected } = useQuotation(
+    project,
+    role
+  );
 
   return (
     <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg ">
@@ -151,14 +150,22 @@ export default function QuotationFile({
             />
           )}
 
-          <p className="mb-6">{parent_revisions.length} revisions</p>
-          {all_revisions?.map((revision) => (
-            <QuotationFileDisplay
-              key={revision?._id}
-              revisionNumber={revision?.revisionNumber || ""}
-              file={revision?.file}
-            />
-          ))}
+          {number_parent_revisions > 0 && (
+            <p className="mb-6 mt-10 text-sm text-destructive">
+              Rejected Versions
+            </p>
+          )}
+          {number_parent_revisions > 0 &&
+            rejected?.map(
+              (revision) =>
+                revision?.file && (
+                  <QuotationFileDisplay
+                    key={revision?._id}
+                    revisionNumber={revision?.revisionNumber || ""}
+                    file={revision?.file}
+                  />
+                )
+            )}
         </div>
       </CardContent>
     </div>

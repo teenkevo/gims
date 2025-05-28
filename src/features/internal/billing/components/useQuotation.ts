@@ -27,7 +27,10 @@ export function useQuotation(
       (quotation?.rejectionNotes?.trim()?.length ?? 0) > 0;
 
     const number_parent_revisions = parentQuotation?.revisions?.length ?? 0;
-    const parent_revisions = parentQuotation?.revisions ?? [];
+
+    const all = [...(parentQuotation?.revisions ?? []), parentQuotation];
+
+    const rejected = parentQuotationHasRevisions ? (all.slice(1) ?? []) : [];
 
     return {
       parentQuotation,
@@ -38,7 +41,7 @@ export function useQuotation(
       quotation,
       quotationNeedsRevision,
       number_parent_revisions,
-      parent_revisions,
+      rejected,
     };
   }, [project, role]);
 }
