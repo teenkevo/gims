@@ -596,6 +596,45 @@ export type Quotation = {
   };
   status?: "draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid";
   rejectionNotes?: string;
+  invoice?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "invoice";
+  };
+};
+
+export type Invoice = {
+  _id: string;
+  _type: "invoice";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  currency?: "usd" | "eur" | "gbp" | "ugx";
+  items?: Array<
+    {
+      _key: string;
+    } & ServiceItem
+  >;
+  otherItems?: Array<
+    {
+      _key: string;
+    } & OtherItem
+  >;
+  vatPercentage?: number;
+  paymentNotes?: string;
+  file?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+    };
+    media?: unknown;
+    _type: "file";
+  };
 };
 
 export type Service = {
@@ -773,6 +812,7 @@ export type AllSanitySchemaTypes =
   | Client
   | Project
   | Quotation
+  | Invoice
   | Service
   | FieldTest
   | LabTest

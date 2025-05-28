@@ -20,6 +20,7 @@ import { quotation } from "./quotation";
 import { revision } from "./revision";
 import { otherItem } from "./billing-item";
 import { serviceItem } from "./billing-item";
+import { invoice } from "./invoice";
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -43,5 +44,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     serviceItem,
     otherItem,
     revision,
+    invoice,
   ],
 };
