@@ -133,7 +133,9 @@ export function BillingLifecycle({
           ? "Quotation was rejected by the client"
           : rejectionStage === 3 && quotationNeedsRevision
             ? "Quotation was rejected by the client with revisions requested"
-            : "Revisions are possible at this stage if needed",
+            : quotation?.status === "invoiced"
+              ? "Quotation has been accepted by the client"
+              : "Revisions are possible at this stage if needed",
     },
     {
       id: 4,
@@ -396,6 +398,13 @@ export function BillingLifecycle({
                     />
                   </div>
                 )}
+
+              {quotation?.status === "invoiced" && stage.id === 5 && (
+                <div className="mt-4 flex items-center text-orange-500 text-xs">
+                  <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                  <span>Awaiting client payment</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -588,7 +597,10 @@ export function BillingLifecycle({
                     stage.id === 3 &&
                     quotationNeedsRevision &&
                     role !== "client" && (
-                      <div className="mt-4 flex items-center text-orange-500 text-xs">
+                      <div className="mt-4 flex gap-2 items-center text-orange-500 text-xs">
+                        <RevisionNotesDialog
+                          revisionText={quotation?.rejectionNotes || ""}
+                        />
                         <QuotationDrawer
                           allServices={allServices}
                           project={project}
@@ -603,6 +615,12 @@ export function BillingLifecycle({
                         />
                       </div>
                     )}
+                  {quotation?.status === "invoiced" && stage.id === 5 && (
+                    <div className="mt-4 flex items-center text-orange-500 text-xs">
+                      <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                      <span>Awaiting client payment</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
