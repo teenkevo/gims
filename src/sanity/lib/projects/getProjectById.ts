@@ -33,6 +33,15 @@ export const getProjectById = async (projectId: string) => {
             currency,
             status,
             rejectionNotes,
+            invoice {
+              asset->{
+                _id,
+                url,
+                originalFilename,
+                size,
+                mimeType,
+              },
+            },
             revisions[]->|order(revisionNumber desc){
               _id,
               revisionNumber,
@@ -42,8 +51,24 @@ export const getProjectById = async (projectId: string) => {
               currency,
               status,
               rejectionNotes,
+              invoice {
+                asset->{
+                  _id,
+                  url,
+                  originalFilename,
+                  size,
+                  mimeType,
+                },
+              },
               items[] {
-                service,
+                service -> {
+                  _id,
+                  testParameter,
+                  sampleClass -> {
+                    _id,
+                    name,
+                  },
+                },
                 unitPrice,
                 quantity,
                 lineTotal,
@@ -75,7 +100,14 @@ export const getProjectById = async (projectId: string) => {
               },
             },
             items[] {
-              service,
+              service -> {
+                _id,
+                testParameter,
+                sampleClass -> {
+                  _id,
+                  name,
+                },
+              },
               unitPrice,
               quantity,
               lineTotal,

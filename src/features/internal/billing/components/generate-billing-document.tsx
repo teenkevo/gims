@@ -116,6 +116,7 @@ export const GenerateBillingDocument = ({
     () => (
       <Document>
         <BillingDocument
+          isInvoice={false}
           revisionNumber={revisionNumber}
           quotationNumber={quotationNumber || ""}
           quotationDate={quotationDate}

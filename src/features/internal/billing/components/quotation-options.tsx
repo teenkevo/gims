@@ -43,7 +43,7 @@ function mergeQuotation(
   quotation?: PROJECT_BY_ID_QUERYResult[number]["quotation"]
 ) {
   return services.map((svc) => {
-    const item = quotation?.items?.find((i) => i.service?._ref === svc._id);
+    const item = quotation?.items?.find((i) => i.service?._id === svc._id);
     const selectedMethod = item?.testMethod?.standard?.acronym ?? null;
 
     return {

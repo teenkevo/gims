@@ -21,7 +21,7 @@ import {
 import { ButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
-import { respondToQuotation } from "@/lib/actions";
+import { createInvoice, respondToQuotation } from "@/lib/actions";
 import { Check, MessageSquareReply, Send, X } from "lucide-react";
 import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -29,6 +29,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import { Document, pdf, PDFViewer } from "@react-pdf/renderer";
+import { BillingDocument } from "./billingDocument";
+import { InvoiceDocument } from "./invoice-document";
 
 export function RespondToQuotationDialog({
   project,
@@ -46,10 +49,62 @@ export function RespondToQuotationDialog({
 
   const { quotation } = useQuotation(project, role);
 
+  const fieldTests = quotation?.items?.filter(
+    (item) => item.service?.sampleClass?.name === "Field"
+  );
+
+  const labTests = quotation?.items?.filter(
+    (item) => item.service?.sampleClass?.name !== "Field"
+  );
+
+  const mobilizationActivities = quotation?.otherItems?.filter(
+    (item) => item.type === "mobilization"
+  );
+
+  const reportingActivities = quotation?.otherItems?.filter(
+    (item) => item.type === "reporting"
+  );
+
+  const Doc = (
+    <Document>
+      <InvoiceDocument
+        isInvoice={true}
+        revisionNumber={quotation?.revisionNumber || ""}
+        quotationNumber={quotation?.quotationNumber?.replace("Q", "INV") || ""}
+        quotationDate={quotation?.quotationDate || ""}
+        acquisitionNumber={quotation?.acquisitionNumber || ""}
+        currency={quotation?.currency || ""}
+        labTests={labTests || []}
+        fieldTests={fieldTests || []}
+        reportingActivities={reportingActivities || []}
+        mobilizationActivities={mobilizationActivities || []}
+        project={project}
+        paymentNotes={quotation?.paymentNotes || ""}
+        vatPercentage={quotation?.vatPercentage || 0}
+      />
+    </Document>
+  );
+
   const action = async (_: void | null) => {
     if (!quotation) {
       toast.error("Quotation not found");
       return;
+    }
+
+    if (status === "accepted") {
+      const blob = await pdf(Doc).toBlob();
+      const formData = new FormData();
+      formData.append(
+        "files",
+        blob,
+        `Invoice-${quotation?.quotationNumber?.replace("Q", "INV")}.pdf`
+      );
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const fileResult = await response.json();
+      await createInvoice(quotation._id, fileResult.files[0].fileId);
     }
 
     // For rejection, we need to create a new revision

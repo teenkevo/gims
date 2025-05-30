@@ -38,118 +38,23 @@ interface QuotationProps {
 }
 
 // CREATE INVOICE
-export async function createInvoice(
-  billingInfo: QuotationProps,
-  fileId: string
-) {
+export async function createInvoice(quotationId: string, fileId: string) {
   try {
-    const {
-      labTests,
-      fieldTests,
-      reportingActivities,
-      mobilizationActivities,
-      project,
-      currency,
-      vatPercentage,
-      paymentNotes,
-      quotationNumber,
-      quotationDate,
-      acquisitionNumber,
-      revisionNumber,
-    } = billingInfo;
-
-    const labTestMethod = labTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
-
-    const fieldTestMethod = fieldTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
-
-    const items = [
-      ...labTests.map((test) => ({
-        _type: "serviceItem",
-        service: {
-          _type: "reference",
-          _ref: test._id,
-        },
-        testMethod: {
-          _type: "reference",
-          _ref: labTestMethod,
-        },
-        unitPrice: test.price,
-        quantity: test.quantity,
-        lineTotal: test.price * test.quantity,
-      })),
-      ...fieldTests.map((field) => ({
-        _type: "serviceItem",
-        service: {
-          _type: "reference",
-          _ref: field._id,
-        },
-        testMethod: {
-          _type: "reference",
-          _ref: fieldTestMethod,
-        },
-        unitPrice: field.price,
-        quantity: field.quantity,
-        lineTotal: field.price * field.quantity,
-      })),
-    ];
-
-    const otherItems = [
-      ...reportingActivities.map((reporting) => ({
-        _type: "otherItem",
-        type: "reporting",
-        activity: reporting.activity,
-        unitPrice: reporting.price,
-        quantity: reporting.quantity,
-        lineTotal: reporting.price * reporting.quantity,
-      })),
-      ...mobilizationActivities.map((mobilization) => ({
-        _type: "otherItem",
-        type: "mobilization",
-        activity: mobilization.activity,
-        unitPrice: mobilization.price,
-        quantity: mobilization.quantity,
-        lineTotal: mobilization.price * mobilization.quantity,
-      })),
-    ];
-
-    const invoice = await writeClient.create(
-      {
-        _type: "invoice",
-        invoiceNumber: `${quotationNumber.replace("Q", "INV")}`,
-        invoiceDate: quotationDate,
-        currency: currency.toLowerCase(),
-        items,
-        otherItems,
-        vatPercentage,
-        paymentNotes,
-        file: {
+    const quotation = await writeClient
+      .patch(quotationId)
+      .set({
+        invoice: {
           _type: "file",
           asset: {
             _type: "reference",
             _ref: fileId,
           },
         },
-      },
-      {
-        autoGenerateArrayKeys: true,
-      }
-    );
-    await writeClient
-      .patch(project.quotation?._id ?? "")
-      .set({
-        invoice: {
-          _type: "reference",
-          _ref: invoice._id,
-        },
       })
       .commit();
 
-    revalidateTag(`invoice`);
-    return { result: invoice, status: "ok" };
+    revalidateTag(`quotation`);
+    return { result: quotation, status: "ok" };
   } catch (error) {
     console.error("Error creating invoice:", error);
     return { error, status: "error" };
@@ -1403,8 +1308,55 @@ export async function removeClientFromProject(
   }
 }
 
-export async function deleteProject(projectId: string) {
+export async function deleteProject(
+  project: PROJECT_BY_ID_QUERYResult[number]
+) {
   try {
+    const projectId = project._id;
+    const quotation = project.quotation;
+    const quotationHasRevisions = (quotation?.revisions?.length ?? 0) > 0;
+
+    // if project has a quotation we need to delete the quotation
+    if (quotation?._id) {
+      // remove the quotation from the project
+      await writeClient.patch(projectId).unset([`quotation`]).commit();
+
+      // if the quotation has revisions, we need to delete the revisions
+      if (quotationHasRevisions) {
+        const revisions = quotation?.revisions?.map((revision) => revision);
+
+        revisions?.forEach(async (revision) => {
+          // delete revision pdf file
+          if (revision?.file?.asset?._id) {
+            await writeClient.patch(revision?._id).unset([`file`]).commit();
+            await writeClient.delete(revision?.file?.asset?._id);
+          }
+          // delete revision invoice file if any
+          if (revision?.invoice?.asset?._id) {
+            await writeClient.patch(revision?._id).unset([`invoice`]).commit();
+            await writeClient.delete(revision?.invoice?.asset?._id);
+          }
+          // delete revision
+          await writeClient.delete(revision?._id);
+        });
+      }
+
+      // delete quotation file if it has any
+      if (quotation?.file?.asset?._id) {
+        await writeClient.patch(quotation?._id).unset([`file`]).commit();
+        await writeClient.delete(quotation?.file?.asset?._id);
+      }
+
+      // delete quotation invoice file if it has any
+      if (quotation?.invoice?.asset?._id) {
+        await writeClient.patch(quotation?._id).unset([`invoice`]).commit();
+        await writeClient.delete(quotation?.invoice?.asset?._id);
+      }
+
+      // delete quotation
+      await writeClient.delete(quotation?._id);
+    }
+
     const result = await writeClient.delete(projectId);
     // TODO: Is there a need to revalidate projects?
     revalidateTag(`projects`);

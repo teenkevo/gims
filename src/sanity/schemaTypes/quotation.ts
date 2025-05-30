@@ -124,9 +124,11 @@ export const quotation = defineType({
     }),
     defineField({
       name: "invoice",
+      type: "file",
       title: "Invoice",
-      type: "reference",
-      to: [{ type: "invoice" }],
+      options: {
+        accept: "application/pdf",
+      },
     }),
   ],
   // Initial value template to seed the first revision

@@ -399,6 +399,27 @@ export function BillingLifecycle({
                   </div>
                 )}
 
+              {quotation &&
+                quotation.status === "invoiced" &&
+                stage.id === 4 && (
+                  <div className="mt-5 flex flex-wrap gap-2 items-center">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="border border-primary/30"
+                    >
+                      <Link
+                        className="flex items-center"
+                        href={quotation?.invoice?.asset?.url || ""}
+                        target="_blank"
+                      >
+                        <ExternalLink className="text-primary h-4 w-4 mr-2" />
+                        View Invoice
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+
               {quotation?.status === "invoiced" && stage.id === 5 && (
                 <div className="mt-4 flex items-center text-orange-500 text-xs">
                   <CircleDashed className="animate-spin h-3 w-3 mr-1" />

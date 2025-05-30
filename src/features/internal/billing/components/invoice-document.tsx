@@ -2,17 +2,8 @@ import React from "react";
 import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
-import {
-  FieldService,
-  MobilizationService,
-  ReportingService,
-  Service,
-} from "@/features/customer/services/data/schema";
 import { numberToWords } from "../../projects/constants";
-import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
-} from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { currencyCodeToName } from "@/lib/utils";
 const tw = createTw({
   theme: {
@@ -46,11 +37,40 @@ Font.register({
   ],
 });
 
+export interface Test {
+  service: {
+    _id: string;
+    testParameter: string | null;
+    sampleClass: {
+      _id: string;
+      name: string | null;
+    } | null;
+  } | null;
+  unitPrice: number | null;
+  quantity: number | null;
+  lineTotal: number | null;
+  testMethod: {
+    _id: string;
+    standard: {
+      _id: string;
+      acronym: string | null;
+    } | null;
+  } | null;
+}
+
+interface Activity {
+  type: "mobilization" | "reporting" | null;
+  activity: string | null;
+  unitPrice: number | null;
+  quantity: number | null;
+  lineTotal: number | null;
+}
+
 interface BillingDocumentProps {
-  labTests: ALL_SERVICES_QUERYResult;
-  fieldTests: ALL_SERVICES_QUERYResult;
-  reportingActivities: ReportingService[];
-  mobilizationActivities: MobilizationService[];
+  labTests: Test[];
+  fieldTests: Test[];
+  reportingActivities: Activity[];
+  mobilizationActivities: Activity[];
   project: PROJECT_BY_ID_QUERYResult[number];
   currency: string;
   paymentNotes: string;
@@ -62,7 +82,7 @@ interface BillingDocumentProps {
   isInvoice: boolean;
 }
 
-export const BillingDocument = (billingInfo: BillingDocumentProps) => {
+export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
   const {
     quotationNumber,
     quotationDate,
@@ -99,9 +119,9 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   const lab = billing_data.items.labTests || [];
   const reporting = billing_data.items.reportingActivities || [];
 
-  const calculateBill = (items: any) =>
+  const calculateBill = (items: (Test | Activity)[]) =>
     items.reduce(
-      (sum: number, item: any) => sum + item.price * item.quantity,
+      (sum: number, item) => sum + (item.unitPrice || 0) * (item.quantity || 0),
       0
     );
 
@@ -110,6 +130,8 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     (calculateBill(field) || 0) +
     (calculateBill(lab) || 0) +
     (calculateBill(reporting) || 0);
+
+  console.log(SUBTOTAL);
 
   const VAT_AMOUNT = Math.round((SUBTOTAL * vatPercentage) / 100);
   const TOTAL_WITH_VAT = Math.round(SUBTOTAL + VAT_AMOUNT);
@@ -462,11 +484,11 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       </View>
     </View>
   );
-  const TableBodyWithListItems = ({ items }: any) =>
+  const TableBodyWithListItems = ({ items }: { items: (Test | Activity)[] }) =>
     items.length === 0 ? (
       <NoItems text="No items" />
     ) : (
-      items?.map((item: any, index: number) => (
+      items?.map((item, index: number) => (
         <View key={index} style={{ width: "100%", flexDirection: "row" }}>
           <View style={styles.tbody}>
             <Text>{item.quantity}</Text>
@@ -475,45 +497,20 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
             <Text>No</Text>
           </View>
           <View style={[styles.tbody, styles.tbody2]}>
-            <Text>{item.testParameter || item.activity}</Text>
+            <Text>
+              {"service" in item ? item.service?.testParameter : item.activity}
+            </Text>
           </View>
           <View style={styles.tbodyRightAlign}>
-            <Text>{item.price.toLocaleString()} </Text>
+            <Text>{item.unitPrice?.toLocaleString() || "0"} </Text>
           </View>
           <View style={styles.tbodyRightAlign}>
-            <Text>{(item.price * item.quantity).toLocaleString()}</Text>
+            <Text>
+              {((item.unitPrice || 0) * (item.quantity || 0))?.toLocaleString()}
+            </Text>
           </View>
         </View>
       ))
-    );
-
-  const TableBodyWithSingleItem = ({
-    item,
-  }: {
-    item: MobilizationService | ReportingService;
-  }) =>
-    !item.price || !item.quantity ? (
-      <NoItems text="No item" />
-    ) : (
-      <View style={{ width: "100%", flexDirection: "row" }}>
-        <View style={styles.tbody}>
-          <Text>{item.quantity}</Text>
-        </View>
-        <View style={styles.tbody}>
-          <Text>No</Text>
-        </View>
-        <View style={[styles.tbody, styles.tbody2]}>
-          <Text>{item.activity}</Text>
-        </View>
-        <View style={styles.tbodyRightAlign}>
-          <Text>{item?.price?.toLocaleString()} </Text>
-        </View>
-        <View style={styles.tbodyRightAlign}>
-          <Text>
-            {((item?.price ?? 0) * (item?.quantity ?? 0)).toLocaleString()}
-          </Text>
-        </View>
-      </View>
     );
 
   const TableTotal = () => (
