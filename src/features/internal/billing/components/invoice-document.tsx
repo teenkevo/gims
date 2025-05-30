@@ -131,8 +131,6 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
     (calculateBill(lab) || 0) +
     (calculateBill(reporting) || 0);
 
-  console.log(SUBTOTAL);
-
   const VAT_AMOUNT = Math.round((SUBTOTAL * vatPercentage) / 100);
   const TOTAL_WITH_VAT = Math.round(SUBTOTAL + VAT_AMOUNT);
 

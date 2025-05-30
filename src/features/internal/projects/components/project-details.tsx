@@ -200,8 +200,8 @@ export default function ProjectDetails({
               savable={true}
               fieldName="dateRange"
               initialValue={{
-                from: new Date(startDate ?? Date.now()),
-                to: new Date(endDate ?? Date.now()),
+                from: startDate ? new Date(startDate) : undefined,
+                to: endDate ? new Date(endDate) : undefined,
               }}
               projectId={_id}
             />
@@ -319,7 +319,7 @@ export default function ProjectDetails({
 
               <CardContent>
                 <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
-                  <DeleteProject name={name || ""} id={_id || ""} />
+                  <DeleteProject project={project} />
                 </div>
               </CardContent>
             </div>

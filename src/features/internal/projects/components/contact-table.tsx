@@ -41,7 +41,6 @@ export function ContactTable({
     (contact) => contact.client?._id === clientId
   );
 
-  console.log(existingContactsForClient);
   // Update the column helper to use the new type
   const columnHelper = createColumnHelper<ExtendedContact>();
 
