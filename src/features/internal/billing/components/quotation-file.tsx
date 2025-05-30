@@ -4,7 +4,6 @@ import { CardContent } from "@/components/ui/card";
 import { Download, ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import mime from "mime-types";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
@@ -30,10 +29,7 @@ const FileActions: React.FC<FileActionsProps> = ({
       </Link>
     </Button>
     <Button variant="outline" size="sm">
-      <Link
-        className="flex items-center"
-        href={`${fileUrl}?dl=${fileName}.${mime.extension(mimeType || "")}`}
-      >
+      <Link className="flex items-center" href={`${fileUrl}?dl=${fileName}`}>
         <Download className="h-4 w-4 mr-2 text-primary" />
         Download
       </Link>
