@@ -22,8 +22,13 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteProject } from "@/lib/actions";
+import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
 
-export function DeleteProject({ name, id }: { name: string; id: string }) {
+export function DeleteProject({
+  project,
+}: {
+  project: PROJECT_BY_ID_QUERYResult[number];
+}) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(""); // Track input value
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -31,7 +36,7 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
   const router = useRouter();
 
   const action = async (_: void | null) => {
-    const result = await deleteProject(id);
+    const result = await deleteProject(project);
     if (result.status === "ok") {
       toast.success("Project has been deleted");
       router.push("/projects");
@@ -42,7 +47,7 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
 
   const [_, dispatch, isPending] = useActionState(action, null);
 
-  const isDeleteDisabled = inputValue !== name; // Disable button if names don't match
+  const isDeleteDisabled = inputValue !== project.name; // Disable button if names don't match
 
   if (isDesktop) {
     return (
@@ -65,8 +70,8 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
           <div className="grid gap-4 py-4">
             <p className="text-sm text-muted-foreground">
               Enter the project name{" "}
-              <span className="font-bold text-foreground">{name}</span> to
-              confirm this action
+              <span className="font-bold text-foreground">{project.name}</span>{" "}
+              to confirm this action
             </p>
             <Input
               id="name"
@@ -115,8 +120,8 @@ export function DeleteProject({ name, id }: { name: string; id: string }) {
         <div className="grid gap-4 py-4 px-4">
           <p className="text-sm text-muted-foreground">
             Enter the project name{" "}
-            <span className="font-bold text-foreground">{name}</span> to confirm
-            this action
+            <span className="font-bold text-foreground">{project.name}</span> to
+            confirm this action
           </p>
           <Input
             id="name"
