@@ -20,6 +20,7 @@ import { DataTable as ProjectsDataTable } from "./projects-table/data-table";
 import { CreateContactDialog } from "./create-contact-dialog";
 import NoProjectsPlaceholder from "@/features/internal/projects/components/no-projects-placeholder";
 import { Badge } from "@/components/ui/badge";
+import { DeleteClient } from "./delete-client";
 
 export default function ClientDetails({
   client,
@@ -152,7 +153,7 @@ export default function ClientDetails({
 
               <CardContent>
                 <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
-                  {/* <DeleteProject name={name || ""} id={_id || ""} /> */}
+                  <DeleteClient client={client} />
                 </div>
               </CardContent>
             </div>

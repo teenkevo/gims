@@ -23,7 +23,7 @@ export const getAllClients = async () => {
   try {
     const clients = await sanityFetch({
       query: ALL_CLIENTS_QUERY,
-      revalidate: 0,
+      tags: ["clients"],
     });
 
     // return data or empty array if no data is found
