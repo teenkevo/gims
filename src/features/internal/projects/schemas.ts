@@ -26,6 +26,7 @@ export const clientDetailsSchema = z.object({
   }),
   existingClient: z.string().optional(),
   newClientName: z.string().min(1, "Required").optional().or(z.literal("")),
+  newClientInternalId: z.string(),
 });
 
 export const billingFormSchema = z.object({

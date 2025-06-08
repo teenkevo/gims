@@ -1143,6 +1143,7 @@ export async function createProject(prevState: any, formData: FormData) {
           const newClient = await writeClient.create({
             _type: "client",
             name: client.newClientName,
+            internalId: client.newClientInternalId,
           });
           return newClient._id; // Return the new client's ID
         } else {
