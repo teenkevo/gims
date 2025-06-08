@@ -1316,14 +1316,19 @@ export async function deleteClient(clientId: string) {
     const contactPersons = await writeClient.fetch(
       `*[_type == "contactPerson" && client._ref == "${clientId}"]`
     );
+
     const contactPersonIds = contactPersons.map(
       (contactPerson: any) => contactPerson._id
     );
+
     await deleteMultipleContacts(contactPersonIds);
 
     const result = await writeClient.delete(clientId);
     revalidateTag("clients");
-    return { result, status: "ok" };
+    return {
+      result,
+      status: "ok",
+    };
   } catch (error) {
     console.log(error);
     return { error, status: "error" };

@@ -21,8 +21,10 @@ import { useRouter } from "next/navigation";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
-import { deleteClient, deleteProject } from "@/lib/actions";
+import { deleteClient } from "@/lib/actions";
 import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { AlertTriangle, File } from "lucide-react";
+import Link from "next/link";
 
 export function DeleteClient({
   client,
@@ -34,6 +36,8 @@ export function DeleteClient({
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const router = useRouter();
+
+  const connectedProjects = client.projects;
 
   const action = async (_: void | null) => {
     const result = await deleteClient(client._id);
@@ -47,7 +51,8 @@ export function DeleteClient({
 
   const [_, dispatch, isPending] = useActionState(action, null);
 
-  const isDeleteDisabled = inputValue !== client.internalId; // Disable button if names don't match
+  const isDeleteDisabled =
+    connectedProjects.length > 0 && inputValue !== client.internalId; // Disable button if names don't match
 
   if (isDesktop) {
     return (
@@ -58,31 +63,66 @@ export function DeleteClient({
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader className="space-y-3">
             <DialogTitle>Delete Client</DialogTitle>
-            <DialogDescription>
-              This client will be deleted, along with their contact persons,
-              files, invoices and quotations.
-            </DialogDescription>
-            <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-              <span className="font-bold">Warning</span>: This action is not
-              reversible. Please be certain
-            </div>
+            {connectedProjects.length === 0 && (
+              <DialogDescription>
+                This client will be deleted along with all of their contact
+                persons, files, invoices and quotations.
+              </DialogDescription>
+            )}
+            {connectedProjects.length > 0 ? (
+              <>
+                <div className="flex items-center gap-2 bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
+                  <AlertTriangle className="h-5 w-5 mr-2" />
+                  The client has {connectedProjects.length} project
+                  {connectedProjects.length > 1 ? "s" : ""} referencing them and
+                  cannot be deleted. Delete the projects first.
+                </div>
+                <div className="flex flex-col gap-6">
+                  {connectedProjects.map((project) => (
+                    <div key={project._id}>
+                      <div className="mt-1 flex flex-col gap-4 border border-dashed border-orange-500/50 p-3 rounded text-sm">
+                        {connectedProjects.map((project) => (
+                          <Link
+                            className="flex items-center gap-2 hover:underline underline-offset-2"
+                            href={`/projects/${project._id}`}
+                            key={project._id}
+                          >
+                            <File className="h-4 w-4 mr-2 text-muted-foreground" />
+                            {project.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
+                  <span className="font-bold">Warning</span>: This action is not
+                  reversible. Please be certain
+                </div>
+              </>
+            )}
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              Enter the client internal ID{" "}
-              <span className="font-bold text-foreground">
-                {client.internalId}
-              </span>{" "}
-              to confirm this action
-            </p>
-            <Input
-              id="name"
-              placeholder="Type client internal ID here"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)} // Track input value
-              className="col-span-3"
-            />
-          </div>
+          {connectedProjects.length === 0 && (
+            <div className="grid gap-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the client internal ID{" "}
+                <span className="font-bold text-foreground">
+                  {client.internalId}
+                </span>{" "}
+                to confirm this action
+              </p>
+              <Input
+                id="name"
+                placeholder="Type client internal ID here"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)} // Track input value
+                className="col-span-3"
+              />
+            </div>
+          )}
           <DialogFooter>
             {isPending ? (
               <DestructiveButtonLoading />
@@ -110,31 +150,66 @@ export function DeleteClient({
       <DrawerContent>
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Delete Client</DialogTitle>
-          <DialogDescription>
-            This client will be deleted, along with all of their contact
-            persons, files, invoices and quotations.
-          </DialogDescription>
-          <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-            <span className="font-bold">Warning</span>: This action is not
-            reversible. Please be certain
-          </div>
+          {connectedProjects.length === 0 && (
+            <DialogDescription>
+              This client will be deleted along with all of their contact
+              persons, files, invoices and quotations.
+            </DialogDescription>
+          )}
+          {connectedProjects.length > 0 ? (
+            <>
+              <div className="flex items-center gap-2 bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                The client has {connectedProjects.length} project
+                {connectedProjects.length > 1 ? "s" : ""} referencing them and
+                cannot be deleted. Delete the projects first.
+              </div>
+              <div className="flex flex-col gap-6">
+                {connectedProjects.map((project) => (
+                  <div key={project._id}>
+                    <div className="mt-1 flex flex-col gap-4 border border-dashed border-orange-500/50 p-3 rounded text-sm">
+                      {connectedProjects.map((project) => (
+                        <Link
+                          className="flex items-center gap-2 hover:underline underline-offset-2"
+                          href={`/projects/${project._id}`}
+                          key={project._id}
+                        >
+                          <File className="h-4 w-4 mr-2 text-muted-foreground" />
+                          {project.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
+                <span className="font-bold">Warning</span>: This action is not
+                reversible. Please be certain
+              </div>
+            </>
+          )}
         </DrawerHeader>
-        <div className="grid gap-4 py-4 px-4">
-          <p className="text-sm text-muted-foreground">
-            Enter the client internal ID{" "}
-            <span className="font-bold text-foreground">
-              {client.internalId}
-            </span>{" "}
-            to confirm this action
-          </p>
-          <Input
-            id="name"
-            placeholder="Type client internal ID here"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)} // Track input value
-            className="col-span-3"
-          />
-        </div>
+        {connectedProjects.length === 0 && (
+          <div className="grid gap-4 py-4 px-4">
+            <p className="text-sm text-muted-foreground">
+              Enter the client internal ID{" "}
+              <span className="font-bold text-foreground">
+                {client.internalId}
+              </span>{" "}
+              to confirm this action
+            </p>
+            <Input
+              id="name"
+              placeholder="Type client internal ID here"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)} // Track input value
+              className="col-span-3"
+            />
+          </div>
+        )}
         <DrawerFooter className="pt-2">
           {isPending ? (
             <DestructiveButtonLoading />
