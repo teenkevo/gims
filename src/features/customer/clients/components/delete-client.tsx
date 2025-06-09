@@ -78,22 +78,18 @@ export function DeleteClient({
                   cannot be deleted. Delete the projects first.
                 </div>
                 <div className="flex flex-col gap-6">
-                  {connectedProjects.map((project) => (
-                    <div key={project._id}>
-                      <div className="mt-1 flex flex-col gap-4 border border-dashed border-orange-500/50 p-3 rounded text-sm">
-                        {connectedProjects.map((project) => (
-                          <Link
-                            className="flex items-center gap-2 hover:underline underline-offset-2"
-                            href={`/projects/${project._id}`}
-                            key={project._id}
-                          >
-                            <File className="h-4 w-4 mr-2 text-muted-foreground" />
-                            {project.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  <div className="mt-1 flex flex-col gap-4 border border-dashed border-orange-500/50 p-3 rounded text-sm">
+                    {connectedProjects.map((project) => (
+                      <Link
+                        className="flex items-center gap-2 hover:underline underline-offset-2"
+                        href={`/projects/${project._id}`}
+                        key={project._id}
+                      >
+                        <File className="h-4 w-4 mr-2 text-muted-foreground" />
+                        {project.name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </>
             ) : (
