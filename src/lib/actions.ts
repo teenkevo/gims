@@ -1461,7 +1461,9 @@ export async function updatePersonnel(prevState: any, formData: FormData) {
         departmentRoles: departmentRolesArray,
         status: "active",
       })
-      .commit();
+      .commit({
+        autoGenerateArrayKeys: true,
+      });
 
     revalidateTag("personnel");
     return { result, status: "ok" };

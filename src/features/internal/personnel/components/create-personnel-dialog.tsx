@@ -68,14 +68,12 @@ type FormData = {
 };
 
 export function CreatePersonnelDialog({
-  trigger,
   departmentRoles,
   isEdit = false,
   personnel,
   open,
   onClose,
 }: {
-  trigger?: React.ReactNode;
   departmentRoles: Record<
     string,
     { roles: (string | undefined)[]; departmentId: string }
@@ -90,18 +88,6 @@ export function CreatePersonnelDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        {!isEdit && (
-          <DialogTrigger asChild>
-            {trigger ? (
-              trigger
-            ) : (
-              <Button className="text-sm flex items-center">
-                <Plus className="h-4 w-4 mr-2" />
-                {isEdit ? "Edit Personnel" : "Add New Personnel"}
-              </Button>
-            )}
-          </DialogTrigger>
-        )}
         <DialogContent
           aria-describedby={undefined}
           className="sm:max-w-[600px]"
@@ -114,7 +100,7 @@ export function CreatePersonnelDialog({
 
           <CreatePersonnelForm
             departmentRoles={departmentRoles}
-            setOpen={onClose}
+            onClose={onClose}
             isEdit={isEdit}
             personnel={personnel}
           />
@@ -125,18 +111,6 @@ export function CreatePersonnelDialog({
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      {!isEdit && (
-        <DialogTrigger asChild>
-          {trigger ? (
-            trigger
-          ) : (
-            <Button className="text-sm flex items-center">
-              <Plus className="h-4 w-4 mr-2" />
-              {isEdit ? "Edit Personnel" : "Add New Personnel"}
-            </Button>
-          )}
-        </DialogTrigger>
-      )}
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>
@@ -145,7 +119,7 @@ export function CreatePersonnelDialog({
         </DrawerHeader>
         <CreatePersonnelForm
           departmentRoles={departmentRoles}
-          setOpen={onClose}
+          onClose={onClose}
           isEdit={isEdit}
           personnel={personnel}
         />
@@ -161,7 +135,7 @@ export function CreatePersonnelDialog({
 
 function CreatePersonnelForm({
   departmentRoles,
-  setOpen,
+  onClose,
   isEdit = false,
   personnel,
 }: {
@@ -169,7 +143,7 @@ function CreatePersonnelForm({
     string,
     { roles: (string | undefined)[]; departmentId: string }
   >;
-  setOpen?: (open: boolean) => void;
+  onClose?: () => void;
   isEdit?: boolean;
   personnel?: ALL_PERSONNEL_QUERYResult[number];
 }) {
@@ -239,11 +213,11 @@ function CreatePersonnelForm({
   useEffect(() => {
     if (state?.status === "ok") {
       toast.success(`Personnel has been ${isEdit ? "updated" : "created"}`);
-      setOpen?.(false);
+      onClose?.();
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
-  }, [state, setOpen, isEdit]);
+  }, [state, onClose, isEdit]);
 
   const removeDepartmentRole = (departmentToRemove: string) => {
     const updatedDepartmentRoles = selectedDepartmentRoles.filter(

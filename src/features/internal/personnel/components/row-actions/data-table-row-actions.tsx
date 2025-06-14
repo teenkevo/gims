@@ -62,20 +62,6 @@ export function DataTableRowActions<TData>({
             <span>Edit Personnel</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {/* <DropdownMenuItem
-            className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
-            onClick={() => handleOpenDialog("dialog2")}
-          >
-            {service?.status === "active" ? (
-              <CrossCircledIcon className=" h-4 w-4 mr-2" />
-            ) : (
-              <CheckCircledIcon className=" h-4 w-4 mr-2" />
-            )}
-            <span>
-              {service?.status === "active" ? "Deactivate" : "Activate"}
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator /> */}
           <DropdownMenuItem
             className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground transition-all"
             onClick={() => handleOpenDialog("dialog3")}

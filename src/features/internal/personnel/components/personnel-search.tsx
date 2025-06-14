@@ -8,6 +8,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreatePersonnelDialog } from "./create-personnel-dialog";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface PersonnelSearchProps {
   searchTerm: string;
@@ -31,6 +33,12 @@ export function PersonnelSearch({
   onDepartmentFilterChange,
   departmentRoles,
 }: PersonnelSearchProps) {
+  const [open, setOpen] = useState<boolean>(false);
+
+  const handleCloseDialog = () => {
+    setOpen(false);
+  };
+
   return (
     <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
       <div className="flex items-center gap-4 flex-1">
@@ -75,7 +83,20 @@ export function PersonnelSearch({
         </Select>
       </div>
 
-      <CreatePersonnelDialog departmentRoles={departmentRoles} />
+      <div className="flex items-center gap-4">
+        <Button
+          onClick={() => setOpen(true)}
+          className="text-sm flex items-center"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Personnel
+        </Button>
+        <CreatePersonnelDialog
+          departmentRoles={departmentRoles}
+          open={open}
+          onClose={handleCloseDialog}
+        />
+      </div>
     </div>
   );
 }

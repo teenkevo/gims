@@ -21,7 +21,6 @@ export const structure: StructureResolver = (S) =>
                     .title("Lab Departments and Personnel")
                     .items([
                       S.documentTypeListItem("department").title("Departments"),
-                      S.documentTypeListItem("role").title("Roles"),
                       S.documentTypeListItem("personnel").title("Personnel"),
                     ])
                 ),
