@@ -327,6 +327,49 @@ export type Equipment = {
   };
 };
 
+export type Role = {
+  _id: string;
+  _type: "role";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name?: string;
+  description?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal" | "h2" | "h3" | "h4";
+    listItem?: "bullet" | "number";
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  jobDescriptionFile?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+    };
+    media?: unknown;
+    _type: "file";
+  };
+  department?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "department";
+  };
+};
+
 export type Lab = {
   _id: string;
   _type: "lab";
@@ -415,17 +458,75 @@ export type Personnel = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
+  internalId?: string;
   fullName?: string;
-  roleSet?: Array<string>;
+  departmentRoles?: Array<{
+    department?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "department";
+    };
+    role?: string;
+    _key: string;
+  }>;
   email?: string;
   phone?: string;
-  departments?: Array<string>;
   projects?: {
     _ref: string;
     _type: "reference";
     _weak?: boolean;
     [internalGroqTypeReferenceTo]?: "project";
   };
+  status?:
+    | "active"
+    | "inactive"
+    | "on-leave"
+    | "terminated"
+    | "retired"
+    | "resigned"
+    | "other";
+};
+
+export type Department = {
+  _id: string;
+  _type: "department";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  department?: string;
+  roles?: Array<{
+    roleName?: string;
+    description?: Array<{
+      children?: Array<{
+        marks?: Array<string>;
+        text?: string;
+        _type: "span";
+        _key: string;
+      }>;
+      style?: "normal" | "h2" | "h3" | "h4";
+      listItem?: "bullet" | "number";
+      markDefs?: Array<{
+        href?: string;
+        _type: "link";
+        _key: string;
+      }>;
+      level?: number;
+      _type: "block";
+      _key: string;
+    }>;
+    jobDescriptionFile?: {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+      };
+      media?: unknown;
+      _type: "file";
+    };
+    _key: string;
+  }>;
 };
 
 export type ClientFeedback = {
@@ -497,13 +598,6 @@ export type Client = {
   _rev: string;
   internalId?: string;
   name?: string;
-  projects?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "project";
-  }>;
 };
 
 export type Project = {
@@ -775,9 +869,11 @@ export type AllSanitySchemaTypes =
   | LabApprovalWorkflow
   | MaintenanceLog
   | Equipment
+  | Role
   | Lab
   | FeedbackAction
   | Personnel
+  | Department
   | ClientFeedback
   | ContactPerson
   | Client
@@ -894,6 +990,74 @@ export type CLIENT_BY_ID_QUERYResult = Array<{
       name: string | null;
     }>;
   }>;
+}>;
+
+// Source: ./src/sanity/lib/departments/getAllDepartments.ts
+// Variable: ALL_DEPARTMENTS_QUERY
+// Query: *[_type == "department"] {          _id,          department,          roles        }
+export type ALL_DEPARTMENTS_QUERYResult = Array<{
+  _id: string;
+  department: string | null;
+  roles: Array<{
+    roleName?: string;
+    description?: Array<{
+      children?: Array<{
+        marks?: Array<string>;
+        text?: string;
+        _type: "span";
+        _key: string;
+      }>;
+      style?: "h2" | "h3" | "h4" | "normal";
+      listItem?: "bullet" | "number";
+      markDefs?: Array<{
+        href?: string;
+        _type: "link";
+        _key: string;
+      }>;
+      level?: number;
+      _type: "block";
+      _key: string;
+    }>;
+    jobDescriptionFile?: {
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+      };
+      media?: unknown;
+      _type: "file";
+    };
+    _key: string;
+  }> | null;
+}>;
+
+// Source: ./src/sanity/lib/personnel/getAllPersonnel.ts
+// Variable: ALL_PERSONNEL_QUERY
+// Query: *[_type == "personnel"] | order(internalId desc) {          _id,          internalId,          fullName,          email,          phone,          departmentRoles[] {            department->{              _id,              department            },            role          },          projects[]->{            _id,            name,            internalId          },          status        }
+export type ALL_PERSONNEL_QUERYResult = Array<{
+  _id: string;
+  internalId: string | null;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  departmentRoles: Array<{
+    department: {
+      _id: string;
+      department: string | null;
+    } | null;
+    role: string | null;
+  }> | null;
+  projects: null;
+  status:
+    | "active"
+    | "inactive"
+    | "on-leave"
+    | "other"
+    | "resigned"
+    | "retired"
+    | "terminated"
+    | null;
 }>;
 
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
@@ -1271,6 +1435,8 @@ declare module "@sanity/client" {
     '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate\n      }\n    }\n  ': ALL_CLIENTS_QUERYResult;
     '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            client->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
     '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n              _id,\n              internalId,\n              name,\n              startDate, \n              endDate, \n              stagesCompleted, \n              clients[]->{\n                _id, \n                name,\n                internalId\n              },\n              quotation->{\n                _id,\n                revisionNumber,\n                currency,\n                status,\n                rejectionNotes,\n                revisions[]->|order(revisionNumber desc){\n                  _id,\n                  revisionNumber,\n                  currency,\n                  status,\n                  rejectionNotes,\n                  items[] {\n                    lineTotal,\n                  },\n                  otherItems[] {\n                    lineTotal,\n                  },\n                  vatPercentage,\n                },\n                items[] {\n                  lineTotal,\n                },\n                otherItems[] {\n                  lineTotal,\n                },\n                vatPercentage,\n              }\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERYResult;
+    '\n        *[_type == "department"] {\n          _id,\n          department,\n          roles\n        }\n  ': ALL_DEPARTMENTS_QUERYResult;
+    '\n        *[_type == "personnel"] | order(internalId desc) {\n          _id,\n          internalId,\n          fullName,\n          email,\n          phone,\n          departmentRoles[] {\n            department->{\n              _id,\n              department\n            },\n            role\n          },\n          projects[]->{\n            _id,\n            name,\n            internalId\n          },\n          status\n        }\n  ': ALL_PERSONNEL_QUERYResult;
     '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              items[] {\n                lineTotal,\n              },\n              otherItems[] {\n                lineTotal,\n              },\n              vatPercentage,\n            },\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            invoice {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              quotationNumber,\n              quotationDate,\n              acquisitionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              invoice {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              items[] {\n                service -> {\n                  _id,\n                  testParameter,\n                  sampleClass -> {\n                    _id,\n                    name,\n                  },\n                },\n                unitPrice,\n                quantity,\n                lineTotal,\n                testMethod->{\n                  _id,\n                  standard->{\n                    _id,\n                    acronym,\n                  },\n                },\n              },\n              otherItems[] {\n                type,\n                activity,\n                unitPrice,\n                quantity,\n                lineTotal,\n              },\n              vatPercentage,\n              paymentNotes,\n              file {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n            },\n            items[] {\n              service -> {\n                _id,\n                testParameter,\n                sampleClass -> {\n                  _id,\n                  name,\n                },\n              },\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
     '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;

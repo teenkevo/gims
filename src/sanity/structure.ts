@@ -14,7 +14,17 @@ export const structure: StructureResolver = (S) =>
             .title("Labs")
             .items([
               S.documentTypeListItem("lab").title("Labs"),
-              S.documentTypeListItem("personnel").title("Lab Personnel"),
+              S.documentTypeListItem("personnel")
+                .title("Lab Departments and Personnel")
+                .child(
+                  S.list()
+                    .title("Lab Departments and Personnel")
+                    .items([
+                      S.documentTypeListItem("department").title("Departments"),
+                      S.documentTypeListItem("role").title("Roles"),
+                      S.documentTypeListItem("personnel").title("Personnel"),
+                    ])
+                ),
               S.documentTypeListItem("equipment").title("Lab Equipment"),
               S.documentTypeListItem("maintenanceLog").title(
                 "Lab Maintenance Logs"

@@ -9,6 +9,7 @@ import {
   DatabaseZap,
   FileCheck2,
   FileStack,
+  FileText,
   FlaskConical,
   Frame,
   GalleryVerticalEnd,
@@ -79,6 +80,20 @@ const data = {
       title: "Clients",
       url: "/clients",
       icon: Briefcase,
+      isActive: false,
+      isDisabled: false,
+    },
+    // {
+    //   title: "Requests for Information",
+    //   url: "/requests-for-information",
+    //   icon: FileText,
+    //   isActive: false,
+    //   isDisabled: false,
+    // },
+    {
+      title: "Personnel",
+      url: "/personnel",
+      icon: Users,
       isActive: false,
       isDisabled: false,
     },
@@ -279,12 +294,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <ToggleLightDark />
-        {/* <Button variant="outline" onClick={() => setRole("client")} size="icon">
+        <Button variant="outline" onClick={() => setRole("client")} size="icon">
           C
         </Button>
         <Button variant="outline" onClick={() => setRole("admin")} size="icon">
           A
-        </Button> */}
+        </Button>
         {/* <NavUser user={data.user} /> */}
       </SidebarFooter>
       <SidebarRail />

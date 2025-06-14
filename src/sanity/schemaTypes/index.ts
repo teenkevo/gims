@@ -20,6 +20,7 @@ import { quotation } from "./quotation";
 import { revision } from "./revision";
 import { otherItem } from "./billing-item";
 import { serviceItem } from "./billing-item";
+import { department } from "./department";
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -35,6 +36,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     contactPerson, // CRUD ✅
     lab,
     personnel,
+    department,
     equipment,
     maintenanceLog,
     labApprovalWorkflow,

@@ -1394,8 +1394,92 @@ export async function deleteProject(
   }
 }
 
-export async function revalidateProjects() {
-  revalidateTag("projects");
+// CREATE PERSONNEL
+export async function createPersonnel(prevState: any, formData: FormData) {
+  try {
+    const internalId = formData.get("internalId");
+    const fullName = formData.get("fullName");
+    const email = formData.get("email");
+    const phone = formData.get("phone");
+    const rawDepartmentRoles = formData.get("departmentRoles");
+    const departmentRoles = JSON.parse(rawDepartmentRoles as string);
+
+    const departmentRolesArray = departmentRoles.map(
+      (role: { department: string; departmentId: string; role: string }) => ({
+        _type: "object",
+        department: { _type: "reference", _ref: role.departmentId },
+        role: role.role,
+      })
+    );
+
+    const result = await writeClient.create(
+      {
+        _type: "personnel",
+        internalId,
+        fullName,
+        email,
+        phone: sanitizePhoneNumber(phone as string),
+        departmentRoles: departmentRolesArray,
+        status: "active",
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
+    revalidateTag("personnel");
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+// UPDATE PERSONNEL
+export async function updatePersonnel(prevState: any, formData: FormData) {
+  try {
+    const personnelId = formData.get("personnelId");
+    const internalId = formData.get("internalId");
+    const fullName = formData.get("fullName");
+    const email = formData.get("email");
+    const phone = formData.get("phone");
+    const rawDepartmentRoles = formData.get("departmentRoles");
+    const departmentRoles = JSON.parse(rawDepartmentRoles as string);
+    const departmentRolesArray = departmentRoles.map(
+      (role: { department: string; departmentId: string; role: string }) => ({
+        _type: "object",
+        department: { _type: "reference", _ref: role.departmentId },
+        role: role.role,
+      })
+    );
+
+    const result = await writeClient
+      .patch(personnelId as string)
+      .set({
+        internalId,
+        fullName,
+        email,
+        phone: sanitizePhoneNumber(phone as string),
+        departmentRoles: departmentRolesArray,
+        status: "active",
+      })
+      .commit();
+
+    revalidateTag("personnel");
+    return { result, status: "ok" };
+  } catch (error) {
+    console.log(error);
+    return { error, status: "error" };
+  }
+}
+
+// DELETE PERSONNEL
+export async function deletePersonnel(personnelId: string) {
+  try {
+    const result = await writeClient.delete(personnelId);
+    revalidateTag("personnel");
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
 }
 
 export async function revalidateProject(projectId: string) {
