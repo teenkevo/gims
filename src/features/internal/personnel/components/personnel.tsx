@@ -14,6 +14,7 @@ import {
   ALL_DEPARTMENTS_QUERYResult,
   ALL_PERSONNEL_QUERYResult,
 } from "../../../../../sanity.types";
+import Image from "next/image";
 
 export default function PersonnelManager({
   personnel,
@@ -167,36 +168,52 @@ export default function PersonnelManager({
         />
 
         {/* Executive Cards */}
-        {executives.length > 0 && (
-          <div className="mb-8">
-            <Accordion
-              type="single"
-              collapsible
-              defaultValue="executives"
-              className="w-full"
+
+        <div className="mb-8">
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue="executives"
+            className="w-full"
+          >
+            <AccordionItem
+              value="executives"
+              className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg"
             >
-              <AccordionItem
-                value="executives"
-                className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg"
-              >
-                <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-semibold">Management</span>
-                    <span className="text-sm text-muted-foreground">
-                      ({executives.length})
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6">
+              <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-semibold">Management</span>
+                  <span className="text-sm text-muted-foreground">
+                    ({executives.length})
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-6">
+                {executives.length > 0 ? (
                   <ExecutiveCards
                     executives={executives}
                     departmentRoles={departmentRoles}
                   />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        )}
+                ) : (
+                  <div className="text-center items-center justify-center text-muted-foreground">
+                    <Image
+                      priority
+                      src="/people-who-support-svgrepo-com.svg"
+                      alt="Users"
+                      width={100}
+                      height={100}
+                      className="mx-auto"
+                    />
+                    <p className="text-sm">
+                      Every team needs some management. Won't hurt to add some
+                      team leads.
+                    </p>
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
 
         {/* Department Sections */}
         <div className="space-y-4">
@@ -236,33 +253,6 @@ export default function PersonnelManager({
             }
           })}
         </div>
-
-        {/* Empty State */}
-        {filteredPersonnel.length === 0 && (
-          <div className="text-center py-12 bg-card rounded-lg border border-border">
-            <div className="text-muted-foreground mb-4">
-              <svg
-                className="mx-auto h-12 w-12"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              No personnel found
-            </h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search criteria or filters.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
