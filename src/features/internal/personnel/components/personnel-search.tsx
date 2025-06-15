@@ -51,34 +51,42 @@ export function PersonnelSearch({
             className="pl-10"
           />
         </div>
-
-        <Select value={roleFilter} onValueChange={onRoleFilterChange}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Job Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="lab-director">Lab Director</SelectItem>
-            <SelectItem value="senior-engineer">Senior Engineer</SelectItem>
-            <SelectItem value="lab-engineer">Lab Engineer</SelectItem>
-            <SelectItem value="technician">Technician</SelectItem>
-            <SelectItem value="quality-control">Quality Control</SelectItem>
-          </SelectContent>
-        </Select>
-
         <Select
           value={departmentFilter}
           onValueChange={onDepartmentFilterChange}
         >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Department" />
+          <SelectTrigger className="w-[180px] text-xs">
+            <SelectValue placeholder="Select Department" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="management">Management</SelectItem>
-            <SelectItem value="testing">Testing</SelectItem>
-            <SelectItem value="field-services">Field Services</SelectItem>
-            <SelectItem value="quality-assurance">Quality Assurance</SelectItem>
+            <SelectItem value="all">All Departments</SelectItem>
+            {Object.entries(departmentRoles).map(([key]) => {
+              return (
+                <SelectItem key={key} value={key}>
+                  {key}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={roleFilter} onValueChange={onRoleFilterChange}>
+          <SelectTrigger className="w-[150px] text-xs">
+            <SelectValue placeholder="Job Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            {/* Based on the departmentRoles, we need to show all the roles for the department */}
+            {Object.entries(departmentRoles).map(([key, { roles }]) => {
+              if (departmentFilter === key) {
+                return roles.map((role) => {
+                  return (
+                    <SelectItem key={role} value={role || ""}>
+                      {role}
+                    </SelectItem>
+                  );
+                });
+              }
+            })}
           </SelectContent>
         </Select>
       </div>
