@@ -83,13 +83,13 @@ const data = {
       isActive: false,
       isDisabled: false,
     },
-    // {
-    //   title: "Requests for Information",
-    //   url: "/requests-for-information",
-    //   icon: FileText,
-    //   isActive: false,
-    //   isDisabled: false,
-    // },
+    {
+      title: "Requests for Information",
+      url: "/requests-for-information",
+      icon: FileText,
+      isActive: false,
+      isDisabled: false,
+    },
     {
       title: "Personnel",
       url: "/personnel",
@@ -294,13 +294,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <ToggleLightDark />
-        {/* <Button variant="outline" onClick={() => setRole("client")} size="icon">
+        <Button variant="outline" onClick={() => setRole("client")} size="icon">
           C
         </Button>
         <Button variant="outline" onClick={() => setRole("admin")} size="icon">
           A
         </Button>
-        <NavUser user={data.user} /> */}
+        <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

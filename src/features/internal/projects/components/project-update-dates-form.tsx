@@ -45,6 +45,27 @@ export default function ProjectUpdateDatesForm({
 
   const { mutation } = useUpdateProjectDates();
 
+  const dateRangeSchema = z
+    .object(
+      {
+        from: z.date().optional(),
+        to: z.date().optional(),
+      },
+      {
+        required_error: "Please select a date range",
+      }
+    )
+    .superRefine((val, ctx) => {
+      // Either both are empty, or both are present
+      if (val.from && !val.to) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["to"],
+          message: "Select an end date too",
+        });
+      }
+    });
+
   const handleUpdateProjectDates = async (dateRange: {
     from: Date;
     to: Date;
@@ -82,20 +103,7 @@ export default function ProjectUpdateDatesForm({
       initialValue={initialValue}
       onSubmit={handleUpdateProjectDates}
       isSubmitting={isSubmitting}
-      validation={z
-        .object(
-          {
-            from: z.date(),
-            to: z.date(),
-          },
-          {
-            required_error: "Please select a date range",
-          }
-        )
-        .refine((data) => data.from < data.to, {
-          path: ["dateRange"],
-          message: "From date must be before to date",
-        })}
+      validation={dateRangeSchema}
       renderField={(form) => (
         <FormField
           control={form.control as Control<FieldValues, any, FieldValues>}

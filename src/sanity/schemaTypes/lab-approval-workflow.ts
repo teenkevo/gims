@@ -28,6 +28,7 @@ export const labApprovalWorkflow = defineType({
           { title: "Test Result Approval", value: "test_result_approval" },
           { title: "Lab Access Approval", value: "lab_access_approval" },
           { title: "SOP Change Approval", value: "sop_change_approval" },
+          { title: "Funds Request Approval", value: "funds_request_approval" },
         ],
       },
       validation: (Rule) => Rule.required(),
@@ -99,6 +100,12 @@ export const labApprovalWorkflow = defineType({
       name: "finalDecisionDate",
       type: "datetime",
       title: "Final Decision Date",
+    }),
+    defineField({
+      name: "rfi",
+      type: "reference",
+      to: [{ type: "rfi" }],
+      title: "RFI",
     }),
     defineField({
       name: "status",

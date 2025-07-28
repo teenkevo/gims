@@ -41,8 +41,6 @@ export default function PersonnelManager({
 
   const filteredPersonnel = useMemo(() => {
     return personnel.filter((person) => {
-      console.log(person.departmentRoles);
-
       const matchesSearch =
         person.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         person.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
