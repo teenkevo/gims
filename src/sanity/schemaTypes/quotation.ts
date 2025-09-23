@@ -94,6 +94,84 @@ export const quotation = defineType({
       type: "text",
     }),
     defineField({
+      name: "advance",
+      title: "Advance Percentage",
+      type: "number",
+      initialValue: 60,
+      validation: (Rule) => Rule.min(0).max(100),
+    }),
+    defineField({
+      name: "payments",
+      title: "Payments",
+      type: "array",
+      of: [
+        {
+          type: "object",
+          name: "paymentItem",
+          fields: [
+            defineField({
+              name: "paymentMode",
+              title: "Payment Mode",
+              type: "string",
+              options: {
+                list: ["mobile", "bank", "cash"],
+              },
+            }),
+            defineField({
+              name: "amount",
+              title: "Amount",
+              type: "number",
+            }),
+            defineField({
+              name: "paymentProof",
+              title: "Payment Proof",
+              type: "file",
+              options: {
+                accept: "image/*,application/pdf",
+              },
+            }),
+            defineField({
+              name: "notes",
+              title: "Notes",
+              type: "text",
+            }),
+            // Approved,rejected,pending
+            defineField({
+              name: "status",
+              title: "Status",
+              type: "string",
+              options: {
+                list: ["approved", "rejected", "pending"],
+              },
+              initialValue: "pending",
+            }),
+          ],
+          preview: {
+            select: {
+              paymentMode: "paymentMode",
+              amount: "amount",
+            },
+            prepare({ paymentMode, amount }) {
+              const label =
+                typeof paymentMode === "string" && paymentMode.length
+                  ? paymentMode.charAt(0).toUpperCase() + paymentMode.slice(1)
+                  : "Unknown";
+
+              const formatted =
+                typeof amount === "number"
+                  ? amount.toLocaleString()
+                  : (amount ?? 0);
+
+              return {
+                title: `${label} - ${formatted}`,
+              };
+            },
+          },
+        },
+      ],
+    }),
+
+    defineField({
       name: "revisions",
       title: "Revisions",
       type: "array",
@@ -113,7 +191,15 @@ export const quotation = defineType({
       title: "Status",
       type: "string",
       options: {
-        list: ["draft", "sent", "accepted", "rejected", "invoiced", "paid"],
+        list: [
+          "draft",
+          "sent",
+          "accepted",
+          "rejected",
+          "invoiced",
+          "partially_paid",
+          "fully_paid",
+        ],
       },
       initialValue: "draft",
     }),

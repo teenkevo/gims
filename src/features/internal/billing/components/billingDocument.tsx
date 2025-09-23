@@ -55,6 +55,7 @@ interface BillingDocumentProps {
   currency: string;
   paymentNotes: string;
   vatPercentage: number;
+  advance: number;
   quotationNumber: string;
   quotationDate: string;
   acquisitionNumber: string;
@@ -70,6 +71,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     currency,
     paymentNotes,
     vatPercentage,
+    advance,
     labTests,
     fieldTests,
     reportingActivities,
@@ -622,9 +624,13 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
         </View>
 
         <View style={{ width: "48%" }}>
-          <Text style={styles.heading}>Payment Notes</Text>
+          <Text style={styles.heading}>Advance Payment</Text>
           <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
-            {paymentNotes ? paymentNotes : "No extra payment notes provided"}
+            {advance
+              ? advance +
+                "%" +
+                " advance payment is required before project starts"
+              : "No advance payment required"}
           </Text>
         </View>
       </View>
@@ -657,11 +663,15 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           <Text style={{ ...styles.heading, marginTop: 10 }}>Contact us</Text>
           <Text style={styles.quotationDetail}>
             If you have any questions concerning this{" "}
-            {generateInvoice ? "invoice" : "quotation"}, contact Sam on +256
-            702550557
+            {generateInvoice ? "invoice" : "quotation"}, contact Ivan Masuba on
+            +256 752 972309 or email imasuba@getlab.co.ug
           </Text>
         </View>
         <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>Payment Notes</Text>
+          <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
+            {paymentNotes ? paymentNotes : "No extra payment notes provided"}
+          </Text>
           <Image
             style={tw("w-[200px] mt-5")}
             src="/getlab-certifications.png"

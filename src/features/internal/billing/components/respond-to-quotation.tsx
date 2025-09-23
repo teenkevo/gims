@@ -81,6 +81,7 @@ export function RespondToQuotationDialog({
         project={project}
         paymentNotes={quotation?.paymentNotes || ""}
         vatPercentage={quotation?.vatPercentage || 0}
+        advance={quotation?.advance || 0}
       />
     </Document>
   );

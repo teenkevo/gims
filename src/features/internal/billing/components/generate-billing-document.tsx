@@ -34,6 +34,7 @@ interface GenerateBillingDocumentProps {
   currency: string;
   paymentNotes: string;
   vatPercentage: number;
+  advance: number;
   labTests: (ALL_SERVICES_QUERYResult[number] & {
     price: number;
     quantity: number;
@@ -71,6 +72,7 @@ export const GenerateBillingDocument = ({
     reportingActivities,
     mobilizationActivities,
     project,
+    advance,
   } = billingInfo;
 
   const date = new Date();
@@ -129,6 +131,7 @@ export const GenerateBillingDocument = ({
           project={project}
           paymentNotes={paymentNotes}
           vatPercentage={vatPercentage}
+          advance={advance}
         />
       </Document>
     ),

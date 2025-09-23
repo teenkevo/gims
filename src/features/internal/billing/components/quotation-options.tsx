@@ -34,6 +34,7 @@ import PaymentNotes from "./payment-notes";
 import VATToggle from "./vat";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import AdvanceToggle from "./advance";
 
 // -----------------------------------------------------------------------------
 // Helper ▸ merge the quotation info into each service BEFORE the UI renders.
@@ -361,6 +362,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
 
   const quotationVat = quotation?.vatPercentage;
   const quotationPaymentNotes = quotation?.paymentNotes;
+  const quotationAdvance = quotation?.advance;
   const quotationHasMobilization = quotation?.otherItems?.some(
     (item) => item.type === "mobilization"
   );
@@ -383,6 +385,12 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
   const [notesEnabled, setNotesEnabled] = useState(Boolean(paymentNotes));
   const [vatPercentage, setVatPercentage] = useState(quotationVat || "18");
   const [vatEnabled, setVatEnabled] = useState(Boolean(quotationVat));
+  const [advancePercentage, setAdvancePercentage] = useState(
+    quotationAdvance || "60"
+  );
+  const [advanceEnabled, setAdvanceEnabled] = useState(
+    Boolean(quotationAdvance)
+  );
 
   // ---------------------------------------------------------------------------
   //   Validation handlers
@@ -402,6 +410,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     currency,
     paymentNotes,
     vatPercentage: Number(vatEnabled ? vatPercentage : "0"),
+    advance: Number(advanceEnabled ? advancePercentage : "0"),
     labTests: (isLabTestsValid
       ? selectedLabTests
       : []) as (ALL_SERVICES_QUERYResult[number] & {
@@ -528,6 +537,12 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
             onChange={setPaymentNotes}
             notesEnabled={notesEnabled}
             setNotesEnabled={setNotesEnabled}
+          />
+          <AdvanceToggle
+            value={advancePercentage?.toString()}
+            onChange={setAdvancePercentage}
+            advanceEnabled={advanceEnabled}
+            setAdvanceEnabled={setAdvanceEnabled}
           />
         </div>
       </div>

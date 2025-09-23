@@ -30,7 +30,13 @@ export default function ClientProjectView({
   // 🔑  Derive stage indices **once** per render
   // ---------------------------------------------
   const statusStageMap: Record<
-    "draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid",
+    | "draft"
+    | "sent"
+    | "accepted"
+    | "rejected"
+    | "invoiced"
+    | "partially_paid"
+    | "fully_paid",
     number
   > = {
     draft: 1,
@@ -38,7 +44,8 @@ export default function ClientProjectView({
     accepted: 3,
     rejected: 3,
     invoiced: 4,
-    paid: 5,
+    partially_paid: 5,
+    fully_paid: 5,
   };
 
   const { role } = useRBAC();

@@ -18,6 +18,7 @@ import {
   ExternalLink,
   GitPullRequest,
   MessageSquareMore,
+  WalletMinimal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -98,30 +99,30 @@ export function BillingLifecycle({
     {
       id: 1,
       title: isClientWaitingForParentQuotation
-        ? "Waiting for Quotation"
+        ? "Awaiting Quotation"
         : isAdminWaitingToCreateQuotation
-          ? "Create Quotation"
-          : "Quotation Created",
+          ? "Quotation Drafting"
+          : "Quotation Prepared",
       icon: isParentQuotationCreated ? (
         <FileText className="h-3 w-3" />
       ) : (
         <Plus className="h-3 w-3" />
       ),
       description: isClientWaitingForParentQuotation
-        ? "Waiting for quotation to be created by GETLAB"
+        ? "Pending quotation creation by GETLAB"
         : isAdminWaitingToCreateQuotation
-          ? "A quotation is needed to initiate the billing pipeline"
-          : "A quotation has been created by GETLAB",
+          ? "A quotation must be drafted to proceed with billing"
+          : "Quotation has been prepared by GETLAB",
     },
     {
       id: 2,
-      title: "Sent to Client",
+      title: "Quotation Sent",
       icon: <Send className="h-3 w-3" />,
-      description: "Quotation has been sent to the client for review",
+      description: "Quotation has been delivered to the client for review",
     },
     {
       id: 3,
-      title: "Client Response",
+      title: "Client Feedback",
       icon:
         rejectionStage === 3 ? (
           <XCircle className="h-3 w-3" />
@@ -130,24 +131,38 @@ export function BillingLifecycle({
         ),
       description:
         rejectionStage === 3 && !quotationNeedsRevision
-          ? "Quotation was rejected by the client"
+          ? "Client declined the quotation"
           : rejectionStage === 3 && quotationNeedsRevision
-            ? "Quotation was rejected by the client with revisions requested"
+            ? "Client requested revisions to the quotation"
             : quotation?.status === "invoiced"
-              ? "Quotation has been accepted by the client"
-              : "Revisions are possible at this stage if needed",
+              ? "Client accepted the quotation"
+              : "Revisions may be submitted at this stage if needed",
     },
     {
       id: 4,
-      title: "Invoice Issued",
+      title: "Invoice Generated",
       icon: <FileIcon className="h-3 w-3" />,
-      description: "Invoice has been issued based on the accepted quotation",
+      description: "Invoice issued based on client-approved quotation",
     },
     {
       id: 5,
-      title: "Payment Received",
+      title:
+        quotation?.status === "invoiced"
+          ? "Awaiting Payment"
+          : quotation?.status === "partially_paid"
+            ? "Partial Payment Received"
+            : quotation?.status === "fully_paid"
+              ? "Payment Completed"
+              : "Awaiting Payment",
       icon: <DollarSign className="h-3 w-3" />,
-      description: "Payment has been received for the invoice",
+      description:
+        quotation?.status === "invoiced"
+          ? "Payment is pending for the issued invoice"
+          : quotation?.status === "partially_paid"
+            ? "Invoice payment has been partially received"
+            : quotation?.status === "fully_paid"
+              ? "Invoice has been fully paid"
+              : "Awaiting payment of the invoice",
     },
   ];
 
@@ -421,10 +436,16 @@ export function BillingLifecycle({
                 )}
 
               {quotation?.status === "invoiced" && stage.id === 5 && (
-                <div className="mt-4 flex items-center text-orange-500 text-xs">
-                  <CircleDashed className="animate-spin h-3 w-3 mr-1" />
-                  <span>Awaiting client payment</span>
-                </div>
+                <>
+                  <div className="mt-4 flex items-center text-orange-500 text-xs">
+                    <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                    <span>Awaiting client payment</span>
+                  </div>
+                  <Button className="mt-4" size="sm">
+                    <WalletMinimal className=" h-4 w-4 mr-2" />
+                    Make payment ({quotation?.advance}%)
+                  </Button>
+                </>
               )}
             </div>
           ))}
@@ -637,10 +658,19 @@ export function BillingLifecycle({
                       </div>
                     )}
                   {quotation?.status === "invoiced" && stage.id === 5 && (
-                    <div className="mt-4 flex items-center text-orange-500 text-xs">
-                      <CircleDashed className="animate-spin h-3 w-3 mr-1" />
-                      <span>Awaiting client payment</span>
-                    </div>
+                    <>
+                      <div className="mt-4 flex items-center text-orange-500 text-xs">
+                        <CircleDashed className="animate-spin h-3 w-3 mr-1" />
+                        <span>Awaiting client payment</span>
+                      </div>
+                      <Button className="mt-4" size="sm">
+                        <WalletMinimal className="h-4 w-4 mr-2" />
+                        Make payment{" "}
+                        {quotation?.advance
+                          ? "(" + quotation?.advance + "%)"
+                          : ""}
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

@@ -34,6 +34,7 @@ export const getAllProjects = async () => {
                 lineTotal,
               },
               vatPercentage,
+              advance,
             },
             items[] {
               lineTotal,
@@ -42,6 +43,7 @@ export const getAllProjects = async () => {
               lineTotal,
             },
             vatPercentage,
+            advance,
           }
         }
   `);

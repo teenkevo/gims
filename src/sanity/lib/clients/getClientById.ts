@@ -42,6 +42,7 @@ export const getClientById = async (clientId: string) => {
                     lineTotal,
                   },
                   vatPercentage,
+                  advance,
                 },
                 items[] {
                   lineTotal,
@@ -50,6 +51,7 @@ export const getClientById = async (clientId: string) => {
                   lineTotal,
                 },
                 vatPercentage,
+                advance,
               }
             },
             "contacts": *[_type == "contactPerson" && references(^._id)] {

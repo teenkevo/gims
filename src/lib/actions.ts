@@ -32,6 +32,7 @@ interface QuotationProps {
   currency: string;
   vatPercentage: number;
   paymentNotes: string;
+  advance: number;
   quotationNumber: string;
   quotationDate: string;
   acquisitionNumber: string;
@@ -78,50 +79,55 @@ export async function createQuotation(
       currency,
       vatPercentage,
       paymentNotes,
+      advance,
       quotationNumber,
       quotationDate,
       acquisitionNumber,
       revisionNumber,
     } = billingInfo;
 
-    const labTestMethod = labTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
-
-    const fieldTestMethod = fieldTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
-
     const items = [
-      ...labTests.map((test) => ({
-        _type: "serviceItem",
-        service: {
-          _type: "reference",
-          _ref: test._id,
-        },
-        testMethod: {
-          _type: "reference",
-          _ref: labTestMethod,
-        },
-        unitPrice: test.price,
-        quantity: test.quantity,
-        lineTotal: test.price * test.quantity,
-      })),
-      ...fieldTests.map((field) => ({
-        _type: "serviceItem",
-        service: {
-          _type: "reference",
-          _ref: field._id,
-        },
-        testMethod: {
-          _type: "reference",
-          _ref: fieldTestMethod,
-        },
-        unitPrice: field.price,
-        quantity: field.quantity,
-        lineTotal: field.price * field.quantity,
-      })),
+      ...labTests.map((test) => {
+        const selectedMethodId = test.testMethods?.find(
+          (method: any) => method.selected
+        )?._id;
+        return {
+          _type: "serviceItem",
+          service: {
+            _type: "reference",
+            _ref: test._id,
+          },
+          testMethod: {
+            _type: "reference",
+            _ref: selectedMethodId,
+          },
+          unitPrice: test.price,
+          quantity: test.quantity,
+          lineTotal: test.price * test.quantity,
+        };
+      }),
+      ...fieldTests.map((field) => {
+        const selectedMethodId = field.testMethods?.find(
+          (method: any) => method.selected
+        )?._id;
+        return {
+          _type: "serviceItem",
+          service: {
+            _type: "reference",
+            _ref: field._id,
+          },
+          testMethod: {
+            _type: "reference",
+            _ref: selectedMethodId,
+          },
+          unitPrice: field.price,
+          quantity: field.quantity,
+          lineTotal: field.price * field.quantity,
+        };
+      }),
     ];
+
+    console.log(items);
 
     const otherItems = [
       ...reportingActivities.map((reporting) => ({
@@ -155,6 +161,7 @@ export async function createQuotation(
         otherItems,
         vatPercentage,
         paymentNotes,
+        advance,
         file: {
           _type: "file",
           asset: {
@@ -203,49 +210,52 @@ export async function updateQuotation(
       currency,
       vatPercentage,
       paymentNotes,
+      advance,
       quotationNumber,
       quotationDate,
       acquisitionNumber,
       revisionNumber,
     } = billingInfo;
 
-    const labTestMethod = labTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
-
-    const fieldTestMethod = fieldTests.map((test) =>
-      test.testMethods?.find((method: any) => method.selected)
-    )[0]?._id;
-
     const items = [
-      ...labTests.map((test) => ({
-        _type: "serviceItem",
-        service: {
-          _type: "reference",
-          _ref: test._id,
-        },
-        testMethod: {
-          _type: "reference",
-          _ref: labTestMethod,
-        },
-        unitPrice: test.price,
-        quantity: test.quantity,
-        lineTotal: test.price * test.quantity,
-      })),
-      ...fieldTests.map((field) => ({
-        _type: "serviceItem",
-        service: {
-          _type: "reference",
-          _ref: field._id,
-        },
-        testMethod: {
-          _type: "reference",
-          _ref: fieldTestMethod,
-        },
-        unitPrice: field.price,
-        quantity: field.quantity,
-        lineTotal: field.price * field.quantity,
-      })),
+      ...labTests.map((test) => {
+        const selectedMethodId = test.testMethods?.find(
+          (method: any) => method.selected
+        )?._id;
+        return {
+          _type: "serviceItem",
+          service: {
+            _type: "reference",
+            _ref: test._id,
+          },
+          testMethod: {
+            _type: "reference",
+            _ref: selectedMethodId,
+          },
+          unitPrice: test.price,
+          quantity: test.quantity,
+          lineTotal: test.price * test.quantity,
+        };
+      }),
+      ...fieldTests.map((field) => {
+        const selectedMethodId = field.testMethods?.find(
+          (method: any) => method.selected
+        )?._id;
+        return {
+          _type: "serviceItem",
+          service: {
+            _type: "reference",
+            _ref: field._id,
+          },
+          testMethod: {
+            _type: "reference",
+            _ref: selectedMethodId,
+          },
+          unitPrice: field.price,
+          quantity: field.quantity,
+          lineTotal: field.price * field.quantity,
+        };
+      }),
     ];
 
     const otherItems = [
@@ -289,6 +299,7 @@ export async function updateQuotation(
         otherItems,
         vatPercentage,
         paymentNotes,
+        advance,
         file: {
           _type: "file",
           asset: {

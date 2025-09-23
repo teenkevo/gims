@@ -143,9 +143,11 @@ export const getColumns = (
                 ? "Quotation rejected"
                 : quotation?.status === "invoiced"
                   ? "Invoice issued"
-                  : quotation?.status === "paid"
-                    ? "Invoice paid"
-                    : "Not Billed";
+                  : quotation?.status === "partially_paid"
+                    ? "Invoice partially paid"
+                    : quotation?.status === "fully_paid"
+                      ? "Invoice paid"
+                      : "Not Billed";
 
       const badgeVariant =
         quotation?.status === "draft" ? (
@@ -180,7 +182,7 @@ export const getColumns = (
           >
             {status}
           </Badge>
-        ) : quotation?.status === "paid" ? (
+        ) : quotation?.status === "fully_paid" ? (
           <Badge
             variant="outline"
             className="mr-2 bg-primary/10 border-dashed border-primary"

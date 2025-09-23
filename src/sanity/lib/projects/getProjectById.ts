@@ -89,6 +89,7 @@ export const getProjectById = async (projectId: string) => {
               },
               vatPercentage,
               paymentNotes,
+              advance,
               file {
                 asset->{
                   _id,
@@ -128,6 +129,7 @@ export const getProjectById = async (projectId: string) => {
             },
             vatPercentage,
             paymentNotes,
+            advance,
             file {
               asset->{
                 _id,

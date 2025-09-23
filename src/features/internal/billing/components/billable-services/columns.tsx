@@ -42,19 +42,26 @@ const TestMethodCell = ({
   row: Row<ExtendedService>;
   setTableData: Dispatch<SetStateAction<ExtendedService[]>>;
 }) => {
-  const methods = row.original.testMethods?.map((m) => m.standard?.acronym ?? "");
+  const methods = row.original.testMethods?.map(
+    (m) => m.standard?.acronym ?? ""
+  );
 
-  const initial = row.original.testMethods?.find((m: any) => m.selected)?.standard?.acronym;
+  const initial = row.original.testMethods?.find((m: any) => m.selected)
+    ?.standard?.acronym;
   const [selected, setSelected] = useState<string | null>(initial ?? null);
 
   const updateFlags = (value: string) =>
     row.original.testMethods
       ? row.original.testMethods.map((tm) =>
-          tm.standard?.acronym === value ? { ...tm, selected: true } : { ...tm, selected: false }
+          tm.standard?.acronym === value
+            ? { ...tm, selected: true }
+            : { ...tm, selected: false }
         )
       : null;
 
-  const isChosen = row.original.testMethods?.some((tm) => tm.standard?.acronym === selected);
+  const isChosen = row.original.testMethods?.some(
+    (tm) => tm.standard?.acronym === selected
+  );
 
   return (
     <div>
@@ -67,7 +74,11 @@ const TestMethodCell = ({
           onValueChange={(value) => {
             setSelected(value);
             setTableData((prev) =>
-              prev.map((svc) => (svc._id === row.original._id ? { ...svc, testMethods: updateFlags(value) } : svc))
+              prev.map((svc) =>
+                svc._id === row.original._id
+                  ? { ...svc, testMethods: updateFlags(value) }
+                  : svc
+              )
             );
           }}
         >
@@ -78,7 +89,11 @@ const TestMethodCell = ({
           ))}
         </ToggleGroup>
       </div>
-      {row.getIsSelected() && !isChosen && <p className="text-destructive text-xs mt-2 font-medium">Choose a method</p>}
+      {row.getIsSelected() && !isChosen && (
+        <p className="text-destructive text-xs mt-2 font-medium">
+          Choose a method
+        </p>
+      )}
     </div>
   );
 };
@@ -93,10 +108,18 @@ const PriceCell = ({
   currency: string;
 }) => {
   const onPriceChange = (price?: number) =>
-    setTableData((prev) => prev.map((svc) => (svc._id === row.original._id ? { ...svc, price } : svc)));
+    setTableData((prev) =>
+      prev.map((svc) =>
+        svc._id === row.original._id ? { ...svc, price } : svc
+      )
+    );
 
   const onQuantityChange = (quantity?: number) =>
-    setTableData((prev) => prev.map((svc) => (svc._id === row.original._id ? { ...svc, quantity } : svc)));
+    setTableData((prev) =>
+      prev.map((svc) =>
+        svc._id === row.original._id ? { ...svc, quantity } : svc
+      )
+    );
 
   return (
     <PriceForm
@@ -116,13 +139,19 @@ const PriceCell = ({
 /* ------------------------------------------------------------------ */
 /* Column factory                                                     */
 /* ------------------------------------------------------------------ */
-export const columns = ({ setTableData, currency }: ColumnProps): ColumnDef<ExtendedService>[] => [
+export const columns = ({
+  setTableData,
+  currency,
+}: ColumnProps): ColumnDef<ExtendedService>[] => [
   /* 1 ▸ Select ----------------------------------------------------- */
   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
         onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
         aria-label="Select all"
         className="translate-y-[2px]"
@@ -136,8 +165,12 @@ export const columns = ({ setTableData, currency }: ColumnProps): ColumnDef<Exte
   /* 2 ▸ Code ------------------------------------------------------- */
   {
     accessorKey: "code",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Code" className="text-sm" />,
-    cell: ({ row }) => <div className="w-[40px] font-bold">{row.getValue("code")}</div>,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Code" className="text-sm" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[70px] font-bold">{row.getValue("code")}</div>
+    ),
     enableSorting: false,
     enableHiding: false,
   },
@@ -145,10 +178,18 @@ export const columns = ({ setTableData, currency }: ColumnProps): ColumnDef<Exte
   /* 3 ▸ Test parameter -------------------------------------------- */
   {
     accessorKey: "testParameter",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Test Parameter" className="text-sm" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Test Parameter"
+        className="text-sm"
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex space-x-2">
-        <span className="max-w-[300px] truncate font-normal">{row.getValue("testParameter")}</span>
+        <span className="max-w-[300px] truncate font-normal">
+          {row.getValue("testParameter")}
+        </span>
       </div>
     ),
   },
@@ -156,14 +197,26 @@ export const columns = ({ setTableData, currency }: ColumnProps): ColumnDef<Exte
   /* 4 ▸ Test methods ---------------------------------------------- */
   {
     accessorKey: "testMethods",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Test Methods" className="text-sm" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Test Methods"
+        className="text-sm"
+      />
+    ),
     cell: ({ row }) => <TestMethodCell row={row} setTableData={setTableData} />,
   },
 
   /* 5 ▸ Sample class ---------------------------------------------- */
   {
     accessorKey: "sampleClass",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Sample Class" className="text-sm" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Sample Class"
+        className="text-sm"
+      />
+    ),
     cell: ({ row }) => (
       <div className="flex w-[100px] items-center">
         <span>{row.original.sampleClass?.name}</span>
@@ -176,8 +229,14 @@ export const columns = ({ setTableData, currency }: ColumnProps): ColumnDef<Exte
   {
     id: "price",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Unit Price – Quantity – Total" className="text-sm" />
+      <DataTableColumnHeader
+        column={column}
+        title="Unit Price – Quantity – Total"
+        className="text-sm"
+      />
     ),
-    cell: ({ row }) => <PriceCell row={row} setTableData={setTableData} currency={currency} />,
+    cell: ({ row }) => (
+      <PriceCell row={row} setTableData={setTableData} currency={currency} />
+    ),
   },
 ];
