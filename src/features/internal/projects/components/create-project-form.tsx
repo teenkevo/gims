@@ -114,7 +114,10 @@ export function CreateProjectForm({
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={isPending} />
+            <ProjectDetailsForm
+              isSubmitting={isPending}
+              formTitle="Create new project"
+            />
             <ClientProfileForm clients={clients} isSubmitting={isPending} />
           </motion.div>
           <FormSubmitButton text="Create Project" isSubmitting={isPending} />
