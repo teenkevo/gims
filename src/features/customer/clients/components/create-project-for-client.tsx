@@ -13,19 +13,17 @@ import { startTransition, useEffect } from "react";
 import { ArrowLeftCircle } from "lucide-react";
 
 // Forms
-import { ProjectDetailsForm } from "./project-details-form";
-import { ClientProfileForm } from "./client-profile-form";
 
 // Components
 import { FormSubmitButton } from "@/components/form-submit-button";
 
 // Form schema
-import { createProjectSchema } from "@/features/internal/projects/schemas";
+import { projectDetailsSchema } from "@/features/internal/projects/schemas";
 
-import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
-import { createProject } from "@/lib/actions";
+import { createProjectForClient } from "@/lib/actions";
 import { useActionState } from "react";
+import { ProjectDetailsForm } from "@/features/internal/projects/components/project-details-form";
 
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
@@ -33,29 +31,26 @@ const formVariants = {
   exit: { opacity: 0, x: 50, transition: { ease: "easeOut" } },
 };
 
-export function CreateProjectForm({
-  clients,
-}: {
-  clients: ALL_CLIENTS_QUERYResult;
-}) {
+export function CreateProjectForClientForm({ clientId }: { clientId: string }) {
   const router = useRouter();
 
   // Restored useActionState
-  const [state, dispatch, isPending] = useActionState(createProject, null);
+  const [state, dispatch, isPending] = useActionState(
+    createProjectForClient,
+    null
+  );
 
-  const form = useForm<z.infer<typeof createProjectSchema>>({
+  const form = useForm<z.infer<typeof projectDetailsSchema>>({
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
       projectName: "",
       internalId: `P${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000).toString()}`,
       dateRange: { from: undefined, to: undefined },
-      clients: [],
     },
   });
 
-  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
-    console.log(data);
+  const onSubmit = (data: z.infer<typeof projectDetailsSchema>) => {
     const formData = new FormData();
     formData.append("projectName", data.projectName);
     formData.append("internalId", data.internalId);
@@ -64,33 +59,14 @@ export function CreateProjectForm({
       formData.append("dateFrom", data.dateRange.from.toISOString());
       formData.append("dateTo", data.dateRange.to.toISOString());
     }
-
-    data.clients.forEach((client) =>
-      formData.append(
-        "clients",
-        JSON.stringify({
-          clientType: client.clientType,
-          existingClient:
-            client.clientType === "existing"
-              ? client.existingClient
-              : undefined,
-          newClientName:
-            client.clientType === "new" ? client.newClientName : undefined,
-          newClientInternalId:
-            client.clientType === "new"
-              ? client.newClientInternalId
-              : undefined,
-        })
-      )
-    );
-
+    formData.append("clientId", clientId);
     startTransition(() => dispatch(formData)); // Use dispatch instead of createProject
   };
 
   useEffect(() => {
     if (state?.status === "ok") {
       toast.success("Project created successfully");
-      router.push("/projects");
+      router.push(`/clients/${clientId}?tab=projects`);
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
@@ -100,7 +76,7 @@ export function CreateProjectForm({
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/projects"
+        href={`/clients/${clientId}?tab=projects`}
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
@@ -114,8 +90,10 @@ export function CreateProjectForm({
             animate="visible"
             exit="exit"
           >
-            <ProjectDetailsForm isSubmitting={isPending} />
-            <ClientProfileForm clients={clients} isSubmitting={isPending} />
+            <ProjectDetailsForm
+              isSubmitting={isPending}
+              formTitle="Create new project for client"
+            />
           </motion.div>
           <FormSubmitButton text="Create Project" isSubmitting={isPending} />
         </form>

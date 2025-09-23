@@ -7,6 +7,7 @@ import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../sanity.types";
+import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERYResult[number] & {
@@ -1109,8 +1110,6 @@ export async function setProjectDateRange(prevState: any, formData: FormData) {
     const dateTo = formData.get("dateTo");
     const projectId = formData.get("projectId");
 
-    console.log(projectId);
-
     const result = await writeClient
       .patch(projectId as string)
       .set({
@@ -1118,7 +1117,7 @@ export async function setProjectDateRange(prevState: any, formData: FormData) {
         endDate: (dateTo as string) || null,
       })
       .commit();
-    console.log("Project Date Range Set", result);
+    revalidateTag(`project-${projectId}`);
     return { result: result, status: "ok" };
   } catch (error) {
     console.error("Error setting date-range:", error);
@@ -1173,6 +1172,87 @@ export async function createProject(prevState: any, formData: FormData) {
     );
     revalidateTag("projects");
     return { result: project, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+export async function createProjectForClient(
+  prevState: any,
+  formData: FormData
+) {
+  try {
+    const internalId = formData.get("internalId");
+    const projectName = formData.get("projectName");
+    const dateFrom = formData.get("dateFrom");
+    const dateTo = formData.get("dateTo");
+    const clientId = formData.get("clientId");
+
+    console.log(clientId);
+
+    // Create the project
+    const project = await writeClient.create(
+      {
+        _type: "project",
+        internalId,
+        name: projectName,
+        startDate: dateFrom || null,
+        endDate: dateTo || null,
+        stagesCompleted: [], // Placeholder logic
+        clients: [
+          {
+            _type: "reference",
+            _ref: clientId,
+          },
+        ],
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
+
+    revalidateTag(`client-${clientId}`);
+    return { result: project, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+export async function updateProjectName(
+  formData: FormData,
+  projectId?: string
+) {
+  try {
+    const name = formData.get("name");
+    const result = await writeClient
+      .patch(projectId as string)
+      .set({ name: name as string })
+      .commit();
+    if (projectId) {
+      revalidateTag(`project-${projectId}`);
+    }
+    return { result, status: "ok" };
+  } catch (error) {
+    return { error, status: "error" };
+  }
+}
+
+export async function updateProjectDates(
+  formData: FormData,
+  projectId?: string
+) {
+  try {
+    const dateFrom = formData.get("dateFrom");
+    const dateTo = formData.get("dateTo");
+
+    const result = await writeClient
+      .patch(projectId as string)
+      .set({ startDate: dateFrom, endDate: dateTo })
+      .commit();
+    if (projectId) {
+      revalidateTag(`project-${projectId}`);
+    }
+    return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
   }
@@ -1233,6 +1313,20 @@ export async function createContactPerson(prevState: any, formData: FormData) {
     const phone = formData.get("phone");
     const designation = formData.get("designation");
     const clientId = formData.get("clientId");
+
+    // Check if contact with this email already exists for this specific client
+    const existingContact = await checkContactEmailExists(
+      email as string,
+      clientId as string
+    );
+
+    if (existingContact) {
+      return {
+        error: `A contact with email ${email} already exists for this client`,
+        status: "error",
+      };
+    }
+
     const result = await writeClient.create({
       _type: "contactPerson",
       name,

@@ -12,13 +12,16 @@ import type {
 import Link from "next/link";
 
 // Convert columns to a function that accepts parameters
-export const getColumns = (): ColumnDef<CLIENT_BY_ID_QUERYResult[number]["contacts"][number]>[] => [
+export const getColumns = (): ColumnDef<
+  CLIENT_BY_ID_QUERYResult[number]["contacts"][number]
+>[] => [
   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
@@ -38,66 +41,71 @@ export const getColumns = (): ColumnDef<CLIENT_BY_ID_QUERYResult[number]["contac
   },
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
     cell: ({ row }) => (
-      <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
-        <div className="w-[150px] font-bold">{row.original?.name}</div>
-      </Link>
+      <div className="w-[150px] font-bold">{row.original?.name}</div>
     ),
     // enableSorting: false,
     // enableHiding: false,
   },
   {
     accessorKey: "email",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Email" />
+    ),
     cell: ({ row }) => {
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
-          <div className="flex space-x-2">
-            <span className="max-w-[350px] truncate font-normal">{row.original?.email}</span>
-          </div>
-        </Link>
+        <div className="flex space-x-2">
+          <span className="max-w-[350px] truncate font-normal">
+            {row.original?.email}
+          </span>
+        </div>
       );
     },
   },
   {
     accessorKey: "phone",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Phone Number" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Phone Number" />
+    ),
     cell: ({ row }) => {
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
-          <div className="flex space-x-2">
-            <span className="font-normal">{row.original?.phone}</span>
-          </div>
-        </Link>
+        <div className="flex space-x-2">
+          <span className="font-normal">{row.original?.phone}</span>
+        </div>
       );
     },
   },
   {
     accessorKey: "designation",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Designation" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Designation" />
+    ),
     cell: ({ row }) => {
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
-          <div className="flex space-x-2">
-            <span className="max-w-[350px] truncate font-normal">
-              <span className="font-bold text-primary">{row.original?.designation}</span>
+        <div className="flex space-x-2">
+          <span className="max-w-[350px] truncate font-normal">
+            <span className="font-bold text-primary">
+              {row.original?.designation}
             </span>
-          </div>
-        </Link>
+          </span>
+        </div>
       );
     },
   },
+  // Allow going to linked projects
   {
     accessorKey: "projects",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Projects" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Projects" />
+    ),
     cell: ({ row }) => {
       return (
-        <Link className="hover:underline" href={`/clients/${row.original?._id}`}>
-          <div className="flex space-x-2">
-            <span className="font-normal">{row.original?.projects.length}</span>
-          </div>
-        </Link>
+        <div className="flex space-x-2">
+          <span className="font-normal">{row.original?.projects.length}</span>
+        </div>
       );
     },
   },

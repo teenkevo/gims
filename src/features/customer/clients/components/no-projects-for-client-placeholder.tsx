@@ -5,12 +5,14 @@ import Link from "next/link";
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function NoClientsPlaceholder({
+export default function NoProjectsForClientPlaceholder({
   helperText,
   needAction,
+  clientId,
 }: {
   helperText?: string;
   needAction?: boolean;
+  clientId: string;
 }) {
   return (
     <motion.div
@@ -20,27 +22,33 @@ export default function NoClientsPlaceholder({
       transition={{ duration: 0.1, ease: "easeOut" }} // Control the speed of the animation
     >
       <div className="flex flex-col items-center gap-1 text-center">
-        <Image
-          src="https://res.cloudinary.com/teenkevo-cloud/image/upload/v1714345451/hasura_new_project.72d74b03527711e12ed017d57b54ca79_jrvqju.svg"
-          width="0"
-          height="0"
-          priority
-          alt="Success Icon"
-          className="w-full h-auto md:mb-4"
-        />
+        {needAction && (
+          <Image
+            src="https://res.cloudinary.com/teenkevo-cloud/image/upload/v1714345451/hasura_new_project.72d74b03527711e12ed017d57b54ca79_jrvqju.svg"
+            width="0"
+            height="0"
+            priority
+            alt="Success Icon"
+            className="w-full h-auto md:mb-4"
+          />
+        )}
         <h3 className="text-2xl font-bold tracking-tight">
           You have no {helperText}
         </h3>
         {needAction && (
           <>
             <p className="text-sm text-muted-foreground">
-              Let&apos;s start off with creating a client.
+              Let&apos;s start off with creating a project.
             </p>
+
             <div className="mx-4 my-2">
               <Button asChild className="sm:w-auto" variant="default">
-                <Link href="/clients/create" className="my-2">
+                <Link
+                  href={`/clients/${clientId}/projects/create`}
+                  className="my-2"
+                >
                   <PlusCircleIcon className="h-5 w-5 mr-2" />
-                  Create New Client
+                  Create New Project
                 </Link>
               </Button>
             </div>

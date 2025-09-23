@@ -7,10 +7,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import React, { useState } from "react";
+import React, { useActionState, useState } from "react";
 import { z } from "zod";
 import { useUpdateProjectName } from "../api/use-update-project-name";
-import { revalidateProject } from "@/lib/actions";
+import { revalidateProject, updateProjectName } from "@/lib/actions";
 import { Control, FieldValues } from "react-hook-form";
 
 interface ProjectUpdateNameFormProps {
@@ -34,28 +34,17 @@ export default function ProjectUpdateNameForm({
   initialValue,
   projectId,
 }: ProjectUpdateNameFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { mutation } = useUpdateProjectName();
-
-  const handleUpdateProjectName = async (name: any): Promise<void> => {
-    setIsSubmitting(true);
-    const result = await mutation.mutateAsync({
-      json: {
-        projectId,
-        projectName: name,
-      },
-    });
-
-    if (result) {
-      revalidateProject(projectId).then(() => {
-        toast.success("Project name has been updated");
-        setIsSubmitting(false);
-      });
+  const action = async (_: any, formData: FormData) => {
+    const result = await updateProjectName(formData, projectId);
+    if (result.status === "ok") {
+      toast.success("Project name has been updated");
     } else {
       toast.error("Something went wrong");
     }
+    return result;
   };
+
+  const [actionResult, dispatch, isPending] = useActionState(action, null);
 
   return (
     <SingleFieldForm
@@ -66,8 +55,9 @@ export default function ProjectUpdateNameForm({
       savable={savable}
       fieldName={fieldName}
       initialValue={initialValue}
-      onSubmit={handleUpdateProjectName}
-      isSubmitting={isSubmitting}
+      action={dispatch}
+      actionResult={actionResult}
+      isSubmitting={isPending}
       validation={z.string().trim().min(1, "Required")}
       renderField={(form) => (
         <FormField
@@ -76,7 +66,7 @@ export default function ProjectUpdateNameForm({
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input disabled={isSubmitting} {...field} autoComplete="off" />
+                <Input disabled={isPending} {...field} autoComplete="off" />
               </FormControl>
               <FormMessage />
             </FormItem>

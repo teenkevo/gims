@@ -35,6 +35,13 @@ export function DeleteProject({
 
   const router = useRouter();
 
+  // Reset input value when dialog opens/closes
+  React.useEffect(() => {
+    if (!open) {
+      setInputValue("");
+    }
+  }, [open]);
+
   const action = async (_: void | null) => {
     const result = await deleteProject(project);
     if (result.status === "ok") {
@@ -47,7 +54,8 @@ export function DeleteProject({
 
   const [_, dispatch, isPending] = useActionState(action, null);
 
-  const isDeleteDisabled = inputValue !== project.name; // Disable button if names don't match
+  // Use internalId for validation in both desktop and mobile
+  const isDeleteDisabled = inputValue !== project.internalId;
 
   if (isDesktop) {
     return (
@@ -69,13 +77,15 @@ export function DeleteProject({
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Enter the project name{" "}
-              <span className="font-bold text-foreground">{project.name}</span>{" "}
+              Enter the project internal ID{" "}
+              <span className="font-bold text-foreground">
+                {project.internalId}
+              </span>{" "}
               to confirm this action
             </p>
             <Input
-              id="name"
-              placeholder="Type project name here"
+              id="internalId"
+              placeholder="Type project internal ID here"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)} // Track input value
               className="col-span-3"
@@ -119,13 +129,15 @@ export function DeleteProject({
         </DrawerHeader>
         <div className="grid gap-4 py-4 px-4">
           <p className="text-sm text-muted-foreground">
-            Enter the project name{" "}
-            <span className="font-bold text-foreground">{project.name}</span> to
-            confirm this action
+            Enter the project internal ID{" "}
+            <span className="font-bold text-foreground">
+              {project.internalId}
+            </span>{" "}
+            to confirm this action
           </p>
           <Input
-            id="name"
-            placeholder="Type project name here"
+            id="internalId"
+            placeholder="Type project internal ID here"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)} // Track input value
             className="col-span-3"

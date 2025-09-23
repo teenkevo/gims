@@ -7,12 +7,38 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Icons
-import { BriefcaseBusiness, Check, ChevronsUpDown, Plus, PlusCircle, Trash, UserPlus, Users } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Check,
+  ChevronsUpDown,
+  Plus,
+  PlusCircle,
+  Trash,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 // Components
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Formheader from "@/components/form-header";
@@ -25,7 +51,10 @@ interface ClientProfileFormProps {
   clients: ALL_CLIENTS_QUERYResult;
 }
 
-export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormProps) {
+export function ClientProfileForm({
+  isSubmitting,
+  clients,
+}: ClientProfileFormProps) {
   const {
     control,
     watch,
@@ -46,19 +75,12 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
     },
   });
 
-  // // Add a default client if none exist
-  // if (fields.length === 0) {
-  //   append({
-  //     clientType: "new",
-  //     existingClient: "",
-  //     newClientName: "",
-  //   });
-  // }
-
   const clientsArrayError = errors.clients?.root?.message as string;
 
   // Manage open state for each client
-  const [openStates, setOpenStates] = useState<boolean[]>(Array(fields.length).fill(false));
+  const [openStates, setOpenStates] = useState<boolean[]>(
+    Array(fields.length).fill(false)
+  );
 
   const togglePopover = (index: number) => {
     setOpenStates((prev) => {
@@ -67,6 +89,8 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
       return newStates;
     });
   };
+
+  const prefix = `C-`;
 
   return (
     <FormSpacerWrapper>
@@ -82,7 +106,10 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
             exit={{ opacity: 0 }}
             className="border-b"
           >
-            <FormItem key={clientField.id} className="mb-10 border px-4 rounded-lg border-dashed">
+            <FormItem
+              key={clientField.id}
+              className="mb-10 border px-4 rounded-lg border-dashed"
+            >
               {/* Client Type Selection */}
               <FormField
                 control={control}
@@ -91,7 +118,21 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
                   <FormItem>
                     <CardSelector
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => {
+                        field.onChange(val);
+                        if (val === "new") {
+                          const currentId = watch(
+                            `clients.${index}.newClientInternalId`
+                          );
+                          if (!currentId) {
+                            const generated = `C-${Math.floor(10000 + Math.random() * 90000).toString()}`;
+                            setValue(
+                              `clients.${index}.newClientInternalId`,
+                              generated
+                            );
+                          }
+                        }
+                      }}
                       disabled={isSubmitting}
                       options={[
                         {
@@ -120,15 +161,23 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
                     rules={{ required: "Please select an existing client" }}
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel className="py-1">Existing contacts</FormLabel>
-                        <Popover open={openStates[index]} onOpenChange={() => togglePopover(index)}>
+                        <FormLabel className="py-1">
+                          Existing contacts
+                        </FormLabel>
+                        <Popover
+                          open={openStates[index]}
+                          onOpenChange={() => togglePopover(index)}
+                        >
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 disabled={isSubmitting}
                                 variant="outline"
                                 role="combobox"
-                                className={cn("w-auto justify-between", !field.value && "text-muted-foreground")}
+                                className={cn(
+                                  "w-auto justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
                               >
                                 <AnimatePresence mode="wait">
                                   <motion.div
@@ -140,7 +189,9 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
                                     className="flex items-center justify-between w-full"
                                   >
                                     {field.value
-                                      ? clients.find((c) => c._id === field.value)?.name
+                                      ? clients.find(
+                                          (c) => c._id === field.value
+                                        )?.name
                                       : "Select an existing client"}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                   </motion.div>
@@ -161,15 +212,22 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
                                       value={client.name || ""}
                                       key={client._id}
                                       onSelect={() => {
-                                        setValue(`clients.${index}.existingClient`, client._id);
+                                        setValue(
+                                          `clients.${index}.existingClient`,
+                                          client._id
+                                        );
                                         togglePopover(index);
-                                        clearErrors(`clients.${index}.existingClient`);
+                                        clearErrors(
+                                          `clients.${index}.existingClient`
+                                        );
                                       }}
                                     >
                                       <Check
                                         className={cn(
                                           "mr-2 h-4 w-4",
-                                          client._id === field.value ? "opacity-100" : "opacity-0"
+                                          client._id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
                                         )}
                                       />
                                       {client.name}
@@ -203,13 +261,58 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
                 <div className="flex flex-col py-4 space-y-4">
                   <FormField
                     control={control}
+                    name={`clients.${index}.newClientInternalId`}
+                    rules={{ required: "Client internal ID is required" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Client Internal ID</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute text-sm left-3 top-1/2 -translate-y-1/2 font-bold select-none">
+                              {prefix}
+                            </div>
+                            <Input
+                              disabled
+                              {...field}
+                              value={(field.value || prefix).replace(
+                                prefix,
+                                ""
+                              )}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                setValue(
+                                  `clients.${index}.newClientInternalId`,
+                                  `${prefix}${newValue}`
+                                );
+                              }}
+                              className={cn(
+                                "pl-[calc(0.5rem_+_var(--prefix-length))]"
+                              )}
+                              style={
+                                {
+                                  "--prefix-length": `${prefix.length}ch`,
+                                } as React.CSSProperties
+                              }
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={control}
                     name={`clients.${index}.newClientName`}
                     rules={{ required: "Client name is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Client Name</FormLabel>
+                        <FormLabel required>Client Name</FormLabel>
                         <FormControl>
-                          <Input disabled={isSubmitting} placeholder="e.g. Acme Corporation" {...field} />
+                          <Input
+                            disabled={isSubmitting}
+                            placeholder="e.g. Acme Corporation"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -237,7 +340,12 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
       <div className="space-y-4">
         <div className="flex-row">
           {fields.length === 0 && (
-            <p className={cn('after:ml-0.5 after:text-destructive after:content-["*"]', "my-2 text-sm font-medium")}>
+            <p
+              className={cn(
+                'after:ml-0.5 after:text-destructive after:content-["*"]',
+                "my-2 text-sm font-medium"
+              )}
+            >
               Atleast one client is required
             </p>
           )}
@@ -250,13 +358,19 @@ export function ClientProfileForm({ isSubmitting, clients }: ClientProfileFormPr
                 clientType: "new",
                 existingClient: "",
                 newClientName: "",
+                newClientInternalId: `C-${Math.floor(10000 + Math.random() * 90000).toString()}`,
               })
             }
           >
-            <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add {fields.length === 0 ? "a " : "another "}
+            <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add{" "}
+            {fields.length === 0 ? "a " : "another "}
             client
           </Button>
-          {errors.clients && <p className="text-sm font-medium text-destructive">{clientsArrayError}</p>}
+          {errors.clients && (
+            <p className="text-sm font-medium text-destructive">
+              {clientsArrayError}
+            </p>
+          )}
         </div>
       </div>
     </FormSpacerWrapper>

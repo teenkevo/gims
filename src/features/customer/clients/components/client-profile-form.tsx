@@ -32,7 +32,7 @@ export function ClientProfileForm({
     formState: { errors },
   } = useFormContext();
 
-  const prefix = `CLIENT-`;
+  const prefix = `C-`;
   // TODO: InternalID should be unique
 
   return (
@@ -67,7 +67,7 @@ export function ClientProfileForm({
                         field.onChange(prefix + newValue);
                       }}
                       className={cn(
-                        prefix && "pl-[calc(0.2rem_+_var(--prefix-length))]"
+                        prefix && "pl-[calc(0.5rem_+_var(--prefix-length))]"
                       )}
                       style={
                         {

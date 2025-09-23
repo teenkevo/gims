@@ -208,7 +208,7 @@ export function RespondToQuotationDialog({
           required
         />
         <p className="text-xs text-muted-foreground">
-          Accepting / rejecting the revisions is at the GETLAB's discretion.
+          Accepting / rejecting the revisions is at GETLAB&apos;s discretion.
         </p>
       </div>
     );

@@ -12,7 +12,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon, X } from "lucide-react";
 import type { DateRange } from "react-day-picker";
@@ -34,7 +38,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { setProjectDateRange } from "@/lib/actions";
+import { setProjectDateRange, updateProjectDates } from "@/lib/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { toast } from "sonner";
 import type { ALL_PROJECTS_QUERYResult } from "../../../../../sanity.types";
@@ -78,7 +82,8 @@ export function SetDateRangeDialog({
           <DialogHeader>
             <DialogTitle>Set Project Dates</DialogTitle>
             <DrawerDescription>
-              This configuration allows you to track the progression of your project
+              This configuration allows you to track the progression of your
+              project
             </DrawerDescription>
           </DialogHeader>
 
@@ -105,7 +110,8 @@ export function SetDateRangeDialog({
         <DrawerHeader className="text-left">
           <DrawerTitle>Set Project Dates</DrawerTitle>
           <DrawerDescription>
-            This configuration allows you to track the progression of your project
+            This configuration allows you to track the progression of your
+            project
           </DrawerDescription>
         </DrawerHeader>
 
@@ -128,8 +134,22 @@ function DateRangeForm({
   project: ALL_PROJECTS_QUERYResult[number];
 }) {
   const { _id, startDate, endDate } = project;
+
+  const action = async (_: any, formData: FormData) => {
+    const result = await updateProjectDates(formData, _id);
+    if (result.status === "ok") {
+      toast.success("Project dates have been updated");
+    } else {
+      toast.error("Something went wrong");
+    }
+    return result;
+  };
+
   // Restored useActionState
-  const [state, dispatch, isPending] = React.useActionState(setProjectDateRange, null);
+  const [actionResult, dispatch, isPending] = React.useActionState(
+    action,
+    null
+  );
 
   const form = useForm({
     mode: "onChange",
@@ -154,18 +174,12 @@ function DateRangeForm({
     React.startTransition(() => dispatch(formData)); // Use dispatch instead of createProject
   };
 
-  React.useEffect(() => {
-    if (state?.status === "ok") {
-      toast.success("Project dates have been set");
-      setOpen(false);
-    } else if (state?.status === "error") {
-      toast.error("Something went wrong");
-    }
-  }, [state]);
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={`space-y-8 h-40 px-4 md:px-0 py-4`}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={`space-y-8 h-40 px-4 md:px-0 py-4`}
+      >
         <FormField
           control={form.control}
           name="dateRange"
@@ -180,7 +194,7 @@ function DateRangeForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel className="flex " required>
-                Start and End Date
+                Expected start and end date
               </FormLabel>
               <FormControl>
                 <div className="relative w-full">
@@ -225,7 +239,9 @@ function DateRangeForm({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => field.onChange({ from: undefined, to: undefined })}
+                      onClick={() =>
+                        field.onChange({ from: undefined, to: undefined })
+                      }
                       className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6"
                       title="Clear dates"
                     >

@@ -55,9 +55,9 @@ export default function Loading() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 2 }}
-          className="space-y-3 mb-6"
         >
-          <Skeleton className="h-7 w-48 md:h-9 md:w-64" />
+          <Skeleton className="h-6 mb-2 w-24 border border-[#4e4e4e]" />
+          <Skeleton className="my-4 h-5 w-48 md:h-9 md:w-72 bg-white dark:bg-[#2e2e2e]" />
         </motion.div>
       </div>
 

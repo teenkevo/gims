@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftCircle, Trash2 } from "lucide-react";
+import { ArrowLeftCircle, PlusCircleIcon, Trash2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
@@ -18,9 +18,10 @@ import ClientUpdateNameForm from "./client-update-name-form";
 import { DataTable } from "./contacts-table/data-table";
 import { DataTable as ProjectsDataTable } from "./projects-table/data-table";
 import { CreateContactDialog } from "./create-contact-dialog";
-import NoProjectsPlaceholder from "@/features/internal/projects/components/no-projects-placeholder";
 import { Badge } from "@/components/ui/badge";
 import { DeleteClient } from "./delete-client";
+import { Button } from "@/components/ui/button";
+import NoProjectsForClientPlaceholder from "./no-projects-for-client-placeholder";
 
 export default function ClientDetails({
   client,
@@ -55,44 +56,58 @@ export default function ClientDetails({
         </Badge>
         <h1 className="text-xl md:text-3xl font-extrabold mb-6">{name}</h1>
       </div>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger
-            value="client_profile"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "client_profile");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            Client Profile
-          </TabsTrigger>
-          <TabsTrigger
-            value="projects"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "projects");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            Projects
-          </TabsTrigger>
 
-          <TabsTrigger
-            className="text-destructive data-[state=active]:text-destructive"
-            value="danger"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "danger");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            <Trash2 strokeWidth={1.5} className="w-5 h-5" />
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger
+              value="client_profile"
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("tab", "client_profile");
+                window.history.pushState({}, "", url);
+              }}
+            >
+              Client Profile
+            </TabsTrigger>
+            <TabsTrigger
+              value="projects"
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("tab", "projects");
+                window.history.pushState({}, "", url);
+              }}
+            >
+              Projects
+            </TabsTrigger>
+
+            <TabsTrigger
+              className="text-destructive data-[state=active]:text-destructive"
+              value="danger"
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("tab", "danger");
+                window.history.pushState({}, "", url);
+              }}
+            >
+              <Trash2 strokeWidth={1.5} className="w-5 h-5" />
+            </TabsTrigger>
+          </TabsList>
+          {projects.length > 0 && activeTab === "projects" && (
+            <Button asChild className="sm:w-auto" variant="default">
+              <Link
+                href={`/clients/${_id}/projects/create`}
+                className=" flex items-center"
+              >
+                <PlusCircleIcon className="h-5 w-5 md:mr-2" />
+                <span className="hidden sm:inline">Create New Project</span>
+              </Link>
+            </Button>
+          )}
+        </div>
 
         <TabsContent value="client_profile">
-          <div className="space-y-8 my-10">
+          <div className="space-y-8 my-5">
             <AnimatePresence mode="popLayout">
               {/* Map through clients and filter contacts by client id */}
 
@@ -106,7 +121,7 @@ export default function ClientDetails({
                 <div className="flex flex-col gap-10">
                   <ClientUpdateNameForm
                     title="Client Name"
-                    description="Used to identify a client on the Dashboard"
+                    description="Used to identify a client in the system"
                     learnMoreLink="#"
                     learnMoreText="Save"
                     savable
@@ -132,7 +147,11 @@ export default function ClientDetails({
               <ProjectsDataTable data={projects} client={client} />
             </div>
           ) : (
-            <NoProjectsPlaceholder />
+            <NoProjectsForClientPlaceholder
+              helperText="projects"
+              needAction
+              clientId={client._id}
+            />
           )}
         </TabsContent>
 

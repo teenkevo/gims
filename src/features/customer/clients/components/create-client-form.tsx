@@ -30,7 +30,11 @@ const formVariants = {
   exit: { opacity: 0, x: 50, transition: { ease: "easeOut" } },
 };
 
-export function CreateClientForm({ clients }: { clients: ALL_CLIENTS_QUERYResult }) {
+export function CreateClientForm({
+  clients,
+}: {
+  clients: ALL_CLIENTS_QUERYResult;
+}) {
   const router = useRouter();
 
   // Restored useActionState
@@ -40,7 +44,7 @@ export function CreateClientForm({ clients }: { clients: ALL_CLIENTS_QUERYResult
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      internalId: `CLIENT-${Math.floor(10000 + Math.random() * 90000).toString()}`,
+      internalId: `C-${Math.floor(10000 + Math.random() * 90000).toString()}`,
       clientName: "",
     },
   });
@@ -65,14 +69,22 @@ export function CreateClientForm({ clients }: { clients: ALL_CLIENTS_QUERYResult
 
   return (
     <>
-      <Link className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4" href="/clients">
+      <Link
+        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
+        href="/clients"
+      >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
       <FormProvider {...form}>
         <ScrollToFieldError />
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <motion.div variants={formVariants} initial="hidden" animate="visible" exit="exit">
+          <motion.div
+            variants={formVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
             <ClientProfileForm clients={clients} isSubmitting={isPending} />
           </motion.div>
           <FormSubmitButton text="Add Client" isSubmitting={isPending} />

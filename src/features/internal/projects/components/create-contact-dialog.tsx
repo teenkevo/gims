@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -41,7 +41,11 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { motion } from "framer-motion";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { AnimatePresence } from "framer-motion";
 import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
@@ -54,6 +58,7 @@ import { Badge } from "@/components/ui/badge";
 import { revalidateProject } from "@/lib/actions";
 import { PlusCircleIcon, Users } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 
 const formSchema = z
   .object({
@@ -78,7 +83,10 @@ const formSchema = z
   })
   .refine(
     (data) => {
-      if (data.contactType === "new" && (data.name === undefined || data.name === "")) {
+      if (
+        data.contactType === "new" &&
+        (data.name === undefined || data.name === "")
+      ) {
         return false;
       }
       return true;
@@ -90,7 +98,10 @@ const formSchema = z
   )
   .refine(
     (data) => {
-      if (data.contactType === "new" && (data.email === undefined || data.email === "")) {
+      if (
+        data.contactType === "new" &&
+        (data.email === undefined || data.email === "")
+      ) {
         return false;
       }
       return true;
@@ -102,7 +113,10 @@ const formSchema = z
   )
   .refine(
     (data) => {
-      if (data.contactType === "new" && (data.phone === undefined || data.phone === "")) {
+      if (
+        data.contactType === "new" &&
+        (data.phone === undefined || data.phone === "")
+      ) {
         return false;
       }
       return true;
@@ -114,7 +128,10 @@ const formSchema = z
   )
   .refine(
     (data) => {
-      if (data.contactType === "existing" && data.existingContact === undefined) {
+      if (
+        data.contactType === "existing" &&
+        data.existingContact === undefined
+      ) {
         return false;
       }
       return true;
@@ -154,6 +171,8 @@ export function CreateContactDialog({
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   const { mutation } = useCreateContact();
 
@@ -170,17 +189,75 @@ export function CreateContactDialog({
     },
   });
 
+  // Debounced email validation
+  const checkEmailExists = useCallback(
+    async (email: string) => {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setEmailError(null);
+        return;
+      }
+
+      setIsCheckingEmail(true);
+      try {
+        const existingContact = await checkContactEmailExists(email, clientId);
+
+        if (existingContact) {
+          setEmailError(
+            `A contact with this email already exists for this client`
+          );
+        } else {
+          setEmailError(null);
+        }
+      } catch (error) {
+        console.error("Error checking email:", error);
+        setEmailError(null);
+      } finally {
+        setIsCheckingEmail(false);
+      }
+    },
+    [clientId]
+  );
+
+  // Debounce the email check
+  useEffect(() => {
+    const email = form.watch("email");
+    const timeoutId = setTimeout(() => {
+      if (email) {
+        checkEmailExists(email);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [form.watch("email"), checkEmailExists]);
+
+  // Reset email validation state when contact type changes
+  useEffect(() => {
+    const contactType = form.watch("contactType");
+    if (contactType === "existing") {
+      setEmailError(null);
+      setIsCheckingEmail(false);
+    } else if (contactType === "new") {
+      // Re-validate email if there's already a value when switching back to "new"
+      const email = form.getValues("email");
+      if (email) {
+        checkEmailExists(email);
+      }
+    }
+  }, [form.watch("contactType"), checkEmailExists]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const formattedData = {
       projectId,
       clientId,
       contactType: values.contactType,
-      existingContact: values.contactType === "existing" ? values.existingContact : undefined,
+      existingContact:
+        values.contactType === "existing" ? values.existingContact : undefined,
       name: values.contactType === "new" ? values.name : undefined,
       email: values.contactType === "new" ? values.email : undefined,
       phone: values.contactType === "new" ? values.phone : undefined,
-      designation: values.contactType === "new" ? values.designation : undefined,
+      designation:
+        values.contactType === "new" ? values.designation : undefined,
     };
 
     const result = await mutation.mutateAsync({ json: formattedData });
@@ -202,7 +279,8 @@ export function CreateContactDialog({
 
   // 1. Filter contacts that belong to the current client
   const contactsForCurrentClient =
-    existingContacts?.filter((contact) => contact.client?._id === clientId) ?? [];
+    existingContacts?.filter((contact) => contact.client?._id === clientId) ??
+    [];
 
   // 2. Get IDs of contacts already added to the project
   const addedContactIds = new Set(projectContacts.map((c) => c._id));
@@ -230,14 +308,20 @@ export function CreateContactDialog({
                 >
                   <FormItem className="w-1/2">
                     <FormControl>
-                      <RadioGroupItem value="new" className="sr-only peer" id="new-contact" />
+                      <RadioGroupItem
+                        value="new"
+                        className="sr-only peer"
+                        id="new-contact"
+                      />
                     </FormControl>
                     <FormLabel
                       htmlFor="new-contact"
                       className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <PlusCircleIcon className="h-8 w-8 mb-2" />
-                      <span className="text-sm text-center font-medium">Create New</span>
+                      <span className="text-sm text-center font-medium">
+                        Create New
+                      </span>
                     </FormLabel>
                   </FormItem>
                   <FormItem className="w-1/2">
@@ -253,7 +337,9 @@ export function CreateContactDialog({
                       className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                     >
                       <Users className="h-8 w-8 mb-2" />
-                      <span className="text-sm font-medium">Choose Existing</span>
+                      <span className="text-sm font-medium">
+                        Choose Existing
+                      </span>
                     </FormLabel>
                   </FormItem>
                 </RadioGroup>
@@ -293,8 +379,9 @@ export function CreateContactDialog({
                           >
                             <span className="truncate">
                               {field.value !== undefined
-                                ? existingContacts?.find((contact) => contact._id === field.value)
-                                    ?.name
+                                ? existingContacts?.find(
+                                    (contact) => contact._id === field.value
+                                  )?.name
                                 : "Select an existing contact"}
                             </span>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -322,7 +409,9 @@ export function CreateContactDialog({
                               }}
                             >
                               <span className="truncate">{contact.name}</span>
-                              {contact.isAdded && <Badge variant="secondary">Added</Badge>}
+                              {contact.isAdded && (
+                                <Badge variant="secondary">Added</Badge>
+                              )}
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -343,7 +432,11 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input disabled={isSubmitting} placeholder="John Doe" {...field} />
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder="John Doe"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -356,9 +449,23 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input disabled={isSubmitting} placeholder="contact@email.com" {...field} />
+                    <div className="relative">
+                      <Input
+                        disabled={isSubmitting}
+                        placeholder="contact@email.com"
+                        {...field}
+                      />
+                      {isCheckingEmail && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
+                  {emailError && (
+                    <p className="text-[13px] text-destructive">{emailError}</p>
+                  )}
                 </FormItem>
               )}
             />
@@ -387,7 +494,11 @@ export function CreateContactDialog({
                 <FormItem>
                   <FormLabel>Designation</FormLabel>
                   <FormControl>
-                    <Input disabled={isSubmitting} placeholder="Technical Engineer" {...field} />
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder="Technical Engineer"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -402,7 +513,12 @@ export function CreateContactDialog({
               {isSubmitting ? (
                 <ButtonLoading />
               ) : (
-                <Button type="submit" variant="default" className="w-full">
+                <Button
+                  type="submit"
+                  variant="default"
+                  className="w-full"
+                  disabled={!!emailError || isCheckingEmail}
+                >
                   Add contact to project
                   <ArrowRightCircle className="ml-2" />
                 </Button>
@@ -421,6 +537,7 @@ export function CreateContactDialog({
         setOpen(isOpen);
         if (isOpen) {
           form.reset();
+          setEmailError(null);
         }
       }}
     >
@@ -452,6 +569,7 @@ export function CreateContactDialog({
         setOpen(isOpen);
         if (isOpen) {
           form.reset();
+          setEmailError(null);
         }
       }}
     >

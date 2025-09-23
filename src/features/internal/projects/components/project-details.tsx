@@ -120,7 +120,7 @@ export default function ProjectDetails({
       </Link>
       <div className="mb-6">
         <Badge variant="outline" className="text-xs text-muted-foreground mb-2">
-          Project-<span className="font-bold">{project.internalId}</span>
+          {project.internalId}
         </Badge>
         <h1 className="text-xl md:text-3xl font-extrabold mb-6">{name}</h1>
       </div>
@@ -184,16 +184,16 @@ export default function ProjectDetails({
           <div className="space-y-8 my-10">
             <ProjectUpdateNameForm
               title="Project Name"
-              description="Used to identify a project on the Dashboard"
+              description="Used to identify a project in the system"
               learnMoreLink="#"
               learnMoreText="Save"
-              savable
+              savable={true}
               fieldName="name"
               initialValue={name || ""}
               projectId={_id}
             />
             <ProjectUpdateDatesForm
-              title="Start and End Date"
+              title="Expected start and end date"
               description="Used to track the progression and milestones of a project"
               learnMoreLink="#"
               learnMoreText="Save"

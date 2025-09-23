@@ -12,10 +12,10 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useActionState, useState } from "react";
 import { z } from "zod";
 import { useUpdateProjectDates } from "../api/use-update-project-dates";
-import { revalidateProject } from "@/lib/actions";
+import { revalidateProject, updateProjectDates } from "@/lib/actions";
 import { Control, FieldValues } from "react-hook-form";
 
 interface ProjectUpdateDatesFormProps {
@@ -39,11 +39,7 @@ export default function ProjectUpdateDatesForm({
   initialValue,
   projectId,
 }: ProjectUpdateDatesFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  const { mutation } = useUpdateProjectDates();
 
   const dateRangeSchema = z
     .object(
@@ -66,31 +62,17 @@ export default function ProjectUpdateDatesForm({
       }
     });
 
-  const handleUpdateProjectDates = async (dateRange: {
-    from: Date;
-    to: Date;
-  }) => {
-    setIsSubmitting(true);
-    const result = await mutation.mutateAsync({
-      json: {
-        dateRange: {
-          from: dateRange.from.toISOString(),
-          to: dateRange.to.toISOString(),
-        },
-        projectId,
-      },
-    });
-
-    if (result) {
-      revalidateProject(projectId).then(() => {
-        toast.success("Project dates have been updated");
-        setIsSubmitting(false);
-      });
+  const action = async (_: any, formData: FormData) => {
+    const result = await updateProjectDates(formData, projectId);
+    if (result.status === "ok") {
+      toast.success("Project dates have been updated");
     } else {
       toast.error("Something went wrong");
-      setIsSubmitting(false);
     }
+    return result;
   };
+
+  const [actionResult, dispatch, isPending] = useActionState(action, null);
 
   return (
     <SingleFieldForm
@@ -101,8 +83,9 @@ export default function ProjectUpdateDatesForm({
       savable={savable}
       fieldName={fieldName}
       initialValue={initialValue}
-      onSubmit={handleUpdateProjectDates}
-      isSubmitting={isSubmitting}
+      action={dispatch}
+      actionResult={actionResult}
+      isSubmitting={isPending}
       validation={dateRangeSchema}
       renderField={(form) => (
         <FormField
@@ -110,11 +93,22 @@ export default function ProjectUpdateDatesForm({
           name={fieldName}
           render={({ field }) => (
             <FormItem className="flex flex-col">
+              {/* Hidden inputs to provide server action FormData keys */}
+              <input
+                type="hidden"
+                name="dateFrom"
+                value={field.value?.from ? field.value.from.toISOString() : ""}
+              />
+              <input
+                type="hidden"
+                name="dateTo"
+                value={field.value?.to ? field.value.to.toISOString() : ""}
+              />
               <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <Button
                     id="date"
-                    disabled={isSubmitting}
+                    disabled={isPending}
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",

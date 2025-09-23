@@ -52,7 +52,7 @@ export function DeleteClient({
   const [_, dispatch, isPending] = useActionState(action, null);
 
   const isDeleteDisabled =
-    connectedProjects.length > 0 && inputValue !== client.internalId; // Disable button if names don't match
+    connectedProjects.length > 0 || inputValue !== client.internalId; // Disable button if names don't match
 
   if (isDesktop) {
     return (

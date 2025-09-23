@@ -1,4 +1,5 @@
-import { useForm } from "react-hook-form";
+import React from "react";
+import { useForm, useFormState } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface SingleFieldFormProps {
   validation?: z.ZodType<any, any>;
   renderField?: (form: ReturnType<typeof useForm>) => React.ReactNode; // <-- New renderField prop
   action?: string | ((formData: FormData) => void | Promise<void>); // <-- Optional action prop
+  actionResult?: any; // <-- Optional server action result to detect success
 }
 
 export function SingleFieldForm({
@@ -35,6 +37,7 @@ export function SingleFieldForm({
   validation = z.string().min(1),
   renderField, // <-- Accept renderField prop
   action, // <-- Accept action prop
+  actionResult, // <-- Accept action result
 }: SingleFieldFormProps) {
   const schema = z.object({
     [fieldName]: validation,
@@ -49,7 +52,20 @@ export function SingleFieldForm({
     },
   });
 
-  const formIsEdited = form.formState.isDirty;
+  const { isDirty, errors } = useFormState({ control: form.control });
+  const formIsEdited = isDirty;
+  const formHasError = Object.keys(errors).length > 0;
+
+  if (action) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useEffect(() => {
+      if (actionResult && actionResult.status === "ok") {
+        const currentValue = form.getValues()[fieldName];
+        form.reset({ [fieldName]: currentValue });
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [actionResult]);
+  }
 
   const handleFormSubmit = async (data: any) => {
     try {
@@ -98,7 +114,10 @@ export function SingleFieldForm({
                 </a>
               </span>
               {savable && (
-                <Button type="submit" disabled={isSubmitting || !formIsEdited}>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !formIsEdited || formHasError}
+                >
                   {isSubmitting ? (
                     <>
                       <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />

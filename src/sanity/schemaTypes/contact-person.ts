@@ -36,4 +36,18 @@ export const contactPerson = defineType({
       to: [{ type: "client" }],
     }),
   ],
+  preview: {
+    select: {
+      name: "name",
+      clientName: "client.name",
+      email: "email",
+    },
+    prepare(selection) {
+      const { name, clientName, email } = selection;
+      return {
+        title: `${name} - ${clientName || "No Client"}`,
+        subtitle: email,
+      };
+    },
+  },
 });

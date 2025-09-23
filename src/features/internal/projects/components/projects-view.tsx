@@ -24,7 +24,8 @@ export function ProjectsView({
   const { role } = useRBAC();
 
   const quotedProjects = projects.filter((project) => project.quotation);
-
+  // TODO: get completed projects
+  const completedProjects: ALL_PROJECTS_QUERYResult = [];
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Projects</h1>
@@ -35,12 +36,14 @@ export function ProjectsView({
             <TabsTrigger value="quoted">Quoted</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
-          <Button asChild className="sm:w-auto" variant="default">
-            <Link href="/projects/create" className="my-2 flex items-center">
-              <PlusCircleIcon className="h-5 w-5 md:mr-2" />
-              <span className="hidden sm:inline">Create New Project</span>
-            </Link>
-          </Button>
+          {projects.length > 0 && (
+            <Button asChild className="sm:w-auto" variant="default">
+              <Link href="/projects/create" className="my-2 flex items-center">
+                <PlusCircleIcon className="h-5 w-5 md:mr-2" />
+                <span className="hidden sm:inline">Create New Project</span>
+              </Link>
+            </Button>
+          )}
         </div>
         <TabsContent value="in-progress">
           {projects.length > 0 ? (
@@ -48,7 +51,7 @@ export function ProjectsView({
               <DataTable data={projects} />
             </div>
           ) : (
-            <NoProjectsPlaceholder />
+            <NoProjectsPlaceholder helperText="running projects" needAction />
           )}
         </TabsContent>
         <TabsContent value="quoted">
@@ -57,7 +60,16 @@ export function ProjectsView({
               <DataTable data={quotedProjects} />
             </div>
           ) : (
-            <NoProjectsPlaceholder />
+            <NoProjectsPlaceholder helperText="quoted projects" />
+          )}
+        </TabsContent>
+        <TabsContent value="completed">
+          {completedProjects.length > 0 ? (
+            <div className="mt-5">
+              <DataTable data={completedProjects} />
+            </div>
+          ) : (
+            <NoProjectsPlaceholder helperText="completed projects" />
           )}
         </TabsContent>
       </Tabs>
