@@ -34,9 +34,22 @@ export default function FileUpload({
   const handleFileChange = (selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
 
+    const isDuplicate = (candidate: File, list: FileWithPreview[]) =>
+      list.some(
+        (f) =>
+          f.file.name === candidate.name &&
+          f.file.size === candidate.size &&
+          f.file.lastModified === candidate.lastModified
+      );
+
     const newFiles: FileWithPreview[] = [];
 
     Array.from(selectedFiles).forEach((file) => {
+      // Skip duplicates against existing files and those in this batch
+      if (isDuplicate(file, files) || isDuplicate(file, newFiles)) {
+        return;
+      }
+
       // Check file size
       if (file.size > maxSize * 1024 * 1024) {
         newFiles.push({
@@ -65,6 +78,11 @@ export default function FileUpload({
 
     if (onFilesChange) {
       onFilesChange(updatedFiles.filter((f) => !f.error).map((f) => f.file));
+    }
+
+    // Reset input value so selecting the same file again triggers onChange
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
 
     // Simulate upload progress
@@ -119,10 +137,17 @@ export default function FileUpload({
 
       return newFiles;
     });
+
+    // Also clear the input so the same file can be re-selected
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const openFileDialog = () => {
     if (fileInputRef.current) {
+      // Ensure onChange fires even if the same file is picked again
+      fileInputRef.current.value = "";
       fileInputRef.current.click();
     }
   };
@@ -228,7 +253,7 @@ export default function FileUpload({
             {isDragging ? "Drop files here" : "Drag & drop files here"}
           </div>
           <div className="text-sm text-muted-foreground">
-            or <span className="text-primary font-medium">browse files</span>
+            or <span className="text-primary/50 font-medium">browse files</span>
           </div>
           <div className="text-xs text-muted-foreground mt-2">
             {multiple ? "Upload multiple files up to " : "Upload a file up to "}

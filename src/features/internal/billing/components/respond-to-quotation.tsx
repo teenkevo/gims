@@ -86,6 +86,8 @@ export function RespondToQuotationDialog({
     </Document>
   );
 
+  console.log(quotation);
+
   const action = async (_: void | null) => {
     if (!quotation) {
       toast.error("Quotation not found");

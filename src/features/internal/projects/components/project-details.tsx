@@ -67,7 +67,13 @@ export default function ProjectDetails({
   // 🔑  Derive stage indices **once** per render
   // ---------------------------------------------
   const statusStageMap: Record<
-    "draft" | "sent" | "accepted" | "rejected" | "invoiced" | "paid",
+    | "draft"
+    | "sent"
+    | "accepted"
+    | "rejected"
+    | "invoiced"
+    | "partially_paid"
+    | "fully_paid",
     number
   > = {
     draft: 1,
@@ -75,7 +81,8 @@ export default function ProjectDetails({
     accepted: 3,
     rejected: 3,
     invoiced: 4,
-    paid: 5,
+    partially_paid: 5,
+    fully_paid: 5,
   };
 
   const { role } = useRBAC();
@@ -92,14 +99,14 @@ export default function ProjectDetails({
   const [selectedFieldTests, setSelectedFieldTests] =
     useState<ALL_SERVICES_QUERYResult>([]);
   const [mobilizationActivities, setMobilizationActivities] = useState<
-    { activity: string; price: number; quantity: number }[]
+    { activity: string; price: number; quantity: number; unit: string }[]
   >([]);
   const [reportingActivities, setReportingActivities] = useState<
-    { activity: string; price: number; quantity: number }[]
+    { activity: string; price: number; quantity: number; unit: string }[]
   >([]);
 
   // State to manage the active tab
-  const [activeTab, setActiveTab] = useState("details");
+  const [activeTab, setActiveTab] = useState("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -125,7 +132,11 @@ export default function ProjectDetails({
         <h1 className="text-xl md:text-3xl font-extrabold mb-6">{name}</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        defaultValue="details"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <TabsList>
           <TabsTrigger
             value="details"
@@ -271,11 +282,12 @@ export default function ProjectDetails({
                 );
               })}
             </AnimatePresence>
-            <CreateClientDialog
+            {/* TODO: Add back logic to add multiple clients to a project */}
+            {/* <CreateClientDialog
               projectId={_id || ""}
               existingClients={existingClients}
               projectClients={project.clients || []}
-            />
+            /> */}
           </div>
         </TabsContent>
         <TabsContent value="billing">

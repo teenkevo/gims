@@ -104,7 +104,7 @@ export function ClientProfileForm({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="border-b"
+            // className="border-b"
           >
             <FormItem
               key={clientField.id}
@@ -349,7 +349,8 @@ export function ClientProfileForm({
               Atleast one client is required
             </p>
           )}
-          <Button
+          {/* TODO: Add back logic to add multiple clients to a project */}
+          {/* <Button
             type="button"
             disabled={isSubmitting}
             variant="outline"
@@ -365,7 +366,7 @@ export function ClientProfileForm({
             <PlusCircle className="w-4 h-4 mr-2 text-primary" /> Add{" "}
             {fields.length === 0 ? "a " : "another "}
             client
-          </Button>
+          </Button> */}
           {errors.clients && (
             <p className="text-sm font-medium text-destructive">
               {clientsArrayError}

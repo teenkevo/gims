@@ -12,7 +12,24 @@ export const serviceItem = defineType({
       to: [{ type: "service" }],
       validation: (Rule) => Rule.required(),
     }),
-
+    defineField({
+      name: "unit",
+      title: "Unit",
+      type: "string",
+      validation: (Rule) => Rule.required(),
+      options: {
+        list: [
+          { title: "Number", value: "number" },
+          { title: "Meters", value: "meters" },
+          { title: "Lump sum", value: "lump sum" },
+          { title: "Days", value: "days" },
+          { title: "Weeks", value: "weeks" },
+          { title: "Months", value: "months" },
+          { title: "Year", value: "year" },
+        ],
+      },
+      initialValue: "number",
+    }),
     defineField({
       name: "unitPrice",
       title: "Unit Price",
@@ -80,6 +97,24 @@ export const otherItem = defineType({
       title: "Activity Description",
       type: "string",
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "unit",
+      title: "Unit",
+      type: "string",
+      validation: (Rule) => Rule.required(),
+      options: {
+        list: [
+          { title: "Number", value: "number" },
+          { title: "Meters", value: "meters" },
+          { title: "Lump sum", value: "lump sum" },
+          { title: "Days", value: "days" },
+          { title: "Weeks", value: "weeks" },
+          { title: "Months", value: "months" },
+          { title: "Year", value: "year" },
+        ],
+      },
+      initialValue: "number",
     }),
     defineField({
       name: "unitPrice",

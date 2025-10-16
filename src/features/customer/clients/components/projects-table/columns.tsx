@@ -7,6 +7,7 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 import type {
   ALL_PROJECTS_QUERYResult,
   CLIENT_BY_ID_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
   Quotation,
 } from "../../../../../../sanity.types";
 import Link from "next/link";
@@ -14,6 +15,7 @@ import { ListEnd, ListStart } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { quotationTotal } from "@/features/internal/projects/constants";
+import { calculatePaymentStatus } from "@/features/internal/billing/components/billing-lifecycle";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
@@ -132,6 +134,12 @@ export const getColumns = (
       const total = quotationTotal(quotation as Quotation);
       const currency = quotation?.currency;
 
+      const paymentStatus = calculatePaymentStatus(
+        quotation as NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>
+      );
+
+      const { allClear, advanceRejected } = paymentStatus;
+
       const status =
         quotation?.status === "draft"
           ? "Quotation created"
@@ -144,9 +152,9 @@ export const getColumns = (
                 : quotation?.status === "invoiced"
                   ? "Invoice issued"
                   : quotation?.status === "partially_paid"
-                    ? "Invoice partially paid"
+                    ? "Partially paid"
                     : quotation?.status === "fully_paid"
-                      ? "Invoice paid"
+                      ? "Fully paid"
                       : "Not Billed";
 
       const badgeVariant =

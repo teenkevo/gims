@@ -30,7 +30,9 @@ import { ExtendedService } from "./columns";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  setSelectedServices: React.Dispatch<React.SetStateAction<ALL_SERVICES_QUERYResult>>;
+  setSelectedServices: React.Dispatch<
+    React.SetStateAction<ALL_SERVICES_QUERYResult>
+  >;
   onValidationChange: (isValid: boolean) => void;
 }
 
@@ -53,8 +55,11 @@ export function DataTable<TData extends ExtendedService, TValue>({
 
   const [rowSelection, setRowSelection] = React.useState(initialRowSelection);
 
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
@@ -82,7 +87,9 @@ export function DataTable<TData extends ExtendedService, TValue>({
 
   // Bubble up the selection to the parent component
   React.useEffect(() => {
-    const selectedServices = table.getSelectedRowModel().flatRows.map((row) => row.original);
+    const selectedServices = table
+      .getSelectedRowModel()
+      .flatRows.map((row) => row.original);
 
     setSelectedServices(selectedServices);
 
@@ -91,11 +98,14 @@ export function DataTable<TData extends ExtendedService, TValue>({
       selectedServices.length > 0
         ? selectedServices.every(
             (t: ExtendedService) =>
-              t.price &&
-              t.price > 0 &&
-              t.quantity &&
-              t.quantity > 0 &&
-              t.testMethods?.some((tm) => (tm as { selected?: boolean }).selected)
+              // require unit
+              Boolean(t.unit && String(t.unit).trim().length > 0) &&
+              // require price and quantity
+              Boolean(t.price && t.price > 0 && t.quantity && t.quantity > 0) &&
+              // require a selected test method
+              t.testMethods?.some(
+                (tm) => (tm as { selected?: boolean }).selected
+              )
           )
         : false;
 
@@ -116,7 +126,10 @@ export function DataTable<TData extends ExtendedService, TValue>({
                     <TableHead key={header.id} colSpan={header.colSpan}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -126,17 +139,26 @@ export function DataTable<TData extends ExtendedService, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>

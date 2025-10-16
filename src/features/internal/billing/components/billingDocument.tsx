@@ -14,6 +14,7 @@ import {
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
 import { currencyCodeToName } from "@/lib/utils";
+import { computeBillingTotals } from "../constants";
 const tw = createTw({
   theme: {
     extend: {
@@ -101,20 +102,11 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
   const lab = billing_data.items.labTests || [];
   const reporting = billing_data.items.reportingActivities || [];
 
-  const calculateBill = (items: any) =>
-    items.reduce(
-      (sum: number, item: any) => sum + item.price * item.quantity,
-      0
-    );
-
-  const SUBTOTAL =
-    (calculateBill(mobilization) || 0) +
-    (calculateBill(field) || 0) +
-    (calculateBill(lab) || 0) +
-    (calculateBill(reporting) || 0);
-
-  const VAT_AMOUNT = Math.round((SUBTOTAL * vatPercentage) / 100);
-  const TOTAL_WITH_VAT = Math.round(SUBTOTAL + VAT_AMOUNT);
+  const {
+    subtotal: SUBTOTAL,
+    vatAmount: VAT_AMOUNT,
+    totalWithVat: TOTAL_WITH_VAT,
+  } = computeBillingTotals({ items: billing_data.items }, vatPercentage);
 
   const styles = StyleSheet.create({
     page: {
@@ -142,7 +134,6 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     },
 
     spaceBetweenNoAlign: {
-      flex: 1,
       flexDirection: "row",
       justifyContent: "space-between",
       color: "#3E3E3E",
@@ -160,7 +151,6 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       flexDirection: "row",
       textAlign: "right",
       borderRadius: 10,
-      flex: 2,
       justifyContent: "space-between",
       marginBottom: 10,
     },
@@ -209,7 +199,22 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       borderBottomWidth: 1,
     },
 
-    theader2: { flex: 4, borderRightWidth: 1, borderBottomWidth: 1 },
+    theaderSmall: {
+      marginTop: 5,
+      fontSize: 7,
+      fontWeight: 500,
+      paddingTop: 4,
+      paddingLeft: 5,
+      paddingRight: 5,
+      flex: 0.5,
+      height: 20,
+      backgroundColor: "#E1EBE3",
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+
+    theader2: { flex: 2.5, borderRightWidth: 1, borderBottomWidth: 1 },
 
     tbody: {
       fontSize: 8,
@@ -222,6 +227,19 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       borderRightWidth: 1,
       borderBottomWidth: 1,
     },
+
+    tbodySmall: {
+      fontSize: 8,
+      fontWeight: 400,
+      paddingTop: 2,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 0.5,
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+
     tbodyRightAlign: {
       fontSize: 8,
       fontWeight: 400,
@@ -235,7 +253,7 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       textAlign: "right",
     },
 
-    tbody2: { flex: 4, borderRightWidth: 1 },
+    tbody2: { flex: 2.5, borderRightWidth: 1 },
 
     tbodyTotal: {
       fontSize: 8,
@@ -424,9 +442,6 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           </View>
         ))} */}
         <Text style={styles.subHeading}>{project?.clients?.[0]?.name}</Text>
-        <Text style={styles.addressTitle}>
-          Email: {project?.contactPersons?.[0]?.email}
-        </Text>
       </View>
 
       <View
@@ -447,11 +462,14 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
 
   const TableHead = () => (
     <View style={{ width: "100%", flexDirection: "row", marginTop: 10 }}>
-      <View style={styles.theader}>
+      <View style={styles.theaderSmall}>
         <Text>QUANTITY</Text>
       </View>
       <View style={styles.theader}>
         <Text>UNITS</Text>
+      </View>
+      <View style={styles.theader}>
+        <Text>METHOD</Text>
       </View>
       <View style={[styles.theader, styles.theader2]}>
         <Text>DESCRIPTION</Text>
@@ -470,11 +488,18 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
     ) : (
       items?.map((item: any, index: number) => (
         <View key={index} style={{ width: "100%", flexDirection: "row" }}>
-          <View style={styles.tbody}>
+          <View style={styles.tbodySmall}>
             <Text>{item.quantity}</Text>
           </View>
           <View style={styles.tbody}>
-            <Text>No</Text>
+            <Text>
+              {item.unit.charAt(0).toUpperCase() + item.unit.slice(1)}
+            </Text>
+          </View>
+          <View style={styles.tbody}>
+            <Text>
+              {item?.testMethods?.find((m: any) => m.selected)?.code || "-"}
+            </Text>
           </View>
           <View style={[styles.tbody, styles.tbody2]}>
             <Text>{item.testParameter || item.activity}</Text>
@@ -487,35 +512,6 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
           </View>
         </View>
       ))
-    );
-
-  const TableBodyWithSingleItem = ({
-    item,
-  }: {
-    item: MobilizationService | ReportingService;
-  }) =>
-    !item.price || !item.quantity ? (
-      <NoItems text="No item" />
-    ) : (
-      <View style={{ width: "100%", flexDirection: "row" }}>
-        <View style={styles.tbody}>
-          <Text>{item.quantity}</Text>
-        </View>
-        <View style={styles.tbody}>
-          <Text>No</Text>
-        </View>
-        <View style={[styles.tbody, styles.tbody2]}>
-          <Text>{item.activity}</Text>
-        </View>
-        <View style={styles.tbodyRightAlign}>
-          <Text>{item?.price?.toLocaleString()} </Text>
-        </View>
-        <View style={styles.tbodyRightAlign}>
-          <Text>
-            {((item?.price ?? 0) * (item?.quantity ?? 0)).toLocaleString()}
-          </Text>
-        </View>
-      </View>
     );
 
   const TableTotal = () => (
@@ -704,14 +700,30 @@ export const BillingDocument = (billingInfo: BillingDocumentProps) => {
       <Header />
       <ClientAddressAndProject />
       <TableHead />
-      <Subsection text="Mobilization & Demobilization costs" />
-      <TableBodyWithListItems items={mobilization} />
-      <Subsection text="Field Investigations" />
-      <TableBodyWithListItems items={field} />
-      <Subsection text="Laboratory tests" />
-      <TableBodyWithListItems items={lab} />
-      <Subsection text="Reporting" />
-      <TableBodyWithListItems items={reporting} />
+      {mobilization.length > 0 ? (
+        <>
+          <Subsection text="Mobilization & Demobilization costs" />
+          <TableBodyWithListItems items={mobilization} />
+        </>
+      ) : null}
+      {field.length > 0 ? (
+        <>
+          <Subsection text="Field Investigations" />
+          <TableBodyWithListItems items={field} />
+        </>
+      ) : null}
+      {lab.length > 0 ? (
+        <>
+          <Subsection text="Laboratory tests" />
+          <TableBodyWithListItems items={lab} />
+        </>
+      ) : null}
+      {reporting.length > 0 ? (
+        <>
+          <Subsection text="Reporting" />
+          <TableBodyWithListItems items={reporting} />
+        </>
+      ) : null}
       <TableTotal />
       {isVATRequired() ? <VAT /> : null}
       {isVATRequired() ? <TotalBillWithVAT /> : <TotalBill />}

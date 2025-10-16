@@ -1,12 +1,18 @@
-/* columns.tsx
-   Derived-data version ─ no effects needed */
-import { Dispatch, SetStateAction, useState } from "react";
-import { ColumnDef, Row } from "@tanstack/react-table";
+/* columns.tsx */
+import { type Dispatch, type SetStateAction, useState } from "react";
+import type { ColumnDef, Row } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { PriceForm } from "./price-form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -14,6 +20,7 @@ import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
 export type ExtendedService = ALL_SERVICES_QUERYResult[number] & {
   price?: number;
   quantity?: number;
+  unit?: string;
   /** added by mergeQuotation to pre-select a row */
   preSelected?: boolean;
 };
@@ -34,6 +41,56 @@ const SelectCell = ({ row }: { row: Row<ExtendedService> }) => (
     className="translate-y-[2px]"
   />
 );
+
+const UnitCell = ({
+  row,
+  setTableData,
+}: {
+  row: Row<ExtendedService>;
+  setTableData: Dispatch<SetStateAction<ExtendedService[]>>;
+}) => {
+  const units = [
+    "Number",
+    "Meters",
+    "Lump sum",
+    "Days",
+    "Weeks",
+    "Months",
+    "Year",
+  ];
+
+  return (
+    <div>
+      <div className="flex w-[120px] items-center">
+        <Select
+          disabled={!row.getIsSelected()}
+          value={row.original.unit ?? ""}
+          onValueChange={(value) => {
+            setTableData((prev) =>
+              prev.map((svc) =>
+                svc._id === row.original._id ? { ...svc, unit: value } : svc
+              )
+            );
+          }}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select unit" />
+          </SelectTrigger>
+          <SelectContent>
+            {units.map((unit) => (
+              <SelectItem key={unit} value={unit}>
+                {unit}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {row.getIsSelected() && !row.original.unit && (
+        <p className="text-destructive text-xs mt-2 font-medium">Required</p>
+      )}
+    </div>
+  );
+};
 
 const TestMethodCell = ({
   row,
@@ -62,6 +119,8 @@ const TestMethodCell = ({
   const isChosen = row.original.testMethods?.some(
     (tm) => tm.standard?.acronym === selected
   );
+
+  console.log(row.original.testMethods);
 
   return (
     <div>
@@ -187,7 +246,7 @@ export const columns = ({
     ),
     cell: ({ row }) => (
       <div className="flex space-x-2">
-        <span className="max-w-[300px] truncate font-normal">
+        <span className="max-w-[200px] truncate font-normal">
           {row.getValue("testParameter")}
         </span>
       </div>
@@ -225,13 +284,22 @@ export const columns = ({
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
 
-  /* 6 ▸ Price / Qty / Total --------------------------------------- */
+  /* 6 ▸ Unit ------------------------------------------------------- */
+  {
+    accessorKey: "unit",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Unit" className="text-sm" />
+    ),
+    cell: ({ row }) => <UnitCell row={row} setTableData={setTableData} />,
+  },
+
+  /* 7 ▸ Price / Qty / Total --------------------------------------- */
   {
     id: "price",
     header: ({ column }) => (
       <DataTableColumnHeader
         column={column}
-        title="Unit Price – Quantity – Total"
+        title="Quantity – Unit Price – Total"
         className="text-sm"
       />
     ),

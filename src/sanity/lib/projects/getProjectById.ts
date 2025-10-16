@@ -69,11 +69,13 @@ export const getProjectById = async (projectId: string) => {
                     name,
                   },
                 },
+                unit,
                 unitPrice,
                 quantity,
                 lineTotal,
                 testMethod->{
                   _id,
+                  code,
                   standard->{
                     _id,
                     acronym,
@@ -83,6 +85,7 @@ export const getProjectById = async (projectId: string) => {
               otherItems[] {
                 type,
                 activity,
+                unit,
                 unitPrice,
                 quantity,
                 lineTotal,
@@ -90,6 +93,62 @@ export const getProjectById = async (projectId: string) => {
               vatPercentage,
               paymentNotes,
               advance,
+              grandTotal,
+              subtotal,
+              payments[] {
+                _key,
+                paymentType,
+                amount,
+                paymentMode,
+                currency,
+                internalNotes,
+                internalStatus,
+                paymentProof {
+                  asset->{
+                    _id,
+                    url,
+                    originalFilename,
+                    size,
+                    mimeType,
+                  },
+                },
+                receipt {
+                  asset->{
+                    _id,
+                    url,
+                    originalFilename,
+                    name,
+                    mimeType,
+                    size,
+                  },
+                },
+                resubmissions[] {
+                  _key,
+                  amount,
+                  paymentMode,
+                  internalNotes,
+                  internalStatus,
+                  paymentProof {
+                    asset->{
+                      _id,
+                      url,
+                      originalFilename,
+                      size,
+                      mimeType,
+                    },
+                  },
+                  receipt {
+                    asset->{
+                      _id,
+                      url,
+                      originalFilename,
+                      name,
+                      mimeType,
+                      size,
+                    },
+                  },
+                },
+              },
               file {
                 asset->{
                   _id,
@@ -109,11 +168,13 @@ export const getProjectById = async (projectId: string) => {
                   name,
                 },
               },
+              unit,
               unitPrice,
               quantity,
               lineTotal,
               testMethod->{
                 _id,
+                code,
                 standard->{
                   _id,
                   acronym,
@@ -123,6 +184,7 @@ export const getProjectById = async (projectId: string) => {
             otherItems[] {
               type,
               activity,
+              unit,
               unitPrice,
               quantity,
               lineTotal,
@@ -130,6 +192,63 @@ export const getProjectById = async (projectId: string) => {
             vatPercentage,
             paymentNotes,
             advance,
+            grandTotal,
+            subtotal,
+            payments[] {
+              _key,
+              paymentType,
+              amount,
+              paymentMode,
+              currency,
+              internalNotes,
+              internalStatus,
+              resubmissions[] {
+                _key,
+                amount,
+                paymentMode,
+                internalNotes,
+                internalStatus,
+                paymentProof {
+                  asset->{
+                    _id,
+                    url,
+                    originalFilename,
+                    size,
+                    mimeType,
+                  },
+                },
+                receipt {
+                  asset->{
+                    _id,
+                    url,
+                    originalFilename,
+                    name,
+                    mimeType,
+                    size,
+                  },
+                },
+              },
+              paymentProof {
+                asset->{
+                  _id,
+                  url,
+                  originalFilename,
+                  size,
+                  mimeType,
+                },
+              },
+              receipt {
+                asset->{
+                  _id,
+                  url,
+                  originalFilename,
+                  name,
+                  mimeType,
+                  size,
+                },
+              },
+              
+            },
             file {
               asset->{
                 _id,

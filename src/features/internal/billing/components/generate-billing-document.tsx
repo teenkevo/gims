@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { ButtonLoading } from "@/components/button-loading";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import { computeBillingTotals } from "../constants";
 
 interface GenerateBillingDocumentProps {
   currency: string;
@@ -38,22 +39,28 @@ interface GenerateBillingDocumentProps {
   labTests: (ALL_SERVICES_QUERYResult[number] & {
     price: number;
     quantity: number;
+    unit: string;
   })[];
   fieldTests: (ALL_SERVICES_QUERYResult[number] & {
     price: number;
     quantity: number;
+    unit: string;
   })[];
   reportingActivities: {
+    unit: string;
     activity: string;
     price: number;
     quantity: number;
   }[];
   mobilizationActivities: {
+    unit: string;
     activity: string;
     price: number;
     quantity: number;
   }[];
   project: PROJECT_BY_ID_QUERYResult[number];
+  subtotal: number;
+  grandTotal: number;
 }
 
 export const GenerateBillingDocument = ({
@@ -102,13 +109,26 @@ export const GenerateBillingDocument = ({
       : `A${uniqueNumber}`;
   const quotationDate = date.toISOString();
 
+  const { subtotal, totalWithVat } = computeBillingTotals(
+    { items: billingInfo },
+    vatPercentage
+  );
+
   const finalBillingInfo = {
     ...billingInfo,
     quotationNumber: quotationNumber || "",
     acquisitionNumber: acquisitionNumber || "",
     quotationDate: quotationDate || "",
     revisionNumber: revisionNumber || "",
+    subtotal: subtotal,
+    grandTotal: totalWithVat,
   };
+
+  const isQuotationEmpty =
+    labTests.length === 0 &&
+    fieldTests.length === 0 &&
+    reportingActivities.length === 0 &&
+    mobilizationActivities.length === 0;
 
   const isMobile = useMediaQuery("(max-width: 640px)");
 
@@ -140,6 +160,10 @@ export const GenerateBillingDocument = ({
 
   // CREATE QUOTATION
   const handleCreateQuotation = async () => {
+    if (isQuotationEmpty) {
+      toast.error("Please add at least one item to the quotation");
+      return;
+    }
     setIsLoading(true);
     try {
       const blob = await pdf(Doc).toBlob();

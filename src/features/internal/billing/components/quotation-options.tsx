@@ -49,6 +49,9 @@ function mergeQuotation(
 
     return {
       ...svc,
+      unit: item?.unit
+        ? item.unit.charAt(0).toUpperCase() + item.unit.slice(1)
+        : undefined,
       price: item?.unitPrice ?? undefined,
       quantity: item?.quantity ?? undefined,
       testMethods: svc.testMethods?.map((tm) => ({
@@ -198,6 +201,7 @@ const SwitchField = ({
       quotationOptionsProps.setMobilizationActivities(
         activities.map((a) => ({
           activity: a.activity || "",
+          unit: a.unit || "",
           price: a.price || 0,
           quantity: a.quantity || 0,
         }))
@@ -210,6 +214,7 @@ const SwitchField = ({
       quotationOptionsProps.setReportingActivities(
         activities.map((a) => ({
           activity: a.activity || "",
+          unit: a.unit || "",
           price: a.price || 0,
           quantity: a.quantity || 0,
         }))
@@ -333,15 +338,25 @@ interface QuotationOptionsProps {
   setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
   mobilizationActivities: {
     activity: string;
+    unit: string;
     price: number;
     quantity: number;
   }[];
   setMobilizationActivities: Dispatch<
-    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+    SetStateAction<
+      { activity: string; unit: string; price: number; quantity: number }[]
+    >
   >;
-  reportingActivities: { activity: string; price: number; quantity: number }[];
+  reportingActivities: {
+    activity: string;
+    unit: string;
+    price: number;
+    quantity: number;
+  }[];
   setReportingActivities: Dispatch<
-    SetStateAction<{ activity: string; price: number; quantity: number }[]>
+    SetStateAction<
+      { activity: string; unit: string; price: number; quantity: number }[]
+    >
   >;
   setDrawerOpen: Dispatch<SetStateAction<boolean>>;
 }
@@ -416,16 +431,20 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
       : []) as (ALL_SERVICES_QUERYResult[number] & {
       price: number;
       quantity: number;
+      unit: string;
     })[],
     fieldTests: (isFieldsValid
       ? selectedFieldTests
       : []) as (ALL_SERVICES_QUERYResult[number] & {
       price: number;
       quantity: number;
+      unit: string;
     })[],
     mobilizationActivities: isMobilizationValid ? mobilizationActivities : [],
     reportingActivities: isReportingValid ? reportingActivities : [],
     project,
+    subtotal: quotation?.subtotal ?? 0,
+    grandTotal: quotation?.grandTotal ?? 0,
   } as const;
 
   // ---------------------------------------------------------------------------

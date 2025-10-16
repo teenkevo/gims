@@ -46,6 +46,7 @@ export interface Test {
       name: string | null;
     } | null;
   } | null;
+  unit: string | null;
   unitPrice: number | null;
   quantity: number | null;
   lineTotal: number | null;
@@ -61,6 +62,7 @@ export interface Test {
 interface Activity {
   type: "mobilization" | "reporting" | null;
   activity: string | null;
+  unit: string | null;
   unitPrice: number | null;
   quantity: number | null;
   lineTotal: number | null;
@@ -162,7 +164,6 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
     },
 
     spaceBetweenNoAlign: {
-      flex: 1,
       flexDirection: "row",
       justifyContent: "space-between",
       color: "#3E3E3E",
@@ -180,7 +181,6 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
       flexDirection: "row",
       textAlign: "right",
       borderRadius: 10,
-      flex: 2,
       justifyContent: "space-between",
       marginBottom: 10,
     },
@@ -229,7 +229,22 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
       borderBottomWidth: 1,
     },
 
-    theader2: { flex: 4, borderRightWidth: 1, borderBottomWidth: 1 },
+    theaderSmall: {
+      marginTop: 5,
+      fontSize: 7,
+      fontWeight: 500,
+      paddingTop: 4,
+      paddingLeft: 5,
+      paddingRight: 5,
+      flex: 0.5,
+      height: 20,
+      backgroundColor: "#E1EBE3",
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+
+    theader2: { flex: 2.5, borderRightWidth: 1, borderBottomWidth: 1 },
 
     tbody: {
       fontSize: 8,
@@ -242,6 +257,19 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
       borderRightWidth: 1,
       borderBottomWidth: 1,
     },
+
+    tbodySmall: {
+      fontSize: 8,
+      fontWeight: 400,
+      paddingTop: 2,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 0.5,
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+
     tbodyRightAlign: {
       fontSize: 8,
       fontWeight: 400,
@@ -255,7 +283,7 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
       textAlign: "right",
     },
 
-    tbody2: { flex: 4, borderRightWidth: 1 },
+    tbody2: { flex: 2.5, borderRightWidth: 1 },
 
     tbodyTotal: {
       fontSize: 8,
@@ -467,11 +495,14 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
 
   const TableHead = () => (
     <View style={{ width: "100%", flexDirection: "row", marginTop: 10 }}>
-      <View style={styles.theader}>
+      <View style={styles.theaderSmall}>
         <Text>QUANTITY</Text>
       </View>
       <View style={styles.theader}>
         <Text>UNITS</Text>
+      </View>
+      <View style={styles.theader}>
+        <Text>METHOD</Text>
       </View>
       <View style={[styles.theader, styles.theader2]}>
         <Text>DESCRIPTION</Text>
@@ -484,17 +515,22 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
       </View>
     </View>
   );
-  const TableBodyWithListItems = ({ items }: { items: (Test | Activity)[] }) =>
+  const TableBodyWithListItems = ({ items }: any) =>
     items.length === 0 ? (
       <NoItems text="No items" />
     ) : (
-      items?.map((item, index: number) => (
+      items?.map((item: any, index: number) => (
         <View key={index} style={{ width: "100%", flexDirection: "row" }}>
-          <View style={styles.tbody}>
+          <View style={styles.tbodySmall}>
             <Text>{item.quantity}</Text>
           </View>
           <View style={styles.tbody}>
-            <Text>No</Text>
+            <Text>
+              {item.unit.charAt(0).toUpperCase() + item.unit.slice(1)}
+            </Text>
+          </View>
+          <View style={styles.tbody}>
+            <Text>{item.testMethod?.code || "-"}</Text>
           </View>
           <View style={[styles.tbody, styles.tbody2]}>
             <Text>
@@ -701,14 +737,30 @@ export const InvoiceDocument = (billingInfo: BillingDocumentProps) => {
       <Header />
       <ClientAddressAndProject />
       <TableHead />
-      <Subsection text="Mobilization & Demobilization costs" />
-      <TableBodyWithListItems items={mobilization} />
-      <Subsection text="Field Investigations" />
-      <TableBodyWithListItems items={field} />
-      <Subsection text="Laboratory tests" />
-      <TableBodyWithListItems items={lab} />
-      <Subsection text="Reporting" />
-      <TableBodyWithListItems items={reporting} />
+      {mobilization.length > 0 ? (
+        <>
+          <Subsection text="Mobilization & Demobilization costs" />
+          <TableBodyWithListItems items={mobilization} />
+        </>
+      ) : null}
+      {field.length > 0 ? (
+        <>
+          <Subsection text="Field Investigations" />
+          <TableBodyWithListItems items={field} />
+        </>
+      ) : null}
+      {lab.length > 0 ? (
+        <>
+          <Subsection text="Laboratory tests" />
+          <TableBodyWithListItems items={lab} />
+        </>
+      ) : null}
+      {reporting.length > 0 ? (
+        <>
+          <Subsection text="Reporting" />
+          <TableBodyWithListItems items={reporting} />
+        </>
+      ) : null}
       <TableTotal />
       {isVATRequired() ? <VAT /> : null}
       {isVATRequired() ? <TotalBillWithVAT /> : <TotalBill />}

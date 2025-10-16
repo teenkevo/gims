@@ -62,10 +62,10 @@ export default function ClientProjectView({
   const [selectedFieldTests, setSelectedFieldTests] =
     useState<ALL_SERVICES_QUERYResult>([]);
   const [mobilizationActivities, setMobilizationActivities] = useState<
-    { activity: string; price: number; quantity: number }[]
+    { activity: string; price: number; quantity: number; unit: string }[]
   >([]);
   const [reportingActivities, setReportingActivities] = useState<
-    { activity: string; price: number; quantity: number }[]
+    { activity: string; price: number; quantity: number; unit: string }[]
   >([]);
 
   return (

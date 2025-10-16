@@ -80,30 +80,6 @@ export function PriceForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-7">
         <FormField
           control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <NumericFormat
-                  className="max-w-[150px] min-w-[130px]"
-                  customInput={Input}
-                  thousandSeparator={true}
-                  prefix={`${currency.toUpperCase()} `}
-                  placeholder="Add a price"
-                  value={field.value}
-                  disabled={!isRowSelected}
-                  onValueChange={(target) => {
-                    onPriceChange(target.floatValue);
-                    field.onChange(target.floatValue);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="quantity"
           render={({ field }) => (
             <FormItem>
@@ -124,6 +100,31 @@ export function PriceForm({
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <NumericFormat
+                  className="max-w-[150px] min-w-[130px]"
+                  customInput={Input}
+                  thousandSeparator={true}
+                  prefix={`${currency.toUpperCase()} `}
+                  placeholder="Unit price"
+                  value={field.value}
+                  disabled={!isRowSelected}
+                  onValueChange={(target) => {
+                    onPriceChange(target.floatValue);
+                    field.onChange(target.floatValue);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="total"

@@ -132,7 +132,11 @@ export default function QuotationFile({
                     ? "text-destructive"
                     : quotation?.status === "invoiced"
                       ? "text-primary"
-                      : "bg-orange-500 text-orange-foreground"
+                      : quotation?.status === "fully_paid"
+                        ? "text-primary"
+                        : quotation?.status === "partially_paid"
+                          ? "text-orange-500"
+                          : "text-orange-500"
               }`}
             >
               {quotation?.status === "accepted"
@@ -141,7 +145,11 @@ export default function QuotationFile({
                   ? "Rejected"
                   : quotation?.status === "invoiced"
                     ? "Invoiced"
-                    : "Pending"}
+                    : quotation?.status === "fully_paid"
+                      ? "Invoiced & fully paid"
+                      : quotation?.status === "partially_paid"
+                        ? "Invoiced & Partially paid"
+                        : "Pending"}
             </Badge>
           </div>
           {quotation && (

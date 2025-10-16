@@ -3,6 +3,7 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { sanitizePhoneNumber } from "./utils";
+import { v4 as uuidv4 } from "uuid";
 import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
@@ -13,17 +14,21 @@ interface QuotationProps {
   labTests: (ALL_SERVICES_QUERYResult[number] & {
     price: number;
     quantity: number;
+    unit: string;
   })[];
   fieldTests: (ALL_SERVICES_QUERYResult[number] & {
     price: number;
     quantity: number;
+    unit: string;
   })[];
   reportingActivities: {
+    unit: string;
     activity: string;
     price: number;
     quantity: number;
   }[];
   mobilizationActivities: {
+    unit: string;
     activity: string;
     price: number;
     quantity: number;
@@ -37,6 +42,8 @@ interface QuotationProps {
   quotationDate: string;
   acquisitionNumber: string;
   revisionNumber: string;
+  subtotal: number;
+  grandTotal: number;
 }
 
 // CREATE INVOICE
@@ -84,6 +91,8 @@ export async function createQuotation(
       quotationDate,
       acquisitionNumber,
       revisionNumber,
+      subtotal,
+      grandTotal,
     } = billingInfo;
 
     const items = [
@@ -101,6 +110,7 @@ export async function createQuotation(
             _type: "reference",
             _ref: selectedMethodId,
           },
+          unit: test.unit.toLowerCase(),
           unitPrice: test.price,
           quantity: test.quantity,
           lineTotal: test.price * test.quantity,
@@ -120,6 +130,7 @@ export async function createQuotation(
             _type: "reference",
             _ref: selectedMethodId,
           },
+          unit: field.unit.toLowerCase(),
           unitPrice: field.price,
           quantity: field.quantity,
           lineTotal: field.price * field.quantity,
@@ -127,13 +138,12 @@ export async function createQuotation(
       }),
     ];
 
-    console.log(items);
-
     const otherItems = [
       ...reportingActivities.map((reporting) => ({
         _type: "otherItem",
         type: "reporting",
         activity: reporting.activity,
+        unit: reporting.unit.toLowerCase(),
         unitPrice: reporting.price,
         quantity: reporting.quantity,
         lineTotal: reporting.price * reporting.quantity,
@@ -142,52 +152,62 @@ export async function createQuotation(
         _type: "otherItem",
         type: "mobilization",
         activity: mobilization.activity,
+        unit: mobilization.unit.toLowerCase(),
         unitPrice: mobilization.price,
         quantity: mobilization.quantity,
         lineTotal: mobilization.price * mobilization.quantity,
       })),
     ];
 
-    const quotation = await writeClient.create(
-      {
-        _type: "quotation",
-        revisionNumber,
-        quotationNumber,
-        quotationDate,
-        acquisitionNumber,
-        currency: currency.toLowerCase(),
-        status: "draft",
-        items,
-        otherItems,
-        vatPercentage,
-        paymentNotes,
-        advance,
-        file: {
-          _type: "file",
-          asset: {
-            _type: "reference",
-            _ref: fileId,
-          },
+    const quotationId = `quotation-${uuidv4()}`;
+
+    const tx = writeClient.transaction();
+
+    // create quotation
+    tx.create({
+      _id: quotationId,
+      _type: "quotation",
+      revisionNumber,
+      quotationNumber,
+      quotationDate,
+      acquisitionNumber,
+      currency: currency.toLowerCase(),
+      status: "draft",
+      items,
+      otherItems,
+      vatPercentage,
+      paymentNotes,
+      advance,
+      subtotal,
+      grandTotal,
+      file: {
+        _type: "file",
+        asset: {
+          _type: "reference",
+          _ref: fileId,
         },
       },
-      {
-        autoGenerateArrayKeys: true,
-      }
-    );
+    });
 
+    // 2) Optionally set quotation ref on project in the SAME commit
     if (!creatingRevision) {
-      await writeClient
-        .patch(project._id)
-        .set({
-          quotation: {
-            _type: "reference",
-            _ref: quotation._id,
-          },
+      tx.patch(project._id, (p) =>
+        p.set({
+          quotation: { _type: "reference", _ref: quotationId },
         })
-        .commit();
+      );
     }
-    revalidateTag(`quotation`);
-    return { result: quotation, status: "ok" };
+    // Single network roundtrip; no document echo
+    await tx.commit({
+      returnDocuments: false,
+      autoGenerateArrayKeys: true,
+    });
+
+    // Revalidate both; projects often render quotation info
+    revalidateTag("quotation");
+    revalidateTag("projects");
+
+    return { result: quotationId, status: "ok" };
   } catch (error) {
     console.error("Error creating quotation:", error);
     return { error, status: "error" };
@@ -215,6 +235,8 @@ export async function updateQuotation(
       quotationDate,
       acquisitionNumber,
       revisionNumber,
+      subtotal,
+      grandTotal,
     } = billingInfo;
 
     const items = [
@@ -232,6 +254,7 @@ export async function updateQuotation(
             _type: "reference",
             _ref: selectedMethodId,
           },
+          unit: test.unit.toLowerCase(),
           unitPrice: test.price,
           quantity: test.quantity,
           lineTotal: test.price * test.quantity,
@@ -251,6 +274,7 @@ export async function updateQuotation(
             _type: "reference",
             _ref: selectedMethodId,
           },
+          unit: field.unit.toLowerCase(),
           unitPrice: field.price,
           quantity: field.quantity,
           lineTotal: field.price * field.quantity,
@@ -263,6 +287,7 @@ export async function updateQuotation(
         _type: "otherItem",
         type: "reporting",
         activity: reporting.activity,
+        unit: reporting.unit.toLowerCase(),
         unitPrice: reporting.price,
         quantity: reporting.quantity,
         lineTotal: reporting.price * reporting.quantity,
@@ -271,24 +296,25 @@ export async function updateQuotation(
         _type: "otherItem",
         type: "mobilization",
         activity: mobilization.activity,
+        unit: mobilization.unit.toLowerCase(),
         unitPrice: mobilization.price,
         quantity: mobilization.quantity,
         lineTotal: mobilization.price * mobilization.quantity,
       })),
     ];
 
+    const tx = writeClient.transaction();
+
     // If the file is referenced, unlink it from the quotation
-    await writeClient
-      .patch(quotationId as string)
-      .unset(["file"])
-      .commit();
+    tx.patch(quotationId as string, (p) => p.unset(["file"]));
 
     // first delete the old pdf file from the quotation
-    await writeClient.delete(project.quotation?.file?.asset?._id || "");
+    if (project.quotation?.file?.asset?._id) {
+      tx.delete(project.quotation?.file?.asset?._id);
+    }
 
-    await writeClient
-      .patch(quotationId as string)
-      .set({
+    tx.patch(quotationId as string, (p) =>
+      p.set({
         status: "draft",
         revisionNumber,
         quotationNumber,
@@ -300,6 +326,8 @@ export async function updateQuotation(
         vatPercentage,
         paymentNotes,
         advance,
+        subtotal,
+        grandTotal,
         file: {
           _type: "file",
           asset: {
@@ -308,7 +336,10 @@ export async function updateQuotation(
           },
         },
       })
-      .commit({ autoGenerateArrayKeys: true });
+    );
+
+    await tx.commit({ autoGenerateArrayKeys: true });
+
     revalidateTag(`project-${project._id}`);
     return { result: "ok", status: "ok" };
   } catch (error) {
@@ -319,6 +350,7 @@ export async function updateQuotation(
 
 // SEND QUOTATION TO CLIENT
 export async function sendQuotation(quotationId: string) {
+  // TODO: Send email to client
   try {
     await writeClient
       .patch(quotationId as string)
@@ -373,30 +405,265 @@ export async function createRevision(
     // create revised quotation
     const revision = await createQuotation(billingInfo, fileId, true);
 
-    // append revision to original quotation
-    const result = await writeClient
-      .patch(originalQuotationId)
-      .setIfMissing({ revisions: [] })
-      .append("revisions", [
+    // Append reference + mark revision "sent" in ONE transaction
+    const tx = writeClient.transaction();
+
+    tx.patch(originalQuotationId, (p) =>
+      p
+        .setIfMissing({ revisions: [] })
+        .append("revisions", [{ _type: "reference", _ref: revision?.result }])
+    );
+
+    tx.patch(revision?.result || "", (p) => p.set({ status: "sent" }));
+
+    await tx.commit({
+      autoGenerateArrayKeys: true,
+      returnDocuments: false,
+    });
+
+    revalidateTag("quotation");
+    return { result: revision?.result, status: "ok" };
+  } catch (error) {
+    console.error("Error creating revision:", error);
+    return { error, status: "error" };
+  }
+}
+
+// MAKE PAYMENT
+export async function makePayment(prevState: any, formData: FormData) {
+  const quotationId = formData.get("quotationId");
+  const amountRaw = formData.get("amount");
+  const currency = formData.get("currency");
+  const paymentMode = formData.get("paymentMode");
+  const paymentType = formData.get("paymentType");
+  const paymentReference = formData.get("reference");
+  const paymentProof = formData.get("paymentProof");
+
+  // Validate & coerce
+  if (!quotationId) return { status: "error", error: "Missing quotationId" };
+
+  const amount =
+    typeof amountRaw === "string"
+      ? parseFloat(amountRaw)
+      : typeof amountRaw === "number"
+        ? amountRaw
+        : NaN;
+
+  if (!Number.isFinite(amount))
+    return { status: "error", error: "Invalid amount" };
+
+  const paymentModeValue =
+    paymentMode === "mobile_money"
+      ? "mobile"
+      : paymentMode === "bank_transfer"
+        ? "bank"
+        : "cash";
+
+  try {
+    await writeClient
+      .patch(quotationId as string)
+      .set({
+        status: "partially_paid",
+      })
+      .setIfMissing({ payments: [] })
+      .append("payments", [
         {
-          _type: "reference",
-          _ref: revision?.result?._id,
+          paymentType,
+          amount,
+          paymentMode: paymentModeValue,
+          currency,
+          paymentProof: {
+            _type: "file",
+            asset: {
+              _type: "reference",
+              _ref: paymentProof,
+            },
+          },
+          internalStatus: "pending",
         },
       ])
       .commit({ autoGenerateArrayKeys: true });
+    revalidateTag("quotation");
+    return { result: "ok", status: "ok" };
+  } catch (error) {
+    console.error("Error making payment:", error);
+    return { error, status: "error" };
+  }
+}
 
-    // send revised quotation to client
-    const sentRevision = await writeClient
-      .patch(revision?.result?._id || "")
-      .set({
-        status: "sent",
+// MAKE RESUBMISSION
+export async function makeResubmission(prevState: any, formData: FormData) {
+  const quotationId = formData.get("quotationId");
+  const amountRaw = formData.get("amount");
+  const paymentMode = formData.get("paymentMode");
+  const paymentProof = formData.get("paymentProof");
+  const paymentKey = formData.get("paymentKey");
+
+  // Validate & coerce
+  if (!quotationId) return { status: "error", error: "Missing quotationId" };
+
+  const amount =
+    typeof amountRaw === "string"
+      ? parseFloat(amountRaw)
+      : typeof amountRaw === "number"
+        ? amountRaw
+        : NaN;
+
+  if (!Number.isFinite(amount))
+    return { status: "error", error: "Invalid amount" };
+
+  const paymentModeValue =
+    paymentMode === "mobile_money"
+      ? "mobile"
+      : paymentMode === "bank_transfer"
+        ? "bank"
+        : "cash";
+
+  try {
+    await writeClient
+      .patch(quotationId as string)
+      .setIfMissing({ payments: [] })
+      .setIfMissing({ [`payments[_key == "${paymentKey}"].resubmissions`]: [] })
+      .append(`payments[_key == "${paymentKey}"].resubmissions`, [
+        {
+          amount,
+          paymentMode: paymentModeValue,
+          paymentProof: {
+            _type: "file",
+            asset: { _type: "reference", _ref: paymentProof },
+          },
+          internalStatus: "pending",
+        },
+      ])
+      .commit({ autoGenerateArrayKeys: true });
+    revalidateTag("quotation");
+    return { result: "ok", status: "ok" };
+  } catch (error) {
+    console.error("Error making resubmission:", error);
+    return { error, status: "error" };
+  }
+}
+
+// APPROVE PAYMENT & CREATE RECEIPT
+export async function createReceipt(
+  quotationId: string,
+  fileId: string,
+  paymentKey: string,
+  resubmissionKey?: string,
+  internalNotes?: string
+) {
+  const paymentPath = resubmissionKey
+    ? `payments[_key=="${paymentKey}"].resubmissions[_key=="${resubmissionKey}"]`
+    : `payments[_key=="${paymentKey}"]`;
+  try {
+    // Fetch latest quotation with totals and payments
+    const quotation = await writeClient.fetch(
+      `*[_id == $id][0]{
+        _id,
+        grandTotal,
+        payments[]{
+          _key,
+          amount,
+          internalStatus,
+          resubmissions[]{
+            _key,
+            amount,
+            internalStatus
+          }
+        }
+      }`,
+      { id: quotationId }
+    );
+
+    const grandTotal: number = Number(quotation?.grandTotal || 0);
+
+    // Compute total approved before current approval
+    const totalApprovedBefore: number = (quotation?.payments || []).reduce(
+      (sum: number, p: any) => {
+        const approvedResubs = (p.resubmissions || []).filter(
+          (r: any) => r.internalStatus === "approved"
+        );
+        const latestApproved =
+          approvedResubs.length > 0
+            ? approvedResubs[approvedResubs.length - 1]
+            : null;
+        if (latestApproved) return sum + (Number(latestApproved.amount) || 0);
+        if (p.internalStatus === "approved")
+          return sum + (Number(p.amount) || 0);
+        return sum;
+      },
+      0
+    );
+
+    // Find the amount being approved in this call
+    const targetPayment = (quotation?.payments || []).find(
+      (p: any) => p._key === paymentKey
+    );
+    let amountToApprove = 0;
+    if (targetPayment) {
+      if (resubmissionKey) {
+        const resub = (targetPayment.resubmissions || []).find(
+          (r: any) => r._key === resubmissionKey
+        );
+        amountToApprove = Number(resub?.amount || 0);
+      } else {
+        amountToApprove = Number(targetPayment.amount || 0);
+      }
+    }
+
+    const totalApprovedAfter = totalApprovedBefore + amountToApprove;
+    const epsilon = 0.0001; // currency rounding tolerance
+    const shouldMarkFullyPaid =
+      grandTotal > 0 && totalApprovedAfter >= grandTotal - epsilon;
+
+    const tx = writeClient.transaction();
+    tx.patch(quotationId, (patch: any) =>
+      patch.set({
+        [`${paymentPath}.receipt`]: {
+          _type: "file",
+          asset: { _type: "reference", _ref: fileId },
+        },
+        [`${paymentPath}.internalStatus`]: "approved",
+        [`${paymentPath}.internalNotes`]: internalNotes,
+        ...(shouldMarkFullyPaid ? { status: "fully_paid" } : {}),
       })
-      .commit();
+    );
+
+    const result = await tx.commit({ autoGenerateArrayKeys: true });
+
+    revalidateTag(`quotation`);
+    return { result, status: "ok" };
+  } catch (error) {
+    console.error("Error approving payment:", error);
+    return { error, status: "error" };
+  }
+}
+
+export async function rejectPayment(
+  quotationId: string,
+  paymentKey: string,
+  internalNotes: string,
+  resubmissionKey?: string
+) {
+  const paymentPath = resubmissionKey
+    ? `payments[_key=="${paymentKey}"].resubmissions[_key=="${resubmissionKey}"]`
+    : `payments[_key=="${paymentKey}"]`;
+
+  try {
+    const quotation = await writeClient
+      .patch(quotationId)
+      .set({
+        [`${paymentPath}.internalStatus`]: "rejected",
+        [`${paymentPath}.internalNotes`]: internalNotes,
+      })
+      // Optional: if you want to clear a previously generated receipt on rejection
+      // .unset([`${paymentPath}.receipt`])
+      .commit({ autoGenerateArrayKeys: true });
 
     revalidateTag("quotation");
-    return { result: sentRevision, status: "ok" };
+    return { result: quotation, status: "ok" };
   } catch (error) {
-    console.error("Error creating revision:", error);
+    console.error("Error rejecting payment:", error);
     return { error, status: "error" };
   }
 }
@@ -1440,58 +1707,166 @@ export async function deleteClient(clientId: string) {
   }
 }
 
+// utility: push unique strings only
+const push = (arr: string[], v?: string | null) => {
+  if (v) arr.push(v);
+};
+
 export async function deleteProject(
   project: PROJECT_BY_ID_QUERYResult[number]
 ) {
+  const projectId = project._id;
+  const quotation = project.quotation;
+  const tx = writeClient.transaction();
+
   try {
-    const projectId = project._id;
-    const quotation = project.quotation;
-    const quotationHasRevisions = (quotation?.revisions?.length ?? 0) > 0;
-
-    // if project has a quotation we need to delete the quotation
+    // 1) Unset quotation ref from the project (so we can delete the quotation doc safely)
     if (quotation?._id) {
-      // remove the quotation from the project
-      await writeClient.patch(projectId).unset([`quotation`]).commit();
-
-      // if the quotation has revisions, we need to delete the revisions
-      if (quotationHasRevisions) {
-        const revisions = quotation?.revisions?.map((revision) => revision);
-
-        revisions?.forEach(async (revision) => {
-          // delete revision pdf file
-          if (revision?.file?.asset?._id) {
-            await writeClient.patch(revision?._id).unset([`file`]).commit();
-            await writeClient.delete(revision?.file?.asset?._id);
-          }
-          // delete revision invoice file if any
-          if (revision?.invoice?.asset?._id) {
-            await writeClient.patch(revision?._id).unset([`invoice`]).commit();
-            await writeClient.delete(revision?.invoice?.asset?._id);
-          }
-          // delete revision
-          await writeClient.delete(revision?._id);
-        });
-      }
-
-      // delete quotation file if it has any
-      if (quotation?.file?.asset?._id) {
-        await writeClient.patch(quotation?._id).unset([`file`]).commit();
-        await writeClient.delete(quotation?.file?.asset?._id);
-      }
-
-      // delete quotation invoice file if it has any
-      if (quotation?.invoice?.asset?._id) {
-        await writeClient.patch(quotation?._id).unset([`invoice`]).commit();
-        await writeClient.delete(quotation?.invoice?.asset?._id);
-      }
-
-      // delete quotation
-      await writeClient.delete(quotation?._id);
+      tx.patch(projectId, (p) => p.unset(["quotation"]));
     }
 
-    const result = await writeClient.delete(projectId);
-    // TODO: Is there a need to revalidate projects?
-    revalidateTag(`projects`);
+    // 2) Collect per-doc unsets for revisions and payments, then deletions
+    const assetIdsToDelete: string[] = [];
+    const docIdsToDelete: string[] = [];
+
+    // Handle quotation revisions
+    const revisions = quotation?.revisions ?? [];
+    for (const rev of revisions) {
+      const unsetPaths: string[] = [];
+
+      // revision file & invoice
+      if (rev?.file?.asset?._id) {
+        unsetPaths.push("file");
+        push(assetIdsToDelete, rev.file.asset._id);
+      }
+      if (rev?.invoice?.asset?._id) {
+        unsetPaths.push("invoice");
+        push(assetIdsToDelete, rev.invoice.asset._id);
+      }
+
+      // payments: proof + receipt paths
+      for (const pay of rev?.payments ?? []) {
+        const key = pay?._key;
+        if (!key) continue;
+        if (pay?.paymentProof?.asset?._id) {
+          unsetPaths.push(`payments[_key == "${key}"].paymentProof`);
+          push(assetIdsToDelete, pay.paymentProof.asset._id);
+        }
+        if (pay?.internalStatus === "approved" && pay?.receipt?.asset?._id) {
+          unsetPaths.push(`payments[_key == "${key}"].receipt`);
+          push(assetIdsToDelete, pay.receipt.asset._id);
+        }
+
+        // resubmissions: proof + receipt paths
+        for (const resub of pay?.resubmissions ?? []) {
+          const rkey = resub?._key;
+          if (!rkey) continue;
+          if (resub?.paymentProof?.asset?._id) {
+            unsetPaths.push(
+              `payments[_key == "${key}"].resubmissions[_key == "${rkey}"].paymentProof`
+            );
+            push(assetIdsToDelete, resub.paymentProof.asset._id);
+          }
+          if (
+            resub?.internalStatus === "approved" &&
+            resub?.receipt?.asset?._id
+          ) {
+            unsetPaths.push(
+              `payments[_key == "${key}"].resubmissions[_key == "${rkey}"].receipt`
+            );
+            push(assetIdsToDelete, resub.receipt.asset._id);
+          }
+        }
+      }
+
+      // Apply a single patch for this revision
+      if (unsetPaths.length) {
+        tx.patch(rev._id, (p) => p.unset(unsetPaths));
+      }
+
+      // Also drop the back-ref in the quotation's revisions array in ONE patch later
+      // We'll gather all revision refs to unset at once
+    }
+
+    // 3) Quotation-level unsets in a single patch
+    if (quotation?._id) {
+      const qUnsetPaths: string[] = [];
+
+      if (quotation?.file?.asset?._id) {
+        qUnsetPaths.push("file");
+        push(assetIdsToDelete, quotation.file.asset._id);
+      }
+      if (quotation?.invoice?.asset?._id) {
+        qUnsetPaths.push("invoice");
+        push(assetIdsToDelete, quotation.invoice.asset._id);
+      }
+
+      for (const pay of quotation?.payments ?? []) {
+        const key = pay?._key;
+        if (!key) continue;
+        if (pay?.paymentProof?.asset?._id) {
+          qUnsetPaths.push(`payments[_key == "${key}"].paymentProof`);
+          push(assetIdsToDelete, pay.paymentProof.asset._id);
+        }
+        if (pay?.internalStatus === "approved" && pay?.receipt?.asset?._id) {
+          qUnsetPaths.push(`payments[_key == "${key}"].receipt`);
+          push(assetIdsToDelete, pay.receipt.asset._id);
+        }
+
+        // resubmissions: proof + receipt paths
+        for (const resub of pay?.resubmissions ?? []) {
+          const rkey = resub?._key;
+          if (!rkey) continue;
+          if (resub?.paymentProof?.asset?._id) {
+            qUnsetPaths.push(
+              `payments[_key == "${key}"].resubmissions[_key == "${rkey}"].paymentProof`
+            );
+            push(assetIdsToDelete, resub.paymentProof.asset._id);
+          }
+          if (
+            resub?.internalStatus === "approved" &&
+            resub?.receipt?.asset?._id
+          ) {
+            qUnsetPaths.push(
+              `payments[_key == "${key}"].resubmissions[_key == "${rkey}"].receipt`
+            );
+            push(assetIdsToDelete, resub.receipt.asset._id);
+          }
+        }
+      }
+
+      // unset all revision refs from the quotation in one shot
+      const revRefs = (quotation?.revisions ?? [])
+        .map((r) => r?._id)
+        .filter(Boolean);
+      for (const id of revRefs) {
+        qUnsetPaths.push(`revisions[_ref == "${id}"]`);
+      }
+
+      if (qUnsetPaths.length) {
+        tx.patch(quotation._id, (p) => p.unset(qUnsetPaths));
+      }
+    }
+
+    // 4) Deletes — assets first (now safe), then revision docs, then quotation, then project
+    // assets
+    for (const assetId of new Set(assetIdsToDelete)) {
+      tx.delete(assetId);
+    }
+    // revision docs
+    for (const rev of revisions) {
+      if (rev?._id) tx.delete(rev._id);
+    }
+    // quotation doc
+    if (quotation?._id) {
+      tx.delete(quotation._id);
+    }
+    // project doc
+    tx.delete(projectId);
+
+    const result = await tx.commit({ returnDocuments: false });
+
+    revalidateTag("projects");
     return { result, status: "ok" };
   } catch (error) {
     console.log(error);

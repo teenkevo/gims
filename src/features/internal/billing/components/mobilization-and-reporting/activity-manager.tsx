@@ -30,6 +30,7 @@ export function ActivityManager({
       .map((item) => ({
         id: `${item.type}-${uuidv4()}`,
         activity: item.activity ?? "",
+        unit: item.unit ?? "",
         price: item.unitPrice ?? 0,
         quantity: item.quantity ?? 0,
         total: item.lineTotal ?? 0,
@@ -42,6 +43,7 @@ export function ActivityManager({
       .map((item) => ({
         id: `${item.type}-${uuidv4()}`,
         activity: item.activity ?? "",
+        unit: item.unit ?? "",
         price: item.unitPrice ?? 0,
         quantity: item.quantity ?? 0,
         total: item.lineTotal ?? 0,
@@ -56,6 +58,7 @@ export function ActivityManager({
         {
           id: `${type}-${Date.now()}`,
           activity: "",
+          unit: "",
           price: undefined,
           quantity: undefined,
           total: undefined,
@@ -76,8 +79,9 @@ export function ActivityManager({
   // Update parent component when activities change
   useEffect(() => {
     const simplifiedActivities = activities.map(
-      ({ activity, price, quantity, total }) => ({
+      ({ activity, unit, price, quantity, total }) => ({
         activity,
+        unit,
         price,
         quantity,
         total,
@@ -97,6 +101,7 @@ export function ActivityManager({
       {
         id: `${type}-${uuidv4()}`,
         activity: "",
+        unit: "",
         price: undefined,
         quantity: undefined,
         total: undefined,
@@ -172,6 +177,7 @@ export function ActivityManager({
             type={type}
             initialValues={{
               activity: activity.activity,
+              unit: activity.unit,
               price: activity.price,
               quantity: activity.quantity,
             }}
@@ -179,6 +185,7 @@ export function ActivityManager({
             onActivityChange={(value) =>
               updateActivity(activity.id, "activity", value)
             }
+            onUnitChange={(value) => updateActivity(activity.id, "unit", value)}
             onPriceChange={(value) =>
               updateActivity(activity.id, "price", value)
             }

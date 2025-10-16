@@ -4,29 +4,12 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { DataTableRowActions } from "./data-table-row-actions";
 import type {
-  ALL_SERVICES_QUERYResult,
   ALL_PROJECTS_QUERYResult,
   Quotation,
 } from "../../../../../../sanity.types";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  CalendarIcon,
-  CheckCircle,
-  DollarSign,
-  ListEnd,
-  ListStart,
-  ReceiptText,
-  Send,
-  XCircle,
-  CreditCard,
-  FileIcon as FileInvoice,
-  CircleDashed,
-  PlusCircle,
-  TriangleAlert,
-} from "lucide-react";
+import { ListEnd, ListStart, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { SetDateRangeDialog } from "../set-project-date-range";
@@ -67,7 +50,10 @@ export const getColumns = (
       <DataTableColumnHeader column={column} title="Project ID" />
     ),
     cell: ({ row }) => (
-      <Link className="hover:underline" href={`/projects/${row.original?._id}`}>
+      <Link
+        className="hover:underline"
+        href={`/projects/${row.original?._id}?project=${row.original?.name}&tab=details`}
+      >
         <div className="w-[100px] font-bold">{row.original?.internalId}</div>
       </Link>
     ),
@@ -83,7 +69,7 @@ export const getColumns = (
       return (
         <Link
           className="hover:underline"
-          href={`/projects/${row.original?._id}?project=${row.original?.name}`}
+          href={`/projects/${row.original?._id}?project=${row.original?.name}&tab=details`}
         >
           <div className="flex space-x-2">
             <span className="max-w-[350px] truncate font-normal">
@@ -161,16 +147,18 @@ export const getColumns = (
         quotation?.status === "draft"
           ? "Quotation created"
           : quotation?.status === "sent"
-            ? "Quotation sent"
+            ? "Quotation received"
             : quotation?.status === "accepted"
               ? "Quotation accepted"
               : quotation?.status === "rejected"
                 ? "Quotation rejected"
                 : quotation?.status === "invoiced"
                   ? "Invoice issued"
-                  : quotation?.status === "paid"
-                    ? "Invoice paid"
-                    : "Not Billed";
+                  : quotation?.status === "partially_paid"
+                    ? "Partially paid"
+                    : quotation?.status === "fully_paid"
+                      ? "Fully paid"
+                      : "Not Billed";
 
       const badgeVariant =
         quotation?.status === "draft" ? (
@@ -205,7 +193,7 @@ export const getColumns = (
           >
             {status}
           </Badge>
-        ) : quotation?.status === "paid" ? (
+        ) : quotation?.status === "fully_paid" ? (
           <Badge
             variant="outline"
             className="mr-2 bg-primary/10 border-dashed border-primary"
