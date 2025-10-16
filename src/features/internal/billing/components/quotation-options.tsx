@@ -386,6 +386,24 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
   );
   const quotationCurrency = quotation?.currency;
 
+  // Determine which investigative groups exist in the current quotation draft
+  const hasFieldInvestigations = Boolean(
+    quotation?.items?.some((item: any) => {
+      const svc = quotationOptionsProps.allServices.find(
+        (s) => s._id === item?.service?._id
+      );
+      return svc?.sampleClass?.name === "Field";
+    })
+  );
+  const hasLabInvestigations = Boolean(
+    quotation?.items?.some((item: any) => {
+      const svc = quotationOptionsProps.allServices.find(
+        (s) => s._id === item?.service?._id
+      );
+      return svc?.sampleClass?.name !== "Field";
+    })
+  );
+
   // ---------------------------------------------------------------------------
   //   Local state
   // ---------------------------------------------------------------------------
@@ -481,7 +499,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
         />
         {/* Field investigations */}
         <SwitchField
-          defaultOn={Boolean(quotation)}
+          defaultOn={hasFieldInvestigations}
           currency={currency}
           handleMobilizationValidationChange={
             handleMobilizationValidationChange
@@ -500,7 +518,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
         />
         {/* Laboratory tests */}
         <SwitchField
-          defaultOn={Boolean(quotation)}
+          defaultOn={hasLabInvestigations}
           currency={currency}
           handleMobilizationValidationChange={
             handleMobilizationValidationChange
