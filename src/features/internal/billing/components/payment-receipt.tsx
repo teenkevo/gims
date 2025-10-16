@@ -410,48 +410,9 @@ export const PaymentReceipt = ({
                   : "N/A"}
           </Text>
         </View>
-      </View>
-    </View>
-  );
-
-  const QuotationSummary = () => (
-    <View style={{ marginBottom: 20 }}>
-      <Text style={{ ...styles.heading, marginBottom: 5 }}>
-        Quotation Summary
-      </Text>
-      <View style={{ width: "100%", flexDirection: "row", marginTop: 10 }}>
-        <View style={styles.theader}>
-          <Text>DESCRIPTION</Text>
-        </View>
-        <View style={styles.theader}>
-          <Text>AMOUNT ({payment.currency?.toUpperCase()})</Text>
-        </View>
-      </View>
-      <View style={{ width: "100%", flexDirection: "row" }}>
         <View style={styles.tbody}>
-          <Text>Total Quotation Amount</Text>
-        </View>
-        <View style={styles.tbodyRightAlign}>
-          <Text>{quotation.grandTotal?.toLocaleString()}</Text>
-        </View>
-      </View>
-      <View style={{ width: "100%", flexDirection: "row" }}>
-        <View style={styles.tbody}>
-          <Text>Amount Paid</Text>
-        </View>
-        <View style={styles.tbodyRightAlign}>
-          <Text>{payment.amount?.toLocaleString()}</Text>
-        </View>
-      </View>
-      <View style={{ width: "100%", flexDirection: "row" }}>
-        <View style={styles.tbodyTotal}>
-          <Text>Remaining Balance</Text>
-        </View>
-        <View style={styles.tbodyTotal}>
-          <Text>
-            {(
-              (quotation.grandTotal || 0) - (payment.amount || 0)
-            ).toLocaleString()}
+          <Text style={{ textTransform: "capitalize" }}>
+            {quotation.quotationNumber}
           </Text>
         </View>
       </View>
@@ -496,7 +457,6 @@ export const PaymentReceipt = ({
       <Header />
       <ClientAddressAndProject />
       <PaymentDetails />
-      <QuotationSummary />
       <AmountInWords />
 
       <Text
