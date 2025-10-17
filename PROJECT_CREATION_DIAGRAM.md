@@ -51,7 +51,7 @@ sequenceDiagram
 
     System->>DB: Create project record
     System->>DB: Link clients to project
-    System->>DB: Set stagesCompleted: ["BILLING"]
+    System->>DB: Set stagesCompleted: []
     DB-->>System: Return project ID
 
     System-->>Form: Project created successfully
@@ -220,7 +220,7 @@ PROJECT SCHEMA STRUCTURE:
 │ • contactPersons: [array of contact person references]                        │
 │ • projectPersonnel: [array of personnel references]                          │
 │ • projectSupervisors: [array of supervisor references]                       │
-│ • stagesCompleted: ["BILLING"] (initial stage)                                │
+│ • stagesCompleted: [] (empty array initially)                                   │
 │ • quotation: reference to quotation document (initially null)               │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
@@ -270,12 +270,12 @@ CLIENT SCHEMA STRUCTURE:
 ```
 Project Document
 ├── quotation: null (initially)
-└── stagesCompleted: ["BILLING"]
+└── stagesCompleted: []
 
 After Quotation Creation:
 Project Document
 ├── quotation: reference to quotation document
-└── stagesCompleted: ["BILLING", "QUOTATION_SENT", ...]
+└── stagesCompleted: ["QUOTATION_CREATED", "QUOTATION_SENT", ...]
 ```
 
 ### 2. **Billing Lifecycle Entry**

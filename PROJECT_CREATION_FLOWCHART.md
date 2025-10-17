@@ -68,7 +68,7 @@ flowchart TD
     ClientValidated --> CreateProject
 
     CreateProject --> LinkClients[Link clients to project]
-    LinkClients --> SetStages[Set stagesCompleted: ["BILLING"]]
+    LinkClients --> SetStages[Set stagesCompleted: []]
     SetStages --> ProjectCreated[Project created successfully]
 
     ProjectCreated --> Redirect[Redirect to projects list]

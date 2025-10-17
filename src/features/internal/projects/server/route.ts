@@ -69,7 +69,7 @@ const app = new Hono()
         startDate: dateRange.from,
         endDate: dateRange.to,
         priority,
-        stagesCompleted: ["BILLING"], // Placeholder logic
+        stagesCompleted: [], // Placeholder logic
         clients: clientIds.map((clientId) => ({
           _type: "reference",
           _ref: clientId,
