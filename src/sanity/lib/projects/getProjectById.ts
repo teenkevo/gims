@@ -97,12 +97,29 @@ export const getProjectById = async (projectId: string) => {
               subtotal,
               payments[] {
                 _key,
+                paymentTime,
                 paymentType,
                 amount,
                 paymentMode,
                 currency,
                 internalNotes,
                 internalStatus,
+                internalDecisionTime,
+                internalDecisionBy->{
+                  _id,
+                  internalId,
+                  fullName,
+                  email,
+                  phone,
+                  status,
+                  departmentRoles[]->{
+                    department->{
+                      _id,
+                      name,
+                    },
+                    role,
+                  },
+                },
                 paymentProof {
                   asset->{
                     _id,
@@ -125,9 +142,26 @@ export const getProjectById = async (projectId: string) => {
                 resubmissions[] {
                   _key,
                   amount,
+                  paymentTime,
                   paymentMode,
                   internalNotes,
                   internalStatus,
+                  internalDecisionTime,
+                  internalDecisionBy->{
+                    _id,
+                    internalId,
+                    fullName,
+                    email,
+                    phone,
+                    status,
+                    departmentRoles[]->{
+                      department->{
+                        _id,
+                        name,
+                      },
+                      role,
+                    },
+                  },
                   paymentProof {
                     asset->{
                       _id,
@@ -196,18 +230,52 @@ export const getProjectById = async (projectId: string) => {
             subtotal,
             payments[] {
               _key,
+              paymentTime,
               paymentType,
               amount,
               paymentMode,
               currency,
               internalNotes,
               internalStatus,
+              internalDecisionTime,
+              internalDecisionBy->{
+                _id,
+                internalId,
+                fullName,
+                email,
+                phone,
+                status,
+                departmentRoles[]->{
+                  department->{
+                    _id,
+                    name,
+                  },
+                  role,
+                },
+              },
               resubmissions[] {
                 _key,
                 amount,
+                paymentTime,
                 paymentMode,
                 internalNotes,
                 internalStatus,
+                internalDecisionTime,
+                internalDecisionBy->{
+                  _id,
+                  internalId,
+                  fullName,
+                  email,
+                  phone,
+                  status,
+                  departmentRoles[]->{
+                    department->{
+                      _id,
+                      name,
+                    },
+                    role,
+                  },
+                },
                 paymentProof {
                   asset->{
                     _id,
@@ -246,8 +314,7 @@ export const getProjectById = async (projectId: string) => {
                   mimeType,
                   size,
                 },
-              },
-              
+              },              
             },
             file {
               asset->{

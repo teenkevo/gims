@@ -41,25 +41,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  CreditCard,
-  CheckCircle,
-  Wallet,
-  Download,
-  Loader,
-  XCircle,
-} from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import FileUpload from "@/components/file-upload";
 import { NumericFormat } from "react-number-format";
 import { FormSubmitButton } from "@/components/form-submit-button";
-import { makePayment, makeResubmission } from "@/lib/actions";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { makeResubmission } from "@/lib/actions";
 import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
-import { ApproveRejectPaymentDialog } from "./approve-reject-payment-dialog";
-import Link from "next/link";
 import { WarningOutlineIcon } from "@sanity/icons";
 
 type PaymentFormData = {

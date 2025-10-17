@@ -5,7 +5,7 @@ import { Document, pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 import { PaymentReceipt } from "./payment-receipt";
 import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
-import { createReceipt, rejectPayment } from "@/lib/actions";
+import { approvePayment, rejectPayment } from "@/lib/actions";
 import { ResponsiveActionDialog } from "./responsive-action-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,7 +59,7 @@ export const ApproveRejectPaymentDialog = ({
         body: formData,
       });
       const fileResult = await response.json();
-      await createReceipt(
+      await approvePayment(
         quotation._id,
         fileResult.files[0].fileId,
         payment._key,

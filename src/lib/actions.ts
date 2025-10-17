@@ -470,6 +470,7 @@ export async function makePayment(prevState: any, formData: FormData) {
         {
           paymentType,
           amount,
+          paymentTime: new Date().toISOString(),
           paymentMode: paymentModeValue,
           currency,
           paymentProof: {
@@ -527,6 +528,7 @@ export async function makeResubmission(prevState: any, formData: FormData) {
       .append(`payments[_key == "${paymentKey}"].resubmissions`, [
         {
           amount,
+          paymentTime: new Date().toISOString(),
           paymentMode: paymentModeValue,
           paymentProof: {
             _type: "file",
@@ -544,8 +546,8 @@ export async function makeResubmission(prevState: any, formData: FormData) {
   }
 }
 
-// APPROVE PAYMENT & CREATE RECEIPT
-export async function createReceipt(
+// APPROVE PAYMENT AND CREATE RECEIPT
+export async function approvePayment(
   quotationId: string,
   fileId: string,
   paymentKey: string,
@@ -625,6 +627,7 @@ export async function createReceipt(
         },
         [`${paymentPath}.internalStatus`]: "approved",
         [`${paymentPath}.internalNotes`]: internalNotes,
+        [`${paymentPath}.internalDecisionTime`]: new Date().toISOString(),
         ...(shouldMarkFullyPaid ? { status: "fully_paid" } : {}),
       })
     );
@@ -655,6 +658,7 @@ export async function rejectPayment(
       .set({
         [`${paymentPath}.internalStatus`]: "rejected",
         [`${paymentPath}.internalNotes`]: internalNotes,
+        [`${paymentPath}.internalDecisionTime`]: new Date().toISOString(),
       })
       // Optional: if you want to clear a previously generated receipt on rejection
       // .unset([`${paymentPath}.receipt`])

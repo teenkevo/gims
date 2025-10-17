@@ -33,7 +33,7 @@ import Link from "next/link";
 import { RespondToQuotationDialog } from "./respond-to-quotation";
 import { useQuotation } from "./useQuotation";
 import { RevisionNotesDialog } from "./revision-notes-dialog";
-import { MakePaymentDialog } from "./make-payment-dialog";
+import { MakePaymentDialog, Payments } from "./make-payment-dialog";
 import { ViewPaymentsDialog } from "./view-payment-dialog";
 import { RemakePaymentDialog } from "./remake-payment";
 
@@ -95,6 +95,28 @@ export function calculatePaymentStatus(
       noAdvancePaymentsYet: false,
     };
   }
+
+  // Include pending resubmissions when computing unapproved totals
+  const totalUnapprovedPayments = quotation.payments?.reduce(
+    (sum: number, payment: Payments[number]) => {
+      const pendingResubs = (payment.resubmissions ?? []).filter(
+        (resubmission: any) => resubmission.internalStatus !== "approved"
+      );
+      const latestPendingResub =
+        pendingResubs[pendingResubs.length - 1] ?? null;
+
+      if (latestPendingResub) {
+        return sum + (latestPendingResub.amount || 0);
+      }
+
+      if (payment.internalStatus !== "approved") {
+        return sum + (payment.amount || 0);
+      }
+
+      return sum;
+    },
+    0
+  );
 
   // Calculate total approved payments
   const totalApprovedPayments =
@@ -206,6 +228,7 @@ export function calculatePaymentStatus(
 
   return {
     totalApprovedPayments,
+    totalUnapprovedPayments,
     allPaymentsApproved,
     somePaymentsRejected,
     allPaymentsRejected,
@@ -248,7 +271,7 @@ function getPaymentStageInfo(
     title = "All Payments Rejected";
   } else if (advanceRejected) {
     title = "Advance Rejected";
-  } else if (somePaymentsRejected && !allPaymentsRejected && balanceDue === 0) {
+  } else if (somePaymentsRejected && !allPaymentsRejected) {
     title = "Some Payments Rejected";
   } else if (allClear) {
     title = "All Payments Approved";
@@ -268,7 +291,7 @@ function getPaymentStageInfo(
   } else if (advanceRejected) {
     description =
       "Advance payment has been rejected. Please review and resubmit.";
-  } else if (somePaymentsRejected && !allPaymentsRejected && balanceDue === 0) {
+  } else if (somePaymentsRejected && !allPaymentsRejected) {
     description =
       "Some payments have been rejected. Please review and resubmit.";
   } else if (allClear) {
@@ -466,7 +489,18 @@ function StageCard({
   >;
   paymentStatus: ReturnType<typeof calculatePaymentStatus>;
 }) {
-  const { allClear, allClearWaitingApproval, advanceRejected } = paymentStatus;
+  const {
+    allClear,
+    allClearWaitingApproval,
+    advanceRejected,
+    totalUnapprovedPayments,
+    totalApprovedPayments,
+  } = paymentStatus;
+
+  const remainingAmount =
+    quotation?.grandTotal -
+    (totalApprovedPayments ?? 0) -
+    (totalUnapprovedPayments ?? 0);
 
   return (
     <div
@@ -647,7 +681,7 @@ function StageCard({
                     : "Awaiting client payments"}
               </span>
             </div>
-            <div className="mt-5 space-y-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               {advanceRejected ? (
                 <RemakePaymentDialog
                   quotationId={quotation?._id}
@@ -656,7 +690,7 @@ function StageCard({
                     (payment: any) => payment.paymentType === "advance"
                   )}
                 />
-              ) : !allClear && !advanceRejected ? (
+              ) : !allClear && !advanceRejected && remainingAmount > 0 ? (
                 <MakePaymentDialog
                   quotationId={quotation?._id}
                   total={quotation?.grandTotal as number}

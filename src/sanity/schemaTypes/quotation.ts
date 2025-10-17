@@ -135,6 +135,13 @@ export const quotation = defineType({
               },
             }),
             defineField({
+              name: "paymentTime",
+              title: "Payment Time",
+              type: "datetime",
+              initialValue: () => new Date().toISOString(),
+              readOnly: true,
+            }),
+            defineField({
               name: "amount",
               title: "Amount",
               type: "number",
@@ -185,6 +192,19 @@ export const quotation = defineType({
               initialValue: "pending",
             }),
             defineField({
+              name: "internalDecisionTime",
+              title: "Internal Decision Time",
+              type: "datetime",
+              readOnly: true,
+              initialValue: () => new Date().toISOString(),
+            }),
+            defineField({
+              name: "internalDecisionBy",
+              title: "Internal Decision By",
+              type: "reference",
+              to: [{ type: "personnel" }],
+            }),
+            defineField({
               name: "receipt",
               title: "Receipt",
               description: "Generated automatically when payment is approved",
@@ -219,6 +239,13 @@ export const quotation = defineType({
                       },
                     }),
                     defineField({
+                      name: "paymentTime",
+                      title: "Payment Time",
+                      type: "datetime",
+                      readOnly: true,
+                      initialValue: () => new Date().toISOString(),
+                    }),
+                    defineField({
                       name: "paymentProof",
                       title: "Payment Proof",
                       type: "file",
@@ -239,6 +266,19 @@ export const quotation = defineType({
                         list: ["approved", "rejected", "pending"],
                       },
                       initialValue: "pending",
+                    }),
+                    defineField({
+                      name: "internalDecisionTime",
+                      title: "Internal Decision Time",
+                      type: "datetime",
+                      readOnly: true,
+                      initialValue: () => new Date().toISOString(),
+                    }),
+                    defineField({
+                      name: "internalDecisionBy",
+                      title: "Internal Decision By",
+                      type: "reference",
+                      to: [{ type: "personnel" }],
                     }),
                     defineField({
                       name: "receipt",

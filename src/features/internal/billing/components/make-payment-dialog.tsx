@@ -89,7 +89,9 @@ export function MakePaymentDialog({
   const isAdvanceRequired = advancePercentage > 0;
   const isAdvanceDisabled = !isAdvanceRequired || hasAdvancePayment;
   const isFullDisabled =
-    hasAdvancePayment || (isAdvanceRequired && !hasAdvancePayment);
+    hasAdvancePayment ||
+    (isAdvanceRequired && !hasAdvancePayment) ||
+    (!isAdvanceRequired && existingPayments.length > 0);
   const isOtherDisabled = isAdvanceRequired && !hasAdvancePayment;
 
   const form = useForm<PaymentFormData>({
@@ -105,7 +107,29 @@ export function MakePaymentDialog({
   const advanceAmount = (total * advancePercentage) / 100;
   const fullAmount = total;
 
-  const totalPaidAmount = existingPayments.reduce(
+  // Include pending resubmissions when computing unapproved totals
+  const totalUnapprovedPayments = existingPayments.reduce(
+    (sum: number, payment: Payments[number]) => {
+      const pendingResubs = (payment.resubmissions ?? []).filter(
+        (resubmission: any) => resubmission.internalStatus !== "approved"
+      );
+      const latestPendingResub =
+        pendingResubs[pendingResubs.length - 1] ?? null;
+
+      if (latestPendingResub) {
+        return sum + (latestPendingResub.amount || 0);
+      }
+
+      if (payment.internalStatus !== "approved") {
+        return sum + (payment.amount || 0);
+      }
+
+      return sum;
+    },
+    0
+  );
+
+  const totalApprovedAmount = existingPayments.reduce(
     (sum: number, payment: Payments[number]) => {
       const approvedResubmissions = (payment.resubmissions ?? []).filter(
         (resubmission: any) => resubmission.internalStatus === "approved"
@@ -125,7 +149,8 @@ export function MakePaymentDialog({
     },
     0
   );
-  const remainingAmount = total - totalPaidAmount;
+  const remainingAmount =
+    total - (totalApprovedAmount + totalUnapprovedPayments);
 
   const handlePaymentTypeChange = (type: PaymentType) => {
     setPaymentType(type);
@@ -153,6 +178,9 @@ export function MakePaymentDialog({
           handlePaymentTypeChange("advance");
         }, 100);
       }
+      setTimeout(() => {
+        handlePaymentTypeChange("other");
+      }, 100);
     }
   };
 
@@ -163,7 +191,7 @@ export function MakePaymentDialog({
     }
 
     const amount = Number.parseFloat(data.amount);
-    const maxAllowedAmount = totalPaidAmount > 0 ? remainingAmount : total;
+    const maxAllowedAmount = remainingAmount > 0 ? remainingAmount : total;
     if (paymentType === "other" && amount > maxAllowedAmount) {
       toast.error(
         `Amount cannot exceed the remaining amount of ${currency.toUpperCase()} ${maxAllowedAmount.toLocaleString()}`
@@ -333,7 +361,7 @@ export function MakePaymentDialog({
               validate: (value) => {
                 const numValue = Number.parseFloat(value);
                 const maxAllowedAmount =
-                  totalPaidAmount > 0 ? remainingAmount : total;
+                  remainingAmount > 0 ? remainingAmount : total;
                 if (paymentType === "other" && numValue > maxAllowedAmount) {
                   return `Amount cannot exceed the remaining amount of ${currency.toUpperCase()} ${maxAllowedAmount.toLocaleString()}`;
                 }
@@ -348,12 +376,12 @@ export function MakePaymentDialog({
                 <FormLabel required>Payment Amount</FormLabel>
                 {paymentType === "other" && (
                   <FormDescription className="text-xs">
-                    {totalPaidAmount > 0
+                    {remainingAmount > 0
                       ? "Remaining amount: "
                       : "Maximum amount: "}
                     <span className="font-bold text-primary">
                       {currency.toUpperCase()}{" "}
-                      {(totalPaidAmount > 0
+                      {(remainingAmount > 0
                         ? remainingAmount
                         : total
                       )?.toLocaleString()}
@@ -415,7 +443,12 @@ export function MakePaymentDialog({
           name="paymentProof"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel className="mb-1">Payment Proof</FormLabel>
+              <FormLabel required className="mb-1">
+                Payment Proof
+              </FormLabel>
+              <FormDescription className="text-xs">
+                Please upload a proof of payment
+              </FormDescription>
               <FormControl>
                 <FileUpload
                   accept=".pdf,.doc,.docx,.txt"
@@ -432,7 +465,7 @@ export function MakePaymentDialog({
         <FormSubmitButton
           text="Submit Payment"
           isSubmitting={isPending || loading}
-          disabled={!paymentType}
+          disabled={!paymentType || form.watch("paymentProof").length === 0}
         />
       </form>
     </Form>
@@ -450,21 +483,20 @@ export function MakePaymentDialog({
         <DrawerHeader className="text-left">
           <DrawerTitle>Make Payment</DrawerTitle>
           <DrawerDescription className="text-xs">
-            {totalPaidAmount > 0
-              ? "Remaining amount to be paid: "
+            {remainingAmount > 0
+              ? "Pending amount: "
               : "Total amount to be paid towards this invoice is "}
             <span className="font-bold text-primary">
               {currency.toUpperCase()}{" "}
-              {(totalPaidAmount > 0
+              {(remainingAmount > 0
                 ? remainingAmount
                 : total
               )?.toLocaleString()}
             </span>
-            {totalPaidAmount > 0 && (
-              <span className="text-gray-500 ml-2">
-                (Total: {currency.toUpperCase()} {total?.toLocaleString()})
-              </span>
-            )}
+
+            <span className="text-gray-500 ml-2">
+              (Total: {currency.toUpperCase()} {total?.toLocaleString()})
+            </span>
           </DrawerDescription>
         </DrawerHeader>
         <div className="p-4 pb-0 max-h-[400px] overflow-y-auto">
@@ -493,21 +525,20 @@ export function MakePaymentDialog({
         <DialogHeader>
           <DialogTitle>Make Payment</DialogTitle>
           <DialogDescription className="text-xs">
-            {totalPaidAmount > 0
-              ? "Remaining amount to be paid: "
+            {remainingAmount > 0
+              ? "Pending amount: "
               : "Total amount to be paid towards this invoice is "}
             <span className="font-bold text-primary">
               {currency.toUpperCase()}{" "}
-              {(totalPaidAmount > 0
+              {(remainingAmount > 0
                 ? remainingAmount
                 : total
               )?.toLocaleString()}
             </span>
-            {totalPaidAmount > 0 && (
-              <span className="text-gray-500 ml-2">
-                (Total: {currency.toUpperCase()} {total?.toLocaleString()})
-              </span>
-            )}
+
+            <span className="text-gray-500 ml-2">
+              (Total: {currency.toUpperCase()} {total?.toLocaleString()})
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto p-1">{formContent}</div>

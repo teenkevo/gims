@@ -37,6 +37,8 @@ import { ApproveRejectPaymentDialog } from "./approve-reject-payment-dialog";
 import { RemakePaymentDialog } from "./remake-payment";
 import { calculatePaymentStatus } from "./billing-lifecycle";
 import { MakePaymentDialog } from "./make-payment-dialog";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type Quotation = NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>;
 
@@ -65,7 +67,7 @@ export function ViewPaymentsDialog({
 
   const paymentStatus = calculatePaymentStatus(quotation);
 
-  const { totalApprovedPayments, allClear } = paymentStatus;
+  const { totalApprovedPayments } = paymentStatus;
 
   const paymentsViewContent = (
     <div className="space-y-4 py-4">
@@ -101,7 +103,7 @@ export function ViewPaymentsDialog({
           </div>
           <div className="border-2 rounded-lg bg-popover p-4">
             <Badge variant="outline" className="text-orange-600 ">
-              Pending
+              Pending (To pay & approve)
             </Badge>
             <div className="mt-4">
               <div className="text-xs text-muted-foreground">
@@ -138,12 +140,20 @@ export function ViewPaymentsDialog({
             .map((payment: Payments[number], index: number) => (
               <div
                 key={index}
-                className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-3 space-y-2"
+                className="border border-foreground/20 bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-3 space-y-2"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col">
                     <span className="font-medium text-base capitalize">
                       {payment.paymentType || "Unknown"} Payment
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {payment.paymentTime
+                        ? format(
+                            new Date(payment.paymentTime),
+                            "do MMM yyyy, hh:mm a"
+                          )
+                        : "N/A"}
                     </span>
                   </div>
 
@@ -185,10 +195,11 @@ export function ViewPaymentsDialog({
                       )}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1">
+                <div className="text-xs text-muted-foreground space-y-2">
                   <div>
                     <span>Amount:</span>{" "}
                     <span className="font-semibold text-foreground">
+                      {currency?.toUpperCase()}{" "}
                       {formatAmount(payment.amount || 0)}
                     </span>
                   </div>
@@ -198,6 +209,7 @@ export function ViewPaymentsDialog({
                       {payment.paymentMode || "N/A"}
                     </span>
                   </div>
+
                   <div className="flex items-center gap-1">
                     <span>Status:</span>{" "}
                     <span className="capitalize flex items-center gap-1 font-semibold text-foreground">
@@ -220,11 +232,34 @@ export function ViewPaymentsDialog({
                   {payment.internalNotes && (
                     <div>
                       <span className="mb-5">Notes:</span>{" "}
-                      <span className="text-destructive font-semibold">
+                      <span
+                        className={cn(
+                          "font-semibold text-foreground",
+                          payment.internalStatus === "rejected" &&
+                            "text-destructive"
+                        )}
+                      >
                         {payment.internalNotes}
                       </span>
                     </div>
                   )}
+                  <div>
+                    <span>
+                      {payment.internalStatus === "approved"
+                        ? "Approved at:"
+                        : payment.internalStatus === "rejected"
+                          ? "Rejected at:"
+                          : null}
+                    </span>{" "}
+                    <span className="capitalize font-semibold text-foreground">
+                      {payment?.internalDecisionTime
+                        ? format(
+                            new Date(payment.internalDecisionTime),
+                            "do MMM yyyy, hh:mm a"
+                          )
+                        : "N/A"}
+                    </span>
+                  </div>
                   {payment.resubmissions &&
                     payment.resubmissions.length > 0 && (
                       <div>
@@ -237,12 +272,22 @@ export function ViewPaymentsDialog({
                               key={resubmission._key}
                             >
                               <div className="flex items-center justify-between mb-5">
-                                <Badge
-                                  variant="outline"
-                                  className="border-muted-foreground"
-                                >
-                                  Resubmission {idx + 1}
-                                </Badge>{" "}
+                                <div className="flex flex-col gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-muted-foreground"
+                                  >
+                                    Resubmission {idx + 1}
+                                  </Badge>{" "}
+                                  <span className="text-xs text-muted-foreground">
+                                    {payment.paymentTime
+                                      ? format(
+                                          new Date(payment.paymentTime),
+                                          "do MMM yyyy, hh:mm a"
+                                        )
+                                      : "N/A"}
+                                  </span>
+                                </div>
                                 <div className="flex items-center gap-2">
                                   {resubmission.internalStatus ===
                                     "pending" && (
@@ -287,7 +332,7 @@ export function ViewPaymentsDialog({
                                 </div>
                               </div>
                               <div className="flex items-center justify-between mt-2">
-                                <div className="text-xs text-muted-foreground space-y-1">
+                                <div className="text-xs text-muted-foreground space-y-2">
                                   <div>
                                     <span>Amount:</span>{" "}
                                     <span className="font-semibold text-foreground">
@@ -300,6 +345,7 @@ export function ViewPaymentsDialog({
                                       {resubmission.paymentMode || "N/A"}
                                     </span>
                                   </div>
+
                                   <div className="flex items-center gap-1">
                                     <span>Status:</span>{" "}
                                     <span className="capitalize flex items-center gap-1 font-semibold text-foreground">
@@ -323,11 +369,38 @@ export function ViewPaymentsDialog({
                                       )}
                                     </span>
                                   </div>
+                                  <div>
+                                    <span>
+                                      {resubmission.internalStatus ===
+                                      "approved"
+                                        ? "Approved at:"
+                                        : resubmission.internalStatus ===
+                                            "rejected"
+                                          ? "Rejected at:"
+                                          : null}
+                                    </span>{" "}
+                                    <span className="capitalize font-semibold text-foreground">
+                                      {resubmission.internalDecisionTime
+                                        ? format(
+                                            new Date(
+                                              resubmission.internalDecisionTime
+                                            ),
+                                            "do MMM yyyy, hh:mm a"
+                                          )
+                                        : "N/A"}
+                                    </span>
+                                  </div>
 
                                   {resubmission.internalNotes && (
                                     <div>
                                       <span>Notes:</span>{" "}
-                                      <span className="text-destructive font-semibold">
+                                      <span
+                                        className={cn(
+                                          "font-semibold text-foreground",
+                                          resubmission.internalStatus ===
+                                            "rejected" && "text-destructive"
+                                        )}
+                                      >
                                         {resubmission.internalNotes}
                                       </span>
                                     </div>
@@ -387,7 +460,7 @@ export function ViewPaymentsDialog({
 
       <DialogContent
         aria-describedby={undefined}
-        className="max-w-2xl flex flex-col max-h-[600px]"
+        className="max-w-3xl flex flex-col max-h-[600px]"
       >
         <DialogHeader>
           <DialogTitle>Payment History</DialogTitle>
