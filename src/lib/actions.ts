@@ -1976,3 +1976,271 @@ export async function revalidateAll() {
   revalidatePath("/");
   redirect("/");
 }
+
+// CREATE RFI
+// CREATE RFI - Improved Implementation
+export async function createRFI(prevState: any, formData: FormData) {
+  const initiationType = formData.get("initiationType") as string;
+  const project = formData.get("project") as string;
+  const client = formData.get("client") as string;
+  const subject = formData.get("subject") as string;
+  const description = formData.get("description") as string;
+  const labInitiator = formData.get("labInitiator") as string;
+  const labReceiver = formData.get("labReceiver") as string;
+  const labInitiatorExternal = formData.get("labInitiatorExternal") as string;
+  const clientReceiver = formData.get("clientReceiver") as string;
+  const clientInitiator = formData.get("clientInitiator") as string;
+  const labReceiverExternal = formData.get("labReceiverExternal") as string;
+
+  // Basic validation
+  if (!initiationType || !subject || !description) {
+    return { error: "Missing required fields", status: "error" };
+  }
+
+  // Conditional validation based on initiation type
+  const validationErrors = await validateRFIFields({
+    initiationType,
+    project,
+    client,
+    labInitiator,
+    labReceiver,
+    labInitiatorExternal,
+    clientReceiver,
+    clientInitiator,
+    labReceiverExternal,
+  });
+
+  if (validationErrors.length > 0) {
+    return { error: validationErrors.join(", "), status: "error" };
+  }
+
+  try {
+    // Build the RFI document based on initiation type
+    const rfiDocument: any = {
+      _type: "rfi",
+      initiationType,
+      subject,
+      description,
+      status: "open",
+      dateSubmitted: new Date().toISOString(),
+      attachments: [],
+      conversation: [],
+    };
+
+    // Add conditional fields based on initiation type
+    if (initiationType === "internal_internal") {
+      rfiDocument.labInitiator = { _type: "reference", _ref: labInitiator };
+      if (labReceiver) {
+        rfiDocument.labReceiver = { _type: "reference", _ref: labReceiver };
+      }
+    } else if (initiationType === "internal_external") {
+      rfiDocument.project = { _type: "reference", _ref: project };
+      rfiDocument.client = { _type: "reference", _ref: client };
+      rfiDocument.labInitiatorExternal = {
+        _type: "reference",
+        _ref: labInitiatorExternal,
+      };
+      rfiDocument.clientReceiver = { _type: "reference", _ref: clientReceiver };
+    } else if (initiationType === "external_internal") {
+      rfiDocument.project = { _type: "reference", _ref: project };
+      rfiDocument.client = { _type: "reference", _ref: client };
+      rfiDocument.clientInitiator = {
+        _type: "reference",
+        _ref: clientInitiator,
+      };
+      if (labReceiverExternal) {
+        rfiDocument.labReceiverExternal = {
+          _type: "reference",
+          _ref: labReceiverExternal,
+        };
+      }
+    }
+
+    const result = await writeClient.create(rfiDocument);
+    revalidateTag("rfi");
+    return { result, status: "ok" };
+  } catch (error) {
+    console.error("Error creating RFI:", error);
+    return { error: "Failed to create RFI", status: "error" };
+  }
+}
+
+// Validation helper function
+async function validateRFIFields(fields: {
+  initiationType: string;
+  project?: string;
+  client?: string;
+  labInitiator?: string;
+  labReceiver?: string;
+  labInitiatorExternal?: string;
+  clientReceiver?: string;
+  clientInitiator?: string;
+  labReceiverExternal?: string;
+}): Promise<string[]> {
+  const errors: string[] = [];
+
+  const {
+    initiationType,
+    project,
+    client,
+    labInitiator,
+    labReceiver,
+    labInitiatorExternal,
+    clientReceiver,
+    clientInitiator,
+    labReceiverExternal,
+  } = fields;
+
+  // Internal to Internal validation
+  if (initiationType === "internal_internal") {
+    if (!labInitiator) {
+      errors.push("Lab Personnel Initiator is required for Internal RFIs");
+    }
+  }
+
+  // Internal to External validation
+  if (initiationType === "internal_external") {
+    if (!project || !client) {
+      errors.push(
+        "Project and Client are required for Internal to External RFIs"
+      );
+    }
+    if (!labInitiatorExternal) {
+      errors.push(
+        "Lab Personnel Initiator is required for Internal to External RFIs"
+      );
+    }
+    if (!clientReceiver) {
+      errors.push("Client Receiver is required for Internal to External RFIs");
+    }
+
+    // Validate contact person relationships
+    if (project && client && clientReceiver) {
+      const isValidContact = await validateContactPersonRelationships(
+        project,
+        client,
+        clientReceiver
+      );
+      if (!isValidContact) {
+        errors.push(
+          "The selected contact person is not assigned to the project or not linked to the client"
+        );
+      }
+    }
+  }
+
+  // External to Internal validation
+  if (initiationType === "external_internal") {
+    if (!project || !client) {
+      errors.push(
+        "Project and Client are required for External to Internal RFIs"
+      );
+    }
+    if (!clientInitiator) {
+      errors.push("Client Initiator is required for External to Internal RFIs");
+    }
+
+    // Validate contact person relationships
+    if (project && client && clientInitiator) {
+      const isValidContact = await validateContactPersonRelationships(
+        project,
+        client,
+        clientInitiator
+      );
+      if (!isValidContact) {
+        errors.push(
+          "The selected contact person is not assigned to the project or not linked to the client"
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
+// Helper function to validate contact person relationships
+async function validateContactPersonRelationships(
+  projectId: string,
+  clientId: string,
+  contactPersonId: string
+): Promise<boolean> {
+  try {
+    // Fetch project with contact persons
+    const project = await writeClient.fetch(
+      `*[_type == "project" && _id == $projectId][0]{
+        name,
+        contactPersons[]->{_id}
+      }`,
+      { projectId }
+    );
+
+    console.log(project);
+
+    // Fetch contact person with clients
+    const contactPerson = await writeClient.fetch(
+      `*[_type == "contactPerson" && _id == $contactPersonId][0]{
+        client->{_id,name}
+      }`,
+      { contactPersonId }
+    );
+
+    // Check if contact person is assigned to project
+    const isAssignedToProject = project?.contactPersons?.some(
+      (person: { _id: string }) => person._id === contactPersonId
+    );
+
+    // Check if contact person is linked to client
+    const isLinkedToClient = contactPerson?.client?._id === clientId;
+
+    console.log(isLinkedToClient);
+
+    return isAssignedToProject && isLinkedToClient;
+  } catch (error) {
+    console.error("Error validating contact person relationships:", error);
+    return false;
+  }
+}
+
+// SEND MESSAGE TO RFI
+export async function sendMessageToRFI(prevState: any, formData: FormData) {
+  const rfiId = formData.get("rfiId") as string;
+  const message = formData.get("message") as string;
+  const sentByClient = formData.get("sentByClient") as string;
+  const clientSender = formData.get("clientSender") as string;
+  const labSender = formData.get("labSender") as string;
+  const timestamp = formData.get("timestamp") as string;
+  try {
+    // TODO: Senders should come from authed state data instead of being passed in as form data
+    // TODO: Work on attachments
+    // Maybe support multiple participants from client side and lab side in an RFI conversation
+    const result = await writeClient
+      .patch(rfiId)
+      .setIfMissing({ conversation: [] })
+      .setIfMissing({ attachments: [] })
+      .append("conversation", [
+        sentByClient === "true"
+          ? {
+              message,
+              sentByClient: true,
+              clientSender: { _type: "reference", _ref: clientSender },
+              attachments: [],
+              timestamp,
+            }
+          : {
+              message,
+              sentByClient: false,
+              labSender: { _type: "reference", _ref: labSender },
+              attachments: [],
+              timestamp,
+            },
+      ])
+      .commit({
+        autoGenerateArrayKeys: true,
+      });
+    revalidateTag("rfi");
+    return { result, status: "ok" };
+  } catch (error) {
+    console.error("Error sending message to RFI:", error);
+    return { error: "Failed to send message", status: "error" };
+  }
+}

@@ -15,7 +15,14 @@ export const getAllClients = async () => {
         _id,
         name,
         internalId,
-        endDate
+        endDate,
+        contactPersons[]->{
+          _id,
+          name,
+          email,
+          phone,
+          designation,
+        }
       }
     }
   `);

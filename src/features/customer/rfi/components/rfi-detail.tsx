@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { RFI, ConversationMessage } from "../types/rfi.ts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,50 +30,82 @@ import {
   Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ALL_RFIS_QUERYResult } from "../../../../../sanity.types.js";
+import { sendMessageToRFI } from "@/lib/actions";
+import { toast } from "sonner";
 
 interface RFIDetailProps {
-  rfi: RFI;
-  onUpdateRFI: (rfi: RFI) => void;
+  rfi: ALL_RFIS_QUERYResult[number];
+  onUpdateRFI: (rfi: ALL_RFIS_QUERYResult[number]) => void;
 }
 
 export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [newStatus, setNewStatus] = useState(rfi.status);
+  const [isPending, startTransition] = useTransition();
 
+  console.log(Boolean("false"));
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
-    const message: ConversationMessage = {
-      id: `msg-${Date.now()}`,
-      message: newMessage,
-      sentByClient: false, // Assuming lab user for demo
-      labSender: { id: "current-user", name: "Current User", role: "Engineer" },
-      timestamp: new Date().toISOString(),
-      attachments: [],
-    };
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.append("rfiId", rfi._id || "");
+        formData.append("message", newMessage);
+        formData.append("sentByClient", "false");
+        formData.append("clientSender", "fi9cAQAozMYCAhgLkY6pF2");
+        formData.append("labSender", "jV1aTfIhlBR8NUdNOYrNqx"); // You may need to get the current lab user ID
+        formData.append("timestamp", new Date().toISOString());
 
-    const updatedRFI: RFI = {
-      ...rfi,
-      conversation: [...rfi.conversation, message],
-      status: rfi.status === "open" ? "in_progress" : rfi.status,
-    };
+        const result = await sendMessageToRFI(null, formData);
 
-    onUpdateRFI(updatedRFI);
-    setNewMessage("");
+        if (result.status === "ok") {
+          // Update local state optimistically
+          const message = {
+            _key: `msg-${Date.now()}`,
+            message: newMessage,
+            sentByClient: false,
+            clientSender: null,
+            labSender: null,
+            attachments: [],
+            timestamp: new Date().toISOString(),
+          };
+
+          const updatedRFI: ALL_RFIS_QUERYResult[number] = {
+            ...rfi,
+            conversation: [...(rfi.conversation || []), message],
+            status: rfi.status === "open" ? "in_progress" : rfi.status,
+          };
+
+          onUpdateRFI(updatedRFI);
+          setNewMessage("");
+          toast.success("Message sent successfully");
+        } else {
+          toast.error("Failed to send message");
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+        toast.error("Failed to send message");
+      }
+    });
   };
 
-  const handleStatusChange = (status: RFI["status"]) => {
-    const updatedRFI: RFI = {
+  const handleStatusChange = (
+    status: ALL_RFIS_QUERYResult[number]["status"]
+  ) => {
+    const updatedRFI: ALL_RFIS_QUERYResult[number] = {
       ...rfi,
       status,
-      dateResolved:
-        status === "resolved" ? new Date().toISOString() : undefined,
+      dateResolved: status === "resolved" ? new Date().toISOString() : null,
     };
     onUpdateRFI(updatedRFI);
     setNewStatus(status);
   };
 
-  const getInitiationTypeIcon = (type: RFI["initiationType"]) => {
+  const getInitiationTypeIcon = (
+    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+  ) => {
     switch (type) {
       case "internal_internal":
         return <RefreshCcw className="w-4 h-4" />;
@@ -84,7 +116,9 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
     }
   };
 
-  const getInitiationTypeLabel = (type: RFI["initiationType"]) => {
+  const getInitiationTypeLabel = (
+    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+  ) => {
     switch (type) {
       case "internal_internal":
         return "Internal Communication";
@@ -95,7 +129,7 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
     }
   };
 
-  const getStatusIcon = (status: RFI["status"]) => {
+  const getStatusIcon = (status: ALL_RFIS_QUERYResult[number]["status"]) => {
     switch (status) {
       case "open":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
@@ -118,14 +152,20 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                   {getInitiationTypeIcon(rfi.initiationType)}
                   <Badge variant="outline" className="text-xs">
                     <span className="sm:hidden">
-                      {getInitiationTypeLabel(rfi.initiationType).split(" ")[0]}
+                      {
+                        getInitiationTypeLabel(rfi.initiationType)?.split(
+                          " "
+                        )[0]
+                      }
                     </span>
                     <span className="hidden sm:inline">
-                      {getInitiationTypeLabel(rfi.initiationType)}
+                      {getInitiationTypeLabel(rfi.initiationType)?.split(
+                        " "
+                      )[0] || ""}
                     </span>
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
-                    {rfi.id.toUpperCase()}
+                    {rfi._id.toUpperCase()}
                   </Badge>
                 </div>
                 <h1 className="text-lg sm:text-2xl font-semibold mb-2 break-words">
@@ -137,9 +177,17 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {getStatusIcon(rfi.status)}
-                <Select value={newStatus} onValueChange={handleStatusChange}>
+                <Select
+                  value={newStatus || ""}
+                  onValueChange={(value) =>
+                    handleStatusChange(
+                      value as ALL_RFIS_QUERYResult[number]["status"]
+                    )
+                  }
+                  disabled={isPending}
+                >
                   <SelectTrigger className="w-24 sm:w-32">
-                    <SelectValue />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="open">Open</SelectItem>
@@ -157,14 +205,14 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                   <div className="flex items-center gap-2">
                     <FileStack className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span className="font-medium">Project:</span>
-                    <span className="truncate">{rfi.project.name}</span>
+                    <span className="truncate">{rfi.project?.name || ""}</span>
                   </div>
                 )}
                 {rfi.client && (
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span className="font-medium">Client:</span>
-                    <span className="truncate">{rfi.client.name}</span>
+                    <span className="truncate">{rfi.client?.name || ""}</span>
                   </div>
                 )}
               </div>
@@ -172,13 +220,13 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                 <div className="text-xs sm:text-sm flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="font-medium">Initiated:</span>{" "}
-                  {new Date(rfi.dateSubmitted).toLocaleString()}
+                  {new Date(rfi.dateSubmitted || "").toLocaleString()}
                 </div>
                 {rfi.dateResolved && (
                   <div className="text-xs sm:text-sm flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
                     <span className="font-medium">Resolved:</span>{" "}
-                    {new Date(rfi.dateResolved).toLocaleString()}
+                    {new Date(rfi.dateResolved || "").toLocaleString()}
                   </div>
                 )}
               </div>
@@ -191,42 +239,56 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                 {rfi.labInitiator && (
                   <Badge variant="secondary" className="text-xs">
                     <span className="sm:hidden">
-                      Lab: {rfi.labInitiator.name}
+                      Lab: {rfi.labInitiator?.fullName || ""}
                     </span>
                     <span className="hidden sm:inline">
-                      Lab: {rfi.labInitiator.name} ({rfi.labInitiator.role})
+                      Lab: {rfi.labInitiator?.fullName || ""} (
+                      {rfi.labInitiator?.departmentRoles
+                        ?.map((role) => role.department?.name || "")
+                        .join(", ") || ""}
+                      )
                     </span>
                   </Badge>
                 )}
                 {rfi.labReceiver && (
                   <Badge variant="secondary" className="text-xs">
                     <span className="sm:hidden">
-                      Lab: {rfi.labReceiver.name}
+                      Lab: {rfi.labReceiver?.fullName || ""}
                     </span>
                     <span className="hidden sm:inline">
-                      Lab: {rfi.labReceiver.name} ({rfi.labReceiver.role})
+                      Lab: {rfi.labReceiver?.fullName || ""} (
+                      {rfi.labReceiver?.departmentRoles
+                        ?.map((role) => role.role || "")
+                        .join(", ") || ""}
+                      )
                     </span>
                   </Badge>
                 )}
                 {rfi.labInitiatorExternal && (
                   <Badge variant="secondary" className="text-xs">
                     <span className="sm:hidden">
-                      Lab: {rfi.labInitiatorExternal.name}
+                      Lab: {rfi.labInitiatorExternal?.fullName || ""}
                     </span>
                     <span className="hidden sm:inline">
-                      Lab: {rfi.labInitiatorExternal.name} (
-                      {rfi.labInitiatorExternal.role})
+                      Lab: {rfi.labInitiatorExternal?.fullName || ""} (
+                      {rfi.labInitiatorExternal?.departmentRoles
+                        ?.map((role) => role.role || "")
+                        .join(", ") || ""}
+                      )
                     </span>
                   </Badge>
                 )}
                 {rfi.labReceiverExternal && (
                   <Badge variant="secondary" className="text-xs">
                     <span className="sm:hidden">
-                      Lab: {rfi.labReceiverExternal.name}
+                      Lab: {rfi.labReceiverExternal?.fullName || ""}
                     </span>
                     <span className="hidden sm:inline">
-                      Lab: {rfi.labReceiverExternal.name} (
-                      {rfi.labReceiverExternal.role})
+                      Lab: {rfi.labReceiverExternal?.fullName || ""} (
+                      {rfi.labReceiverExternal?.departmentRoles
+                        ?.map((role) => role.role || "")
+                        .join(", ") || ""}
+                      )
                     </span>
                   </Badge>
                 )}
@@ -237,7 +299,7 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                     </span>
                     <span className="hidden sm:inline">
                       Client: {rfi.clientInitiator.name} (
-                      {rfi.clientInitiator.role})
+                      {rfi.clientInitiator.designation})
                     </span>
                   </Badge>
                 )}
@@ -248,7 +310,7 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                     </span>
                     <span className="hidden sm:inline">
                       Client: {rfi.clientReceiver.name} (
-                      {rfi.clientReceiver.role})
+                      {rfi.clientReceiver.designation})
                     </span>
                   </Badge>
                 )}
@@ -256,7 +318,7 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
             </div>
 
             {/* Initial Attachments */}
-            {rfi.attachments.length > 0 && (
+            {rfi.attachments && rfi.attachments.length > 0 && (
               <div className="mt-4">
                 <div className="text-sm font-medium mb-2">
                   Initial Attachments
@@ -270,7 +332,7 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                     >
                       <FileText className="w-3 h-3" />
                       <span className="truncate max-w-[120px] sm:max-w-none">
-                        {attachment}
+                        {attachment.asset?.originalFilename || ""}
                       </span>
                     </Badge>
                   ))}
@@ -282,89 +344,96 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
           {/* Conversation Section - Chat Bubbles */}
           <div className="px-4 sm:px-6">
             <div className="space-y-6">
-              {rfi.conversation.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex",
-                    message.sentByClient ? "justify-start" : "justify-end"
-                  )}
-                >
-                  <div className="flex flex-col max-w-[80%]">
-                    {/* Sender info */}
-                    <div
-                      className={cn(
-                        "flex items-center gap-2 mb-1 text-xs",
-                        message.sentByClient ? "justify-start" : "justify-end"
-                      )}
-                    >
-                      {message.sentByClient ? (
-                        <>
-                          <User className="w-3 h-3 text-blue-500" />
-                          <span className="font-medium">
-                            {message.clientSender?.name}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleString()}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleString()}
-                          </span>
-                          <span className="font-medium">
-                            {message.labSender?.name}
-                          </span>
-                          <Building className="w-3 h-3 text-green-500" />
-                        </>
-                      )}
-                    </div>
-
-                    {/* Message bubble */}
-                    <div
-                      className={cn(
-                        "relative p-3 rounded-lg",
-                        message.sentByClient
-                          ? "bg-blue-100 text-blue-900 rounded-tl-none"
-                          : "bg-green-100 text-green-900 rounded-tr-none"
-                      )}
-                    >
-                      {/* Pointed end / tail */}
+              {rfi.conversation &&
+                rfi.conversation.length > 0 &&
+                rfi.conversation.map((message) => (
+                  <div
+                    key={message._key}
+                    className={cn(
+                      "flex",
+                      message.sentByClient ? "justify-start" : "justify-end"
+                    )}
+                  >
+                    <div className="flex flex-col max-w-[80%]">
+                      {/* Sender info */}
                       <div
                         className={cn(
-                          "absolute top-0 w-3 h-3",
-                          message.sentByClient
-                            ? "left-0 -translate-x-[6px] border-t-8 border-r-8 border-t-transparent border-r-blue-100"
-                            : "right-0 translate-x-[6px] border-t-8 border-l-8 border-t-transparent border-l-green-100"
+                          "flex items-center gap-2 mb-1 text-xs",
+                          message.sentByClient ? "justify-start" : "justify-end"
                         )}
-                      ></div>
+                      >
+                        {message.sentByClient ? (
+                          <>
+                            <User className="w-3 h-3 text-blue-500" />
+                            <span className="font-medium">
+                              {message.clientSender?.name}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {new Date(
+                                message.timestamp || ""
+                              ).toLocaleString()}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-muted-foreground">
+                              {new Date(
+                                message.timestamp || ""
+                              ).toLocaleString()}
+                            </span>
+                            <span className="font-medium">
+                              {message.labSender?.fullName || ""}
+                            </span>
+                            <Building className="w-3 h-3 text-green-500" />
+                          </>
+                        )}
+                      </div>
 
-                      {/* Message content */}
-                      <p className="text-sm break-words">{message.message}</p>
+                      {/* Message bubble */}
+                      <div
+                        className={cn(
+                          "relative p-3 rounded-lg",
+                          message.sentByClient
+                            ? "bg-blue-100 text-blue-900 rounded-tl-none"
+                            : "bg-green-100 text-green-900 rounded-tr-none"
+                        )}
+                      >
+                        {/* Pointed end / tail */}
+                        <div
+                          className={cn(
+                            "absolute top-0 w-3 h-3",
+                            message.sentByClient
+                              ? "left-0 -translate-x-[6px] border-t-8 border-r-8 border-t-transparent border-r-blue-100"
+                              : "right-0 translate-x-[6px] border-t-8 border-l-8 border-t-transparent border-l-green-100"
+                          )}
+                        ></div>
 
-                      {/* Attachments */}
-                      {message.attachments.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-opacity-20 border-current">
-                          {message.attachments.map((attachment, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white bg-opacity-50"
-                            >
-                              <FileText className="w-3 h-3" />
-                              <span className="truncate max-w-[100px] sm:max-w-none">
-                                {attachment}
-                              </span>
+                        {/* Message content */}
+                        <p className="text-sm break-words">{message.message}</p>
+
+                        {/* Attachments */}
+                        {message.attachments &&
+                          message.attachments.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-opacity-20 border-current">
+                              {message.attachments.map((attachment) => (
+                                <div
+                                  key={attachment.asset?._id || ""}
+                                  className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-white bg-opacity-50"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                  <span className="truncate max-w-[100px] sm:max-w-none">
+                                    {attachment.asset?.originalFilename || ""}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {rfi.conversation.length === 0 && (
+              {rfi.conversation && rfi.conversation.length === 0 && (
                 <div className="text-center text-muted-foreground text-sm py-8">
                   No messages yet. Start the conversation below!
                 </div>
@@ -384,6 +453,7 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   className="min-h-[80px] sm:min-h-[100px] text-sm"
+                  disabled={isPending}
                 />
                 <div className="flex items-center justify-between gap-2">
                   <Button
@@ -397,13 +467,17 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                   </Button>
                   <Button
                     onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() || isPending}
                     size="sm"
                     className="text-xs sm:text-sm"
                   >
                     <Send className="w-4 h-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Send Reply</span>
-                    <span className="sm:hidden">Send</span>
+                    <span className="hidden sm:inline">
+                      {isPending ? "Sending..." : "Send Reply"}
+                    </span>
+                    <span className="sm:hidden">
+                      {isPending ? "..." : "Send"}
+                    </span>
                   </Button>
                 </div>
               </div>

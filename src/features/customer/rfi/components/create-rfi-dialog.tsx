@@ -1,16 +1,36 @@
-import type React from "react";
+import { startTransition, useActionState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
-import { useState } from "react";
-import type { RFI } from "../types/rfi.ts";
+// Components
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -19,12 +39,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlusCircleIcon } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import type { RFI } from "../types/rfi.ts";
+import { FormSubmitButton } from "@/components/form-submit-button";
+import {
+  ALL_CLIENTS_QUERYResult,
+  ALL_PERSONNEL_QUERYResult,
+  ALL_RFIS_QUERYResult,
+} from "../../../../../sanity.types.js";
+import { createRFI } from "@/lib/actions";
 
 interface CreateRFIDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateRFI: (rfi: Omit<RFI, "id" | "dateSubmitted">) => void;
+  onCreateRFI: (
+    rfi: Omit<ALL_RFIS_QUERYResult[number], "_id" | "dateSubmitted">
+  ) => void;
+  labPersonnel: ALL_PERSONNEL_QUERYResult;
+  clients: ALL_CLIENTS_QUERYResult;
 }
 
 // Mock data for dropdowns
@@ -73,77 +106,16 @@ export function CreateRFIDialog({
   open,
   onOpenChange,
   onCreateRFI,
+  labPersonnel,
+  clients,
 }: CreateRFIDialogProps) {
-  const [formData, setFormData] = useState({
-    initiationType: "" as RFI["initiationType"] | "",
-    project: "",
-    client: "",
-    subject: "",
-    description: "",
-    labInitiator: "",
-    labReceiver: "",
-    labInitiatorExternal: "",
-    clientReceiver: "",
-    clientInitiator: "",
-    labReceiverExternal: "",
-  });
+  const [state, dispatch, isPending] = useActionState(createRFI, null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !formData.initiationType ||
-      !formData.subject ||
-      !formData.description
-    ) {
-      return;
-    }
-
-    const selectedProject = mockProjects.find((p) => p.id === formData.project);
-    const selectedClient = mockClients.find((c) => c.id === formData.client);
-
-    const rfi: Omit<RFI, "id" | "dateSubmitted"> = {
-      initiationType: formData.initiationType,
-      project: selectedProject
-        ? { id: selectedProject.id, name: selectedProject.name }
-        : undefined,
-      client: selectedClient
-        ? { id: selectedClient.id, name: selectedClient.name }
-        : undefined,
-      subject: formData.subject,
-      description: formData.description,
-      status: "open",
-      attachments: [],
-      conversation: [],
-
-      // Conditional fields based on initiation type
-      ...(formData.initiationType === "internal_internal" && {
-        labInitiator: mockPersonnel.find((p) => p.id === formData.labInitiator),
-        labReceiver: mockPersonnel.find((p) => p.id === formData.labReceiver),
-      }),
-      ...(formData.initiationType === "internal_external" && {
-        labInitiatorExternal: mockPersonnel.find(
-          (p) => p.id === formData.labInitiatorExternal
-        ),
-        clientReceiver: mockContactPersons.find(
-          (c) => c.id === formData.clientReceiver
-        ),
-      }),
-      ...(formData.initiationType === "external_internal" && {
-        clientInitiator: mockContactPersons.find(
-          (c) => c.id === formData.clientInitiator
-        ),
-        labReceiverExternal: mockPersonnel.find(
-          (p) => p.id === formData.labReceiverExternal
-        ),
-      }),
-    };
-
-    onCreateRFI(rfi);
-
-    // Reset form
-    setFormData({
-      initiationType: "",
+  const form = useForm({
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      initiationType: "" as RFI["initiationType"] | "",
       project: "",
       client: "",
       subject: "",
@@ -154,206 +126,306 @@ export function CreateRFIDialog({
       clientReceiver: "",
       clientInitiator: "",
       labReceiverExternal: "",
+    },
+  });
+
+  // Watch the selected client to filter projects
+  const selectedClientId = form.watch("client");
+
+  // Get the selected client
+  const selectedClient = clients.find(
+    (client) => client._id === selectedClientId
+  );
+
+  const selectedProject = selectedClient?.projects?.find(
+    (project) => project._id === form.watch("project")
+  );
+
+  const selectedProjectContactPersons = selectedProject?.contactPersons;
+
+  // Reset project selection when client changes
+  useEffect(() => {
+    form.setValue("project", "");
+  }, [selectedClientId, form]);
+
+  const onSubmit = (data: {
+    initiationType: RFI["initiationType"] | "";
+    project: string;
+    client: string;
+    subject: string;
+    description: string;
+    labInitiator: string;
+    labReceiver: string;
+    labInitiatorExternal: string;
+    clientReceiver: string;
+    clientInitiator: string;
+    labReceiverExternal: string;
+  }) => {
+    const formData = new FormData();
+    formData.append("initiationType", data.initiationType || "");
+    formData.append("project", data.project || "");
+    formData.append("client", data.client || "");
+    formData.append("subject", data.subject || "");
+    formData.append("description", data.description || "");
+    formData.append("labInitiator", data.labInitiator || "");
+    formData.append("labReceiver", data.labReceiver || "");
+    formData.append("labInitiatorExternal", data.labInitiatorExternal || "");
+    formData.append("clientReceiver", data.clientReceiver || "");
+    formData.append("clientInitiator", data.clientInitiator || "");
+    formData.append("labReceiverExternal", data.labReceiverExternal || "");
+
+    console.log({
+      data,
     });
+
+    startTransition(() => dispatch(formData));
   };
 
+  form.watch("clientReceiver");
+
+  useEffect(() => {
+    if (state?.status === "ok") {
+      toast.success("RFI has been created");
+      onOpenChange(false);
+      form.reset();
+    } else if (state?.status === "error") {
+      toast.error((state.error as string) || "Something went wrong");
+    }
+  }, [state, form]);
+
   const renderParticipantFields = () => {
-    switch (formData.initiationType) {
+    const initiationType = form.watch("initiationType");
+
+    switch (initiationType) {
       case "internal_internal":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="labInitiator" className="text-sm">
-                Lab Initiator
-              </Label>
-              <Select
-                value={formData.labInitiator}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, labInitiator: value }))
-                }
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select lab personnel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockPersonnel.map((person) => (
-                    <SelectItem
-                      key={person.id}
-                      value={person.id}
-                      className="text-sm"
-                    >
-                      <span className="sm:hidden">{person.name}</span>
-                      <span className="hidden sm:inline">
-                        {person.name} - {person.role}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="labReceiver" className="text-sm">
-                Lab Receiver
-              </Label>
-              <Select
-                value={formData.labReceiver}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, labReceiver: value }))
-                }
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select lab personnel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockPersonnel.map((person) => (
-                    <SelectItem
-                      key={person.id}
-                      value={person.id}
-                      className="text-sm"
-                    >
-                      <span className="sm:hidden">{person.name}</span>
-                      <span className="hidden sm:inline">
-                        {person.name} - {person.role}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="labInitiator"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lab Initiator</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lab personnel" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {labPersonnel.map((personnel) => (
+                        <SelectItem key={personnel._id} value={personnel._id}>
+                          <span className="sm:hidden">
+                            {personnel.fullName}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {personnel.fullName} -{" "}
+                            {personnel.departmentRoles?.[0]?.role}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="labReceiver"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lab Receiver</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lab personnel" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {labPersonnel.map((personnel) => (
+                        <SelectItem key={personnel._id} value={personnel._id}>
+                          <span className="sm:hidden">
+                            {personnel.fullName}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {personnel.fullName} -{" "}
+                            {personnel.departmentRoles?.[0]?.role}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         );
 
       case "internal_external":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="labInitiatorExternal" className="text-sm">
-                Lab Initiator
-              </Label>
-              <Select
-                value={formData.labInitiatorExternal}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    labInitiatorExternal: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select lab personnel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockPersonnel.map((person) => (
-                    <SelectItem
-                      key={person.id}
-                      value={person.id}
-                      className="text-sm"
-                    >
-                      <span className="sm:hidden">{person.name}</span>
-                      <span className="hidden sm:inline">
-                        {person.name} - {person.role}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clientReceiver" className="text-sm">
-                Client Receiver
-              </Label>
-              <Select
-                value={formData.clientReceiver}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, clientReceiver: value }))
-                }
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select client contact" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockContactPersons.map((contact) => (
-                    <SelectItem
-                      key={contact.id}
-                      value={contact.id}
-                      className="text-sm"
-                    >
-                      <span className="sm:hidden">{contact.name}</span>
-                      <span className="hidden sm:inline">
-                        {contact.name} - {contact.role}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="labInitiatorExternal"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lab Initiator</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lab personnel" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {labPersonnel.map((personnel) => (
+                        <SelectItem key={personnel._id} value={personnel._id}>
+                          <span className="sm:hidden">
+                            {personnel.fullName}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {personnel.fullName} -{" "}
+                            {personnel.departmentRoles?.[0]?.role}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="clientReceiver"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client Receiver</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select client contact" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedProjectContactPersons?.map((contact) => (
+                        <SelectItem key={contact._id} value={contact._id}>
+                          <span className="sm:hidden">{contact.name}</span>
+                          <span className="hidden sm:inline">
+                            {contact.name} - {contact.designation}
+                          </span>
+                        </SelectItem>
+                      ))}
+                      {!selectedProjectContactPersons && (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          No contact persons found for this project
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         );
 
       case "external_internal":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="clientInitiator" className="text-sm">
-                Client Initiator
-              </Label>
-              <Select
-                value={formData.clientInitiator}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, clientInitiator: value }))
-                }
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select client contact" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockContactPersons.map((contact) => (
-                    <SelectItem
-                      key={contact.id}
-                      value={contact.id}
-                      className="text-sm"
-                    >
-                      <span className="sm:hidden">{contact.name}</span>
-                      <span className="hidden sm:inline">
-                        {contact.name} - {contact.role}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="labReceiverExternal" className="text-sm">
-                Lab Receiver
-              </Label>
-              <Select
-                value={formData.labReceiverExternal}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    labReceiverExternal: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select lab personnel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockPersonnel.map((person) => (
-                    <SelectItem
-                      key={person.id}
-                      value={person.id}
-                      className="text-sm"
-                    >
-                      <span className="sm:hidden">{person.name}</span>
-                      <span className="hidden sm:inline">
-                        {person.name} - {person.role}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="clientInitiator"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client Initiator</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select client contact" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedProjectContactPersons?.map((contact) => (
+                        <SelectItem key={contact._id} value={contact._id}>
+                          <span className="sm:hidden">{contact.name}</span>
+                          <span className="hidden sm:inline">
+                            {contact.name} - {contact.designation}
+                          </span>
+                        </SelectItem>
+                      ))}
+                      {!selectedProjectContactPersons && (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          No contact persons found for this client
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="labReceiverExternal"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lab Receiver</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lab personnel" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {labPersonnel.map((personnel) => (
+                        <SelectItem key={personnel._id} value={personnel._id}>
+                          <span className="sm:hidden">
+                            {personnel.fullName}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {personnel.fullName} -{" "}
+                            {personnel.departmentRoles?.[0]?.role}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         );
 
@@ -362,182 +434,233 @@ export function CreateRFIDialog({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto mx-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">
-            Create New RFI
-          </DialogTitle>
-        </DialogHeader>
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
-              <div className="space-y-2">
-                <Label htmlFor="initiationType" className="text-sm">
-                  Initiation Type *
-                </Label>
-                <Select
-                  value={formData.initiationType}
-                  onValueChange={(value: RFI["initiationType"]) =>
-                    setFormData((prev) => ({ ...prev, initiationType: value }))
-                  }
-                >
-                  <SelectTrigger className="text-sm">
+  const content = (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-8 h-[460px] px-4 md:px-1 py-4 overflow-y-auto pb-20"
+      >
+        <FormField
+          control={form.control}
+          name="initiationType"
+          rules={{ required: "Required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Initiation Type</FormLabel>
+              <Select
+                disabled={isPending}
+                onValueChange={field.onChange}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
                     <SelectValue placeholder="Select initiation type" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="internal_internal">
-                      <span className="sm:hidden">Internal</span>
-                      <span className="hidden sm:inline">
-                        Internal to Internal (Lab to Lab)
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="internal_external">
-                      <span className="sm:hidden">Lab to Client</span>
-                      <span className="hidden sm:inline">
-                        Internal to External (Lab to Client)
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="external_internal">
-                      <span className="sm:hidden">Client to Lab</span>
-                      <span className="hidden sm:inline">
-                        External to Internal (Client to Lab)
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="internal_internal">
+                    <span className="sm:hidden">Internal</span>
+                    <span className="hidden sm:inline">
+                      Internal to Internal (Lab to Lab)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="internal_external">
+                    <span className="sm:hidden">Lab to Client</span>
+                    <span className="hidden sm:inline">
+                      Internal to External (Lab to Client)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="external_internal">
+                    <span className="sm:hidden">Client to Lab</span>
+                    <span className="hidden sm:inline">
+                      External to Internal (Client to Lab)
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              {(formData.initiationType === "internal_external" ||
-                formData.initiationType === "external_internal") && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="project" className="text-sm">
-                      Project
-                    </Label>
-                    <Select
-                      value={formData.project}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({ ...prev, project: value }))
-                      }
-                    >
-                      <SelectTrigger className="text-sm">
-                        <SelectValue placeholder="Select project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockProjects.map((project) => (
-                          <SelectItem
-                            key={project.id}
-                            value={project.id}
-                            className="text-sm"
-                          >
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client" className="text-sm">
-                      Client
-                    </Label>
-                    <Select
-                      value={formData.client}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({ ...prev, client: value }))
-                      }
-                    >
-                      <SelectTrigger className="text-sm">
+        {(form.watch("initiationType") === "internal_external" ||
+          form.watch("initiationType") === "external_internal") && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <FormField
+              control={form.control}
+              name="client"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Client</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
                         <SelectValue placeholder="Select client" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {mockClients.map((client) => (
-                          <SelectItem
-                            key={client.id}
-                            value={client.id}
-                            className="text-sm"
-                          >
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                    </FormControl>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client._id} value={client._id}>
+                          <span className="font-bold">{client.internalId}</span>{" "}
+                          - {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="subject" className="text-sm">
-                  Subject *
-                </Label>
-                <Input
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      subject: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter RFI subject"
-                  className="text-sm"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm">
-                  Description *
-                </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Describe the information request in detail"
-                  className="min-h-[80px] sm:min-h-[100px] text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {formData.initiationType && (
-            <Card>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">
-                  Participants
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0">
-                {renderParticipantFields()}
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="flex flex-col sm:flex-row justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="text-sm"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="text-sm">
-              Create RFI
-            </Button>
+            />
+            <FormField
+              control={form.control}
+              name="project"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project</FormLabel>
+                  <Select
+                    disabled={isPending}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {selectedClient?.projects?.map((project) => (
+                        <SelectItem key={project._id} value={project._id}>
+                          <span className="font-bold">
+                            {project.internalId}
+                          </span>{" "}
+                          - {project.name}
+                        </SelectItem>
+                      ))}
+                      {selectedClient?.projects?.length === 0 && (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          No projects found for this client
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-        </form>
+        )}
+
+        <FormField
+          control={form.control}
+          name="subject"
+          rules={{ required: "Required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Subject</FormLabel>
+              <FormControl>
+                <Input
+                  disabled={isPending}
+                  placeholder="Enter RFI subject"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          rules={{ required: "Required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  disabled={isPending}
+                  placeholder="Describe the information request in detail"
+                  className="min-h-[80px] sm:min-h-[100px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.watch("initiationType") && <div>{renderParticipantFields()}</div>}
+
+        <FormSubmitButton text="Create RFI" isSubmitting={isPending} />
+      </form>
+    </Form>
+  );
+
+  return isMobile ? (
+    <Drawer
+      open={open}
+      onOpenChange={(isOpen) => {
+        onOpenChange(isOpen);
+        if (isOpen) {
+          form.reset();
+        }
+      }}
+    >
+      <DrawerTrigger asChild>
+        <Button>
+          <PlusCircleIcon className="h-5 w-5 mr-2 " />
+          Create New RFI
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Create New RFI</DrawerTitle>
+          <DrawerDescription>
+            Create a new Request for Information
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="p-4 pb-0">{content}</div>
+        <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  ) : (
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        onOpenChange(isOpen);
+        if (isOpen) {
+          form.reset();
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircleIcon className="h-5 w-5 mr-2" />
+          Create New RFI
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent
+        aria-describedby={undefined}
+        className="w-[95vw] max-w-2xl"
+      >
+        <DialogHeader>
+          <DialogTitle>Create New RFI</DialogTitle>
+          <DialogDescription>
+            Create a new Request for Information
+          </DialogDescription>
+        </DialogHeader>
+        {content}
       </DialogContent>
     </Dialog>
   );

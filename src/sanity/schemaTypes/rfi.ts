@@ -114,6 +114,12 @@ export const rfi = defineType({
       validation: (Rule) =>
         Rule.custom(async (clientReceiver, context) => {
           const { document } = context;
+
+          // Only validate for internal_external initiation type
+          if (document?.initiationType !== "internal_external") {
+            return true; // No validation needed for other initiation types
+          }
+
           if (!document?.project || !document?.client) {
             return "You must select both a project and a client.";
           }
@@ -138,7 +144,7 @@ export const rfi = defineType({
             .getClient({ apiVersion: "2022-03-07" })
             .fetch(
               `*[_type == "contactPerson" && _id == $clientReceiver][0]{
-              clients[]->{_id,name}
+              client->{_id,name}
             }`,
               { clientReceiver: clientReceiver._ref }
             );
@@ -154,10 +160,8 @@ export const rfi = defineType({
 
           // Ensure the selected contact person is linked to the selected client
           if (
-            !contactPerson?.clients?.some(
-              (client: { _id: string }) =>
-                client._id === (document.client as { _ref?: string })?._ref
-            )
+            contactPerson?.client?._id !==
+            (document.client as { _ref?: string })?._ref
           ) {
             return "The selected contact person is not linked to the selected client.";
           }
@@ -177,6 +181,11 @@ export const rfi = defineType({
         Rule.custom(async (clientInitiator, context) => {
           const { document } = context;
 
+          // Only validate for external_internal initiation type
+          if (document?.initiationType !== "external_internal") {
+            return true; // No validation needed for other initiation types
+          }
+
           if (!document?.project || !document?.client) {
             return "You must select both a project and a client.";
           }
@@ -188,8 +197,9 @@ export const rfi = defineType({
             return "Client Initiator is required for External to Internal RFIs.";
           }
 
+          // Only validate client-initiator relationship if we have a clientInitiator
           if (!clientInitiator) {
-            return "You must select a contact person.";
+            return true; // No validation needed if no clientInitiator selected
           }
 
           // Fetch the project document dynamically
@@ -208,7 +218,7 @@ export const rfi = defineType({
             .getClient({ apiVersion: "2022-03-07" })
             .fetch(
               `*[_type == "contactPerson" && _id == $clientInitiator][0]{
-              clients[]->{_id,name}
+              client->{_id,name}
             }`,
               { clientInitiator: clientInitiator._ref }
             );
@@ -224,10 +234,8 @@ export const rfi = defineType({
 
           // Ensure the selected contact person is linked to the selected client
           if (
-            !contactPerson?.clients?.some(
-              (client: { _id: string }) =>
-                client._id === (document.client as { _ref?: string })?._ref
-            )
+            contactPerson?.client?._id !==
+            (document.client as { _ref?: string })?._ref
           ) {
             return "The selected contact person is not linked to the selected client.";
           }
@@ -275,7 +283,14 @@ export const rfi = defineType({
       name: "attachments",
       title: "Attachments (Initial Message)",
       type: "array",
-      of: [{ type: "url" }],
+      of: [
+        {
+          type: "file",
+          options: {
+            accept: "image/*,application/pdf",
+          },
+        },
+      ],
       description: "Attach relevant files for the initial RFI request.",
     }),
     defineField({
@@ -373,7 +388,14 @@ export const rfi = defineType({
               name: "attachments",
               title: "Attachments (Reply Message)",
               type: "array",
-              of: [{ type: "url" }],
+              of: [
+                {
+                  type: "file",
+                  options: {
+                    accept: "image/*,application/pdf",
+                  },
+                },
+              ],
               description: "Attach files relevant to this response.",
             }),
             defineField({
@@ -475,7 +497,7 @@ export const rfi = defineType({
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
-        })} - ${project}`,
+        })} - ${project || "No project involved"}`,
       };
     },
   },

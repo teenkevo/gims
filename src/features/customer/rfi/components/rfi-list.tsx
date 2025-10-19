@@ -16,14 +16,17 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
+import { ALL_RFIS_QUERYResult } from "../../../../../sanity.types";
 interface RFIListProps {
-  rfis: RFI[];
-  selectedRFI: RFI | null;
-  onSelectRFI: (rfi: RFI) => void;
+  rfis: ALL_RFIS_QUERYResult;
+  selectedRFI: ALL_RFIS_QUERYResult[number] | null;
+  onSelectRFI: (rfi: ALL_RFIS_QUERYResult[number]) => void;
 }
 
 export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
-  const getInitiationTypeIcon = (type: RFI["initiationType"]) => {
+  const getInitiationTypeIcon = (
+    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+  ) => {
     switch (type) {
       case "internal_internal":
         return <RefreshCcw className="w-4 h-4" />;
@@ -34,7 +37,9 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     }
   };
 
-  const getInitiationTypeLabel = (type: RFI["initiationType"]) => {
+  const getInitiationTypeLabel = (
+    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+  ) => {
     switch (type) {
       case "internal_internal":
         return "Internal";
@@ -45,7 +50,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     }
   };
 
-  const getStatusIcon = (status: RFI["status"]) => {
+  const getStatusIcon = (status: ALL_RFIS_QUERYResult[number]["status"]) => {
     switch (status) {
       case "open":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
@@ -56,7 +61,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     }
   };
 
-  const getStatusColor = (status: RFI["status"]) => {
+  const getStatusColor = (status: ALL_RFIS_QUERYResult[number]["status"]) => {
     switch (status) {
       case "open":
         return "bg-red-100 hover:bg-red-200 text-red-800 border-red-200";
@@ -72,12 +77,12 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="pl-1 pr-4 py-2 space-y-3">
-            {rfis.map((rfi) => (
+            {rfis.map((rfi: ALL_RFIS_QUERYResult[number]) => (
               <div
                 key={uuidv4()}
                 className={cn(
                   "cursor-pointer transition-colors hover:bg-muted/50 border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg",
-                  selectedRFI?.id === rfi.id && "ring-2 ring-primary"
+                  selectedRFI?._id === rfi._id && "ring-2 ring-primary"
                 )}
                 onClick={() => onSelectRFI(rfi)}
               >
@@ -96,10 +101,10 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                           className={cn("text-xs", getStatusColor(rfi.status))}
                         >
                           <span className="sm:hidden">
-                            {rfi.status.charAt(0).toUpperCase()}
+                            {rfi.status?.charAt(0).toUpperCase()}
                           </span>
                           <span className="hidden sm:inline">
-                            {rfi.status.replace("_", " ").toUpperCase()}
+                            {rfi.status?.replace("_", " ").toUpperCase()}
                           </span>
                         </Badge>
                       </div>
@@ -132,19 +137,19 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="truncate">
                         {
-                          new Date(rfi.dateSubmitted)
+                          new Date(rfi.dateSubmitted || "")
                             .toISOString()
                             .split("T")[0]
                         }
                       </span>
                       <div className="flex items-center gap-2 shrink-0">
-                        {rfi.attachments.length > 0 && (
+                        {rfi.attachments && rfi.attachments.length > 0 && (
                           <div className="flex items-center gap-1">
                             <FileText className="w-3 h-3" />
                             <span>{rfi.attachments.length}</span>
                           </div>
                         )}
-                        {rfi.conversation.length > 0 && (
+                        {rfi.conversation && rfi.conversation.length > 0 && (
                           <Badge variant="secondary" className="text-xs">
                             <span className="sm:hidden">
                               {rfi.conversation.length}

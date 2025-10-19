@@ -8,7 +8,11 @@ interface FormSubmitButtonProps {
   disabled?: boolean;
 }
 
-export function FormSubmitButton({ isSubmitting, text, disabled }: FormSubmitButtonProps) {
+export function FormSubmitButton({
+  isSubmitting,
+  text,
+  disabled,
+}: FormSubmitButtonProps) {
   return (
     <div className="fixed rounded-b-lg bottom-0 left-0 w-full p-4 shadow-lg flex justify-end items-center border-t border-dashed bg-background/30 backdrop-blur-md">
       <div className="flex items-center">

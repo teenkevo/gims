@@ -15,6 +15,16 @@ export const getAllProjects = async () => {
             name,
             internalId
           },
+          contactPersons[]->{
+            _id,
+            name,
+            email,
+            phone,
+            designation,
+            client->{
+              _id,
+            },
+          },
           quotation->{
             _id,
             revisionNumber,

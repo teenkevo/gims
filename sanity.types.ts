@@ -263,7 +263,17 @@ export type Rfi = {
   };
   subject?: string;
   description?: string;
-  attachments?: Array<string>;
+  attachments?: Array<{
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+    };
+    media?: unknown;
+    _type: "file";
+    _key: string;
+  }>;
   status?: "open" | "in_progress" | "resolved";
   conversation?: Array<{
     message?: string;
@@ -280,7 +290,17 @@ export type Rfi = {
       _weak?: boolean;
       [internalGroqTypeReferenceTo]?: "personnel";
     };
-    attachments?: Array<string>;
+    attachments?: Array<{
+      asset?: {
+        _ref: string;
+        _type: "reference";
+        _weak?: boolean;
+        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+      };
+      media?: unknown;
+      _type: "file";
+      _key: string;
+    }>;
     timestamp?: string;
     _key: string;
   }>;
@@ -952,7 +972,7 @@ export type AllSanitySchemaTypes =
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ./src/sanity/lib/clients/getAllClients.ts
 // Variable: ALL_CLIENTS_QUERY
-// Query: *[_type == "client"] {      _id,      name,      internalId,      // Reverse‐lookup: find projects that reference this client      "projects": *[        _type == "project"         && references(^._id)      ] {        _id,        name,        internalId,        endDate      }    }
+// Query: *[_type == "client"] {      _id,      name,      internalId,      // Reverse‐lookup: find projects that reference this client      "projects": *[        _type == "project"         && references(^._id)      ] {        _id,        name,        internalId,        endDate,        contactPersons[]->{          _id,          name,          email,          phone,          designation,        }      }    }
 export type ALL_CLIENTS_QUERYResult = Array<{
   _id: string;
   name: string | null;
@@ -962,6 +982,13 @@ export type ALL_CLIENTS_QUERYResult = Array<{
     name: string | null;
     internalId: string | null;
     endDate: string | null;
+    contactPersons: Array<{
+      _id: string;
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+      designation: string | null;
+    }> | null;
   }>;
 }>;
 
@@ -1141,7 +1168,7 @@ export type ALL_PERSONNEL_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/projects/getAllProjects.ts
 // Variable: ALL_PROJECTS_QUERY
-// Query: *[_type == "project"] | order(internalId desc) {          _id,          internalId,          name,          startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,            internalId          },          quotation->{            _id,            revisionNumber,            currency,            status,            rejectionNotes,            revisions[]->|order(revisionNumber desc){              _id,              revisionNumber,              currency,              status,              rejectionNotes,              items[] {                lineTotal,              },              otherItems[] {                lineTotal,              },              vatPercentage,              advance,            },            items[] {              lineTotal,            },            otherItems[] {              lineTotal,            },            vatPercentage,            advance,          }        }
+// Query: *[_type == "project"] | order(internalId desc) {          _id,          internalId,          name,          startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,            internalId          },          contactPersons[]->{            _id,            name,            email,            phone,            designation,            client->{              _id,            },          },          quotation->{            _id,            revisionNumber,            currency,            status,            rejectionNotes,            revisions[]->|order(revisionNumber desc){              _id,              revisionNumber,              currency,              status,              rejectionNotes,              items[] {                lineTotal,              },              otherItems[] {                lineTotal,              },              vatPercentage,              advance,            },            items[] {              lineTotal,            },            otherItems[] {              lineTotal,            },            vatPercentage,            advance,          }        }
 export type ALL_PROJECTS_QUERYResult = Array<{
   _id: string;
   internalId: string | null;
@@ -1153,6 +1180,16 @@ export type ALL_PROJECTS_QUERYResult = Array<{
     _id: string;
     name: string | null;
     internalId: string | null;
+  }> | null;
+  contactPersons: Array<{
+    _id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    designation: string | null;
+    client: {
+      _id: string;
+    } | null;
   }> | null;
   quotation: {
     _id: string;
@@ -1586,6 +1623,143 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
   } | null;
 }>;
 
+// Source: ./src/sanity/lib/requests-for-information/getAllRFIs.ts
+// Variable: ALL_RFIS_QUERY
+// Query: *[_type == "rfi"] | order(dateSubmitted desc) {          _id,          initiationType,          project->{            _id,            name,            internalId          },          client->{            _id,            name,            internalId          },          subject,          description,          labInitiator->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labReceiver->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labInitiatorExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          clientReceiver->{            _id,            name,            email,            phone,            designation,          },          clientInitiator->{            _id,            name,            email,            phone,            designation,          },          labReceiverExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          attachments[] {            asset->{                _id,                url,                originalFilename,                size,                mimeType,            },          },          status,          dateSubmitted,          dateResolved,          conversation[] {            _key,            message,            sentByClient,            clientSender->{              _id,              name,              email,              phone,              designation,            },            labSender->{              _id,              fullName,              email,              phone,              departmentRoles[]{                department->{                  _id,                  name,                },                role,              },            },            attachments[] {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            timestamp,          },        }
+export type ALL_RFIS_QUERYResult = Array<{
+  _id: string;
+  initiationType:
+    | "external_internal"
+    | "internal_external"
+    | "internal_internal"
+    | null;
+  project: {
+    _id: string;
+    name: string | null;
+    internalId: string | null;
+  } | null;
+  client: {
+    _id: string;
+    name: string | null;
+    internalId: string | null;
+  } | null;
+  subject: string | null;
+  description: string | null;
+  labInitiator: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  labReceiver: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  labInitiatorExternal: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  clientReceiver: {
+    _id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    designation: string | null;
+  } | null;
+  clientInitiator: {
+    _id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    designation: string | null;
+  } | null;
+  labReceiverExternal: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  attachments: Array<{
+    asset: {
+      _id: string;
+      url: string | null;
+      originalFilename: string | null;
+      size: number | null;
+      mimeType: string | null;
+    } | null;
+  }> | null;
+  status: "in_progress" | "open" | "resolved" | null;
+  dateSubmitted: string | null;
+  dateResolved: string | null;
+  conversation: Array<{
+    _key: string;
+    message: string | null;
+    sentByClient: boolean | null;
+    clientSender: {
+      _id: string;
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+      designation: string | null;
+    } | null;
+    labSender: {
+      _id: string;
+      fullName: string | null;
+      email: string | null;
+      phone: string | null;
+      departmentRoles: Array<{
+        department: {
+          _id: string;
+          name: null;
+        } | null;
+        role: string | null;
+      }> | null;
+    } | null;
+    attachments: Array<{
+      asset: {
+        _id: string;
+        url: string | null;
+        originalFilename: string | null;
+        size: number | null;
+        mimeType: string | null;
+      } | null;
+    }> | null;
+    timestamp: string | null;
+  }> | null;
+}>;
+
 // Source: ./src/sanity/lib/services/getAllSampleClasses.ts
 // Variable: ALL_SAMPLE_CLASSES_QUERY
 // Query: *[_type == "sampleClass"] {            _id,             name,            description,            subclasses[] {                name,                key            }        }
@@ -1745,14 +1919,15 @@ export type TEST_METHOD_BY_ID_QUERYResult = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate\n      }\n    }\n  ': ALL_CLIENTS_QUERYResult;
+    '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate,\n        contactPersons[]->{\n          _id,\n          name,\n          email,\n          phone,\n          designation,\n        }\n      }\n    }\n  ': ALL_CLIENTS_QUERYResult;
     '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            client->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
     '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n              _id,\n              internalId,\n              name,\n              startDate, \n              endDate, \n              stagesCompleted, \n              clients[]->{\n                _id, \n                name,\n                internalId\n              },\n              quotation->{\n                _id,\n                revisionNumber,\n                currency,\n                status,\n                rejectionNotes,\n                revisions[]->|order(revisionNumber desc){\n                  _id,\n                  revisionNumber,\n                  currency,\n                  status,\n                  rejectionNotes,\n                  items[] {\n                    lineTotal,\n                  },\n                  otherItems[] {\n                    lineTotal,\n                  },\n                  vatPercentage,\n                  advance,\n                },\n                items[] {\n                  lineTotal,\n                },\n                otherItems[] {\n                  lineTotal,\n                },\n                vatPercentage,\n                advance,\n              }\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERYResult;
     '\n    *[_type == "contactPerson" && email == $email && client._ref == $clientId] {\n      _id,\n      name,\n      email,\n      client->{\n        _id,\n        name\n      }\n    }\n  ': CONTACT_BY_EMAIL_AND_CLIENT_QUERYResult;
     '\n        *[_type == "department"] {\n          _id,\n          department,\n          roles\n        }\n  ': ALL_DEPARTMENTS_QUERYResult;
     '\n        *[_type == "personnel"] | order(internalId desc) {\n          _id,\n          internalId,\n          fullName,\n          email,\n          phone,\n          departmentRoles[] {\n            department->{\n              _id,\n              department\n            },\n            role\n          },\n          projects[]->{\n            _id,\n            name,\n            internalId\n          },\n          status\n        }\n  ': ALL_PERSONNEL_QUERYResult;
-    '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              items[] {\n                lineTotal,\n              },\n              otherItems[] {\n                lineTotal,\n              },\n              vatPercentage,\n              advance,\n            },\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n            advance,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
+    '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              items[] {\n                lineTotal,\n              },\n              otherItems[] {\n                lineTotal,\n              },\n              vatPercentage,\n              advance,\n            },\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n            advance,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            invoice {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              quotationNumber,\n              quotationDate,\n              acquisitionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              invoice {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              items[] {\n                service -> {\n                  _id,\n                  testParameter,\n                  sampleClass -> {\n                    _id,\n                    name,\n                  },\n                },\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n                testMethod->{\n                  _id,\n                  code,\n                  standard->{\n                    _id,\n                    acronym,\n                  },\n                },\n              },\n              otherItems[] {\n                type,\n                activity,\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n              },\n              vatPercentage,\n              paymentNotes,\n              advance,\n              grandTotal,\n              subtotal,\n              payments[] {\n                _key,\n                paymentTime,\n                paymentType,\n                amount,\n                paymentMode,\n                currency,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n                resubmissions[] {\n                  _key,\n                  amount,\n                  paymentTime,\n                  paymentMode,\n                  internalNotes,\n                  internalStatus,\n                  internalDecisionTime,\n                  internalDecisionBy->{\n                    _id,\n                    internalId,\n                    fullName,\n                    email,\n                    phone,\n                    status,\n                    departmentRoles[]->{\n                      department->{\n                        _id,\n                        name,\n                      },\n                      role,\n                    },\n                  },\n                  paymentProof {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      size,\n                      mimeType,\n                    },\n                  },\n                  receipt {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      name,\n                      mimeType,\n                      size,\n                    },\n                  },\n                },\n              },\n              file {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n            },\n            items[] {\n              service -> {\n                _id,\n                testParameter,\n                sampleClass -> {\n                  _id,\n                  name,\n                },\n              },\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                code,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            advance,\n            grandTotal,\n            subtotal,\n            payments[] {\n              _key,\n              paymentTime,\n              paymentType,\n              amount,\n              paymentMode,\n              currency,\n              internalNotes,\n              internalStatus,\n              internalDecisionTime,\n              internalDecisionBy->{\n                _id,\n                internalId,\n                fullName,\n                email,\n                phone,\n                status,\n                departmentRoles[]->{\n                  department->{\n                    _id,\n                    name,\n                  },\n                  role,\n                },\n              },\n              resubmissions[] {\n                _key,\n                amount,\n                paymentTime,\n                paymentMode,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n              },\n              paymentProof {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              receipt {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  name,\n                  mimeType,\n                  size,\n                },\n              },              \n            },\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
+    '\n        *[_type == "rfi"] | order(dateSubmitted desc) {\n          _id,\n          initiationType,\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceiver->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceiver->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiverExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': ALL_RFIS_QUERYResult;
     '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
     '\n        *[_type == "service"] {\n            _id, \n            status,\n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            \n        }\n  ': ALL_SERVICES_QUERYResult;
     '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;
