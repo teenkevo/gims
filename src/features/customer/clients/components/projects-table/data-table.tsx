@@ -35,14 +35,20 @@ import { useState } from "react";
 import { useRBAC } from "@/components/rbac-context";
 
 interface DataTableProps<TData, TValue> {
-  data: ALL_PROJECTS_QUERYResult;
+  data: CLIENT_BY_ID_QUERYResult[number]["projects"];
   client: CLIENT_BY_ID_QUERYResult[number];
 }
 
-export function DataTable<TData, TValue>({ data, client }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+  data,
+  client,
+}: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
@@ -52,7 +58,10 @@ export function DataTable<TData, TValue>({ data, client }: DataTableProps<TData,
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns(client) as ColumnDef<ALL_PROJECTS_QUERYResult[number]>[],
+    () =>
+      getColumns(client) as ColumnDef<
+        CLIENT_BY_ID_QUERYResult[number]["projects"][number]
+      >[],
     [data, role]
   );
 
@@ -100,7 +109,10 @@ export function DataTable<TData, TValue>({ data, client }: DataTableProps<TData,
                     <TableHead key={header.id} colSpan={header.colSpan}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -110,17 +122,26 @@ export function DataTable<TData, TValue>({ data, client }: DataTableProps<TData,
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No projects.
                 </TableCell>
               </TableRow>
