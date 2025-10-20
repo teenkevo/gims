@@ -1,4 +1,5 @@
 import { useState, useTransition } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { RFI, ConversationMessage } from "../types/rfi.ts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +81,7 @@ export function RFIDetail({
   onDeleteRFI,
   onBackToList,
 }: RFIDetailProps) {
+  const isMobile = useIsMobile();
   const [newMessage, setNewMessage] = useState("");
   const [newStatus, setNewStatus] = useState(rfi.status);
   const [isPending, startTransition] = useTransition();
@@ -327,8 +329,8 @@ export function RFIDetail({
   };
 
   return (
-    <div className="h-full">
-      <ScrollArea className="h-full">
+    <div className="h-full flex flex-col">
+      <ScrollArea className="h-full overflow-hidden">
         {/* Mobile Back Button */}
         {onBackToList && (
           <div className="lg:hidden mb-4">
@@ -387,7 +389,7 @@ export function RFIDetail({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant={`${isMobile ? "outline" : "ghost"}`}
                       size="sm"
                       className="h-8 w-8 p-0 hover:bg-muted/50"
                     >
@@ -677,7 +679,7 @@ export function RFIDetail({
                       message.sentByClient ? "justify-start" : "justify-end"
                     )}
                   >
-                    <div className="flex items-start gap-2 max-w-[80%]">
+                    <div className="flex items-start gap-2">
                       {/* Action button - appears on hover */}
                       {rfi.status !== "resolved" && (
                         <MessageHoverPopup
@@ -831,7 +833,7 @@ export function RFIDetail({
 
           {/* Reply Section */}
           {rfi.status !== "resolved" && (
-            <div className="p-4 sm:p-6 border-t">
+            <div className="p-4 px-1 md:px-4 md:py-4 sm:p-6 border-t">
               <div className="space-y-3">
                 <div className="text-sm font-medium mb-2">
                   Reply to this RFI
@@ -913,7 +915,7 @@ export function RFIDetail({
             <span className="font-bold">Warning</span>: This action is not
             reversible. Please be certain.
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col md:flex-row gap-2">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}

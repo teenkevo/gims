@@ -372,7 +372,7 @@ export function CreateRFIDialog({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 h-[460px] px-4 md:px-1 py-4 overflow-y-auto pb-20"
+        className="space-y-8 h-[460px] md:px-1 py-4 overflow-y-auto pb-20"
       >
         <FormField
           control={form.control}

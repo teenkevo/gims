@@ -59,7 +59,7 @@ export default function RFIModule({
 
   // Helper function to render RFI list and detail view
   const renderRFIContent = (filteredRFIs: ALL_RFIS_QUERYResult) => (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-15rem)] overflow-hidden">
       {/* Mobile: Show list OR detail, Desktop: Show both */}
       <div
         className={`${selectedRFI ? "hidden lg:block" : "block"} w-full lg:w-1/2 xl:w-1/3 md:border-r flex flex-col h-full`}
