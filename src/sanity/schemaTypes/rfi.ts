@@ -319,6 +319,63 @@ export const rfi = defineType({
       initialValue: "open",
     }),
     defineField({
+      name: "statusHistory",
+      title: "Status History",
+      type: "array",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({
+              name: "status",
+              type: "string",
+              title: "Status",
+              options: {
+                list: [
+                  { title: "Open", value: "open" },
+                  { title: "In Progress", value: "in_progress" },
+                  { title: "Resolved", value: "resolved" },
+                ],
+              },
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "timestamp",
+              type: "datetime",
+              title: "Change Date",
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "changedBy",
+              type: "reference",
+              to: [{ type: "personnel" }],
+              title: "Changed By",
+            }),
+            defineField({
+              name: "reason",
+              type: "text",
+              title: "Reason for Change",
+              description:
+                "Reason for the status change (required for reopening)",
+            }),
+            defineField({
+              name: "previousStatus",
+              type: "string",
+              title: "Previous Status",
+              options: {
+                list: [
+                  { title: "Open", value: "open" },
+                  { title: "In Progress", value: "in_progress" },
+                  { title: "Resolved", value: "resolved" },
+                ],
+              },
+            }),
+          ],
+        },
+      ],
+      description: "Complete audit trail of all status changes",
+    }),
+    defineField({
       name: "conversation",
       title: "Conversation Thread",
       type: "array",

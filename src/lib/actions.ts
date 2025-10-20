@@ -2086,6 +2086,16 @@ export async function createRFI(prevState: any, formData: FormData) {
       dateSubmitted: new Date().toISOString(),
       attachments: [],
       conversation: [],
+      statusHistory: [
+        {
+          _type: "object",
+          status: "open",
+          timestamp: new Date().toISOString(),
+          previousStatus: null,
+          reason: "RFI created",
+          changedBy: { _type: "reference", _ref: rfiManager },
+        },
+      ],
     };
 
     // Add conditional fields based on initiation type
@@ -2319,28 +2329,49 @@ export async function sendMessageToRFI(prevState: any, formData: FormData) {
       messageData.labSender = { _type: "reference", _ref: labSender };
     }
 
-    // Get the current RFI to check conversation length
+    // Get the current RFI to check conversation length and status
     const currentRFI = await writeClient.getDocument(rfiId);
     const currentConversationLength = currentRFI?.conversation?.length || 0;
+    const currentStatus = currentRFI?.status || "open";
 
     // Determine if this is the first message and set status accordingly
     const isFirstMessage = currentConversationLength === 0;
-    const newStatus = isFirstMessage ? "in_progress" : currentRFI?.status;
+    const newStatus = isFirstMessage ? "in_progress" : currentStatus;
 
+    // First, add the message to conversation
     const patch = writeClient
       .patch(rfiId)
       .setIfMissing({ conversation: [] })
       .setIfMissing({ attachments: [] })
       .append("conversation", [messageData]);
 
-    // Update status if this is the first message
-    if (isFirstMessage) {
-      patch.set({ status: newStatus });
-    }
-
     const result = await patch.commit({
       autoGenerateArrayKeys: true,
     });
+
+    // If this was the first message and we need to update status, do it separately
+    if (isFirstMessage && currentStatus === "open") {
+      const statusHistoryEntry = {
+        _type: "object",
+        status: "in_progress",
+        timestamp: new Date().toISOString(),
+        previousStatus: "open",
+        reason: "First message sent - conversation started",
+        changedBy:
+          sentByClient === "true"
+            ? { _type: "reference", _ref: clientSender }
+            : { _type: "reference", _ref: labSender },
+      };
+
+      await writeClient
+        .patch(rfiId)
+        .setIfMissing({ statusHistory: [] })
+        .set({ status: "in_progress" })
+        .append("statusHistory", [statusHistoryEntry])
+        .commit({
+          autoGenerateArrayKeys: true,
+        });
+    }
     revalidateTag("rfis");
     return { result, status: "ok" };
   } catch (error) {
@@ -2378,15 +2409,29 @@ export async function markMessageAsOfficial(rfiId: string, messageKey: string) {
       };
     });
 
-    // Update the RFI with the modified conversation and set status to resolved
+    // Create status history entry for resolution
+    const statusHistoryEntry = {
+      _type: "object",
+      status: "resolved",
+      timestamp: new Date().toISOString(),
+      previousStatus: rfi.status || "in_progress",
+      reason: "Message marked as official response",
+      changedBy: rfi.rfiManager || undefined,
+    };
+
+    // Update the RFI with the modified conversation, status, and history
     const result = await writeClient
       .patch(rfiId)
+      .setIfMissing({ statusHistory: [] })
       .set({
         conversation: updatedConversation,
         status: "resolved",
         dateResolved: new Date().toISOString(),
       })
-      .commit();
+      .append("statusHistory", [statusHistoryEntry])
+      .commit({
+        autoGenerateArrayKeys: true,
+      });
 
     revalidateTag(`rfis`);
     return { result, status: "ok" };
@@ -2424,18 +2469,107 @@ export async function unmarkMessageAsOfficial(
       return message;
     });
 
-    // Update the RFI with the modified conversation
+    // Create status history entry for unmarking (revert to in_progress)
+    const statusHistoryEntry = {
+      _type: "object",
+      status: "in_progress",
+      timestamp: new Date().toISOString(),
+      previousStatus: "resolved",
+      reason: "Official response status removed",
+      changedBy: rfi.rfiManager || undefined,
+    };
+
+    // Update the RFI with the modified conversation and status history
     const result = await writeClient
       .patch(rfiId)
+      .setIfMissing({ statusHistory: [] })
       .set({
         conversation: updatedConversation,
+        status: "in_progress",
+        dateResolved: null,
       })
-      .commit();
+      .append("statusHistory", [statusHistoryEntry])
+      .commit({
+        autoGenerateArrayKeys: true,
+      });
 
     revalidateTag(`rfi-${rfiId}`);
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error unmarking message as official:", error);
     return { error: "Failed to unmark message as official", status: "error" };
+  }
+}
+
+// UPDATE RFI STATUS WITH AUDIT TRAIL
+export async function updateRFIStatus(
+  rfiId: string,
+  newStatus: "open" | "in_progress" | "resolved",
+  reason?: string,
+  changedBy?: string
+) {
+  if (!rfiId || !newStatus) {
+    return { error: "Missing required fields", status: "error" };
+  }
+
+  try {
+    // Get the current RFI document
+    const rfi = await writeClient.getDocument(rfiId);
+
+    if (!rfi) {
+      return { error: "RFI not found", status: "error" };
+    }
+
+    const currentStatus = rfi.status;
+    const currentStatusHistory = rfi.statusHistory || [];
+
+    // If reopening (going from resolved to any other status), require reason
+    if (currentStatus === "resolved" && newStatus !== "resolved" && !reason) {
+      return {
+        error: "Reason is required when reopening an RFI",
+        status: "error",
+      };
+    }
+
+    // Create new status history entry
+    const statusHistoryEntry = {
+      _type: "object",
+      status: newStatus,
+      timestamp: new Date().toISOString(),
+      previousStatus: currentStatus,
+      reason: reason || "",
+      changedBy: changedBy
+        ? { _type: "reference", _ref: changedBy }
+        : undefined,
+    };
+
+    // Prepare the update data
+    const updateData: any = {
+      status: newStatus,
+      statusHistory: [...currentStatusHistory, statusHistoryEntry],
+    };
+
+    // Reset dateResolved if reopening
+    if (currentStatus === "resolved" && newStatus !== "resolved") {
+      updateData.dateResolved = null;
+    }
+
+    // Set dateResolved if resolving
+    if (newStatus === "resolved") {
+      updateData.dateResolved = new Date().toISOString();
+    }
+
+    // Update the RFI
+    const result = await writeClient.patch(rfiId).set(updateData).commit({
+      autoGenerateArrayKeys: true,
+    });
+
+    revalidateTag("rfis");
+    revalidateTag(`rfi-${rfiId}`);
+
+    return { result, status: "ok" };
+  } catch (error) {
+    console.error("Error updating RFI status:", error);
+    return { error: "Failed to update RFI status", status: "error" };
   }
 }

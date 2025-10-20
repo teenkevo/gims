@@ -59,10 +59,12 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ALL_RFIS_QUERYResult } from "../../../../../sanity.types.js";
-import { sendMessageToRFI, deleteRFI } from "@/lib/actions";
+import { sendMessageToRFI, deleteRFI, updateRFIStatus } from "@/lib/actions";
 import { toast } from "sonner";
 import FileUpload from "@/components/file-upload";
 import { MessageHoverPopup } from "@/components/message-hover-popup";
+import { StatusHistory } from "./status-history";
+import { ReopenRFIDialog } from "./reopen-rfi-dialog";
 
 interface RFIDetailProps {
   rfi: ALL_RFIS_QUERYResult[number];
@@ -85,6 +87,8 @@ export function RFIDetail({
   const [fileUploadKey, setFileUploadKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReopenDialogOpen, setIsReopenDialogOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() && attachedFiles.length === 0) return;
@@ -173,16 +177,43 @@ export function RFIDetail({
     });
   };
 
-  const handleStatusChange = (
-    status: ALL_RFIS_QUERYResult[number]["status"]
+  const updateStatusDirectly = async (
+    status: ALL_RFIS_QUERYResult[number]["status"],
+    reason?: string
   ) => {
-    const updatedRFI: ALL_RFIS_QUERYResult[number] = {
-      ...rfi,
-      status,
-      dateResolved: status === "resolved" ? new Date().toISOString() : null,
-    };
-    onUpdateRFI(updatedRFI);
-    setNewStatus(status);
+    setIsUpdatingStatus(true);
+    try {
+      const result = await updateRFIStatus(
+        rfi._id,
+        status || "open",
+        reason,
+        "jV1aTfIhlBR8NUdNOYrNqx" // TODO: Get current user ID from auth context
+      );
+
+      if (result.status === "ok") {
+        // Update local state optimistically
+        const updatedRFI: ALL_RFIS_QUERYResult[number] = {
+          ...rfi,
+          status,
+          dateResolved: status === "resolved" ? new Date().toISOString() : null,
+        };
+        onUpdateRFI(updatedRFI);
+        setNewStatus(status);
+        toast.success("Status updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleReopenConfirm = async (reason: string) => {
+    setIsReopenDialogOpen(false);
+    await updateStatusDirectly("open", reason);
   };
 
   const handleMessageOfficialStatusChange = (
@@ -328,15 +359,7 @@ export function RFIDetail({
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {getStatusIcon(rfi.status)}
-                <Select
-                  value={rfi.status || ""}
-                  onValueChange={(value) =>
-                    handleStatusChange(
-                      value as ALL_RFIS_QUERYResult[number]["status"]
-                    )
-                  }
-                  disabled={isPending}
-                >
+                <Select value={rfi.status || ""} disabled={true}>
                   <SelectTrigger className="w-24 sm:w-32">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -368,6 +391,15 @@ export function RFIDetail({
                       <Edit className="mr-2 h-4 w-4" />
                       Edit RFI
                     </DropdownMenuItem>
+                    {rfi.status === "resolved" && (
+                      <DropdownMenuItem
+                        onClick={() => setIsReopenDialogOpen(true)}
+                        className="text-orange-600 focus:text-orange-600"
+                      >
+                        <RefreshCcw className="mr-2 h-4 w-4" />
+                        Reopen RFI
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => setIsDeleteDialogOpen(true)}
                       className="text-destructive focus:text-destructive"
@@ -547,6 +579,12 @@ export function RFIDetail({
                   )}
               </div>
             </div>
+
+            {/* Status History */}
+            {(rfi as any).statusHistory &&
+              (rfi as any).statusHistory.length > 0 && (
+                <StatusHistory statusHistory={(rfi as any).statusHistory} />
+              )}
 
             {/* Initial Attachments */}
             {rfi.attachments && rfi.attachments.length > 0 && (
@@ -826,6 +864,14 @@ export function RFIDetail({
           <div className="h-4"></div>
         </div>
       </ScrollArea>
+
+      {/* Reopen RFI Dialog */}
+      <ReopenRFIDialog
+        isOpen={isReopenDialogOpen}
+        onOpenChange={setIsReopenDialogOpen}
+        onConfirm={handleReopenConfirm}
+        isLoading={isUpdatingStatus}
+      />
 
       {/* Delete RFI Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
