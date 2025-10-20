@@ -27,6 +27,18 @@ export default function RFIModule({
   >(null);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("open");
+
+  // Filter RFIs by status
+  const openRFIs = rfis.filter((rfi) => rfi.status === "open");
+  const inProgressRFIs = rfis.filter((rfi) => rfi.status === "in_progress");
+  const resolvedRFIs = rfis.filter((rfi) => rfi.status === "resolved");
+
+  // Handle tab change and reset selected RFI
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSelectedRFI(null); // Reset selected RFI when switching tabs
+  };
 
   const handleUpdateRFI = (updatedRFI: ALL_RFIS_QUERYResult[number]) => {
     setSelectedRFI(updatedRFI);
@@ -45,17 +57,54 @@ export default function RFIModule({
     }
   }, [rfis, selectedRFI?._id]);
 
+  // Helper function to render RFI list and detail view
+  const renderRFIContent = (filteredRFIs: ALL_RFIS_QUERYResult) => (
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Mobile: Show list OR detail, Desktop: Show both */}
+      <div
+        className={`${selectedRFI ? "hidden md:block" : "block"} w-full md:w-1/3 border-r flex flex-col h-full`}
+      >
+        {filteredRFIs && filteredRFIs.length > 0 ? (
+          <RFIList
+            rfis={filteredRFIs}
+            selectedRFI={selectedRFI}
+            onSelectRFI={setSelectedRFI}
+          />
+        ) : (
+          <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
+            No RFIs found
+          </div>
+        )}
+      </div>
+      <div
+        className={`${selectedRFI ? "block" : "hidden md:block"} w-full md:flex-1 flex flex-col h-full overflow-hidden`}
+      >
+        {selectedRFI ? (
+          <RFIDetail
+            rfi={selectedRFI as ALL_RFIS_QUERYResult[number]}
+            onUpdateRFI={handleUpdateRFI}
+            onDeleteRFI={handleDeleteRFI}
+            onBackToList={() => setSelectedRFI(null)}
+          />
+        ) : (
+          <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
+            Select an RFI to view details
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">
         Requests for Information
       </h1>
-      <Tabs defaultValue="all">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
             <TabsTrigger value="open">Open</TabsTrigger>
+            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
             <TabsTrigger value="resolved">Resolved</TabsTrigger>
           </TabsList>
           <CreateRFIDialog
@@ -65,40 +114,14 @@ export default function RFIModule({
             clients={clients}
           />
         </div>
-        <TabsContent className="border p-2" value="all">
-          <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-            {/* Mobile: Show list OR detail, Desktop: Show both */}
-            <div
-              className={`${selectedRFI ? "hidden md:block" : "block"} w-full md:w-1/3 border-r flex flex-col h-full`}
-            >
-              {rfis && rfis.length > 0 ? (
-                <RFIList
-                  rfis={rfis}
-                  selectedRFI={selectedRFI}
-                  onSelectRFI={setSelectedRFI}
-                />
-              ) : (
-                <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
-                  No RFIs found
-                </div>
-              )}
-            </div>
-            <div
-              className={`${selectedRFI ? "block" : "hidden md:block"} w-full md:flex-1 flex flex-col h-full overflow-hidden`}
-            >
-              {selectedRFI ? (
-                <RFIDetail
-                  rfi={selectedRFI as ALL_RFIS_QUERYResult[number]}
-                  onUpdateRFI={handleUpdateRFI}
-                  onDeleteRFI={handleDeleteRFI}
-                />
-              ) : (
-                <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
-                  Select an RFI to view details
-                </div>
-              )}
-            </div>
-          </div>
+        <TabsContent className="border p-2" value="open">
+          {renderRFIContent(openRFIs)}
+        </TabsContent>
+        <TabsContent className="border p-2" value="in-progress">
+          {renderRFIContent(inProgressRFIs)}
+        </TabsContent>
+        <TabsContent className="border p-2" value="resolved">
+          {renderRFIContent(resolvedRFIs)}
         </TabsContent>
       </Tabs>
 

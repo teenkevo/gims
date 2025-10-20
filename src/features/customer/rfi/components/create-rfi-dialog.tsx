@@ -579,9 +579,8 @@ export function CreateRFIDialog({
       }}
     >
       <DrawerTrigger asChild>
-        <Button>
-          <PlusCircleIcon className="h-5 w-5 mr-2 " />
-          Create New RFI
+        <Button size="icon" className="sm:hidden">
+          <PlusCircleIcon className="h-5 w-5" />
         </Button>
       </DrawerTrigger>
       <DrawerContent>
@@ -610,7 +609,7 @@ export function CreateRFIDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hidden sm:flex">
           <PlusCircleIcon className="h-5 w-5 mr-2" />
           Create New RFI
         </Button>

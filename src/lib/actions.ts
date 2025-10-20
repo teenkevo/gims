@@ -2319,14 +2319,28 @@ export async function sendMessageToRFI(prevState: any, formData: FormData) {
       messageData.labSender = { _type: "reference", _ref: labSender };
     }
 
-    const result = await writeClient
+    // Get the current RFI to check conversation length
+    const currentRFI = await writeClient.getDocument(rfiId);
+    const currentConversationLength = currentRFI?.conversation?.length || 0;
+
+    // Determine if this is the first message and set status accordingly
+    const isFirstMessage = currentConversationLength === 0;
+    const newStatus = isFirstMessage ? "in_progress" : currentRFI?.status;
+
+    const patch = writeClient
       .patch(rfiId)
       .setIfMissing({ conversation: [] })
       .setIfMissing({ attachments: [] })
-      .append("conversation", [messageData])
-      .commit({
-        autoGenerateArrayKeys: true,
-      });
+      .append("conversation", [messageData]);
+
+    // Update status if this is the first message
+    if (isFirstMessage) {
+      patch.set({ status: newStatus });
+    }
+
+    const result = await patch.commit({
+      autoGenerateArrayKeys: true,
+    });
     revalidateTag("rfis");
     return { result, status: "ok" };
   } catch (error) {
@@ -2364,11 +2378,13 @@ export async function markMessageAsOfficial(rfiId: string, messageKey: string) {
       };
     });
 
-    // Update the RFI with the modified conversation
+    // Update the RFI with the modified conversation and set status to resolved
     const result = await writeClient
       .patch(rfiId)
       .set({
         conversation: updatedConversation,
+        status: "resolved",
+        dateResolved: new Date().toISOString(),
       })
       .commit();
 

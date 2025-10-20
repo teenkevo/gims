@@ -68,9 +68,15 @@ interface RFIDetailProps {
   rfi: ALL_RFIS_QUERYResult[number];
   onUpdateRFI: (rfi: ALL_RFIS_QUERYResult[number]) => void;
   onDeleteRFI?: () => void;
+  onBackToList?: () => void;
 }
 
-export function RFIDetail({ rfi, onUpdateRFI, onDeleteRFI }: RFIDetailProps) {
+export function RFIDetail({
+  rfi,
+  onUpdateRFI,
+  onDeleteRFI,
+  onBackToList,
+}: RFIDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [newStatus, setNewStatus] = useState(rfi.status);
   const [isPending, startTransition] = useTransition();
@@ -140,10 +146,15 @@ export function RFIDetail({ rfi, onUpdateRFI, onDeleteRFI }: RFIDetailProps) {
             timestamp: new Date().toISOString(),
           };
 
+          // Determine new status based on conversation length
+          const currentConversationLength = rfi.conversation?.length || 0;
+          const newStatus =
+            currentConversationLength === 0 ? "in_progress" : rfi.status;
+
           const updatedRFI: ALL_RFIS_QUERYResult[number] = {
             ...rfi,
             conversation: [...(rfi.conversation || []), message],
-            status: rfi.status === "open" ? "in_progress" : rfi.status,
+            status: newStatus,
           };
 
           onUpdateRFI(updatedRFI);
@@ -197,9 +208,14 @@ export function RFIDetail({ rfi, onUpdateRFI, onDeleteRFI }: RFIDetailProps) {
       return message;
     });
 
+    // Determine new status - if marking as official, change to resolved
+    const newStatus = isOfficial ? "resolved" : rfi.status;
+
     const updatedRFI: ALL_RFIS_QUERYResult[number] = {
       ...rfi,
       conversation: updatedConversation,
+      status: newStatus,
+      dateResolved: isOfficial ? new Date().toISOString() : rfi.dateResolved,
     };
     onUpdateRFI(updatedRFI);
   };
@@ -261,14 +277,26 @@ export function RFIDetail({ rfi, onUpdateRFI, onDeleteRFI }: RFIDetailProps) {
     }
   };
 
-  console.log(rfi.conversation);
-
   return (
     <div className="h-full">
       <ScrollArea className="h-full">
         <div>
           {/* Header Section */}
-          <div className="p-4 sm:p-6 border-b">
+          <div className="p-4 sm:p-4 border-b">
+            {/* Mobile Back Button */}
+            {onBackToList && (
+              <div className="md:hidden mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBackToList}
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to RFI List
+                </Button>
+              </div>
+            )}
             <div className="flex items-start justify-between mb-4 gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
