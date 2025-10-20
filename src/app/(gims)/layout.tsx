@@ -7,7 +7,8 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import NextBreadcrumb from "@/components/breadcrumbs";
 
-//TODO: work on per page metadata below, this layout is shared
+//TODO:
+//work on per page metadata below, this layout is shared
 export const metadata: Metadata = {
   title: "GIMS",
   description: "GIMS pages that don't share a layout with the home page", //TODO: work on meta description
