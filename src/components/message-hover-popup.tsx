@@ -18,6 +18,7 @@ interface MessageHoverPopupProps {
   rfiId: string;
   messageKey: string;
   isOfficialResponse: boolean;
+  rfiStatus: string;
   children: React.ReactNode;
   onMessageUpdate?: () => void;
 }
@@ -26,6 +27,7 @@ export function MessageHoverPopup({
   rfiId,
   messageKey,
   isOfficialResponse,
+  rfiStatus,
   children,
   onMessageUpdate,
 }: MessageHoverPopupProps) {
@@ -74,6 +76,11 @@ export function MessageHoverPopup({
       }
     });
   };
+
+  // If RFI is resolved, don't show the popup - just render children
+  if (rfiStatus === "resolved") {
+    return <>{children}</>;
+  }
 
   return (
     <>

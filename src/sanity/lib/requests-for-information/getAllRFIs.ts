@@ -107,6 +107,18 @@ export const getAllRFIs = async () => {
             },
           },
           status,
+          statusHistory[] {
+            _key,
+            status,
+            timestamp,
+            previousStatus,
+            reason,
+            officialMessageKey,
+            changedBy->{
+              _id,
+              email,
+            },
+          },
           dateSubmitted,
           dateResolved,
           conversation[] {

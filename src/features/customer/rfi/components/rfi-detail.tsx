@@ -179,7 +179,8 @@ export function RFIDetail({
 
   const updateStatusDirectly = async (
     status: ALL_RFIS_QUERYResult[number]["status"],
-    reason?: string
+    reason?: string,
+    officialMessageKey?: string
   ) => {
     setIsUpdatingStatus(true);
     try {
@@ -187,7 +188,8 @@ export function RFIDetail({
         rfi._id,
         status || "open",
         reason,
-        "jV1aTfIhlBR8NUdNOYrNqx" // TODO: Get current user ID from auth context
+        "jV1aTfIhlBR8NUdNOYrNqx", // TODO: Get current user ID from auth context
+        officialMessageKey
       );
 
       if (result.status === "ok") {
@@ -581,9 +583,12 @@ export function RFIDetail({
             </div>
 
             {/* Status History */}
-            {(rfi as any).statusHistory &&
+            {(rfi as ALL_RFIS_QUERYResult[number]).statusHistory &&
               (rfi as any).statusHistory.length > 0 && (
-                <StatusHistory statusHistory={(rfi as any).statusHistory} />
+                <StatusHistory
+                  statusHistory={(rfi as any).statusHistory}
+                  conversation={rfi.conversation || []}
+                />
               )}
 
             {/* Initial Attachments */}
@@ -659,29 +664,35 @@ export function RFIDetail({
                   >
                     <div className="flex items-start gap-2 max-w-[80%]">
                       {/* Action button - appears on hover */}
-                      <MessageHoverPopup
-                        rfiId={rfi._id}
-                        messageKey={message._key}
-                        isOfficialResponse={message.isOfficialResponse || false}
-                        onMessageUpdate={() => {
-                          // Update local state optimistically
-                          // The actual database update is handled by the MessageHoverPopup component
-                          // We need to determine the new official status based on the current action
-                          const newOfficialStatus = !message.isOfficialResponse;
-                          handleMessageOfficialStatusChange(
-                            message._key,
-                            newOfficialStatus
-                          );
-                        }}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 hover:bg-muted/50 shrink-0 mt-8"
+                      {rfi.status !== "resolved" && (
+                        <MessageHoverPopup
+                          rfiId={rfi._id}
+                          messageKey={message._key}
+                          isOfficialResponse={
+                            message.isOfficialResponse || false
+                          }
+                          rfiStatus={rfi.status || "open"}
+                          onMessageUpdate={() => {
+                            // Update local state optimistically
+                            // The actual database update is handled by the MessageHoverPopup component
+                            // We need to determine the new official status based on the current action
+                            const newOfficialStatus =
+                              !message.isOfficialResponse;
+                            handleMessageOfficialStatusChange(
+                              message._key,
+                              newOfficialStatus
+                            );
+                          }}
                         >
-                          <MoreVertical className="w-3 h-3" />
-                        </Button>
-                      </MessageHoverPopup>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-6 w-6 p-0 hover:bg-muted/50 shrink-0 mt-8"
+                          >
+                            <MoreVertical className="w-3 h-3" />
+                          </Button>
+                        </MessageHoverPopup>
+                      )}
 
                       <div className="flex flex-col flex-1">
                         {/* Sender info */}

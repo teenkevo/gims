@@ -2416,6 +2416,7 @@ export async function markMessageAsOfficial(rfiId: string, messageKey: string) {
       timestamp: new Date().toISOString(),
       previousStatus: rfi.status || "in_progress",
       reason: "Message marked as official response",
+      officialMessageKey: messageKey,
       changedBy: rfi.rfiManager || undefined,
     };
 
@@ -2476,6 +2477,7 @@ export async function unmarkMessageAsOfficial(
       timestamp: new Date().toISOString(),
       previousStatus: "resolved",
       reason: "Official response status removed",
+      officialMessageKey: null, // Clear the official message key
       changedBy: rfi.rfiManager || undefined,
     };
 
@@ -2506,7 +2508,8 @@ export async function updateRFIStatus(
   rfiId: string,
   newStatus: "open" | "in_progress" | "resolved",
   reason?: string,
-  changedBy?: string
+  changedBy?: string,
+  officialMessageKey?: string
 ) {
   if (!rfiId || !newStatus) {
     return { error: "Missing required fields", status: "error" };
@@ -2538,6 +2541,7 @@ export async function updateRFIStatus(
       timestamp: new Date().toISOString(),
       previousStatus: currentStatus,
       reason: reason || "",
+      officialMessageKey: officialMessageKey || undefined,
       changedBy: changedBy
         ? { _type: "reference", _ref: changedBy }
         : undefined,

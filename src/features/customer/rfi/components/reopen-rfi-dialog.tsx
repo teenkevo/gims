@@ -69,8 +69,8 @@ export function ReopenRFIDialog({
           <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-orange-800 dark:text-orange-200">
-                <p className="font-medium mb-1">Important:</p>
+              <div className="text-xs text-orange-800 dark:text-orange-200">
+                <p className="font-bold text-sm mb-1">Important:</p>
                 <p>
                   Reopening this RFI will reset the resolved date and add this
                   action to the status history.

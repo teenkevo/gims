@@ -370,6 +370,13 @@ export const rfi = defineType({
                 ],
               },
             }),
+            defineField({
+              name: "officialMessageKey",
+              type: "string",
+              title: "Official Message Key",
+              description:
+                "The message key that was marked as the official response when status changed to resolved",
+            }),
           ],
         },
       ],
