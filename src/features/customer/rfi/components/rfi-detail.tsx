@@ -329,7 +329,7 @@ export function RFIDetail({
               <div className="flex items-center gap-2 shrink-0">
                 {getStatusIcon(rfi.status)}
                 <Select
-                  value={newStatus || ""}
+                  value={rfi.status || ""}
                   onValueChange={(value) =>
                     handleStatusChange(
                       value as ALL_RFIS_QUERYResult[number]["status"]

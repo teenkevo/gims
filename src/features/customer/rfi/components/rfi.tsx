@@ -27,7 +27,7 @@ export default function RFIModule({
   >(null);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("open");
+  const [activeTab, setActiveTab] = useState("all");
 
   // Filter RFIs by status
   const openRFIs = rfis.filter((rfi) => rfi.status === "open");
@@ -103,6 +103,7 @@ export default function RFIModule({
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className="flex items-center justify-between">
           <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="open">Open</TabsTrigger>
             <TabsTrigger value="in-progress">In Progress</TabsTrigger>
             <TabsTrigger value="resolved">Resolved</TabsTrigger>
@@ -114,6 +115,9 @@ export default function RFIModule({
             clients={clients}
           />
         </div>
+        <TabsContent className="border p-2" value="all">
+          {renderRFIContent(rfis)}
+        </TabsContent>
         <TabsContent className="border p-2" value="open">
           {renderRFIContent(openRFIs)}
         </TabsContent>
