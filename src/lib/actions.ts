@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   ALL_SERVICES_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
+  ALL_RFIS_QUERYResult,
 } from "../../sanity.types";
 import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 
@@ -1871,6 +1872,62 @@ export async function deleteProject(
     const result = await tx.commit({ returnDocuments: false });
 
     revalidateTag("projects");
+    return { result, status: "ok" };
+  } catch (error) {
+    console.log(error);
+    return { error, status: "error" };
+  }
+}
+
+// DELETE RFI
+export async function deleteRFI(rfi: ALL_RFIS_QUERYResult[number]) {
+  const rfiId = rfi._id;
+  const tx = writeClient.transaction();
+
+  try {
+    // Collect all asset IDs to delete
+    const assetIdsToDelete: string[] = [];
+
+    // Helper function to push unique asset IDs
+    const pushAssetId = (assetId?: string | null) => {
+      if (assetId && !assetIdsToDelete.includes(assetId)) {
+        assetIdsToDelete.push(assetId);
+      }
+    };
+
+    // 1) Handle initial attachments
+    if (rfi.attachments) {
+      for (const attachment of rfi.attachments) {
+        if (attachment.asset?._id) {
+          pushAssetId(attachment.asset._id);
+        }
+      }
+    }
+
+    // 2) Handle conversation message attachments
+    if (rfi.conversation) {
+      for (const message of rfi.conversation) {
+        if (message.attachments) {
+          for (const attachment of message.attachments) {
+            if (attachment.asset?._id) {
+              pushAssetId(attachment.asset._id);
+            }
+          }
+        }
+      }
+    }
+
+    // 3) Delete all assets first
+    for (const assetId of assetIdsToDelete) {
+      tx.delete(assetId);
+    }
+
+    // 4) Delete the RFI document
+    tx.delete(rfiId);
+
+    const result = await tx.commit({ returnDocuments: false });
+
+    revalidateTag("rfis");
     return { result, status: "ok" };
   } catch (error) {
     console.log(error);

@@ -12,6 +12,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ArrowRight,
   ArrowLeft,
   Users,
@@ -34,11 +53,13 @@ import {
   Star,
   Briefcase,
   MoreVertical,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ALL_RFIS_QUERYResult } from "../../../../../sanity.types.js";
-import { sendMessageToRFI } from "@/lib/actions";
+import { sendMessageToRFI, deleteRFI } from "@/lib/actions";
 import { toast } from "sonner";
 import FileUpload from "@/components/file-upload";
 import { MessageHoverPopup } from "@/components/message-hover-popup";
@@ -46,15 +67,18 @@ import { MessageHoverPopup } from "@/components/message-hover-popup";
 interface RFIDetailProps {
   rfi: ALL_RFIS_QUERYResult[number];
   onUpdateRFI: (rfi: ALL_RFIS_QUERYResult[number]) => void;
+  onDeleteRFI?: () => void;
 }
 
-export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
+export function RFIDetail({ rfi, onUpdateRFI, onDeleteRFI }: RFIDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [newStatus, setNewStatus] = useState(rfi.status);
   const [isPending, startTransition] = useTransition();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [fileUploadKey, setFileUploadKey] = useState(0);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() && attachedFiles.length === 0) return;
@@ -180,6 +204,26 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
     onUpdateRFI(updatedRFI);
   };
 
+  const handleDeleteRFI = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteRFI(rfi);
+      if (result.status === "ok") {
+        toast.success("RFI has been deleted");
+        setIsDeleteDialogOpen(false);
+        // Call the callback to handle navigation/state updates
+        onDeleteRFI?.();
+      } else {
+        toast.error("Failed to delete RFI");
+      }
+    } catch (error) {
+      console.error("Error deleting RFI:", error);
+      toast.error("Failed to delete RFI");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const getInitiationTypeIcon = (
     type: ALL_RFIS_QUERYResult[number]["initiationType"]
   ) => {
@@ -274,6 +318,37 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
                     <SelectItem value="resolved">Resolved</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Actions Dropdown Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        // TODO: Implement edit RFI functionality
+                        toast.info("Edit RFI functionality coming soon");
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit RFI
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete RFI
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
@@ -723,6 +798,39 @@ export function RFIDetail({ rfi, onUpdateRFI }: RFIDetailProps) {
           <div className="h-4"></div>
         </div>
       </ScrollArea>
+
+      {/* Delete RFI Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete RFI</DialogTitle>
+            <DialogDescription>
+              This RFI will be permanently deleted, along with all of its
+              messages and attachments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
+            <span className="font-bold">Warning</span>: This action is not
+            reversible. Please be certain.
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteRFI}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete RFI"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

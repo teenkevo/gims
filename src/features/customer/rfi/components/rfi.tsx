@@ -32,6 +32,10 @@ export default function RFIModule({
     setSelectedRFI(updatedRFI);
   };
 
+  const handleDeleteRFI = () => {
+    setSelectedRFI(null);
+  };
+
   useEffect(() => {
     if (selectedRFI && rfis) {
       const updatedRFI = rfis.find((rfi) => rfi._id === selectedRFI._id);
@@ -67,11 +71,17 @@ export default function RFIModule({
             <div
               className={`${selectedRFI ? "hidden md:block" : "block"} w-full md:w-1/3 border-r flex flex-col h-full`}
             >
-              <RFIList
-                rfis={rfis}
-                selectedRFI={selectedRFI}
-                onSelectRFI={setSelectedRFI}
-              />
+              {rfis && rfis.length > 0 ? (
+                <RFIList
+                  rfis={rfis}
+                  selectedRFI={selectedRFI}
+                  onSelectRFI={setSelectedRFI}
+                />
+              ) : (
+                <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
+                  No RFIs found
+                </div>
+              )}
             </div>
             <div
               className={`${selectedRFI ? "block" : "hidden md:block"} w-full md:flex-1 flex flex-col h-full overflow-hidden`}
@@ -80,6 +90,7 @@ export default function RFIModule({
                 <RFIDetail
                   rfi={selectedRFI as ALL_RFIS_QUERYResult[number]}
                   onUpdateRFI={handleUpdateRFI}
+                  onDeleteRFI={handleDeleteRFI}
                 />
               ) : (
                 <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
