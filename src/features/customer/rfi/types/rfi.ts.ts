@@ -1,5 +1,6 @@
 export interface RFI {
   id: string;
+  rfiManager: Personnel;
   initiationType:
     | "internal_internal"
     | "internal_external"
@@ -16,15 +17,15 @@ export interface RFI {
 
   // Internal to Internal
   labInitiator?: Personnel;
-  labReceiver?: Personnel;
+  labReceivers?: Personnel[];
 
   // Internal to External
   labInitiatorExternal?: Personnel;
-  clientReceiver?: ContactPerson;
+  clientReceivers?: ContactPerson[];
 
   // External to Internal
   clientInitiator?: ContactPerson;
-  labReceiverExternal?: Personnel;
+  labReceiversExternal?: Personnel[];
 }
 
 export interface ConversationMessage {
@@ -35,6 +36,16 @@ export interface ConversationMessage {
   labSender?: Personnel;
   timestamp: string;
   attachments: string[];
+
+  // New multiple recipient support
+  recipients?: MessageRecipient[];
+  ccRecipients?: MessageRecipient[];
+}
+
+export interface MessageRecipient {
+  type: "lab" | "client";
+  personnel?: Personnel;
+  contactPerson?: ContactPerson;
 }
 
 export interface Personnel {

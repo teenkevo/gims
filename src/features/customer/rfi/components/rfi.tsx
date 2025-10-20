@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RFIList } from "./rfi-list";
 import { RFIDetail } from "./rfi-detail";
 import { CreateRFIDialog } from "./create-rfi-dialog";
@@ -14,7 +14,7 @@ import {
 } from "../../../../../sanity.types";
 
 export default function RFIModule({
-  rfis: b,
+  rfis,
   labPersonnel,
   clients,
 }: {
@@ -25,102 +25,21 @@ export default function RFIModule({
   const [selectedRFI, setSelectedRFI] = useState<
     ALL_RFIS_QUERYResult[number] | null
   >(null);
-  const [rfis, setRFIs] = useState<ALL_RFIS_QUERYResult>(b);
+
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const handleCreateRFI = (
-    newRFI: Omit<ALL_RFIS_QUERYResult[number], "_id" | "dateSubmitted">
-  ) => {
-    const rfi: ALL_RFIS_QUERYResult[number] = {
-      _id: `rfi-${Date.now()}`,
-      initiationType: newRFI.initiationType,
-      project: newRFI.project
-        ? {
-            _id: newRFI.project._id,
-            name: newRFI.project.name,
-            internalId: newRFI.project.internalId,
-          }
-        : null,
-      client: newRFI.client
-        ? {
-            _id: newRFI.client._id,
-            name: newRFI.client.name,
-            internalId: newRFI.client.internalId,
-          }
-        : null,
-      subject: newRFI.subject,
-      description: newRFI.description,
-      status: newRFI.status,
-      dateSubmitted: new Date().toISOString(),
-      dateResolved: newRFI.dateResolved || null,
-      attachments: newRFI.attachments || [],
-      conversation: newRFI.conversation || [],
-      labInitiator: newRFI.labInitiator
-        ? {
-            _id: newRFI.labInitiator._id,
-            fullName: newRFI.labInitiator.fullName,
-            email: newRFI.labInitiator.email,
-            phone: newRFI.labInitiator.phone,
-            departmentRoles: newRFI.labInitiator.departmentRoles || null,
-          }
-        : null,
-      labReceiver: newRFI.labReceiver
-        ? {
-            _id: newRFI.labReceiver._id,
-            fullName: newRFI.labReceiver.fullName,
-            email: newRFI.labReceiver.email,
-            phone: newRFI.labReceiver.phone,
-            departmentRoles: newRFI.labReceiver.departmentRoles || null,
-          }
-        : null,
-      labInitiatorExternal: newRFI.labInitiatorExternal
-        ? {
-            _id: newRFI.labInitiatorExternal._id,
-            fullName: newRFI.labInitiatorExternal.fullName,
-            email: newRFI.labInitiatorExternal.email,
-            phone: newRFI.labInitiatorExternal.phone,
-            departmentRoles:
-              newRFI.labInitiatorExternal.departmentRoles || null,
-          }
-        : null,
-      clientReceiver: newRFI.clientReceiver
-        ? {
-            _id: newRFI.clientReceiver._id,
-            name: newRFI.clientReceiver.name,
-            email: newRFI.clientReceiver.email,
-            phone: newRFI.clientReceiver.phone,
-            designation: newRFI.clientReceiver.designation,
-          }
-        : null,
-      clientInitiator: newRFI.clientInitiator
-        ? {
-            _id: newRFI.clientInitiator._id,
-            name: newRFI.clientInitiator.name,
-            email: newRFI.clientInitiator.email,
-            phone: newRFI.clientInitiator.phone,
-            designation: newRFI.clientInitiator.designation,
-          }
-        : null,
-      labReceiverExternal: newRFI.labReceiverExternal
-        ? {
-            _id: newRFI.labReceiverExternal._id,
-            fullName: newRFI.labReceiverExternal.fullName,
-            email: newRFI.labReceiverExternal.email,
-            phone: newRFI.labReceiverExternal.phone,
-            departmentRoles: newRFI.labReceiverExternal.departmentRoles || null,
-          }
-        : null,
-    };
-    setRFIs((prev) => [rfi, ...prev]);
-    setShowCreateDialog(false);
-  };
-
   const handleUpdateRFI = (updatedRFI: ALL_RFIS_QUERYResult[number]) => {
-    setRFIs((prev) =>
-      prev.map((rfi) => (rfi._id === updatedRFI._id ? updatedRFI : rfi))
-    );
     setSelectedRFI(updatedRFI);
   };
+
+  useEffect(() => {
+    if (selectedRFI && rfis) {
+      const updatedRFI = rfis.find((rfi) => rfi._id === selectedRFI._id);
+      if (updatedRFI) {
+        setSelectedRFI(updatedRFI);
+      }
+    }
+  }, [rfis, selectedRFI?._id]);
 
   return (
     <div>
@@ -138,7 +57,6 @@ export default function RFIModule({
           <CreateRFIDialog
             open={showCreateDialog}
             onOpenChange={setShowCreateDialog}
-            onCreateRFI={handleCreateRFI}
             labPersonnel={labPersonnel}
             clients={clients}
           />

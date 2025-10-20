@@ -1980,20 +1980,23 @@ export async function revalidateAll() {
 // CREATE RFI
 // CREATE RFI - Improved Implementation
 export async function createRFI(prevState: any, formData: FormData) {
+  const rfiManager = formData.get("rfiManager") as string;
   const initiationType = formData.get("initiationType") as string;
   const project = formData.get("project") as string;
   const client = formData.get("client") as string;
   const subject = formData.get("subject") as string;
   const description = formData.get("description") as string;
   const labInitiator = formData.get("labInitiator") as string;
-  const labReceiver = formData.get("labReceiver") as string;
+  const labReceivers = formData.getAll("labReceivers") as string[];
+  const clientReceivers = formData.getAll("clientReceivers") as string[];
+  const labReceiversExternal = formData.getAll(
+    "labReceiversExternal"
+  ) as string[];
   const labInitiatorExternal = formData.get("labInitiatorExternal") as string;
-  const clientReceiver = formData.get("clientReceiver") as string;
   const clientInitiator = formData.get("clientInitiator") as string;
-  const labReceiverExternal = formData.get("labReceiverExternal") as string;
 
   // Basic validation
-  if (!initiationType || !subject || !description) {
+  if (!rfiManager || !initiationType || !subject || !description) {
     return { error: "Missing required fields", status: "error" };
   }
 
@@ -2003,11 +2006,11 @@ export async function createRFI(prevState: any, formData: FormData) {
     project,
     client,
     labInitiator,
-    labReceiver,
+    labReceivers,
     labInitiatorExternal,
-    clientReceiver,
+    clientReceivers,
     clientInitiator,
-    labReceiverExternal,
+    labReceiversExternal,
   });
 
   if (validationErrors.length > 0) {
@@ -2018,6 +2021,7 @@ export async function createRFI(prevState: any, formData: FormData) {
     // Build the RFI document based on initiation type
     const rfiDocument: any = {
       _type: "rfi",
+      rfiManager: { _type: "reference", _ref: rfiManager },
       initiationType,
       subject,
       description,
@@ -2030,8 +2034,12 @@ export async function createRFI(prevState: any, formData: FormData) {
     // Add conditional fields based on initiation type
     if (initiationType === "internal_internal") {
       rfiDocument.labInitiator = { _type: "reference", _ref: labInitiator };
-      if (labReceiver) {
-        rfiDocument.labReceiver = { _type: "reference", _ref: labReceiver };
+
+      if (labReceivers && labReceivers.length > 0) {
+        rfiDocument.labReceivers = labReceivers.map((ref) => ({
+          _type: "reference",
+          _ref: ref,
+        }));
       }
     } else if (initiationType === "internal_external") {
       rfiDocument.project = { _type: "reference", _ref: project };
@@ -2040,7 +2048,13 @@ export async function createRFI(prevState: any, formData: FormData) {
         _type: "reference",
         _ref: labInitiatorExternal,
       };
-      rfiDocument.clientReceiver = { _type: "reference", _ref: clientReceiver };
+
+      if (clientReceivers && clientReceivers.length > 0) {
+        rfiDocument.clientReceivers = clientReceivers.map((ref) => ({
+          _type: "reference",
+          _ref: ref,
+        }));
+      }
     } else if (initiationType === "external_internal") {
       rfiDocument.project = { _type: "reference", _ref: project };
       rfiDocument.client = { _type: "reference", _ref: client };
@@ -2048,15 +2062,17 @@ export async function createRFI(prevState: any, formData: FormData) {
         _type: "reference",
         _ref: clientInitiator,
       };
-      if (labReceiverExternal) {
-        rfiDocument.labReceiverExternal = {
-          _type: "reference",
-          _ref: labReceiverExternal,
-        };
+
+      if (labReceiversExternal && labReceiversExternal.length > 0) {
+        rfiDocument.labReceiversExternal = labReceiversExternal.map(
+          (ref: string) => ({ _type: "reference", _ref: ref })
+        );
       }
     }
 
-    const result = await writeClient.create(rfiDocument);
+    const result = await writeClient.create(rfiDocument, {
+      autoGenerateArrayKeys: true,
+    });
     revalidateTag("rfi");
     return { result, status: "ok" };
   } catch (error) {
@@ -2071,11 +2087,11 @@ async function validateRFIFields(fields: {
   project?: string;
   client?: string;
   labInitiator?: string;
-  labReceiver?: string;
+  labReceivers?: string[];
   labInitiatorExternal?: string;
-  clientReceiver?: string;
+  clientReceivers?: string[];
   clientInitiator?: string;
-  labReceiverExternal?: string;
+  labReceiversExternal?: string[];
 }): Promise<string[]> {
   const errors: string[] = [];
 
@@ -2084,17 +2100,22 @@ async function validateRFIFields(fields: {
     project,
     client,
     labInitiator,
-    labReceiver,
+    labReceivers,
     labInitiatorExternal,
-    clientReceiver,
+    clientReceivers,
     clientInitiator,
-    labReceiverExternal,
+    labReceiversExternal,
   } = fields;
 
   // Internal to Internal validation
   if (initiationType === "internal_internal") {
     if (!labInitiator) {
       errors.push("Lab Personnel Initiator is required for Internal RFIs");
+    }
+    if (!labReceivers || labReceivers.length === 0) {
+      errors.push(
+        "At least one Lab Personnel Receiver is required for Internal RFIs"
+      );
     }
   }
 
@@ -2110,21 +2131,25 @@ async function validateRFIFields(fields: {
         "Lab Personnel Initiator is required for Internal to External RFIs"
       );
     }
-    if (!clientReceiver) {
-      errors.push("Client Receiver is required for Internal to External RFIs");
+    if (!clientReceivers || clientReceivers.length === 0) {
+      errors.push(
+        "At least one Client Receiver is required for Internal to External RFIs"
+      );
     }
 
     // Validate contact person relationships
-    if (project && client && clientReceiver) {
-      const isValidContact = await validateContactPersonRelationships(
-        project,
-        client,
-        clientReceiver
-      );
-      if (!isValidContact) {
-        errors.push(
-          "The selected contact person is not assigned to the project or not linked to the client"
+    if (project && client && clientReceivers && clientReceivers.length > 0) {
+      for (const receiverId of clientReceivers) {
+        const isValidContact = await validateContactPersonRelationships(
+          project,
+          client,
+          receiverId
         );
+        if (!isValidContact) {
+          errors.push(
+            `The selected contact person ${receiverId} is not assigned to the project or not linked to the client`
+          );
+        }
       }
     }
   }
@@ -2153,6 +2178,9 @@ async function validateRFIFields(fields: {
         );
       }
     }
+
+    // Note: Lab receivers are optional for external to internal RFIs
+    // No validation needed for labReceiversExternal
   }
 
   return errors;
@@ -2173,8 +2201,6 @@ async function validateContactPersonRelationships(
       }`,
       { projectId }
     );
-
-    console.log(project);
 
     // Fetch contact person with clients
     const contactPerson = await writeClient.fetch(
@@ -2209,38 +2235,134 @@ export async function sendMessageToRFI(prevState: any, formData: FormData) {
   const clientSender = formData.get("clientSender") as string;
   const labSender = formData.get("labSender") as string;
   const timestamp = formData.get("timestamp") as string;
+
   try {
     // TODO: Senders should come from authed state data instead of being passed in as form data
-    // TODO: Work on attachments
-    // Maybe support multiple participants from client side and lab side in an RFI conversation
+
+    // Get attachment IDs from form data
+    const attachmentIds = formData.getAll("attachments") as string[];
+
+    const messageData: any = {
+      message,
+      sentByClient: sentByClient === "true",
+      attachments: attachmentIds.map((id) => ({
+        _type: "file",
+        asset: {
+          _type: "reference",
+          _ref: id,
+        },
+      })),
+      timestamp,
+    };
+
+    // Add sender information
+    if (sentByClient === "true") {
+      messageData.clientSender = { _type: "reference", _ref: clientSender };
+    } else {
+      messageData.labSender = { _type: "reference", _ref: labSender };
+    }
+
     const result = await writeClient
       .patch(rfiId)
       .setIfMissing({ conversation: [] })
       .setIfMissing({ attachments: [] })
-      .append("conversation", [
-        sentByClient === "true"
-          ? {
-              message,
-              sentByClient: true,
-              clientSender: { _type: "reference", _ref: clientSender },
-              attachments: [],
-              timestamp,
-            }
-          : {
-              message,
-              sentByClient: false,
-              labSender: { _type: "reference", _ref: labSender },
-              attachments: [],
-              timestamp,
-            },
-      ])
+      .append("conversation", [messageData])
       .commit({
         autoGenerateArrayKeys: true,
       });
-    revalidateTag("rfi");
+    revalidateTag("rfis");
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error sending message to RFI:", error);
     return { error: "Failed to send message", status: "error" };
+  }
+}
+
+// MARK MESSAGE AS OFFICIAL
+export async function markMessageAsOfficial(rfiId: string, messageKey: string) {
+  if (!rfiId || !messageKey) {
+    return { error: "Missing required fields", status: "error" };
+  }
+
+  try {
+    // Get the current RFI document
+    const rfi = await writeClient.getDocument(rfiId);
+
+    if (!rfi || !rfi.conversation) {
+      return { error: "No conversation found", status: "error" };
+    }
+
+    // Find and update the specific message, ensuring only one official response
+    const updatedConversation = rfi.conversation.map((message: any) => {
+      if (message._key === messageKey) {
+        return {
+          ...message,
+          isOfficialResponse: true,
+        };
+      }
+      // Remove official status from all other messages
+      return {
+        ...message,
+        isOfficialResponse: false,
+      };
+    });
+
+    // Update the RFI with the modified conversation
+    const result = await writeClient
+      .patch(rfiId)
+      .set({
+        conversation: updatedConversation,
+      })
+      .commit();
+
+    revalidateTag(`rfis`);
+    return { result, status: "ok" };
+  } catch (error) {
+    console.error("Error marking message as official:", error);
+    return { error: "Failed to mark message as official", status: "error" };
+  }
+}
+
+// UNMARK MESSAGE AS OFFICIAL
+export async function unmarkMessageAsOfficial(
+  rfiId: string,
+  messageKey: string
+) {
+  if (!rfiId || !messageKey) {
+    return { error: "Missing required fields", status: "error" };
+  }
+
+  try {
+    // Get the current RFI document
+    const rfi = await writeClient.getDocument(rfiId);
+
+    if (!rfi || !rfi.conversation) {
+      return { error: "No conversation found", status: "error" };
+    }
+
+    // Find and update the specific message to remove official status
+    const updatedConversation = rfi.conversation.map((message: any) => {
+      if (message._key === messageKey) {
+        return {
+          ...message,
+          isOfficialResponse: false,
+        };
+      }
+      return message;
+    });
+
+    // Update the RFI with the modified conversation
+    const result = await writeClient
+      .patch(rfiId)
+      .set({
+        conversation: updatedConversation,
+      })
+      .commit();
+
+    revalidateTag(`rfi-${rfiId}`);
+    return { result, status: "ok" };
+  } catch (error) {
+    console.error("Error unmarking message as official:", error);
+    return { error: "Failed to unmark message as official", status: "error" };
   }
 }

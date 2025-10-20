@@ -1,9 +1,9 @@
 import { defineQuery } from "next-sanity";
 import { sanityFetch } from "../client";
 
-export const getAllRFIs = async () => {
-  const ALL_RFIS_QUERY = defineQuery(`
-        *[_type == "rfi"] | order(dateSubmitted desc) {
+export const getRFIById = async (rfiId: string) => {
+  const RFI_BY_ID_QUERY = defineQuery(`
+        *[_type == "rfi" && _id == $rfiId][0] {
           _id,
           initiationType,
           rfiManager->{
@@ -150,14 +150,14 @@ export const getAllRFIs = async () => {
 
   try {
     const rfi = await sanityFetch({
-      query: ALL_RFIS_QUERY,
+      query: RFI_BY_ID_QUERY,
+      params: { rfiId },
       revalidate: 0,
     });
 
-    // return data or empty array if no data is found
-    return rfi || [];
+    return rfi || null;
   } catch (error) {
-    console.error("Error fetching all RFIs", error);
-    return [];
+    console.error("Error fetching RFI by ID", error);
+    return null;
   }
 };

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 // Components
+import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,59 +54,13 @@ import { createRFI } from "@/lib/actions";
 interface CreateRFIDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateRFI: (
-    rfi: Omit<ALL_RFIS_QUERYResult[number], "_id" | "dateSubmitted">
-  ) => void;
   labPersonnel: ALL_PERSONNEL_QUERYResult;
   clients: ALL_CLIENTS_QUERYResult;
 }
 
-// Mock data for dropdowns
-const mockProjects = [
-  {
-    id: "proj-1",
-    name: "Downtown Foundation Analysis",
-    client: { id: "client-1", name: "Metro Construction Corp" },
-  },
-  {
-    id: "proj-2",
-    name: "Highway Bridge Soil Testing",
-    client: { id: "client-2", name: "State DOT" },
-  },
-  {
-    id: "proj-3",
-    name: "Residential Complex Geotechnical",
-    client: { id: "client-3", name: "Sunrise Developers" },
-  },
-];
-
-const mockClients = [
-  { id: "client-1", name: "Metro Construction Corp" },
-  { id: "client-2", name: "State DOT" },
-  { id: "client-3", name: "Sunrise Developers" },
-];
-
-const mockPersonnel = [
-  {
-    id: "lab-1",
-    name: "Dr. Sarah Johnson",
-    role: "Senior Geotechnical Engineer",
-  },
-  { id: "lab-2", name: "Robert Kim", role: "Field Operations Manager" },
-  { id: "lab-3", name: "Maria Rodriguez", role: "Lab Technician" },
-  { id: "lab-4", name: "David Park", role: "QA Manager" },
-];
-
-const mockContactPersons = [
-  { id: "contact-1", name: "Mike Chen", role: "Project Manager" },
-  { id: "contact-2", name: "Jennifer Walsh", role: "State Inspector" },
-  { id: "contact-3", name: "Tom Wilson", role: "Site Supervisor" },
-];
-
 export function CreateRFIDialog({
   open,
   onOpenChange,
-  onCreateRFI,
   labPersonnel,
   clients,
 }: CreateRFIDialogProps) {
@@ -115,17 +70,18 @@ export function CreateRFIDialog({
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
+      rfiManager: "",
       initiationType: "" as RFI["initiationType"] | "",
       project: "",
       client: "",
       subject: "",
       description: "",
       labInitiator: "",
-      labReceiver: "",
+      labReceivers: [],
       labInitiatorExternal: "",
-      clientReceiver: "",
+      clientReceivers: [],
       clientInitiator: "",
-      labReceiverExternal: "",
+      labReceiversExternal: [],
     },
   });
 
@@ -149,30 +105,41 @@ export function CreateRFIDialog({
   }, [selectedClientId, form]);
 
   const onSubmit = (data: {
+    rfiManager: string;
     initiationType: RFI["initiationType"] | "";
     project: string;
     client: string;
     subject: string;
     description: string;
     labInitiator: string;
-    labReceiver: string;
+    labReceivers: string[];
     labInitiatorExternal: string;
-    clientReceiver: string;
+    clientReceivers: string[];
     clientInitiator: string;
-    labReceiverExternal: string;
+    labReceiversExternal: string[];
   }) => {
     const formData = new FormData();
+    formData.append("rfiManager", data.rfiManager || "");
     formData.append("initiationType", data.initiationType || "");
     formData.append("project", data.project || "");
     formData.append("client", data.client || "");
     formData.append("subject", data.subject || "");
     formData.append("description", data.description || "");
     formData.append("labInitiator", data.labInitiator || "");
-    formData.append("labReceiver", data.labReceiver || "");
+
+    // Add multiple receivers
+    data.labReceivers.forEach((receiver) =>
+      formData.append("labReceivers", receiver)
+    );
+    data.clientReceivers.forEach((receiver) =>
+      formData.append("clientReceivers", receiver)
+    );
+    data.labReceiversExternal.forEach((receiver) =>
+      formData.append("labReceiversExternal", receiver)
+    );
+
     formData.append("labInitiatorExternal", data.labInitiatorExternal || "");
-    formData.append("clientReceiver", data.clientReceiver || "");
     formData.append("clientInitiator", data.clientInitiator || "");
-    formData.append("labReceiverExternal", data.labReceiverExternal || "");
 
     console.log({
       data,
@@ -180,8 +147,6 @@ export function CreateRFIDialog({
 
     startTransition(() => dispatch(formData));
   };
-
-  form.watch("clientReceiver");
 
   useEffect(() => {
     if (state?.status === "ok") {
@@ -237,35 +202,23 @@ export function CreateRFIDialog({
             />
             <FormField
               control={form.control}
-              name="labReceiver"
-              rules={{ required: "Required" }}
+              name="labReceivers"
+              rules={{ required: "At least one lab receiver is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lab Receiver</FormLabel>
-                  <Select
+                  <FormLabel>Lab Receivers</FormLabel>
+                  <MultiSelect
+                    options={labPersonnel.map((personnel) => ({
+                      label: personnel.fullName || "Unknown",
+                      value: personnel._id,
+                      description:
+                        personnel.departmentRoles?.[0]?.role || undefined,
+                    }))}
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    placeholder="Select lab personnel..."
                     disabled={isPending}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select lab personnel" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {labPersonnel.map((personnel) => (
-                        <SelectItem key={personnel._id} value={personnel._id}>
-                          <span className="sm:hidden">
-                            {personnel.fullName}
-                          </span>
-                          <span className="hidden sm:inline">
-                            {personnel.fullName} -{" "}
-                            {personnel.departmentRoles?.[0]?.role}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -313,37 +266,29 @@ export function CreateRFIDialog({
             />
             <FormField
               control={form.control}
-              name="clientReceiver"
-              rules={{ required: "Required" }}
+              name="clientReceivers"
+              rules={{ required: "At least one client receiver is required" }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client Receiver</FormLabel>
-                  <Select
-                    disabled={isPending}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select client contact" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {selectedProjectContactPersons?.map((contact) => (
-                        <SelectItem key={contact._id} value={contact._id}>
-                          <span className="sm:hidden">{contact.name}</span>
-                          <span className="hidden sm:inline">
-                            {contact.name} - {contact.designation}
-                          </span>
-                        </SelectItem>
-                      ))}
-                      {!selectedProjectContactPersons && (
-                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                          No contact persons found for this project
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Client Receivers</FormLabel>
+                  <MultiSelect
+                    options={
+                      selectedProjectContactPersons?.map((contact) => ({
+                        label: contact.name || "Unknown",
+                        value: contact._id,
+                        description: contact.designation || undefined,
+                      })) || []
+                    }
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    placeholder="Select client contacts..."
+                    disabled={isPending || !selectedProjectContactPersons}
+                  />
+                  {!selectedProjectContactPersons && (
+                    <p className="text-sm text-muted-foreground">
+                      No contact persons found for this project
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -393,35 +338,22 @@ export function CreateRFIDialog({
             />
             <FormField
               control={form.control}
-              name="labReceiverExternal"
-              rules={{ required: "Required" }}
+              name="labReceiversExternal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lab Receiver</FormLabel>
-                  <Select
+                  <FormLabel>Lab Receivers (Optional)</FormLabel>
+                  <MultiSelect
+                    options={labPersonnel.map((personnel) => ({
+                      label: personnel.fullName || "Unknown",
+                      value: personnel._id,
+                      description:
+                        personnel.departmentRoles?.[0]?.role || undefined,
+                    }))}
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    placeholder="Select lab personnel..."
                     disabled={isPending}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select lab personnel" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {labPersonnel.map((personnel) => (
-                        <SelectItem key={personnel._id} value={personnel._id}>
-                          <span className="sm:hidden">
-                            {personnel.fullName}
-                          </span>
-                          <span className="hidden sm:inline">
-                            {personnel.fullName} -{" "}
-                            {personnel.departmentRoles?.[0]?.role}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -442,6 +374,40 @@ export function CreateRFIDialog({
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-8 h-[460px] px-4 md:px-1 py-4 overflow-y-auto pb-20"
       >
+        <FormField
+          control={form.control}
+          name="rfiManager"
+          rules={{ required: "Required" }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>RFI Manager</FormLabel>
+              <Select
+                disabled={isPending}
+                onValueChange={field.onChange}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select RFI manager" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {labPersonnel.map((personnel) => (
+                    <SelectItem key={personnel._id} value={personnel._id}>
+                      <span className="sm:hidden">{personnel.fullName}</span>
+                      <span className="hidden sm:inline">
+                        {personnel.fullName} -{" "}
+                        {personnel.departmentRoles?.[0]?.role}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="initiationType"

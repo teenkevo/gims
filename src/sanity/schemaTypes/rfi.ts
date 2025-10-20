@@ -29,6 +29,16 @@ export const rfi = defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
+    // RFI manager
+    defineField({
+      name: "rfiManager",
+      title: "RFI Manager",
+      type: "reference",
+      to: [{ type: "personnel" }],
+      validation: (Rule) => Rule.required(),
+      description:
+        "The personnel who is responsible for managing and resolving this RFI.",
+    }),
     // Link RFI to project
     defineField({
       name: "project",
@@ -64,11 +74,22 @@ export const rfi = defineType({
         }),
     }),
     defineField({
-      name: "labReceiver",
-      title: "Lab Personnel Receiver",
-      type: "reference",
-      to: [{ type: "personnel" }],
+      name: "labReceivers",
+      title: "Lab Personnel Receivers",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "personnel" }] }],
       hidden: ({ parent }) => parent?.initiationType !== "internal_internal",
+      description: "Select one or more lab personnel to receive this RFI.",
+      validation: (Rule) =>
+        Rule.custom((field, context) => {
+          if (
+            context.document?.initiationType === "internal_internal" &&
+            (!field || field.length === 0)
+          ) {
+            return "At least one Lab Personnel Receiver is required for Internal RFIs.";
+          }
+          return true;
+        }),
     }),
     // 🔹 Internal to External (Lab to Client)
     defineField({
@@ -89,30 +110,14 @@ export const rfi = defineType({
         }),
     }),
     defineField({
-      name: "clientReceiver",
-      title: "Receiver - Client Contact Person",
-      type: "reference",
-      to: [{ type: "contactPerson" }],
+      name: "clientReceivers",
+      title: "Client Contact Receivers",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "contactPerson" }] }],
       hidden: ({ parent }) => parent?.initiationType !== "internal_external",
-      options: {
-        // TODO: use correct types instead of any
-        filter: async ({ document }: { document: any }) => {
-          if (!document?.project || !document?.client) {
-            return { filter: "_id == ''", params: {} }; // No results if no project or client is selected
-          }
-
-          return {
-            filter:
-              "references($clientId) && _id in *[_type == 'project' && _id == $projectId][0].contactPersons[]._ref",
-            params: {
-              clientId: document.client?._ref || "",
-              projectId: document.project?._ref || "",
-            },
-          };
-        },
-      },
+      description: "Select one or more client contacts to receive this RFI.",
       validation: (Rule) =>
-        Rule.custom(async (clientReceiver, context) => {
+        Rule.custom(async (clientReceivers, context) => {
           const { document } = context;
 
           // Only validate for internal_external initiation type
@@ -124,8 +129,8 @@ export const rfi = defineType({
             return "You must select both a project and a client.";
           }
 
-          if (!clientReceiver) {
-            return "You must select a contact person.";
+          if (!clientReceivers || clientReceivers.length === 0) {
+            return "You must select at least one contact person.";
           }
 
           // Fetch the project document dynamically
@@ -139,31 +144,37 @@ export const rfi = defineType({
               { projectId: (document.project as { _ref: string })?._ref }
             );
 
-          // Fetch the contact person document dynamically
-          const contactPerson = await context
-            .getClient({ apiVersion: "2022-03-07" })
-            .fetch(
-              `*[_type == "contactPerson" && _id == $clientReceiver][0]{
-              client->{_id,name}
-            }`,
-              { clientReceiver: clientReceiver._ref }
-            );
+          // Validate each selected contact person
+          for (const clientReceiver of clientReceivers) {
+            const receiverRef = (clientReceiver as { _ref: string })?._ref;
+            if (!receiverRef) continue;
 
-          // Ensure the selected contact person is part of the project
-          if (
-            !project?.contactPersons?.some(
-              (person: { _id: string }) => person._id === clientReceiver._ref
-            )
-          ) {
-            return `The selected contact person is not assigned to the project "${project?.name}"`;
-          }
+            // Fetch the contact person document dynamically
+            const contactPerson = await context
+              .getClient({ apiVersion: "2022-03-07" })
+              .fetch(
+                `*[_type == "contactPerson" && _id == $clientReceiver][0]{
+                client->{_id,name}
+              }`,
+                { clientReceiver: receiverRef }
+              );
 
-          // Ensure the selected contact person is linked to the selected client
-          if (
-            contactPerson?.client?._id !==
-            (document.client as { _ref?: string })?._ref
-          ) {
-            return "The selected contact person is not linked to the selected client.";
+            // Ensure the selected contact person is part of the project
+            if (
+              !project?.contactPersons?.some(
+                (person: { _id: string }) => person._id === receiverRef
+              )
+            ) {
+              return `The selected contact person is not assigned to the project "${project?.name}"`;
+            }
+
+            // Ensure the selected contact person is linked to the selected client
+            if (
+              contactPerson?.client?._id !==
+              (document.client as { _ref?: string })?._ref
+            ) {
+              return "The selected contact person is not linked to the selected client.";
+            }
           }
 
           return true; // Validation passed
@@ -261,11 +272,12 @@ export const rfi = defineType({
       },
     }),
     defineField({
-      name: "labReceiverExternal",
-      title: "Receiver - Lab Personnel",
-      type: "reference",
-      to: [{ type: "personnel" }],
+      name: "labReceiversExternal",
+      title: "Lab Personnel Receivers",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "personnel" }] }],
       hidden: ({ parent }) => parent?.initiationType !== "external_internal",
+      description: "Select one or more lab personnel to receive this RFI.",
     }),
     defineField({
       name: "subject",
@@ -314,6 +326,15 @@ export const rfi = defineType({
         {
           type: "object",
           fields: [
+            // mark as official response
+            defineField({
+              name: "isOfficialResponse",
+              title: "Is Official Response?",
+              type: "boolean",
+              description:
+                "If true, this message is an official response to the RFI.",
+              initialValue: false,
+            }),
             defineField({
               name: "message",
               title: "Message",
@@ -391,9 +412,6 @@ export const rfi = defineType({
               of: [
                 {
                   type: "file",
-                  options: {
-                    accept: "image/*,application/pdf",
-                  },
                 },
               ],
               description: "Attach files relevant to this response.",
@@ -453,8 +471,9 @@ export const rfi = defineType({
       status: "status",
       labInitiator: "labInitiator.fullName",
       clientInitiator: "clientInitiator.fullName",
-      labReceiver: "labReceiver.fullName",
-      clientReceiver: "clientReceiver.fullName",
+      labReceivers: "labReceivers.fullName",
+      clientReceivers: "clientReceivers.name",
+      labReceiversExternal: "labReceiversExternal.fullName",
     },
 
     prepare(selection) {
@@ -465,8 +484,9 @@ export const rfi = defineType({
         status,
         labInitiator,
         clientInitiator,
-        labReceiver,
-        clientReceiver,
+        labReceivers,
+        clientReceivers,
+        labReceiversExternal,
       } = selection;
 
       const initiationTypes = {

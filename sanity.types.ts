@@ -213,6 +213,12 @@ export type Rfi = {
     | "internal_internal"
     | "internal_external"
     | "external_internal";
+  rfiManager?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "personnel";
+  };
   project?: {
     _ref: string;
     _type: "reference";
@@ -231,36 +237,39 @@ export type Rfi = {
     _weak?: boolean;
     [internalGroqTypeReferenceTo]?: "personnel";
   };
-  labReceiver?: {
+  labReceivers?: Array<{
     _ref: string;
     _type: "reference";
     _weak?: boolean;
+    _key: string;
     [internalGroqTypeReferenceTo]?: "personnel";
-  };
+  }>;
   labInitiatorExternal?: {
     _ref: string;
     _type: "reference";
     _weak?: boolean;
     [internalGroqTypeReferenceTo]?: "personnel";
   };
-  clientReceiver?: {
+  clientReceivers?: Array<{
     _ref: string;
     _type: "reference";
     _weak?: boolean;
+    _key: string;
     [internalGroqTypeReferenceTo]?: "contactPerson";
-  };
+  }>;
   clientInitiator?: {
     _ref: string;
     _type: "reference";
     _weak?: boolean;
     [internalGroqTypeReferenceTo]?: "contactPerson";
   };
-  labReceiverExternal?: {
+  labReceiversExternal?: Array<{
     _ref: string;
     _type: "reference";
     _weak?: boolean;
+    _key: string;
     [internalGroqTypeReferenceTo]?: "personnel";
-  };
+  }>;
   subject?: string;
   description?: string;
   attachments?: Array<{
@@ -276,6 +285,7 @@ export type Rfi = {
   }>;
   status?: "open" | "in_progress" | "resolved";
   conversation?: Array<{
+    isOfficialResponse?: boolean;
     message?: string;
     sentByClient?: boolean;
     clientSender?: {
@@ -1625,7 +1635,7 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
 
 // Source: ./src/sanity/lib/requests-for-information/getAllRFIs.ts
 // Variable: ALL_RFIS_QUERY
-// Query: *[_type == "rfi"] | order(dateSubmitted desc) {          _id,          initiationType,          project->{            _id,            name,            internalId          },          client->{            _id,            name,            internalId          },          subject,          description,          labInitiator->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labReceiver->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labInitiatorExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          clientReceiver->{            _id,            name,            email,            phone,            designation,          },          clientInitiator->{            _id,            name,            email,            phone,            designation,          },          labReceiverExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          attachments[] {            asset->{                _id,                url,                originalFilename,                size,                mimeType,            },          },          status,          dateSubmitted,          dateResolved,          conversation[] {            _key,            message,            sentByClient,            clientSender->{              _id,              name,              email,              phone,              designation,            },            labSender->{              _id,              fullName,              email,              phone,              departmentRoles[]{                department->{                  _id,                  name,                },                role,              },            },            attachments[] {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            timestamp,          },        }
+// Query: *[_type == "rfi"] | order(dateSubmitted desc) {          _id,          initiationType,          rfiManager->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          project->{            _id,            name,            internalId          },          client->{            _id,            name,            internalId          },          subject,          description,          labInitiator->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labReceivers[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labInitiatorExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          clientReceivers[]->{            _id,            name,            email,            phone,            designation,          },          clientInitiator->{            _id,            name,            email,            phone,            designation,          },          labReceiversExternal[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          attachments[] {            asset->{                _id,                url,                originalFilename,                size,                mimeType,            },          },          status,          dateSubmitted,          dateResolved,          conversation[] {            _key,            isOfficialResponse,            message,            sentByClient,            clientSender->{              _id,              name,              email,              phone,              designation,            },            labSender->{              _id,              fullName,              email,              phone,              departmentRoles[]{                department->{                  _id,                  name,                },                role,              },            },            attachments[] {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            timestamp,          },        }
 export type ALL_RFIS_QUERYResult = Array<{
   _id: string;
   initiationType:
@@ -1633,6 +1643,19 @@ export type ALL_RFIS_QUERYResult = Array<{
     | "internal_external"
     | "internal_internal"
     | null;
+  rfiManager: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
   project: {
     _id: string;
     name: string | null;
@@ -1658,7 +1681,7 @@ export type ALL_RFIS_QUERYResult = Array<{
       role: string | null;
     }> | null;
   } | null;
-  labReceiver: {
+  labReceivers: Array<{
     _id: string;
     fullName: string | null;
     email: string | null;
@@ -1670,7 +1693,7 @@ export type ALL_RFIS_QUERYResult = Array<{
       } | null;
       role: string | null;
     }> | null;
-  } | null;
+  }> | null;
   labInitiatorExternal: {
     _id: string;
     fullName: string | null;
@@ -1684,13 +1707,13 @@ export type ALL_RFIS_QUERYResult = Array<{
       role: string | null;
     }> | null;
   } | null;
-  clientReceiver: {
+  clientReceivers: Array<{
     _id: string;
     name: string | null;
     email: string | null;
     phone: string | null;
     designation: string | null;
-  } | null;
+  }> | null;
   clientInitiator: {
     _id: string;
     name: string | null;
@@ -1698,7 +1721,7 @@ export type ALL_RFIS_QUERYResult = Array<{
     phone: string | null;
     designation: string | null;
   } | null;
-  labReceiverExternal: {
+  labReceiversExternal: Array<{
     _id: string;
     fullName: string | null;
     email: string | null;
@@ -1710,7 +1733,7 @@ export type ALL_RFIS_QUERYResult = Array<{
       } | null;
       role: string | null;
     }> | null;
-  } | null;
+  }> | null;
   attachments: Array<{
     asset: {
       _id: string;
@@ -1725,6 +1748,7 @@ export type ALL_RFIS_QUERYResult = Array<{
   dateResolved: string | null;
   conversation: Array<{
     _key: string;
+    isOfficialResponse: boolean | null;
     message: string | null;
     sentByClient: boolean | null;
     clientSender: {
@@ -1759,6 +1783,157 @@ export type ALL_RFIS_QUERYResult = Array<{
     timestamp: string | null;
   }> | null;
 }>;
+
+// Source: ./src/sanity/lib/requests-for-information/getRFIById.ts
+// Variable: RFI_BY_ID_QUERY
+// Query: *[_type == "rfi" && _id == $rfiId][0] {          _id,          initiationType,          rfiManager->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          project->{            _id,            name,            internalId          },          client->{            _id,            name,            internalId          },          subject,          description,          labInitiator->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labReceivers[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labInitiatorExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          clientReceivers[]->{            _id,            name,            email,            phone,            designation,          },          clientInitiator->{            _id,            name,            email,            phone,            designation,          },          labReceiversExternal[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          attachments[] {            asset->{                _id,                url,                originalFilename,                size,                mimeType,            },          },          status,          dateSubmitted,          dateResolved,          conversation[] {            _key,            isOfficialResponse,            message,            sentByClient,            clientSender->{              _id,              name,              email,              phone,              designation,            },            labSender->{              _id,              fullName,              email,              phone,              departmentRoles[]{                department->{                  _id,                  name,                },                role,              },            },            attachments[] {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            timestamp,          },        }
+export type RFI_BY_ID_QUERYResult = {
+  _id: string;
+  initiationType:
+    | "external_internal"
+    | "internal_external"
+    | "internal_internal"
+    | null;
+  rfiManager: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  project: {
+    _id: string;
+    name: string | null;
+    internalId: string | null;
+  } | null;
+  client: {
+    _id: string;
+    name: string | null;
+    internalId: string | null;
+  } | null;
+  subject: string | null;
+  description: string | null;
+  labInitiator: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  labReceivers: Array<{
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  }> | null;
+  labInitiatorExternal: {
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  } | null;
+  clientReceivers: Array<{
+    _id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    designation: string | null;
+  }> | null;
+  clientInitiator: {
+    _id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    designation: string | null;
+  } | null;
+  labReceiversExternal: Array<{
+    _id: string;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        _id: string;
+        name: null;
+      } | null;
+      role: string | null;
+    }> | null;
+  }> | null;
+  attachments: Array<{
+    asset: {
+      _id: string;
+      url: string | null;
+      originalFilename: string | null;
+      size: number | null;
+      mimeType: string | null;
+    } | null;
+  }> | null;
+  status: "in_progress" | "open" | "resolved" | null;
+  dateSubmitted: string | null;
+  dateResolved: string | null;
+  conversation: Array<{
+    _key: string;
+    isOfficialResponse: boolean | null;
+    message: string | null;
+    sentByClient: boolean | null;
+    clientSender: {
+      _id: string;
+      name: string | null;
+      email: string | null;
+      phone: string | null;
+      designation: string | null;
+    } | null;
+    labSender: {
+      _id: string;
+      fullName: string | null;
+      email: string | null;
+      phone: string | null;
+      departmentRoles: Array<{
+        department: {
+          _id: string;
+          name: null;
+        } | null;
+        role: string | null;
+      }> | null;
+    } | null;
+    attachments: Array<{
+      asset: {
+        _id: string;
+        url: string | null;
+        originalFilename: string | null;
+        size: number | null;
+        mimeType: string | null;
+      } | null;
+    }> | null;
+    timestamp: string | null;
+  }> | null;
+} | null;
 
 // Source: ./src/sanity/lib/services/getAllSampleClasses.ts
 // Variable: ALL_SAMPLE_CLASSES_QUERY
@@ -1927,7 +2102,8 @@ declare module "@sanity/client" {
     '\n        *[_type == "personnel"] | order(internalId desc) {\n          _id,\n          internalId,\n          fullName,\n          email,\n          phone,\n          departmentRoles[] {\n            department->{\n              _id,\n              department\n            },\n            role\n          },\n          projects[]->{\n            _id,\n            name,\n            internalId\n          },\n          status\n        }\n  ': ALL_PERSONNEL_QUERYResult;
     '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              items[] {\n                lineTotal,\n              },\n              otherItems[] {\n                lineTotal,\n              },\n              vatPercentage,\n              advance,\n            },\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n            advance,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
     '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            invoice {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              quotationNumber,\n              quotationDate,\n              acquisitionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              invoice {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              items[] {\n                service -> {\n                  _id,\n                  testParameter,\n                  sampleClass -> {\n                    _id,\n                    name,\n                  },\n                },\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n                testMethod->{\n                  _id,\n                  code,\n                  standard->{\n                    _id,\n                    acronym,\n                  },\n                },\n              },\n              otherItems[] {\n                type,\n                activity,\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n              },\n              vatPercentage,\n              paymentNotes,\n              advance,\n              grandTotal,\n              subtotal,\n              payments[] {\n                _key,\n                paymentTime,\n                paymentType,\n                amount,\n                paymentMode,\n                currency,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n                resubmissions[] {\n                  _key,\n                  amount,\n                  paymentTime,\n                  paymentMode,\n                  internalNotes,\n                  internalStatus,\n                  internalDecisionTime,\n                  internalDecisionBy->{\n                    _id,\n                    internalId,\n                    fullName,\n                    email,\n                    phone,\n                    status,\n                    departmentRoles[]->{\n                      department->{\n                        _id,\n                        name,\n                      },\n                      role,\n                    },\n                  },\n                  paymentProof {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      size,\n                      mimeType,\n                    },\n                  },\n                  receipt {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      name,\n                      mimeType,\n                      size,\n                    },\n                  },\n                },\n              },\n              file {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n            },\n            items[] {\n              service -> {\n                _id,\n                testParameter,\n                sampleClass -> {\n                  _id,\n                  name,\n                },\n              },\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                code,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            advance,\n            grandTotal,\n            subtotal,\n            payments[] {\n              _key,\n              paymentTime,\n              paymentType,\n              amount,\n              paymentMode,\n              currency,\n              internalNotes,\n              internalStatus,\n              internalDecisionTime,\n              internalDecisionBy->{\n                _id,\n                internalId,\n                fullName,\n                email,\n                phone,\n                status,\n                departmentRoles[]->{\n                  department->{\n                    _id,\n                    name,\n                  },\n                  role,\n                },\n              },\n              resubmissions[] {\n                _key,\n                amount,\n                paymentTime,\n                paymentMode,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n              },\n              paymentProof {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              receipt {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  name,\n                  mimeType,\n                  size,\n                },\n              },              \n            },\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
-    '\n        *[_type == "rfi"] | order(dateSubmitted desc) {\n          _id,\n          initiationType,\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceiver->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceiver->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiverExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': ALL_RFIS_QUERYResult;
+    '\n        *[_type == "rfi"] | order(dateSubmitted desc) {\n          _id,\n          initiationType,\n          rfiManager->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceivers[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceivers[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiversExternal[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            isOfficialResponse,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': ALL_RFIS_QUERYResult;
+    '\n        *[_type == "rfi" && _id == $rfiId][0] {\n          _id,\n          initiationType,\n          rfiManager->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceivers[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceivers[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiversExternal[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            isOfficialResponse,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': RFI_BY_ID_QUERYResult;
     '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
     '\n        *[_type == "service"] {\n            _id, \n            status,\n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            \n        }\n  ': ALL_SERVICES_QUERYResult;
     '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;
