@@ -27,7 +27,7 @@ export function CardSelector({
           onClick={() => onChange(option.value)}
           disabled={disabled}
           className={cn(
-            "flex flex-col items-center justify-center w-40 h-32 rounded-lg border-2 p-4 transition-all duration-200 ease-in-out",
+            "flex flex-col items-center justify-center w-full md:w-40 h-20 bg-popover rounded-lg border-2 p-4 transition-all duration-200 ease-in-out",
             "hover:bg-accent hover:text-accent-foreground cursor-pointer",
             disabled && "opacity-50 cursor-not-allowed",
             value === option.value

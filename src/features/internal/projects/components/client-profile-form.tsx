@@ -108,7 +108,7 @@ export function ClientProfileForm({
           >
             <FormItem
               key={clientField.id}
-              className="mb-10 border px-4 rounded-lg border-dashed"
+              className="mb-10 rounded-lg border-dashed"
             >
               {/* Client Type Selection */}
               <FormField

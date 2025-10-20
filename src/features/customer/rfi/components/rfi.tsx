@@ -5,7 +5,7 @@ import { RFIList } from "./rfi-list";
 import { RFIDetail } from "./rfi-detail";
 import { CreateRFIDialog } from "./create-rfi-dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowLeftCircle, Link } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ALL_CLIENTS_QUERYResult,
@@ -62,7 +62,7 @@ export default function RFIModule({
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Mobile: Show list OR detail, Desktop: Show both */}
       <div
-        className={`${selectedRFI ? "hidden md:block" : "block"} w-full md:w-1/3 border-r flex flex-col h-full`}
+        className={`${selectedRFI ? "hidden lg:block" : "block"} w-full lg:w-1/2 xl:w-1/3 md:border-r flex flex-col h-full`}
       >
         {filteredRFIs && filteredRFIs.length > 0 ? (
           <RFIList
@@ -71,13 +71,13 @@ export default function RFIModule({
             onSelectRFI={setSelectedRFI}
           />
         ) : (
-          <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
+          <div className="hidden lg:flex items-center justify-center h-full text-muted-foreground">
             No RFIs found
           </div>
         )}
       </div>
       <div
-        className={`${selectedRFI ? "block" : "hidden md:block"} w-full md:flex-1 flex flex-col h-full overflow-hidden`}
+        className={`${selectedRFI ? "block" : "hidden md:block"} w-full lg:flex-1 flex flex-col h-full overflow-hidden`}
       >
         {selectedRFI ? (
           <RFIDetail
@@ -115,16 +115,16 @@ export default function RFIModule({
             clients={clients}
           />
         </div>
-        <TabsContent className="border p-2" value="all">
+        <TabsContent className="md:border md:p-2 p-0" value="all">
           {renderRFIContent(rfis)}
         </TabsContent>
-        <TabsContent className="border p-2" value="open">
+        <TabsContent className="md:border md:p-2 p-0" value="open">
           {renderRFIContent(openRFIs)}
         </TabsContent>
-        <TabsContent className="border p-2" value="in-progress">
+        <TabsContent className="md:border md:p-2 p-0" value="in-progress">
           {renderRFIContent(inProgressRFIs)}
         </TabsContent>
-        <TabsContent className="border p-2" value="resolved">
+        <TabsContent className="md:border md:p-2 p-0" value="resolved">
           {renderRFIContent(resolvedRFIs)}
         </TabsContent>
       </Tabs>

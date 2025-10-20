@@ -85,11 +85,14 @@ export function StatusHistory({
   };
 
   return (
-    <Card className="bg-transparent mt-4">
+    <Card className="bg-transparent mt-4 mb-4">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className=" cursor-pointer hover:bg-muted/50 transition-colors">
-            <CardTitle className="flex items-center justify-between text-sm font-medium">
+        <CollapsibleTrigger
+          className={isOpen ? "bg-muted/50" : "px-4 md:px-6"}
+          asChild
+        >
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardTitle className=" flex items-center justify-between text-sm font-medium">
               <div className="flex items-center gap-2">
                 <span>RFI Status History</span>
                 <Badge variant="secondary" className="text-xs">
@@ -115,13 +118,9 @@ export function StatusHistory({
                   <div
                     key={index}
                     className={cn(
-                      "flex items-start gap-3 p-4 md:p-6 rounded-lg border",
-                      index === 0 ? "bg-muted/30" : "bg-background"
+                      `flex items-start gap-3 px-0 py-8 ${index !== statusHistory.length - 1 ? "border-b" : ""} border-muted-foreground/20`
                     )}
                   >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getStatusIcon(entry.status)}
-                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-5">
                         <Badge

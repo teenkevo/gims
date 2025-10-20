@@ -76,7 +76,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="pl-1 pr-4 py-2 space-y-3">
+          <div className="md:pl-1 pl-0 md:pr-4 pr-0 py-2 space-y-3">
             {rfis.map((rfi: ALL_RFIS_QUERYResult[number]) => (
               <div
                 key={uuidv4()}
@@ -87,7 +87,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                 onClick={() => onSelectRFI(rfi)}
               >
                 <CardContent className="p-3 sm:p-4">
-                  <div className="space-y-2 sm:space-y-3">
+                  <div className="space-y-4 sm:space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         {getInitiationTypeIcon(rfi.initiationType)}
@@ -100,10 +100,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                         <Badge
                           className={cn("text-xs", getStatusColor(rfi.status))}
                         >
-                          <span className="sm:hidden">
-                            {rfi.status?.charAt(0).toUpperCase()}
-                          </span>
-                          <span className="hidden sm:inline">
+                          <span>
                             {rfi.status?.replace("_", " ").toUpperCase()}
                           </span>
                         </Badge>
@@ -111,7 +108,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                     </div>
 
                     <div>
-                      <h3 className="font-medium text-sm sm:text-base line-clamp-2 mb-1">
+                      <h3 className="font-medium text-md sm:text-base line-clamp-2 mb-1">
                         {rfi.subject}
                       </h3>
                       <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
@@ -121,21 +118,25 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
 
                     <div className="space-y-1">
                       {rfi.project && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          <span className="font-medium">Project:</span>{" "}
+                        <div className="text-xs text-foreground truncate">
+                          <span className="font-medium text-muted-foreground">
+                            Project:
+                          </span>{" "}
                           {rfi.project.name}
                         </div>
                       )}
                       {rfi.client && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          <span className="font-medium">Client:</span>{" "}
+                        <div className="text-xs text-foreground truncate">
+                          <span className="font-medium text-muted-foreground">
+                            Client:
+                          </span>{" "}
                           {rfi.client.name}
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="truncate">
+                      <span className="truncate text-foreground">
                         {
                           new Date(rfi.dateSubmitted || "")
                             .toISOString()
@@ -151,12 +152,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                         )}
                         {rfi.conversation && rfi.conversation.length > 0 && (
                           <Badge variant="secondary" className="text-xs">
-                            <span className="sm:hidden">
-                              {rfi.conversation.length}
-                            </span>
-                            <span className="hidden sm:inline">
-                              {rfi.conversation.length} replies
-                            </span>
+                            <span>{rfi.conversation.length} replies</span>
                           </Badge>
                         )}
                       </div>

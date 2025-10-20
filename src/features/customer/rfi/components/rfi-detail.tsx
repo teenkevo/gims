@@ -55,6 +55,7 @@ import {
   MoreVertical,
   Trash2,
   Edit,
+  ArrowLeftCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -299,40 +300,54 @@ export function RFIDetail({
     }
   };
 
-  const getStatusIcon = (status: ALL_RFIS_QUERYResult[number]["status"]) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "open":
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return "bg-red-100 text-red-800 border-red-200";
       case "in_progress":
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "resolved":
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "open":
+        return "Open";
+      case "in_progress":
+        return "In Progress";
+      case "resolved":
+        return "Resolved";
+      default:
+        return status;
     }
   };
 
   return (
     <div className="h-full">
       <ScrollArea className="h-full">
+        {/* Mobile Back Button */}
+        {onBackToList && (
+          <div className="lg:hidden mb-4">
+            <Link
+              className="my-5 text-sm inline-flex tracking-tight underline underline-offset-4"
+              onClick={onBackToList}
+              href="#"
+            >
+              <ArrowLeftCircle className="mr-5 text-primary" />
+              Back to RFI List
+            </Link>
+          </div>
+        )}
         <div>
           {/* Header Section */}
-          <div className="p-4 sm:p-4 border-b">
-            {/* Mobile Back Button */}
-            {onBackToList && (
-              <div className="md:hidden mb-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBackToList}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to RFI List
-                </Button>
-              </div>
-            )}
-            <div className="flex items-start justify-between mb-4 gap-4">
+          <div className=" md:p-4 md:border-0 border p-4 border-b">
+            <div className="flex flex-col md:flex-row items-start justify-between mb-4 gap-4">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <div className="flex items-center gap-2 mb-5 flex-wrap">
                   {getInitiationTypeIcon(rfi.initiationType)}
                   <Badge variant="outline" className="text-xs">
                     <span className="sm:hidden">
@@ -355,22 +370,18 @@ export function RFIDetail({
                 <h1 className="text-lg sm:text-2xl font-semibold mb-2 break-words">
                   {rfi.subject}
                 </h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
+
+                <p className="text-sm sm:text-base w-full text-muted-foreground">
                   {rfi.description}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {getStatusIcon(rfi.status)}
-                <Select value={rfi.status || ""} disabled={true}>
-                  <SelectTrigger className="w-24 sm:w-32">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="resolved">Resolved</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Badge
+                  variant="outline"
+                  className={cn("text-xs", getStatusColor(rfi.status || ""))}
+                >
+                  {getStatusLabel(rfi.status || "")}
+                </Badge>
 
                 {/* Actions Dropdown Menu */}
                 <DropdownMenu>
@@ -415,8 +426,8 @@ export function RFIDetail({
             </div>
 
             {/* Metadata */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 text-sm border-t md:border-t-0 pt-5 md:pt-0">
+              <div className="space-y-2 mb-0 text-xs md:text-sm">
                 {rfi.project && (
                   <div className="flex items-center gap-2">
                     <FileStack className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -447,16 +458,20 @@ export function RFIDetail({
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 border-t md:border-t-0 pt-5 md:pt-0">
                 <div className="text-xs sm:text-sm flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="font-medium">Initiated:</span>{" "}
+                  <span className="font-medium text-muted-foreground">
+                    Initiated:
+                  </span>{" "}
                   {new Date(rfi.dateSubmitted || "").toLocaleString()}
                 </div>
                 {rfi.dateResolved && (
                   <div className="text-xs sm:text-sm flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span className="font-medium">Resolved:</span>{" "}
+                    <span className="font-medium text-muted-foreground">
+                      Resolved:
+                    </span>{" "}
                     {new Date(rfi.dateResolved || "").toLocaleString()}
                   </div>
                 )}
