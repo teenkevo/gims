@@ -8,17 +8,29 @@ import { getProjectById } from "@/sanity/lib/projects/getProjectById";
 import { getAllContacts } from "@/sanity/lib/clients/getAllContacts";
 import { getAllClients } from "@/sanity/lib/clients/getAllClients";
 import { getAllServices } from "@/sanity/lib/services/getAllServices";
+import { getAllPersonnel } from "@/sanity/lib/personnel/getAllPersonnel";
 import Loading from "./loading";
 
-export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProjectPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
 
   // Fetch data in parallel
-  const [projectData, existingContactsData, existingClientsData, allServicesData] = await Promise.all([
+  const [
+    projectData,
+    existingContactsData,
+    existingClientsData,
+    allServicesData,
+    personnelData,
+  ] = await Promise.all([
     getProjectById(id),
     getAllContacts(),
     getAllClients(),
     getAllServices(),
+    getAllPersonnel(),
   ]);
 
   // If project is not found, show 404 placeholder
@@ -33,6 +45,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         existingContacts={existingContactsData}
         existingClients={existingClientsData}
         allServices={allServicesData}
+        personnel={personnelData}
       />
     </Suspense>
   );

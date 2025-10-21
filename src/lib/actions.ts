@@ -2577,3 +2577,289 @@ export async function updateRFIStatus(
     return { error: "Failed to update RFI status", status: "error" };
   }
 }
+
+// SEED SAMPLE RECEIPT VERIFICATION TEMPLATES
+export async function seedSampleReceiptTemplates() {
+  try {
+    // Check if templates already exist
+    const existingTemplates = await writeClient.fetch(
+      `*[_type in ["sampleReviewTemplate", "sampleAdequacyTemplate"]]`
+    );
+
+    if (existingTemplates.length > 0) {
+      return {
+        error:
+          "Templates already exist. Delete existing templates first if you want to reseed.",
+        status: "error",
+      };
+    }
+
+    // Review items data from the component
+    const reviewItems = [
+      {
+        id: 1,
+        label:
+          "Is the test method adequately defined, documented and understood?",
+        category: "test_method",
+        isRequired: true,
+      },
+      {
+        id: 2,
+        label:
+          "Is the laboratory having capability and resources to meet the customer requirements?",
+        category: "lab_capability",
+        isRequired: true,
+      },
+      {
+        id: 3,
+        label:
+          "Is appropriate test method selected for each test and capable of meeting customer requirements?",
+        category: "test_method",
+        isRequired: true,
+      },
+      {
+        id: 4,
+        label:
+          "Is the quantity of sample adequate to complete all the tests requested by customer?",
+        category: "sample_adequacy",
+        isRequired: true,
+      },
+      {
+        id: 5,
+        label:
+          "Does the customer require statement of conformity? If yes, then refer the document against which the statement is to be given.",
+        category: "customer_requirements",
+        isRequired: true,
+      },
+      {
+        id: 6,
+        label:
+          "Is the uncertainty of measurement (@ 95% confidence level) needs be taken in to consideration to provide statement of conformity as a decision rule? If No, support the written agreement from the customer in this request.",
+        category: "compliance",
+        isRequired: true,
+      },
+      {
+        id: 7,
+        label:
+          "Are the customer requirements or any opinion and interpretation required on the results of the test?",
+        category: "customer_requirements",
+        isRequired: true,
+      },
+      {
+        id: 8,
+        label:
+          "Has the customer issued any requirements? (i.e. project specifications, TOR...)",
+        category: "customer_requirements",
+        isRequired: true,
+      },
+      {
+        id: 9,
+        label:
+          "Is the condition of sample, proper to conduct the test? Is the sample contaminated?",
+        category: "sample_adequacy",
+        isRequired: true,
+      },
+      {
+        id: 10,
+        label: "Details of sampling, if any",
+        category: "sample_adequacy",
+        isRequired: false,
+      },
+      {
+        id: 11,
+        label: "Are the parameters covered under the scope of accreditation?",
+        category: "compliance",
+        isRequired: true,
+      },
+    ];
+
+    // Adequacy checks data from the component
+    const adequacyChecks = [
+      {
+        id: 1,
+        label: "Sample label",
+        required: true,
+        category: "sample_identification",
+      },
+      {
+        id: 2,
+        label: "Identification no. on the sample",
+        required: true,
+        category: "sample_identification",
+      },
+      {
+        id: 3,
+        label: "Date of sampling, if any",
+        required: false,
+        category: "sample_identification",
+      },
+      {
+        id: 4,
+        label: "Details of sampling, if any",
+        required: false,
+        category: "sample_identification",
+      },
+      {
+        id: 5,
+        label: "Source of sample",
+        required: false,
+        category: "sample_identification",
+      },
+      {
+        id: 6,
+        label: "Qnty of sample delivered for the resp. lab test",
+        required: true,
+        category: "sample_condition",
+      },
+      {
+        id: 7,
+        label: "Testing parameters to be evaluated",
+        required: true,
+        category: "testing_requirements",
+      },
+      {
+        id: 8,
+        label: "Testing standards to be used",
+        required: false,
+        category: "testing_requirements",
+      },
+      {
+        id: 9,
+        label: "Acceptance limits for resp. test, if any",
+        required: true,
+        category: "testing_requirements",
+      },
+      {
+        id: 10,
+        label: "Sample is not damaged",
+        required: false,
+        category: "sample_condition",
+      },
+      {
+        id: 11,
+        label: "Sample is packed properly, if any",
+        required: true,
+        category: "sample_condition",
+      },
+      {
+        id: 12,
+        label: "State of Sample (Dry or Wet)",
+        required: true,
+        category: "sample_condition",
+      },
+      {
+        id: 13,
+        label: "Sample Depth",
+        required: false,
+        category: "sample_condition",
+      },
+      {
+        id: 14,
+        label: "Terms of Reference/Request for Lab Test",
+        required: true,
+        category: "documentation",
+      },
+    ];
+
+    // Create templates in a transaction
+    const tx = writeClient.transaction();
+
+    // Create Review Template
+    tx.create({
+      _type: "sampleReviewTemplate",
+      name: "Standard Laboratory Review Template",
+      version: "1.0",
+      description: "Standard review questions for sample receipt verification",
+      isActive: true,
+      reviewItems: reviewItems.map((item) => ({
+        id: item.id,
+        label: item.label,
+        category: item.category,
+        isRequired: item.isRequired,
+      })),
+    });
+
+    // Create Adequacy Template
+    tx.create({
+      _type: "sampleAdequacyTemplate",
+      name: "Standard Sample Adequacy Checklist",
+      version: "1.0",
+      description:
+        "Standard adequacy requirements for sample receipt verification",
+      isActive: true,
+      adequacyChecks: adequacyChecks.map((item) => ({
+        id: item.id,
+        label: item.label,
+        required: item.required,
+        category: item.category,
+      })),
+    });
+
+    await tx.commit({
+      autoGenerateArrayKeys: true,
+    });
+
+    revalidateTag("sampleReviewTemplate");
+    revalidateTag("sampleAdequacyTemplate");
+
+    return {
+      result: {
+        message: "Templates created successfully",
+      },
+      status: "ok",
+    };
+  } catch (error) {
+    console.error("Error seeding templates:", error);
+    return { error: "Failed to seed templates", status: "error" };
+  }
+}
+
+// DELETE ALL SAMPLE RECEIPT VERIFICATION TEMPLATES
+export async function deleteAllSampleReceiptTemplates() {
+  try {
+    // Fetch all existing templates
+    const existingTemplates = await writeClient.fetch(
+      `*[_type in ["sampleReviewTemplate", "sampleAdequacyTemplate"]]{
+        _id,
+        _type,
+        name
+      }`
+    );
+
+    if (existingTemplates.length === 0) {
+      return {
+        error: "No templates found to delete",
+        status: "error",
+      };
+    }
+
+    // Delete all templates in a transaction
+    const tx = writeClient.transaction();
+
+    existingTemplates.forEach((template: any) => {
+      tx.delete(template._id);
+    });
+
+    await tx.commit({
+      autoGenerateArrayKeys: true,
+    });
+
+    revalidateTag("sampleReviewTemplate");
+    revalidateTag("sampleAdequacyTemplate");
+
+    return {
+      result: {
+        message: `Successfully deleted ${existingTemplates.length} template(s)`,
+        deletedTemplates: existingTemplates.map((t: any) => ({
+          id: t._id,
+          type: t._type,
+          name: t.name,
+        })),
+      },
+      status: "ok",
+    };
+  } catch (error) {
+    console.error("Error deleting templates:", error);
+    return { error: "Failed to delete templates", status: "error" };
+  }
+}

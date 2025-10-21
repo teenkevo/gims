@@ -21,6 +21,9 @@ import { revision } from "./revision";
 import { otherItem } from "./billing-item";
 import { serviceItem } from "./billing-item";
 import { department } from "./department";
+import { sampleReceipt } from "./sample-receipt";
+import { sampleReviewTemplate } from "./sample-review-template";
+import { sampleAdequacyTemplate } from "./sample-adequacy-template";
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -45,5 +48,8 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     serviceItem,
     otherItem,
     revision,
+    sampleReceipt,
+    sampleReviewTemplate,
+    sampleAdequacyTemplate,
   ],
 };

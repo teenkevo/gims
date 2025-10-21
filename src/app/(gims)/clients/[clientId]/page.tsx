@@ -1,9 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import React, { Suspense } from "react";
-import { getAllContacts } from "@/sanity/lib/clients/getAllContacts";
-import { getAllClients } from "@/sanity/lib/clients/getAllClients";
-import { getAllServices } from "@/sanity/lib/services/getAllServices";
 import Loading from "./loading";
 import { getClientById } from "@/sanity/lib/clients/getClientById";
 import NoClientPlaceholder from "@/features/customer/clients/components/no-client-placeholder";

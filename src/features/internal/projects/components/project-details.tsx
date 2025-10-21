@@ -30,6 +30,7 @@ import {
   ALL_CLIENTS_QUERYResult,
   ALL_CONTACTS_QUERYResult,
   ALL_SERVICES_QUERYResult,
+  ALL_PERSONNEL_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
@@ -55,11 +56,13 @@ export default function ProjectDetails({
   existingContacts,
   existingClients,
   allServices,
+  personnel,
 }: {
   project: PROJECT_BY_ID_QUERYResult[number];
   existingContacts: ALL_CONTACTS_QUERYResult;
   existingClients: ALL_CLIENTS_QUERYResult;
   allServices: ALL_SERVICES_QUERYResult;
+  personnel: ALL_PERSONNEL_QUERYResult;
 }) {
   const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
@@ -169,7 +172,6 @@ export default function ProjectDetails({
             Billing
           </TabsTrigger>
           <TabsTrigger
-            disabled
             value="sample-receipt"
             onClick={() => {
               const url = new URL(window.location.href);
@@ -311,7 +313,10 @@ export default function ProjectDetails({
         </TabsContent>
         <TabsContent value="sample-receipt">
           <div className="space-y-8 my-10">
-            <SampleReceiptVerification />
+            <SampleReceiptVerification
+              project={project}
+              personnel={personnel}
+            />
           </div>
         </TabsContent>
         <TabsContent value="danger">

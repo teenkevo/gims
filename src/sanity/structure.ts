@@ -61,4 +61,33 @@ export const structure: StructureResolver = (S) =>
             ])
         ),
       S.documentTypeListItem("rfi").title("Requests for Information (RFIs)"),
+      S.listItem()
+        .title("Sample Receipts")
+        .child(
+          S.list()
+            .title("Sample Receipts")
+            .items([
+              S.documentTypeListItem("sampleReceipt").title("Sample Receipts"),
+              S.documentTypeListItem("sampleReviewTemplate")
+                .title("Sample Receipt Templates")
+                .child(
+                  S.list()
+                    .title("Sample Receipt Templates")
+                    .items([
+                      S.documentTypeListItem("sampleReviewTemplate").title(
+                        "Sample Review Template"
+                      ),
+                      S.documentTypeListItem("sampleAdequacyTemplate").title(
+                        "Sample Adequacy Template"
+                      ),
+                    ])
+                ),
+            ])
+        ),
+      // S.documentTypeListItem("sampleReviewTemplate").title(
+      //   "Sample Review Templates"
+      // ),
+      // S.documentTypeListItem("sampleAdequacyTemplate").title(
+      //   "Sample Adequacy Templates"
+      // ),
     ]);
