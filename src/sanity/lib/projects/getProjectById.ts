@@ -325,6 +325,65 @@ export const getProjectById = async (projectId: string) => {
                 mimeType,
               },
             },
+          },
+          // Reverse‐lookup: find sample verification that reference this project
+          "sampleReceipt": *[
+            _type == "sampleReceipt" 
+            && references(^._id)
+          ][0] {
+            _id,
+            verificationDate,
+            status,
+            reviewTemplate->{
+              _id,
+              name,
+              version,
+              description,
+              isActive,
+            },
+            reviewItems[] {
+              templateItemId,
+              label,
+              status,
+              comments,
+            },
+            adequacyTemplate->{
+              _id,
+              name,
+              version,
+              description,
+              isActive,
+            },
+            adequacyChecks[] {
+              templateItemId,
+              label,
+              status,
+              comments,
+            },
+            overallStatus,
+            overallComments,
+            clientAcknowledgement {
+              acknowledgementText,
+              clientSignature,
+              clientRepresentative,
+            },
+            getlabAcknowledgement {
+              expectedDeliveryDate,
+              sampleRetentionDuration,
+              acknowledgementText,
+            },
+            sampleReceiptPersonnel {
+              role,
+              name,
+              signature,
+              personnel->{
+                _id,
+                internalId,
+                fullName,
+                email,
+                phone,
+              },
+            },
           }
         }
   `);

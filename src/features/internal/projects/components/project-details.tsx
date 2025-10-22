@@ -25,13 +25,15 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
-import SampleReceiptVerification from "./sample-receipt-verifications";
+import { SampleVerificationLifecycle } from "./sample-verification-lifecycle";
 import {
   ALL_CLIENTS_QUERYResult,
   ALL_CONTACTS_QUERYResult,
   ALL_SERVICES_QUERYResult,
   ALL_PERSONNEL_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
+  SAMPLE_REVIEW_TEMPLATES_QUERYResult,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
 } from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
@@ -57,12 +59,16 @@ export default function ProjectDetails({
   existingClients,
   allServices,
   personnel,
+  sampleReviewTemplates,
+  sampleAdequacyTemplates,
 }: {
   project: PROJECT_BY_ID_QUERYResult[number];
   existingContacts: ALL_CONTACTS_QUERYResult;
   existingClients: ALL_CLIENTS_QUERYResult;
   allServices: ALL_SERVICES_QUERYResult;
   personnel: ALL_PERSONNEL_QUERYResult;
+  sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERYResult;
+  sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult;
 }) {
   const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
@@ -313,9 +319,11 @@ export default function ProjectDetails({
         </TabsContent>
         <TabsContent value="sample-receipt">
           <div className="space-y-8 my-10">
-            <SampleReceiptVerification
+            <SampleVerificationLifecycle
               project={project}
               personnel={personnel}
+              sampleReviewTemplate={sampleReviewTemplates[0]}
+              sampleAdequacyTemplate={sampleAdequacyTemplates[0]}
             />
           </div>
         </TabsContent>

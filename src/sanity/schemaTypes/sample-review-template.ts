@@ -71,7 +71,7 @@ export const sampleReviewTemplate = defineType({
               },
             }),
             defineField({
-              name: "isRequired",
+              name: "required",
               title: "Required",
               type: "boolean",
               initialValue: true,

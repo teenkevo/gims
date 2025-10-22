@@ -68,80 +68,33 @@ import { format } from "date-fns";
 import {
   PROJECT_BY_ID_QUERYResult,
   ALL_PERSONNEL_QUERYResult,
+  SAMPLE_REVIEW_TEMPLATES_QUERYResult,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
 } from "../../../../../sanity.types";
 
-const initialReviewItems = [
-  {
-    id: 1,
-    label: "Is the test method adequately defined, documented and understood?",
-  },
-  {
-    id: 2,
-    label:
-      "Is the laboratory having capability and resources to meet the customer requirements?",
-  },
-  {
-    id: 3,
-    label:
-      "Is appropriate test method selected for each test and capable of meeting customer requirements?",
-  },
-  {
-    id: 4,
-    label:
-      "Is the quantity of sample adequate to complete all the tests requested by customer?",
-  },
-  {
-    id: 5,
-    label:
-      "Does the customer require statement of conformity? If yes, then refer the document against which the statement is to be given.",
-  },
-  {
-    id: 6,
-    label:
-      "Is the uncertainty of measurement (@ 95% confidence level) needs be taken in to consideration to provide statement of conformity as a decision rule? If No, support the written agreement from the customer in this request.",
-  },
-  {
-    id: 7,
-    label:
-      "Are the customer requirements or any opinion and interpretation required on the results of the test?",
-  },
-  {
-    id: 8,
-    label:
-      "Has the customer issued any requirements? (i.e. project specifications, TOR...)",
-  },
-  {
-    id: 9,
-    label:
-      "Is the condition of sample, proper to conduct the test? Is the sample contaminated?",
-  },
-  { id: 10, label: "Details of sampling, if any" },
-  {
-    id: 11,
-    label: "Are the parameters covered under the scope of accreditation?",
-  },
-];
+// Get initial data from templates
+const getInitialReviewItems = (
+  template: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number]
+) => {
+  return (
+    template.reviewItems?.map((item) => ({
+      id: item.id || 0,
+      label: item.label || "",
+    })) || []
+  );
+};
 
-const initialAdequacyChecks = [
-  { id: 1, label: "Sample label", required: true },
-  { id: 2, label: "Identification no. on the sample", required: true },
-  { id: 3, label: "Date of sampling, if any", required: false },
-  { id: 4, label: "Details of sampling, if any", required: false },
-  { id: 5, label: "Source of sample", required: false },
-  {
-    id: 6,
-    label: "Qnty of sample delivered for the resp. lab test",
-    required: true,
-  },
-  { id: 7, label: "Testing parameters to be evaluated", required: true },
-  { id: 8, label: "Testing standards to be used", required: false },
-  { id: 9, label: "Acceptance limits for resp. test, if any", required: true },
-  { id: 10, label: "Sample is not damaged", required: false },
-  { id: 11, label: "Sample is packed properly, if any", required: true },
-  { id: 12, label: "State of Sample (Dry or Wet)", required: true },
-  { id: 13, label: "Sample Depth", required: false },
-  { id: 14, label: "Terms of Reference/Request for Lab Test", required: true },
-];
+const getInitialAdequacyChecks = (
+  template: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number]
+) => {
+  return (
+    template.adequacyChecks?.map((check) => ({
+      id: check.id || 0,
+      label: check.label || "",
+      required: check.required || false,
+    })) || []
+  );
+};
 
 type ReviewItem = {
   id: number;
@@ -561,21 +514,33 @@ export function SampleVerificationContent({
   setHasUnsavedEdits,
   project,
   personnel,
+  sampleReviewTemplate,
+  sampleAdequacyTemplate,
 }: {
   setDrawerOpen: (open: boolean) => void;
   setHasUnsavedEdits: (hasEdits: boolean) => void;
   project: PROJECT_BY_ID_QUERYResult[number];
   personnel: ALL_PERSONNEL_QUERYResult;
+  sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
+  sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
 }) {
   // Extract values from project
   const clientName = project.clients?.[0]?.name || "Client Name";
   const projectName = project.name || "Sample Receipt Verification";
   const email = project.contactPersons?.[0]?.email || "info@getlab.co.ug";
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>(
-    initialReviewItems.map((item) => ({ ...item, status: "", comments: "" }))
+    getInitialReviewItems(sampleReviewTemplate).map((item) => ({
+      ...item,
+      status: "",
+      comments: "",
+    }))
   );
   const [adequacyChecks, setAdequacyChecks] = useState<AdequacyCheck[]>(
-    initialAdequacyChecks.map((item) => ({ ...item, status: "", comments: "" }))
+    getInitialAdequacyChecks(sampleAdequacyTemplate).map((item) => ({
+      ...item,
+      status: "",
+      comments: "",
+    }))
   );
   const [overallStatus, setOverallStatus] = useState<string>("");
   const [comments, setComments] = useState<string>("");
@@ -1196,10 +1161,10 @@ export function SampleVerificationContent({
 
       {/* Always show the Review Sample Receipt button */}
       <GenerateSampleReceiptDocument
-        setDrawerOpen={(value) =>
-          setDrawerOpen(typeof value === "function" ? value(false) : value)
-        }
+        project={project}
         sampleReceiptData={{
+          sampleReviewTemplate: sampleReviewTemplate._id,
+          sampleAdequacyTemplate: sampleAdequacyTemplate._id,
           reviewItems,
           adequacyChecks,
           overallStatus,
@@ -1221,6 +1186,9 @@ export function SampleVerificationContent({
           clientName: clientName,
           email: email,
           sampleReceiptNumber: `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+          personnel: personnel?.find(
+            (person) => person.fullName === sampleReceiptName
+          ),
         }}
       />
 
@@ -1237,7 +1205,7 @@ export function SampleVerificationContent({
             getlabAcknowledgement,
             expectedDeliveryDate: expectedDeliveryDate
               ? format(expectedDeliveryDate, "yyyy-MM-dd")
-              : "",
+              : undefined,
             sampleRetentionDuration: sampleRetentionDuration
               ? sampleRetentionDuration.toString()
               : "",

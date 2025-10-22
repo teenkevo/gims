@@ -29,8 +29,10 @@ export const sampleReceipt = defineType({
       options: {
         list: [
           { title: "Draft", value: "draft" },
-          { title: "Submitted", value: "submitted" },
-          { title: "Approved", value: "approved" },
+          { title: "Submitted for Approval", value: "submitted" },
+          { title: "Approved Internally", value: "approved" },
+          { title: "Sent to Client", value: "sent_to_client" },
+          { title: "Client Acknowledged", value: "client_acknowledged" },
           { title: "Rejected", value: "rejected" },
         ],
       },
@@ -229,18 +231,17 @@ export const sampleReceipt = defineType({
       name: "clientAcknowledgement",
       title: "Client Acknowledgement",
       type: "object",
+      description: "Only required when status is 'Client Acknowledged'",
       fields: [
         defineField({
           name: "acknowledgementText",
           title: "Acknowledgement Text",
           type: "text",
-          validation: (Rule) => Rule.required(),
         }),
         defineField({
           name: "clientSignature",
           title: "Client Signature",
           type: "string",
-          validation: (Rule) => Rule.required(),
         }),
         defineField({
           name: "clientRepresentative",
@@ -253,9 +254,43 @@ export const sampleReceipt = defineType({
               { title: "Consultant's Rep.", value: "consultant-rep" },
             ],
           },
-          validation: (Rule) => Rule.required(),
         }),
       ],
+      validation: (Rule) =>
+        Rule.custom((clientAcknowledgement, context) => {
+          const status = (context.document as { status?: string })?.status;
+
+          // If status is client_acknowledged, all fields are required
+          if (status === "client_acknowledged") {
+            if (!clientAcknowledgement) {
+              return "Client acknowledgement is required when status is 'Client Acknowledged'";
+            }
+
+            const {
+              acknowledgementText,
+              clientSignature,
+              clientRepresentative,
+            } = clientAcknowledgement as {
+              acknowledgementText?: string;
+              clientSignature?: string;
+              clientRepresentative?: string;
+            };
+
+            if (!acknowledgementText || acknowledgementText.trim() === "") {
+              return "Acknowledgement text is required when client has acknowledged";
+            }
+
+            if (!clientSignature || clientSignature.trim() === "") {
+              return "Client signature is required when client has acknowledged";
+            }
+
+            if (!clientRepresentative || clientRepresentative.trim() === "") {
+              return "Client representative is required when client has acknowledged";
+            }
+          }
+
+          return true;
+        }),
     }),
 
     // GETLAB Acknowledgement
@@ -263,18 +298,12 @@ export const sampleReceipt = defineType({
       name: "getlabAcknowledgement",
       title: "GETLAB Acknowledgement",
       type: "object",
+      description: "Only required when GETLAB has approved the sample receipt",
       fields: [
         defineField({
           name: "expectedDeliveryDate",
           title: "Expected Delivery Date",
           type: "date",
-          validation: (Rule) => Rule.required(),
-        }),
-        defineField({
-          name: "requiresMoreSamples",
-          title: "Client Should Deliver More Samples",
-          type: "boolean",
-          initialValue: false,
         }),
         defineField({
           name: "sampleRetentionDuration",
@@ -282,7 +311,6 @@ export const sampleReceipt = defineType({
           type: "string",
           description:
             "Duration for sample to be retained in case sample remains after testing",
-          validation: (Rule) => Rule.required(),
         }),
         defineField({
           name: "acknowledgementText",
@@ -290,6 +318,36 @@ export const sampleReceipt = defineType({
           type: "text",
         }),
       ],
+      validation: (Rule) =>
+        Rule.custom((getlabAcknowledgement, context) => {
+          const status = (context.document as { status?: string })?.status;
+
+          // If status is approved, all required fields must be present
+          if (status === "approved") {
+            if (!getlabAcknowledgement) {
+              return "GETLAB acknowledgement is required when status is 'Approved Internally'";
+            }
+
+            const { expectedDeliveryDate, sampleRetentionDuration } =
+              getlabAcknowledgement as {
+                expectedDeliveryDate?: string;
+                sampleRetentionDuration?: string;
+              };
+
+            if (!expectedDeliveryDate) {
+              return "Expected delivery date is required when GETLAB has approved the sample receipt";
+            }
+
+            if (
+              !sampleRetentionDuration ||
+              sampleRetentionDuration.trim() === ""
+            ) {
+              return "Sample retention duration is required when GETLAB has approved the sample receipt";
+            }
+          }
+
+          return true;
+        }),
     }),
 
     // Sample Receipt Personnel
@@ -304,13 +362,28 @@ export const sampleReceipt = defineType({
           type: "string",
           options: {
             list: [
-              { title: "SLE", value: "sle" },
-              { title: "Lab. Eng.", value: "lab-eng" },
-              { title: "Jn. Lab. Eng.", value: "jn-lab-eng" },
-              { title: "Sen. Lab. Technician", value: "sen-lab-technician" },
-              { title: "Lab Technician", value: "lab-technician" },
-              { title: "Lab Assistant", value: "lab-assistant" },
-              { title: "Admin. Personnel", value: "admin-personnel" },
+              {
+                title: "Senior Laboratory Engineer",
+                value: "senior-laboratory-engineer",
+              },
+              { title: "Laboratory Engineer", value: "laboratory-engineer" },
+              {
+                title: "Junior Laboratory Engineer",
+                value: "junior-laboratory-engineer",
+              },
+              {
+                title: "Senior Laboratory Technician",
+                value: "senior-laboratory-technician",
+              },
+              {
+                title: "Laboratory Technician",
+                value: "laboratory-technician",
+              },
+              { title: "Laboratory Assistant", value: "laboratory-assistant" },
+              {
+                title: "Administrative Personnel",
+                value: "administrative-personnel",
+              },
             ],
           },
           validation: (Rule) => Rule.required(),
@@ -336,37 +409,6 @@ export const sampleReceipt = defineType({
         }),
       ],
     }),
-
-    // Submission Information
-    defineField({
-      name: "submittedBy",
-      title: "Submitted By",
-      type: "reference",
-      to: [{ type: "personnel" }],
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: "submittedAt",
-      title: "Submitted At",
-      type: "datetime",
-      options: { dateFormat: "YYYY-MM-DD HH:mm" },
-      validation: (Rule) => Rule.required(),
-    }),
-
-    // Additional Metadata
-    defineField({
-      name: "version",
-      title: "Version",
-      type: "string",
-      initialValue: "1.0",
-      description: "Version of the verification form",
-    }),
-    defineField({
-      name: "notes",
-      title: "Additional Notes",
-      type: "text",
-      description: "Any additional notes or comments",
-    }),
   ],
   preview: {
     select: {
@@ -375,7 +417,7 @@ export const sampleReceipt = defineType({
       verificationDate: "verificationDate",
       status: "status",
       overallStatus: "overallStatus",
-      submittedBy: "submittedBy.fullName",
+      sampleReceiptPersonnel: "sampleReceiptPersonnel.fullName",
     },
     prepare(selection) {
       const {
@@ -384,12 +426,12 @@ export const sampleReceipt = defineType({
         verificationDate,
         status,
         overallStatus,
-        submittedBy,
+        sampleReceiptPersonnel,
       } = selection;
 
       return {
         title: `${project}${projectClients ? ` - ${projectClients}` : ""}`,
-        subtitle: `${new Date(verificationDate).toLocaleDateString()} | ${status} | ${overallStatus} | By: ${submittedBy}`,
+        subtitle: `${new Date(verificationDate).toLocaleDateString()} | ${status} | ${overallStatus} | By: ${sampleReceiptPersonnel}`,
       };
     },
   },

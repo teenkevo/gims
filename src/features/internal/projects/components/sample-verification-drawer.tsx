@@ -35,16 +35,22 @@ import { SampleVerificationContent } from "@/features/internal/projects/componen
 import {
   PROJECT_BY_ID_QUERYResult,
   ALL_PERSONNEL_QUERYResult,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
+  SAMPLE_REVIEW_TEMPLATES_QUERYResult,
 } from "../../../../../sanity.types";
 
 export function SampleVerificationDrawer({
   children,
   project,
   personnel,
+  sampleReviewTemplate,
+  sampleAdequacyTemplate,
 }: {
   children: React.ReactNode;
   project: PROJECT_BY_ID_QUERYResult[number];
   personnel: ALL_PERSONNEL_QUERYResult;
+  sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
+  sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
@@ -84,6 +90,8 @@ export function SampleVerificationDrawer({
                 setHasUnsavedEdits={setHasUnsavedEdits}
                 project={project}
                 personnel={personnel}
+                sampleReviewTemplate={sampleReviewTemplate}
+                sampleAdequacyTemplate={sampleAdequacyTemplate}
               />
             </div>
           </SheetContent>
@@ -127,6 +135,8 @@ export function SampleVerificationDrawer({
               setHasUnsavedEdits={setHasUnsavedEdits}
               project={project}
               personnel={personnel}
+              sampleReviewTemplate={sampleReviewTemplate}
+              sampleAdequacyTemplate={sampleAdequacyTemplate}
             />
           </div>
           <DrawerFooter className="pt-2 flex-shrink-0">

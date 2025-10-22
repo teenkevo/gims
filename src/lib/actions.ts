@@ -1387,6 +1387,108 @@ export async function deleteAsset() {
   }
 }
 
+// CREATE SAMPLE RECEIPT
+export async function createSampleReceipt(prevState: any, formData: FormData) {
+  try {
+    const projectId = formData.get("projectId") as string;
+    const verificationDate = formData.get("verificationDate") as string;
+    const reviewItems = JSON.parse(formData.get("reviewItems") as string);
+    const adequacyChecks = JSON.parse(formData.get("adequacyChecks") as string);
+    const overallStatus = formData.get("overallStatus") as string;
+    const overallComments = formData.get("overallComments") as string;
+    const clientAcknowledgement = JSON.parse(
+      formData.get("clientAcknowledgement") as string
+    );
+    const getlabAcknowledgement = JSON.parse(
+      formData.get("getlabAcknowledgement") as string
+    );
+    const sampleReceiptPersonnel = JSON.parse(
+      formData.get("sampleReceiptPersonnel") as string
+    );
+    const reviewTemplate = formData.get("reviewTemplate") as string;
+    const adequacyTemplate = formData.get("adequacyTemplate") as string;
+
+    // Create the sample receipt document
+    const sampleReceipt = await writeClient.create(
+      {
+        _type: "sampleReceipt",
+        project: {
+          _type: "reference",
+          _ref: projectId,
+        },
+        verificationDate: new Date(verificationDate).toISOString(),
+        status: "draft",
+        reviewTemplate: reviewTemplate
+          ? {
+              _type: "reference",
+              _ref: reviewTemplate,
+            }
+          : undefined,
+        reviewItems: reviewItems.map((item: any) => ({
+          templateItemId: item.id,
+          label: item.label,
+          status: item.status,
+          comments: item.comments || "",
+        })),
+        adequacyTemplate: adequacyTemplate
+          ? {
+              _type: "reference",
+              _ref: adequacyTemplate,
+            }
+          : undefined,
+        adequacyChecks: adequacyChecks.map((item: any) => ({
+          templateItemId: item.id,
+          label: item.label,
+          required: item.required,
+          status: item.status,
+          comments: item.comments || "",
+        })),
+        overallStatus,
+        overallComments: overallComments || "",
+        clientAcknowledgement: clientAcknowledgement
+          ? {
+              acknowledgementText:
+                clientAcknowledgement.acknowledgementText || "",
+              clientSignature: clientAcknowledgement.clientSignature || "",
+              clientRepresentative:
+                clientAcknowledgement.clientRepresentative || "",
+            }
+          : undefined,
+        getlabAcknowledgement: getlabAcknowledgement
+          ? {
+              // REMOVED DURING DRAFT
+              // expectedDeliveryDate: getlabAcknowledgement.expectedDeliveryDate,
+              sampleRetentionDuration:
+                getlabAcknowledgement.sampleRetentionDuration || "",
+              acknowledgementText:
+                getlabAcknowledgement.acknowledgementText || "",
+            }
+          : undefined,
+        sampleReceiptPersonnel: {
+          role: sampleReceiptPersonnel.role,
+          name: sampleReceiptPersonnel.name,
+          signature: sampleReceiptPersonnel.signature,
+          personnel: sampleReceiptPersonnel.personnel
+            ? {
+                _type: "reference",
+                _ref: sampleReceiptPersonnel.personnel,
+              }
+            : undefined,
+        },
+      },
+      {
+        autoGenerateArrayKeys: true,
+      }
+    );
+
+    revalidateTag("projects");
+    return { result: sampleReceipt, status: "ok" };
+  } catch (error) {
+    console.error("Error creating sample receipt:", error);
+    return { error: "Failed to create sample receipt", status: "error" };
+  }
+}
+
 export async function setProjectDateRange(prevState: any, formData: FormData) {
   try {
     const dateFrom = formData.get("dateFrom");

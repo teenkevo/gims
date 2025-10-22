@@ -10,6 +10,8 @@ import { getAllClients } from "@/sanity/lib/clients/getAllClients";
 import { getAllServices } from "@/sanity/lib/services/getAllServices";
 import { getAllPersonnel } from "@/sanity/lib/personnel/getAllPersonnel";
 import Loading from "./loading";
+import { getSampleReviewTemplates } from "@/sanity/lib/projects/getSampleReviewTemplates";
+import { getSampleAdequacyTemplates } from "@/sanity/lib/projects/getSampleAdequacyTemplates";
 
 export default async function ProjectPage({
   params,
@@ -25,12 +27,16 @@ export default async function ProjectPage({
     existingClientsData,
     allServicesData,
     personnelData,
+    sampleReviewTemplatesData,
+    sampleAdequacyTemplatesData,
   ] = await Promise.all([
     getProjectById(id),
     getAllContacts(),
     getAllClients(),
     getAllServices(),
     getAllPersonnel(),
+    getSampleReviewTemplates(),
+    getSampleAdequacyTemplates(),
   ]);
 
   // If project is not found, show 404 placeholder
@@ -46,6 +52,8 @@ export default async function ProjectPage({
         existingClients={existingClientsData}
         allServices={allServicesData}
         personnel={personnelData}
+        sampleReviewTemplates={sampleReviewTemplatesData}
+        sampleAdequacyTemplates={sampleAdequacyTemplatesData}
       />
     </Suspense>
   );

@@ -1,6 +1,6 @@
 import { Document, pdf } from "@react-pdf/renderer";
 import dynamic from "next/dynamic";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SampleReceiptDocument } from "./sample-receipt-document";
 import {
@@ -16,6 +16,11 @@ import React, { Dispatch, SetStateAction, useMemo } from "react";
 import Loading from "@/app/loading";
 import { toast } from "sonner";
 import { ButtonLoading } from "@/components/button-loading";
+import { createSampleReceipt } from "@/lib/actions";
+import {
+  ALL_PERSONNEL_QUERYResult,
+  PROJECT_BY_ID_QUERYResult,
+} from "../../../../../sanity.types";
 
 interface ReviewItem {
   id: number;
@@ -33,6 +38,8 @@ interface AdequacyCheck {
 }
 
 interface SampleReceiptData {
+  sampleReviewTemplate: string;
+  sampleAdequacyTemplate: string;
   reviewItems: ReviewItem[];
   adequacyChecks: AdequacyCheck[];
   overallStatus: string;
@@ -50,15 +57,16 @@ interface SampleReceiptData {
   clientName?: string;
   email?: string;
   sampleReceiptNumber?: string;
+  personnel?: ALL_PERSONNEL_QUERYResult[number];
 }
 
 interface GenerateSampleReceiptDocumentProps {
-  setDrawerOpen: Dispatch<SetStateAction<boolean>>;
+  project: PROJECT_BY_ID_QUERYResult[number];
   sampleReceiptData: SampleReceiptData;
 }
 
 export const GenerateSampleReceiptDocument = ({
-  setDrawerOpen,
+  project,
   sampleReceiptData,
 }: GenerateSampleReceiptDocumentProps) => {
   const isMobile = useMediaQuery("(max-width: 640px)");
@@ -231,6 +239,98 @@ export const GenerateSampleReceiptDocument = ({
     }
   };
 
+  const handleCreateSampleReceipt = async () => {
+    // Validate form before allowing creation
+    if (!validateSampleReceiptData()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+
+      // Add project ID
+      formData.append("projectId", project._id);
+
+      // Add verification date (current date)
+      formData.append("verificationDate", new Date().toISOString());
+
+      // Add review items
+      formData.append(
+        "reviewItems",
+        JSON.stringify(sampleReceiptData.reviewItems)
+      );
+
+      // Add adequacy checks
+      formData.append(
+        "adequacyChecks",
+        JSON.stringify(sampleReceiptData.adequacyChecks)
+      );
+
+      // Add overall status and comments
+      formData.append("overallStatus", sampleReceiptData.overallStatus);
+      formData.append("overallComments", sampleReceiptData.comments || "");
+
+      // Add client acknowledgement
+      formData.append(
+        "clientAcknowledgement",
+        JSON.stringify({
+          acknowledgementText: sampleReceiptData.clientAcknowledgement || "",
+          clientSignature: sampleReceiptData.clientSignature || "",
+          clientRepresentative: sampleReceiptData.clientRepresentative || "",
+        })
+      );
+
+      // Add GETLAB acknowledgement
+      formData.append(
+        "getlabAcknowledgement",
+        JSON.stringify({
+          expectedDeliveryDate: sampleReceiptData.expectedDeliveryDate || "",
+          requiresMoreSamples: false, // Default value
+          sampleRetentionDuration:
+            sampleReceiptData.sampleRetentionDuration || "",
+          acknowledgementText: sampleReceiptData.getlabAcknowledgement || "",
+        })
+      );
+
+      // Add sample receipt personnel
+      formData.append(
+        "sampleReceiptPersonnel",
+        JSON.stringify({
+          role: sampleReceiptData.sampleReceiptRole,
+          name: sampleReceiptData.sampleReceiptName,
+          signature: sampleReceiptData.sampleReceiptSignature,
+          personnel: sampleReceiptData.personnel?._id, // No personnel reference for now
+        })
+      );
+
+      // Add submission info (using current user - you may need to get this from context)
+      formData.append("submittedBy", "current-user-id"); // TODO: Get actual user ID
+      formData.append("submittedAt", new Date().toISOString());
+
+      // Add template references (optional for now)
+      formData.append("reviewTemplate", sampleReceiptData.sampleReviewTemplate);
+      formData.append(
+        "adequacyTemplate",
+        sampleReceiptData.sampleAdequacyTemplate
+      );
+
+      const result = await createSampleReceipt({}, formData);
+
+      if (result.status === "ok") {
+        toast.success("Sample receipt created successfully!");
+        setOpen(false); // Close the sheet
+      } else {
+        toast.error(result.error || "Failed to create sample receipt");
+      }
+    } catch (error) {
+      console.error("Error creating sample receipt:", error);
+      toast.error("Failed to create sample receipt");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), {
     loading: () => <Loading />,
     ssr: false,
@@ -263,22 +363,36 @@ export const GenerateSampleReceiptDocument = ({
             {isLoading ? (
               <ButtonLoading />
             ) : (
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleDownloadPDF}
-                disabled={!isFormComplete()}
-                className={
-                  !isFormComplete() ? "opacity-50 cursor-not-allowed" : ""
-                }
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleCreateSampleReceipt}
+                  disabled={!isFormComplete()}
+                  className={
+                    !isFormComplete() ? "opacity-50 cursor-not-allowed" : ""
+                  }
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Create Sample Receipt
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={!isFormComplete()}
+                  className={
+                    !isFormComplete() ? "opacity-50 cursor-not-allowed" : ""
+                  }
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              </>
             )}
             {!isFormComplete() && (
               <Badge variant="outline" className="text-xs text-orange-500">
-                Complete form to enable download
+                Complete form to enable actions
               </Badge>
             )}
           </div>
