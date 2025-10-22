@@ -371,6 +371,8 @@ export const getProjectById = async (projectId: string) => {
               expectedDeliveryDate,
               sampleRetentionDuration,
               acknowledgementText,
+              approvalDecision,
+              rejectionReason,
             },
             sampleReceiptPersonnel {
               role,

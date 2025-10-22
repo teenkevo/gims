@@ -910,6 +910,30 @@
                 "type": "string"
               },
               "optional": true
+            },
+            "approvalDecision": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "union",
+                "of": [
+                  {
+                    "type": "string",
+                    "value": "approve"
+                  },
+                  {
+                    "type": "string",
+                    "value": "reject"
+                  }
+                ]
+              },
+              "optional": true
+            },
+            "rejectionReason": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
             }
           }
         },
@@ -920,57 +944,6 @@
         "value": {
           "type": "object",
           "attributes": {
-            "role": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "union",
-                "of": [
-                  {
-                    "type": "string",
-                    "value": "sle"
-                  },
-                  {
-                    "type": "string",
-                    "value": "lab-eng"
-                  },
-                  {
-                    "type": "string",
-                    "value": "jn-lab-eng"
-                  },
-                  {
-                    "type": "string",
-                    "value": "sen-lab-technician"
-                  },
-                  {
-                    "type": "string",
-                    "value": "lab-technician"
-                  },
-                  {
-                    "type": "string",
-                    "value": "lab-assistant"
-                  },
-                  {
-                    "type": "string",
-                    "value": "admin-personnel"
-                  }
-                ]
-              },
-              "optional": true
-            },
-            "name": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "string"
-              },
-              "optional": true
-            },
-            "signature": {
-              "type": "objectAttribute",
-              "value": {
-                "type": "string"
-              },
-              "optional": true
-            },
             "personnel": {
               "type": "objectAttribute",
               "value": {
@@ -998,6 +971,20 @@
                   }
                 },
                 "dereferencesTo": "personnel"
+              },
+              "optional": true
+            },
+            "role": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "name": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
               },
               "optional": true
             }

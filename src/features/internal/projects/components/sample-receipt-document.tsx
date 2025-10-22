@@ -2,6 +2,7 @@ import React from "react";
 import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
+import { ALL_PERSONNEL_QUERYResult } from "../../../../../sanity.types";
 
 const tw = createTw({
   theme: {
@@ -62,14 +63,15 @@ interface SampleReceiptDocumentProps {
   getlabAcknowledgement: string;
   expectedDeliveryDate: string;
   sampleRetentionDuration: string;
-  sampleReceiptRole: string;
+  approvalDecision?: string;
+  rejectionReason?: string;
   sampleReceiptName: string;
-  sampleReceiptSignature: string;
   projectName?: string;
   clientName?: string;
   email?: string;
   receiptDate?: string;
   sampleReceiptNumber?: string;
+  personnel?: ALL_PERSONNEL_QUERYResult[number];
 }
 
 export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
@@ -84,14 +86,15 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
     getlabAcknowledgement,
     expectedDeliveryDate,
     sampleRetentionDuration,
-    sampleReceiptRole,
+    approvalDecision,
+    rejectionReason,
     sampleReceiptName,
-    sampleReceiptSignature,
     projectName = "Sample Receipt Verification",
     clientName = "Client Name",
     receiptDate = new Date().toISOString(),
     sampleReceiptNumber = `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
     email = "info@getlab.co.ug",
+    personnel,
   } = props;
 
   const styles = StyleSheet.create({
@@ -449,16 +452,39 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
       {/* GETLAB's Acknowledgement Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>GETLAB'S ACKNOWLEDGEMENT</Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Expected delivery date: </Text>
-          {expectedDeliveryDate
-            ? format(new Date(expectedDeliveryDate), "dd/MM/yyyy")
-            : "Not specified"}
-        </Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Sample retention duration: </Text>
-          {sampleRetentionDuration || "Not specified"}
-        </Text>
+
+        {/* Approval Decision */}
+        {approvalDecision && (
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Decision: </Text>
+            {approvalDecision === "approve" ? "APPROVED" : "REJECTED"}
+          </Text>
+        )}
+
+        {/* Rejection Reason */}
+        {approvalDecision === "reject" && rejectionReason && (
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Rejection Reason: </Text>
+            {rejectionReason}
+          </Text>
+        )}
+
+        {/* Only show delivery date and retention duration for approved samples */}
+        {approvalDecision === "approve" && (
+          <>
+            <Text style={styles.text}>
+              <Text style={styles.bold}>Expected delivery date: </Text>
+              {expectedDeliveryDate
+                ? format(new Date(expectedDeliveryDate), "dd/MM/yyyy")
+                : "Not specified"}
+            </Text>
+            <Text style={styles.text}>
+              <Text style={styles.bold}>Sample retention duration: </Text>
+              {sampleRetentionDuration || "Not specified"}
+            </Text>
+          </>
+        )}
+
         {getlabAcknowledgement && (
           <View style={{ marginTop: 10 }}>
             <Text style={styles.bold}>Additional Notes:</Text>
@@ -471,16 +497,12 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>SAMPLE RECEIPT PERSONNEL</Text>
         <Text style={styles.text}>
-          <Text style={styles.bold}>Role: </Text>
-          {sampleReceiptRole}
-        </Text>
-        <Text style={styles.text}>
           <Text style={styles.bold}>Name: </Text>
-          {sampleReceiptName}
+          {personnel?.fullName}
         </Text>
         <Text style={styles.text}>
-          <Text style={styles.bold}>Signature: </Text>
-          {sampleReceiptSignature}
+          <Text style={styles.bold}>Role: </Text>
+          {personnel?.departmentRoles?.[0]?.role}
         </Text>
       </View>
 
@@ -499,7 +521,9 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
         <View style={styles.signatureBox}>
           <Text style={styles.signatureLabel}>GETLAB Personnel</Text>
           <Text style={styles.signatureValue}>Name: {sampleReceiptName}</Text>
-          <Text style={styles.signatureValue}>Role: {sampleReceiptRole}</Text>
+          <Text style={styles.signatureValue}>
+            Role: {personnel?.departmentRoles?.[0]?.role}
+          </Text>
           <Text style={styles.signatureValue}>
             Date: {format(new Date(receiptDate), "dd/MM/yyyy")}
           </Text>

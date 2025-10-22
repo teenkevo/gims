@@ -317,6 +317,38 @@ export const sampleReceipt = defineType({
           title: "Additional Acknowledgement Notes",
           type: "text",
         }),
+        defineField({
+          name: "approvalDecision",
+          title: "Approval Decision",
+          type: "string",
+          options: {
+            list: [
+              { title: "Approve", value: "approve" },
+              { title: "Reject", value: "reject" },
+            ],
+          },
+          validation: (Rule) => Rule.required(),
+          description: "GETLAB's decision on the sample receipt",
+        }),
+        defineField({
+          name: "rejectionReason",
+          title: "Rejection Reason",
+          type: "text",
+          description: "Required when decision is 'Reject'",
+          validation: (Rule) =>
+            Rule.custom((rejectionReason, context) => {
+              const approvalDecision = (
+                context.parent as { approvalDecision?: string }
+              )?.approvalDecision;
+              if (
+                approvalDecision === "reject" &&
+                (!rejectionReason || rejectionReason.trim() === "")
+              ) {
+                return "Rejection reason is required when decision is 'Reject'";
+              }
+              return true;
+            }),
+        }),
       ],
       validation: (Rule) =>
         Rule.custom((getlabAcknowledgement, context) => {
@@ -328,21 +360,31 @@ export const sampleReceipt = defineType({
               return "GETLAB acknowledgement is required when status is 'Approved Internally'";
             }
 
-            const { expectedDeliveryDate, sampleRetentionDuration } =
-              getlabAcknowledgement as {
-                expectedDeliveryDate?: string;
-                sampleRetentionDuration?: string;
-              };
+            const {
+              expectedDeliveryDate,
+              sampleRetentionDuration,
+              approvalDecision,
+            } = getlabAcknowledgement as {
+              expectedDeliveryDate?: string;
+              sampleRetentionDuration?: string;
+              approvalDecision?: string;
+            };
 
-            if (!expectedDeliveryDate) {
-              return "Expected delivery date is required when GETLAB has approved the sample receipt";
+            if (!approvalDecision) {
+              return "Approval decision is required when GETLAB has processed the sample receipt";
             }
 
-            if (
-              !sampleRetentionDuration ||
-              sampleRetentionDuration.trim() === ""
-            ) {
-              return "Sample retention duration is required when GETLAB has approved the sample receipt";
+            if (approvalDecision === "approve") {
+              if (!expectedDeliveryDate) {
+                return "Expected delivery date is required when GETLAB has approved the sample receipt";
+              }
+
+              if (
+                !sampleRetentionDuration ||
+                sampleRetentionDuration.trim() === ""
+              ) {
+                return "Sample retention duration is required when GETLAB has approved the sample receipt";
+              }
             }
           }
 
@@ -357,35 +399,17 @@ export const sampleReceipt = defineType({
       type: "object",
       fields: [
         defineField({
+          name: "personnel",
+          title: "Personnel Reference",
+          type: "reference",
+          to: [{ type: "personnel" }],
+          description: "Personnel who prepared the sample receipt",
+          validation: (Rule) => Rule.required(),
+        }),
+        defineField({
           name: "role",
           title: "Role",
           type: "string",
-          options: {
-            list: [
-              {
-                title: "Senior Laboratory Engineer",
-                value: "senior-laboratory-engineer",
-              },
-              { title: "Laboratory Engineer", value: "laboratory-engineer" },
-              {
-                title: "Junior Laboratory Engineer",
-                value: "junior-laboratory-engineer",
-              },
-              {
-                title: "Senior Laboratory Technician",
-                value: "senior-laboratory-technician",
-              },
-              {
-                title: "Laboratory Technician",
-                value: "laboratory-technician",
-              },
-              { title: "Laboratory Assistant", value: "laboratory-assistant" },
-              {
-                title: "Administrative Personnel",
-                value: "administrative-personnel",
-              },
-            ],
-          },
           validation: (Rule) => Rule.required(),
         }),
         defineField({
@@ -393,19 +417,6 @@ export const sampleReceipt = defineType({
           title: "Name",
           type: "string",
           validation: (Rule) => Rule.required(),
-        }),
-        defineField({
-          name: "signature",
-          title: "Signature",
-          type: "string",
-          validation: (Rule) => Rule.required(),
-        }),
-        defineField({
-          name: "personnel",
-          title: "Personnel Reference",
-          type: "reference",
-          to: [{ type: "personnel" }],
-          description: "Link to the actual personnel record",
         }),
       ],
     }),

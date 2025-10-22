@@ -324,6 +324,7 @@ export default function ProjectDetails({
               personnel={personnel}
               sampleReviewTemplate={sampleReviewTemplates[0]}
               sampleAdequacyTemplate={sampleAdequacyTemplates[0]}
+              existingSampleReceipt={project.sampleReceipt}
             />
           </div>
         </TabsContent>

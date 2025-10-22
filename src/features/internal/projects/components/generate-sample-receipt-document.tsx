@@ -16,7 +16,11 @@ import React, { Dispatch, SetStateAction, useMemo } from "react";
 import Loading from "@/app/loading";
 import { toast } from "sonner";
 import { ButtonLoading } from "@/components/button-loading";
-import { createSampleReceipt } from "@/lib/actions";
+import {
+  createSampleReceipt,
+  updateSampleReceipt,
+  approveSampleReceipt,
+} from "@/lib/actions";
 import {
   ALL_PERSONNEL_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
@@ -48,11 +52,11 @@ interface SampleReceiptData {
   clientSignature: string;
   clientRepresentative: string;
   getlabAcknowledgement: string;
+  approvalDecision?: string;
+  rejectionReason?: string;
   expectedDeliveryDate: string;
   sampleRetentionDuration: string;
-  sampleReceiptRole: string;
   sampleReceiptName: string;
-  sampleReceiptSignature: string;
   projectName?: string;
   clientName?: string;
   email?: string;
@@ -63,15 +67,29 @@ interface SampleReceiptData {
 interface GenerateSampleReceiptDocumentProps {
   project: PROJECT_BY_ID_QUERYResult[number];
   sampleReceiptData: SampleReceiptData;
+  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
+  onCloseDrawers?: () => void;
+  isReadOnly?: boolean;
+  onApprove?: () => void;
 }
 
 export const GenerateSampleReceiptDocument = ({
   project,
   sampleReceiptData,
+  existingSampleReceipt,
+  onCloseDrawers,
+  isReadOnly = false,
+  onApprove,
 }: GenerateSampleReceiptDocumentProps) => {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+
+  // Check if this is an update operation (existing sample receipt) - reactive to live data changes
+  const isUpdate = React.useMemo(
+    () => Boolean(existingSampleReceipt),
+    [existingSampleReceipt]
+  );
 
   // Validation function
   const validateSampleReceiptData = () => {
@@ -132,32 +150,10 @@ export const GenerateSampleReceiptDocument = ({
     // Client acknowledgement fields are not required for sample receipt generation
 
     if (
-      !sampleReceiptData.sampleReceiptRole ||
-      sampleReceiptData.sampleReceiptRole.trim() === ""
-    ) {
-      toast.warning(
-        "Please select sample receipt personnel role before reviewing"
-      );
-      return false;
-    }
-
-    if (
       !sampleReceiptData.sampleReceiptName ||
       sampleReceiptData.sampleReceiptName.trim() === ""
     ) {
-      toast.warning(
-        "Please provide sample receipt personnel name before reviewing"
-      );
-      return false;
-    }
-
-    if (
-      !sampleReceiptData.sampleReceiptSignature ||
-      sampleReceiptData.sampleReceiptSignature.trim() === ""
-    ) {
-      toast.warning(
-        "Please provide sample receipt personnel signature before reviewing"
-      );
+      toast.warning("Please select sample receipt personnel before reviewing");
       return false;
     }
 
@@ -170,7 +166,7 @@ export const GenerateSampleReceiptDocument = ({
   };
 
   // Check if form is complete for visual indication
-  const isFormComplete = () => {
+  const isFormComplete = useMemo(() => {
     const { reviewItems, adequacyChecks, overallStatus } = sampleReceiptData;
 
     const incompleteReviewItems = reviewItems.filter(
@@ -199,11 +195,9 @@ export const GenerateSampleReceiptDocument = ({
       invalidItems.length === 0 &&
       invalidAdequacyItems.length === 0 &&
       // Client acknowledgement fields are not required for form completion
-      sampleReceiptData.sampleReceiptRole?.trim() &&
-      sampleReceiptData.sampleReceiptName?.trim() &&
-      sampleReceiptData.sampleReceiptSignature?.trim()
+      sampleReceiptData.sampleReceiptName?.trim()
     );
-  };
+  }, [sampleReceiptData]);
 
   const Doc = useMemo(
     () => (
@@ -240,7 +234,7 @@ export const GenerateSampleReceiptDocument = ({
   };
 
   const handleCreateSampleReceipt = async () => {
-    // Validate form before allowing creation
+    // Validate form before allowing creation/update
     if (!validateSampleReceiptData()) {
       return;
     }
@@ -249,8 +243,13 @@ export const GenerateSampleReceiptDocument = ({
     try {
       const formData = new FormData();
 
-      // Add project ID
+      // Add project ID (needed for cache invalidation)
       formData.append("projectId", project._id);
+
+      // Add sample receipt ID for updates
+      if (isUpdate && existingSampleReceipt?._id) {
+        formData.append("sampleReceiptId", existingSampleReceipt._id);
+      }
 
       // Add verification date (current date)
       formData.append("verificationDate", new Date().toISOString());
@@ -297,9 +296,8 @@ export const GenerateSampleReceiptDocument = ({
       formData.append(
         "sampleReceiptPersonnel",
         JSON.stringify({
-          role: sampleReceiptData.sampleReceiptRole,
           name: sampleReceiptData.sampleReceiptName,
-          signature: sampleReceiptData.sampleReceiptSignature,
+          role: sampleReceiptData.personnel?.departmentRoles?.[0]?.role,
           personnel: sampleReceiptData.personnel?._id, // No personnel reference for now
         })
       );
@@ -315,17 +313,113 @@ export const GenerateSampleReceiptDocument = ({
         sampleReceiptData.sampleAdequacyTemplate
       );
 
-      const result = await createSampleReceipt({}, formData);
+      const result = isUpdate
+        ? await updateSampleReceipt({}, formData)
+        : await createSampleReceipt({}, formData);
 
       if (result.status === "ok") {
-        toast.success("Sample receipt created successfully!");
+        toast.success(
+          isUpdate
+            ? "Sample receipt updated successfully!"
+            : "Sample receipt created successfully!"
+        );
         setOpen(false); // Close the sheet
+        // Close both drawers if callback is provided
+        if (onCloseDrawers) {
+          onCloseDrawers();
+        }
       } else {
-        toast.error(result.error || "Failed to create sample receipt");
+        toast.error(
+          result.error ||
+            (isUpdate
+              ? "Failed to update sample receipt"
+              : "Failed to create sample receipt")
+        );
       }
     } catch (error) {
       console.error("Error creating sample receipt:", error);
-      toast.error("Failed to create sample receipt");
+      toast.error(
+        isUpdate
+          ? "Failed to update sample receipt"
+          : "Failed to create sample receipt"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApproveSampleReceipt = async () => {
+    if (!existingSampleReceipt?._id) {
+      toast.error("No sample receipt found to approve");
+      return;
+    }
+
+    if (!sampleReceiptData.approvalDecision) {
+      toast.error("Please select an approval decision");
+      return;
+    }
+
+    if (
+      sampleReceiptData.approvalDecision === "reject" &&
+      !sampleReceiptData.rejectionReason?.trim()
+    ) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+
+    if (
+      sampleReceiptData.approvalDecision === "approve" &&
+      (!sampleReceiptData.expectedDeliveryDate ||
+        !sampleReceiptData.sampleRetentionDuration)
+    ) {
+      toast.error(
+        "Expected delivery date and sample retention duration are required for approval"
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("sampleReceiptId", existingSampleReceipt._id);
+      formData.append("projectId", project._id);
+      formData.append(
+        "getlabAcknowledgement",
+        sampleReceiptData.getlabAcknowledgement
+      );
+      formData.append("approvalDecision", sampleReceiptData.approvalDecision);
+      formData.append(
+        "rejectionReason",
+        sampleReceiptData.rejectionReason || ""
+      );
+      formData.append(
+        "expectedDeliveryDate",
+        sampleReceiptData.expectedDeliveryDate || ""
+      );
+      formData.append(
+        "sampleRetentionDuration",
+        sampleReceiptData.sampleRetentionDuration || ""
+      );
+
+      const result = await approveSampleReceipt({}, formData);
+
+      if (result.status === "ok") {
+        toast.success(
+          `Sample receipt ${sampleReceiptData.approvalDecision === "approve" ? "approved" : "rejected"} successfully!`
+        );
+        setOpen(false);
+        if (onApprove) {
+          onApprove();
+        }
+        if (onCloseDrawers) {
+          onCloseDrawers();
+        }
+      } else {
+        toast.error(result.error || "Failed to process sample receipt");
+      }
+    } catch (error) {
+      console.error("Failed to process sample receipt:", error);
+      toast.error("Failed to process sample receipt");
     } finally {
       setIsLoading(false);
     }
@@ -364,35 +458,61 @@ export const GenerateSampleReceiptDocument = ({
               <ButtonLoading />
             ) : (
               <>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleCreateSampleReceipt}
-                  disabled={!isFormComplete()}
-                  className={
-                    !isFormComplete() ? "opacity-50 cursor-not-allowed" : ""
-                  }
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Create Sample Receipt
-                </Button>
-                <Button
+                {isReadOnly ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleApproveSampleReceipt}
+                    disabled={!sampleReceiptData.approvalDecision}
+                    className={
+                      !sampleReceiptData.approvalDecision
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {sampleReceiptData.approvalDecision === "reject"
+                      ? "Reject"
+                      : "Approve"}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateSampleReceipt}
+                    disabled={!isFormComplete}
+                    className={
+                      !isFormComplete ? "opacity-50 cursor-not-allowed" : ""
+                    }
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {isUpdate
+                      ? "Update Sample Receipt"
+                      : "Create Sample Receipt"}
+                  </Button>
+                )}
+                {/* <Button
                   type="button"
                   size="sm"
                   onClick={handleDownloadPDF}
-                  disabled={!isFormComplete()}
+                  disabled={!isFormComplete}
                   className={
-                    !isFormComplete() ? "opacity-50 cursor-not-allowed" : ""
+                    !isFormComplete ? "opacity-50 cursor-not-allowed" : ""
                   }
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
-                </Button>
+                </Button> */}
               </>
             )}
-            {!isFormComplete() && (
+            {!isFormComplete && !isReadOnly && (
               <Badge variant="outline" className="text-xs text-orange-500">
-                Complete form to enable actions
+                Complete form to enable action
+              </Badge>
+            )}
+            {isReadOnly && !sampleReceiptData.approvalDecision && (
+              <Badge variant="outline" className="text-xs text-orange-500">
+                Select approval decision to enable action
               </Badge>
             )}
           </div>

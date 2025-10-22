@@ -117,11 +117,13 @@ const ReviewTable = React.memo(
     onStatusChange,
     onCommentChange,
     isValid,
+    isReadOnly,
   }: {
     data: ReviewItem[];
     onStatusChange: (id: number, status: string) => void;
     onCommentChange: (id: number, comments: string) => void;
     isValid: boolean;
+    isReadOnly: boolean;
   }) => {
     const columns: ColumnDef<ReviewItem>[] = useMemo(
       () => [
@@ -147,6 +149,7 @@ const ReviewTable = React.memo(
               value={row.original.status}
               onValueChange={(value) => onStatusChange(row.original.id, value)}
               className="flex space-x-4"
+              disabled={isReadOnly}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id={`yes-${row.original.id}`} />
@@ -184,6 +187,7 @@ const ReviewTable = React.memo(
                     ? "border-red-500"
                     : ""
                 }
+                disabled={isReadOnly}
               />
               {row.original.status === "no" && !row.original.comments && (
                 <p className="text-sm text-red-500">
@@ -194,7 +198,7 @@ const ReviewTable = React.memo(
           ),
         },
       ],
-      [onStatusChange, onCommentChange]
+      [onStatusChange, onCommentChange, isReadOnly]
     );
 
     const table = useReactTable({
@@ -256,11 +260,13 @@ const AdequacyTable = React.memo(
     onStatusChange,
     onCommentChange,
     isValid,
+    isReadOnly,
   }: {
     data: AdequacyCheck[];
     onStatusChange: (id: number, status: string) => void;
     onCommentChange: (id: number, comments: string) => void;
     isValid: boolean;
+    isReadOnly: boolean;
   }) => {
     const columns: ColumnDef<AdequacyCheck>[] = useMemo(
       () => [
@@ -286,6 +292,7 @@ const AdequacyTable = React.memo(
               value={row.original.status}
               onValueChange={(value) => onStatusChange(row.original.id, value)}
               className="flex space-x-4"
+              disabled={isReadOnly}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
@@ -322,6 +329,7 @@ const AdequacyTable = React.memo(
                     ? "border-red-500"
                     : ""
                 }
+                disabled={isReadOnly}
               />
               {row.original.status === "inadequate" &&
                 !row.original.comments && (
@@ -333,7 +341,7 @@ const AdequacyTable = React.memo(
           ),
         },
       ],
-      [onStatusChange, onCommentChange]
+      [onStatusChange, onCommentChange, isReadOnly]
     );
 
     const table = useReactTable({
@@ -344,7 +352,7 @@ const AdequacyTable = React.memo(
 
     return (
       <div
-        className={`rounded-md border-2 transition-all duration-500 ease-in-out ${
+        className={`rounded-md border transition-all duration-500 ease-in-out ${
           isValid ? "border-primary" : "border-destructive"
         }`}
       >
@@ -498,9 +506,7 @@ const SubmittedInfo = React.memo(({ data }: { data: any }) => {
           <AccordionItem value="sample-receipt">
             <AccordionTrigger>Sample Receipt Personnel</AccordionTrigger>
             <AccordionContent>
-              <p>Role: {data.sampleReceiptRole}</p>
               <p>Name: {data.sampleReceiptName}</p>
-              <p>Signature: {data.sampleReceiptSignature}</p>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -516,6 +522,9 @@ export function SampleVerificationContent({
   personnel,
   sampleReviewTemplate,
   sampleAdequacyTemplate,
+  existingSampleReceipt,
+  isReadOnly = false,
+  onApprove,
 }: {
   setDrawerOpen: (open: boolean) => void;
   setHasUnsavedEdits: (hasEdits: boolean) => void;
@@ -523,47 +532,337 @@ export function SampleVerificationContent({
   personnel: ALL_PERSONNEL_QUERYResult;
   sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
   sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
+  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
+  isReadOnly?: boolean;
+  onApprove?: () => void;
 }) {
   // Extract values from project
   const clientName = project.clients?.[0]?.name || "Client Name";
   const projectName = project.name || "Sample Receipt Verification";
   const email = project.contactPersons?.[0]?.email || "info@getlab.co.ug";
-  const [reviewItems, setReviewItems] = useState<ReviewItem[]>(
-    getInitialReviewItems(sampleReviewTemplate).map((item) => ({
+  // Initialize state with existing data if available
+  const [reviewItems, setReviewItems] = useState<ReviewItem[]>(() => {
+    if (existingSampleReceipt?.reviewItems) {
+      return existingSampleReceipt.reviewItems.map((item) => ({
+        id: item.templateItemId || 0,
+        label: item.label || "",
+        status: item.status || "",
+        comments: item.comments || "",
+      }));
+    }
+    return getInitialReviewItems(sampleReviewTemplate).map((item) => ({
       ...item,
       status: "",
       comments: "",
-    }))
-  );
-  const [adequacyChecks, setAdequacyChecks] = useState<AdequacyCheck[]>(
-    getInitialAdequacyChecks(sampleAdequacyTemplate).map((item) => ({
+    }));
+  });
+
+  const [adequacyChecks, setAdequacyChecks] = useState<AdequacyCheck[]>(() => {
+    if (existingSampleReceipt?.adequacyChecks) {
+      return existingSampleReceipt.adequacyChecks.map((item) => ({
+        id: item.templateItemId || 0,
+        label: item.label || "",
+        required: false, // This will be set from template
+        status: item.status || "",
+        comments: item.comments || "",
+      }));
+    }
+    return getInitialAdequacyChecks(sampleAdequacyTemplate).map((item) => ({
       ...item,
       status: "",
       comments: "",
-    }))
+    }));
+  });
+
+  const [overallStatus, setOverallStatus] = useState<string>(
+    existingSampleReceipt?.overallStatus || ""
   );
-  const [overallStatus, setOverallStatus] = useState<string>("");
-  const [comments, setComments] = useState<string>("");
+  const [comments, setComments] = useState<string>(
+    existingSampleReceipt?.overallComments || ""
+  );
   const [clientAcknowledgement, setClientAcknowledgement] = useState<string>(
-    "I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
+    existingSampleReceipt?.clientAcknowledgement?.acknowledgementText ||
+      "I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
   );
-  const [clientSignature, setClientSignature] = useState<string>("");
-  const [clientRepresentative, setClientRepresentative] = useState<string>("");
-  const [getlabAcknowledgement, setGetlabAcknowledgement] =
-    useState<string>("");
+  const [clientSignature, setClientSignature] = useState<string>(
+    existingSampleReceipt?.clientAcknowledgement?.clientSignature || ""
+  );
+  const [clientRepresentative, setClientRepresentative] = useState<string>(
+    existingSampleReceipt?.clientAcknowledgement?.clientRepresentative || ""
+  );
+  const [getlabAcknowledgement, setGetlabAcknowledgement] = useState<string>(
+    existingSampleReceipt?.getlabAcknowledgement?.acknowledgementText || ""
+  );
+  const [approvalDecision, setApprovalDecision] = useState<string>(
+    existingSampleReceipt?.getlabAcknowledgement?.approvalDecision || ""
+  );
+  const [rejectionReason, setRejectionReason] = useState<string>(
+    existingSampleReceipt?.getlabAcknowledgement?.rejectionReason || ""
+  );
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState<
     Date | undefined
-  >(undefined);
+  >(
+    existingSampleReceipt?.getlabAcknowledgement?.expectedDeliveryDate
+      ? new Date(
+          existingSampleReceipt.getlabAcknowledgement.expectedDeliveryDate
+        )
+      : undefined
+  );
   const [sampleRetentionDuration, setSampleRetentionDuration] = useState<
     number | undefined
-  >(undefined);
-  const [sampleReceiptRole, setSampleReceiptRole] = useState<string>("");
-  const [sampleReceiptName, setSampleReceiptName] = useState<string>("");
-  const [sampleReceiptSignature, setSampleReceiptSignature] =
-    useState<string>("");
+  >(
+    existingSampleReceipt?.getlabAcknowledgement?.sampleRetentionDuration
+      ? parseInt(
+          existingSampleReceipt.getlabAcknowledgement.sampleRetentionDuration,
+          10
+        )
+      : undefined
+  );
+  const [sampleReceiptName, setSampleReceiptName] = useState<string>(
+    existingSampleReceipt?.sampleReceiptPersonnel?.name || ""
+  );
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  // Update state when existingSampleReceipt changes (for live updates from Sanity)
+  useEffect(() => {
+    if (existingSampleReceipt?.reviewItems) {
+      setReviewItems(
+        existingSampleReceipt.reviewItems.map((item) => ({
+          id: item.templateItemId || 0,
+          label: item.label || "",
+          status: item.status || "",
+          comments: item.comments || "",
+        }))
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [existingSampleReceipt?.reviewItems, setHasUnsavedEdits]);
+
+  useEffect(() => {
+    if (existingSampleReceipt?.adequacyChecks) {
+      setAdequacyChecks(
+        existingSampleReceipt.adequacyChecks.map((item) => ({
+          id: item.templateItemId || 0,
+          label: item.label || "",
+          required: false, // This will be set from template
+          status: item.status || "",
+          comments: item.comments || "",
+        }))
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [existingSampleReceipt?.adequacyChecks, setHasUnsavedEdits]);
+
+  useEffect(() => {
+    if (existingSampleReceipt?.overallStatus !== undefined) {
+      setOverallStatus(existingSampleReceipt.overallStatus || "");
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [existingSampleReceipt?.overallStatus, setHasUnsavedEdits]);
+
+  useEffect(() => {
+    if (existingSampleReceipt?.overallComments !== undefined) {
+      setComments(existingSampleReceipt.overallComments || "");
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [existingSampleReceipt?.overallComments, setHasUnsavedEdits]);
+
+  useEffect(() => {
+    if (
+      existingSampleReceipt?.clientAcknowledgement?.acknowledgementText !==
+      undefined
+    ) {
+      setClientAcknowledgement(
+        existingSampleReceipt.clientAcknowledgement.acknowledgementText ||
+          "I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.clientAcknowledgement?.acknowledgementText,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (
+      existingSampleReceipt?.clientAcknowledgement?.clientSignature !==
+      undefined
+    ) {
+      setClientSignature(
+        existingSampleReceipt.clientAcknowledgement.clientSignature || ""
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.clientAcknowledgement?.clientSignature,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (
+      existingSampleReceipt?.clientAcknowledgement?.clientRepresentative !==
+      undefined
+    ) {
+      setClientRepresentative(
+        existingSampleReceipt.clientAcknowledgement.clientRepresentative || ""
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.clientAcknowledgement?.clientRepresentative,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (
+      existingSampleReceipt?.getlabAcknowledgement?.acknowledgementText !==
+      undefined
+    ) {
+      setGetlabAcknowledgement(
+        existingSampleReceipt.getlabAcknowledgement.acknowledgementText || ""
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.getlabAcknowledgement?.acknowledgementText,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (
+      existingSampleReceipt?.getlabAcknowledgement?.approvalDecision !==
+      undefined
+    ) {
+      setApprovalDecision(
+        existingSampleReceipt.getlabAcknowledgement.approvalDecision || ""
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.getlabAcknowledgement?.approvalDecision,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (
+      existingSampleReceipt?.getlabAcknowledgement?.rejectionReason !==
+      undefined
+    ) {
+      setRejectionReason(
+        existingSampleReceipt.getlabAcknowledgement.rejectionReason || ""
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.getlabAcknowledgement?.rejectionReason,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (existingSampleReceipt?.getlabAcknowledgement?.expectedDeliveryDate) {
+      setExpectedDeliveryDate(
+        new Date(
+          existingSampleReceipt.getlabAcknowledgement.expectedDeliveryDate
+        )
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    } else if (
+      existingSampleReceipt?.getlabAcknowledgement?.expectedDeliveryDate ===
+      null
+    ) {
+      setExpectedDeliveryDate(undefined);
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.getlabAcknowledgement?.expectedDeliveryDate,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (existingSampleReceipt?.getlabAcknowledgement?.sampleRetentionDuration) {
+      setSampleRetentionDuration(
+        parseInt(
+          existingSampleReceipt.getlabAcknowledgement.sampleRetentionDuration,
+          10
+        )
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    } else if (
+      existingSampleReceipt?.getlabAcknowledgement?.sampleRetentionDuration ===
+      null
+    ) {
+      setSampleRetentionDuration(undefined);
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt?.getlabAcknowledgement?.sampleRetentionDuration,
+    setHasUnsavedEdits,
+  ]);
+
+  useEffect(() => {
+    if (existingSampleReceipt?.sampleReceiptPersonnel?.name !== undefined) {
+      setSampleReceiptName(
+        existingSampleReceipt.sampleReceiptPersonnel.name || ""
+      );
+      // Reset unsaved edits when data is updated from Sanity
+      setHasUnsavedEdits(false);
+    }
+  }, [existingSampleReceipt?.sampleReceiptPersonnel?.name, setHasUnsavedEdits]);
+
+  // Handle case when sample receipt is deleted (existingSampleReceipt becomes null/undefined)
+  useEffect(() => {
+    if (existingSampleReceipt === null || existingSampleReceipt === undefined) {
+      // Reset all form data to initial state when sample receipt is deleted
+      setReviewItems(
+        getInitialReviewItems(sampleReviewTemplate).map((item) => ({
+          ...item,
+          status: "",
+          comments: "",
+        }))
+      );
+      setAdequacyChecks(
+        getInitialAdequacyChecks(sampleAdequacyTemplate).map((item) => ({
+          ...item,
+          status: "",
+          comments: "",
+        }))
+      );
+      setOverallStatus("");
+      setComments("");
+      setClientAcknowledgement(
+        "I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
+      );
+      setClientSignature("");
+      setClientRepresentative("");
+      setGetlabAcknowledgement("");
+      setExpectedDeliveryDate(undefined);
+      setSampleRetentionDuration(undefined);
+      setSampleReceiptName("");
+      // Reset unsaved edits when sample receipt is deleted
+      setHasUnsavedEdits(false);
+    }
+  }, [
+    existingSampleReceipt,
+    sampleReviewTemplate,
+    sampleAdequacyTemplate,
+    setHasUnsavedEdits,
+  ]);
 
   // Validation states
   const [isReviewValid, setIsReviewValid] = useState<boolean>(false);
@@ -577,6 +876,12 @@ export function SampleVerificationContent({
 
   const { setTheme } = useTheme();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Callback to close both drawers
+  const handleCloseDrawers = useCallback(() => {
+    setDrawerOpen(false);
+    setHasUnsavedEdits(false);
+  }, [setDrawerOpen]);
 
   // Debounced function to set unsaved edits
   const debouncedSetHasUnsavedEdits = useCallback(() => {
@@ -651,16 +956,19 @@ export function SampleVerificationContent({
   }, [overallStatus]);
 
   const isGetlabAcknowledgementSectionValid = useCallback(() => {
+    // Only validate if acknowledgements are visible (after submission)
+    if (
+      !existingSampleReceipt?.status ||
+      existingSampleReceipt.status === "draft"
+    ) {
+      return true;
+    }
     return true; // Expected delivery date is no longer required
-  }, []);
+  }, [existingSampleReceipt?.status]);
 
   const isSampleReceiptPersonnelSectionValid = useCallback(() => {
-    return (
-      sampleReceiptRole !== "" &&
-      sampleReceiptName !== "" &&
-      sampleReceiptSignature !== ""
-    );
-  }, [sampleReceiptRole, sampleReceiptName, sampleReceiptSignature]);
+    return sampleReceiptName !== "";
+  }, [sampleReceiptName]);
 
   // Update validation states when data changes
   useEffect(() => {
@@ -684,6 +992,7 @@ export function SampleVerificationContent({
       isGetlabAcknowledgementSectionValid()
     );
   }, [
+    existingSampleReceipt?.status,
     isGetlabAcknowledgementSectionValid,
     handleGetlabAcknowledgementValidationChange,
   ]);
@@ -693,9 +1002,7 @@ export function SampleVerificationContent({
       isSampleReceiptPersonnelSectionValid()
     );
   }, [
-    sampleReceiptRole,
     sampleReceiptName,
-    sampleReceiptSignature,
     isSampleReceiptPersonnelSectionValid,
     handleSampleReceiptPersonnelValidationChange,
   ]);
@@ -850,6 +1157,7 @@ export function SampleVerificationContent({
                   size="sm"
                   onClick={handleYesToAllChecks}
                   className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                  disabled={isReadOnly}
                 >
                   Yes to All
                 </Button>
@@ -858,6 +1166,7 @@ export function SampleVerificationContent({
                   size="sm"
                   onClick={handleNoToAllChecks}
                   className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                  disabled={isReadOnly}
                 >
                   No to All
                 </Button>
@@ -870,6 +1179,7 @@ export function SampleVerificationContent({
               onStatusChange={handleReviewStatusChange}
               onCommentChange={handleReviewCommentChange}
               isValid={isReviewValid}
+              isReadOnly={isReadOnly}
             />
           </CardContent>
         </div>
@@ -887,6 +1197,7 @@ export function SampleVerificationContent({
                   size="sm"
                   onClick={handleAdequateToAllChecks}
                   className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                  disabled={isReadOnly}
                 >
                   Adequate to All
                 </Button>
@@ -899,12 +1210,13 @@ export function SampleVerificationContent({
               onStatusChange={handleAdequacyStatusChange}
               onCommentChange={handleAdequacyCommentChange}
               isValid={isAdequacyValid}
+              isReadOnly={isReadOnly}
             />
           </CardContent>
         </div>
 
         <div
-          className={`border-2 transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
+          className={`border transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
             isOverallCommentsValid ? "border-primary" : "border-destructive"
           }`}
         >
@@ -919,11 +1231,13 @@ export function SampleVerificationContent({
           </CardHeader>
           <CardContent>
             <RadioGroup
+              value={overallStatus}
               onValueChange={(value) => {
                 setOverallStatus(value);
                 debouncedSetHasUnsavedEdits();
               }}
               className="flex space-x-4 mb-4"
+              disabled={isReadOnly}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="satisfactory" id="satisfactory" />
@@ -950,138 +1264,206 @@ export function SampleVerificationContent({
                 setComments(e.target.value);
                 debouncedSetHasUnsavedEdits();
               }}
+              disabled={isReadOnly}
             />
           </CardContent>
         </div>
 
-        <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
-          <CardHeader>
-            <CardTitle>Client's Acknowledgement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              disabled
-              placeholder="I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
-              value={clientAcknowledgement}
-              onChange={(e) => {
-                setClientAcknowledgement(e.target.value);
-                debouncedSetHasUnsavedEdits();
-              }}
-            />
-            <div className="mt-4">
-              <Label htmlFor="client-signature">Signature of Customer</Label>
-              <Input
-                id="client-signature"
-                type="text"
-                placeholder="Enter name as signature"
-                className="mt-1"
-                value={clientSignature}
-                onChange={(e) => {
-                  setClientSignature(e.target.value);
-                  debouncedSetHasUnsavedEdits();
-                }}
-              />
-            </div>
-            <div className="mt-4">
-              <RadioGroup
-                onValueChange={(value) => {
-                  setClientRepresentative(value);
-                  debouncedSetHasUnsavedEdits();
-                }}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="client-rep" id="client-rep" />
-                  <Label htmlFor="client-rep">Client's Rep.</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="contractor-rep" id="contractor-rep" />
-                  <Label htmlFor="contractor-rep">Contractor's Rep.</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="consultant-rep" id="consultant-rep" />
-                  <Label htmlFor="consultant-rep">Consultant's Rep.</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </CardContent>
-        </div>
-
-        <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
-          <CardHeader>
-            <CardTitle>GETLAB's Acknowledgement </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="expected-delivery-date">
-                  Expected delivery date
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="expected-delivery-date"
-                      variant="outline"
-                      className={`mt-1 w-full justify-start text-left font-normal ${
-                        !expectedDeliveryDate && "text-muted-foreground"
-                      }`}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {expectedDeliveryDate ? (
-                        format(expectedDeliveryDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={expectedDeliveryDate}
-                      onSelect={(date) => {
-                        setExpectedDeliveryDate(date);
+        {/* Only show acknowledgements after sample receipt has been submitted for approval */}
+        {existingSampleReceipt?.status &&
+          existingSampleReceipt.status !== "draft" && (
+            <>
+              <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
+                <CardHeader>
+                  <CardTitle>Client's Acknowledgement</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    disabled
+                    placeholder="I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
+                    value={clientAcknowledgement}
+                    onChange={(e) => {
+                      setClientAcknowledgement(e.target.value);
+                      debouncedSetHasUnsavedEdits();
+                    }}
+                  />
+                  <div className="mt-4">
+                    <Label htmlFor="client-signature">
+                      Signature of Customer
+                    </Label>
+                    <Input
+                      id="client-signature"
+                      type="text"
+                      placeholder="Enter name as signature"
+                      className="mt-1"
+                      value={clientSignature}
+                      onChange={(e) => {
+                        setClientSignature(e.target.value);
                         debouncedSetHasUnsavedEdits();
                       }}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
+                      disabled={isReadOnly}
                     />
-                  </PopoverContent>
-                </Popover>
+                  </div>
+                  <div className="mt-4">
+                    <RadioGroup
+                      value={clientRepresentative}
+                      onValueChange={(value) => {
+                        setClientRepresentative(value);
+                        debouncedSetHasUnsavedEdits();
+                      }}
+                      disabled={isReadOnly}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="client-rep" id="client-rep" />
+                        <Label htmlFor="client-rep">Client's Rep.</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="contractor-rep"
+                          id="contractor-rep"
+                        />
+                        <Label htmlFor="contractor-rep">
+                          Contractor's Rep.
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="consultant-rep"
+                          id="consultant-rep"
+                        />
+                        <Label htmlFor="consultant-rep">
+                          Consultant's Rep.
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
               </div>
-              <div>
-                <Label htmlFor="sample-retention">
-                  Duration for Sample to be Retained Incase Sample Remains After
-                  Testing (days)
-                </Label>
-                <Input
-                  id="sample-retention"
-                  type="number"
-                  min="0"
-                  placeholder="Enter number of days"
-                  className="mt-1"
-                  value={sampleRetentionDuration || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSampleRetentionDuration(
-                      value ? parseInt(value, 10) : undefined
-                    );
-                    debouncedSetHasUnsavedEdits();
-                  }}
-                />
+
+              <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
+                <CardHeader>
+                  <CardTitle>GETLAB's Acknowledgement </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="expected-delivery-date">
+                        Expected delivery date
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            id="expected-delivery-date"
+                            variant="outline"
+                            className={`mt-1 w-full justify-start text-left font-normal ${
+                              !expectedDeliveryDate && "text-muted-foreground"
+                            }`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {expectedDeliveryDate ? (
+                              format(expectedDeliveryDate, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={expectedDeliveryDate}
+                            onSelect={(date) => {
+                              setExpectedDeliveryDate(date);
+                              debouncedSetHasUnsavedEdits();
+                            }}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="sample-retention">
+                        Duration for Sample to be Retained Incase Sample Remains
+                        After Testing (days)
+                      </Label>
+                      <Input
+                        id="sample-retention"
+                        type="number"
+                        min="0"
+                        placeholder="Enter number of days"
+                        className="mt-1"
+                        value={sampleRetentionDuration || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSampleRetentionDuration(
+                            value ? parseInt(value, 10) : undefined
+                          );
+                          debouncedSetHasUnsavedEdits();
+                        }}
+                      />
+                    </div>
+
+                    {/* Approval Decision */}
+                    <div>
+                      <Label htmlFor="approval-decision">
+                        Approval Decision
+                        <span className="text-red-500 ml-1">*</span>
+                      </Label>
+                      <RadioGroup
+                        value={approvalDecision}
+                        onValueChange={(value) => {
+                          setApprovalDecision(value);
+                          debouncedSetHasUnsavedEdits();
+                        }}
+                        className="flex space-x-4 mt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="approve" id="approve" />
+                          <Label htmlFor="approve">Approve</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="reject" id="reject" />
+                          <Label htmlFor="reject">Reject</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Rejection Reason - only show when rejected */}
+                    {approvalDecision === "reject" && (
+                      <div>
+                        <Label htmlFor="rejection-reason">
+                          Rejection Reason
+                          <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Textarea
+                          id="rejection-reason"
+                          placeholder="Enter reason for rejection..."
+                          value={rejectionReason}
+                          onChange={(e) => {
+                            setRejectionReason(e.target.value);
+                            debouncedSetHasUnsavedEdits();
+                          }}
+                          className="mt-1"
+                        />
+                      </div>
+                    )}
+
+                    <Textarea
+                      placeholder="Additional acknowledgement notes..."
+                      value={getlabAcknowledgement}
+                      onChange={(e) => {
+                        setGetlabAcknowledgement(e.target.value);
+                        debouncedSetHasUnsavedEdits();
+                      }}
+                    />
+                  </div>
+                </CardContent>
               </div>
-              <Textarea
-                placeholder="Additional acknowledgement notes..."
-                value={getlabAcknowledgement}
-                onChange={(e) => {
-                  setGetlabAcknowledgement(e.target.value);
-                  debouncedSetHasUnsavedEdits();
-                }}
-              />
-            </div>
-          </CardContent>
-        </div>
+            </>
+          )}
 
         <div
-          className={`border-2 transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
+          className={`border transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
             isSampleReceiptPersonnelValid
               ? "border-primary"
               : "border-destructive"
@@ -1089,45 +1471,23 @@ export function SampleVerificationContent({
         >
           <CardHeader>
             <div className="flex items-center gap-2">
-              <CardTitle>Sample Receipt Personnel</CardTitle>
+              <CardTitle>Personnel</CardTitle>
               <ValidityChecker isValid={isSampleReceiptPersonnelValid} />
             </div>
           </CardHeader>
           <CardContent>
-            <RadioGroup
-              onValueChange={(value) => {
-                setSampleReceiptRole(value);
-                debouncedSetHasUnsavedEdits();
-              }}
-            >
-              {[
-                "Senior Laboratory Engineer",
-                "Laboratory Engineer",
-                "Junior Laboratory Engineer",
-                "Senior Laboratory Technician",
-                "Laboratory Technician",
-                "Laboratory Assistant",
-                "Administrative Personnel",
-              ].map((role) => (
-                <div key={role} className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value={role.toLowerCase().replace(/\s+/g, "-")}
-                    id={role.toLowerCase().replace(/\s+/g, "-")}
-                  />
-                  <Label htmlFor={role.toLowerCase().replace(/\s+/g, "-")}>
-                    {role}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-            <div className="mt-4">
-              <Label htmlFor="personnel-name">Name</Label>
+            <div>
+              <Label htmlFor="personnel-name">
+                Personnel responsible for this sample receipt
+                <span className="text-red-500 ml-1">*</span>
+              </Label>
               <Select
                 value={sampleReceiptName}
                 onValueChange={(value) => {
                   setSampleReceiptName(value);
                   debouncedSetHasUnsavedEdits();
                 }}
+                disabled={isReadOnly}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select personnel" />
@@ -1142,19 +1502,6 @@ export function SampleVerificationContent({
                 </SelectContent>
               </Select>
             </div>
-            <div className="mt-4">
-              <Label htmlFor="personnel-signature">Signature</Label>
-              <Input
-                id="personnel-signature"
-                type="text"
-                className="mt-1"
-                value={sampleReceiptSignature}
-                onChange={(e) => {
-                  setSampleReceiptSignature(e.target.value);
-                  debouncedSetHasUnsavedEdits();
-                }}
-              />
-            </div>
           </CardContent>
         </div>
       </div>
@@ -1162,6 +1509,9 @@ export function SampleVerificationContent({
       {/* Always show the Review Sample Receipt button */}
       <GenerateSampleReceiptDocument
         project={project}
+        existingSampleReceipt={existingSampleReceipt}
+        isReadOnly={isReadOnly}
+        onApprove={onApprove}
         sampleReceiptData={{
           sampleReviewTemplate: sampleReviewTemplate._id,
           sampleAdequacyTemplate: sampleAdequacyTemplate._id,
@@ -1173,23 +1523,25 @@ export function SampleVerificationContent({
           clientSignature,
           clientRepresentative,
           getlabAcknowledgement,
+          approvalDecision,
+          rejectionReason,
           expectedDeliveryDate: expectedDeliveryDate
             ? format(expectedDeliveryDate, "yyyy-MM-dd")
             : "",
           sampleRetentionDuration: sampleRetentionDuration
             ? sampleRetentionDuration.toString()
             : "",
-          sampleReceiptRole,
           sampleReceiptName,
-          sampleReceiptSignature,
           projectName: projectName,
           clientName: clientName,
           email: email,
           sampleReceiptNumber: `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
-          personnel: personnel?.find(
-            (person) => person.fullName === sampleReceiptName
-          ),
+          personnel:
+            personnel?.find(
+              (person) => person.fullName === sampleReceiptName
+            ) || undefined,
         }}
+        onCloseDrawers={handleCloseDrawers}
       />
 
       {isSubmitted && (
@@ -1209,9 +1561,7 @@ export function SampleVerificationContent({
             sampleRetentionDuration: sampleRetentionDuration
               ? sampleRetentionDuration.toString()
               : "",
-            sampleReceiptRole,
             sampleReceiptName,
-            sampleReceiptSignature,
           }}
         />
       )}

@@ -2,7 +2,13 @@
 
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
-import { FileText, CheckCircle, Clock, UserCheck } from "lucide-react";
+import {
+  FileText,
+  CheckCircle,
+  Clock,
+  UserCheck,
+  ArrowRightCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   PROJECT_BY_ID_QUERYResult,
@@ -13,6 +19,11 @@ import type {
 import { Button } from "@/components/ui/button";
 import { SampleVerificationDrawer } from "./sample-verification-drawer";
 import { useRBAC } from "@/components/rbac-context";
+import {
+  submitSampleReceiptForApproval,
+  approveSampleReceipt,
+} from "@/lib/actions";
+import { toast } from "sonner";
 
 type SampleVerificationStage = {
   id: number;
@@ -26,6 +37,7 @@ interface SampleVerificationLifecycleProps {
   personnel: ALL_PERSONNEL_QUERYResult;
   sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
   sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
+  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
 }
 
 // Sample verification status types based on actual schema
@@ -54,10 +66,12 @@ function getSampleVerificationStage(status: SampleVerificationStatus): number {
 
 // Get actual sample verification status from project data
 function getSampleVerificationStatus(
-  project: PROJECT_BY_ID_QUERYResult[number]
+  project: PROJECT_BY_ID_QUERYResult[number],
+  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"]
 ): SampleVerificationStatus {
-  // Check if project has a sample receipt
-  const sampleReceipt = project.sampleReceipt as any;
+  // Use the live existingSampleReceipt data if available, otherwise fall back to project.sampleReceipt
+  const sampleReceipt = existingSampleReceipt || project.sampleReceipt;
+
   if (!sampleReceipt || !sampleReceipt._id) {
     return "not_started";
   }
@@ -75,6 +89,7 @@ function SampleVerificationStageCard({
   sampleAdequacyTemplate,
   status,
   onSendForApproval,
+  onApprove,
   isLoading,
 }: {
   stage: SampleVerificationStage;
@@ -85,6 +100,7 @@ function SampleVerificationStageCard({
   sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
   status: SampleVerificationStatus;
   onSendForApproval: () => void;
+  onApprove: () => void;
   isLoading: boolean;
 }) {
   const { role } = useRBAC();
@@ -97,7 +113,7 @@ function SampleVerificationStageCard({
       className={cn(
         "bg-gradient-to-b from-muted/20 to-muted/40 p-4 rounded-lg transition-all duration-500",
         isActive && "border border-primary bg-primary/10",
-        isCompleted && "border border-green-500 bg-green-500/10",
+        isCompleted && "border border-muted-foreground",
         isUpcoming && "border border-muted"
       )}
     >
@@ -143,6 +159,7 @@ function SampleVerificationStageCard({
               disabled={isLoading}
             >
               {isLoading ? "Submitting..." : "Submit for Approval"}
+              <ArrowRightCircle className="text-primary h-4 w-4 ml-2" />
             </Button>
           )}
         </div>
@@ -150,13 +167,40 @@ function SampleVerificationStageCard({
 
       {/* STAGE 2: Awaiting Approval */}
       {stage.id === 2 && isActive && (
-        <div className="mt-4 flex items-center text-orange-500 text-xs">
-          <Clock className="h-3 w-3 mr-1" />
-          <span>
-            {status === "rejected"
-              ? "Rejected - needs revision"
-              : "Awaiting approval"}
-          </span>
+        <div className="mt-4 flex-col items-center text-orange-500 text-xs">
+          <div className="flex items-center">
+            <Clock className="h-3 w-3 mr-1" />
+            <span>
+              {status === "rejected"
+                ? "Rejected - needs revision"
+                : "Awaiting approval"}
+            </span>
+          </div>
+
+          {/* Approve button for admin users */}
+          {role === "admin" &&
+            (status === "submitted" || status === "rejected") && (
+              <div className="mt-3">
+                <SampleVerificationDrawer
+                  project={project}
+                  personnel={personnel}
+                  sampleReviewTemplate={sampleReviewTemplate}
+                  sampleAdequacyTemplate={sampleAdequacyTemplate}
+                  isReadOnly={true}
+                  onApprove={onApprove}
+                >
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="border border-green-600 text-foreground"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Approving..." : "Approve"}
+                    <CheckCircle className="text-green-600 h-4 w-4 ml-2" />
+                  </Button>
+                </SampleVerificationDrawer>
+              </div>
+            )}
         </div>
       )}
 
@@ -192,15 +236,25 @@ export function SampleVerificationLifecycle({
   personnel,
   sampleReviewTemplate,
   sampleAdequacyTemplate,
+  existingSampleReceipt,
 }: SampleVerificationLifecycleProps) {
   const [animationComplete, setAnimationComplete] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // State management for sample verification process
   const [currentStatus, setCurrentStatus] = useState<SampleVerificationStatus>(
-    getSampleVerificationStatus(project)
+    getSampleVerificationStatus(project, existingSampleReceipt)
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update status when existingSampleReceipt changes (for live updates)
+  useEffect(() => {
+    const newStatus = getSampleVerificationStatus(
+      project,
+      existingSampleReceipt
+    );
+    setCurrentStatus(newStatus);
+  }, [project, existingSampleReceipt]);
 
   const currentStage = getSampleVerificationStage(currentStatus);
 
@@ -208,11 +262,48 @@ export function SampleVerificationLifecycle({
   const handleSendForApproval = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement actual API call to send for approval
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
-      setCurrentStatus("submitted");
+      const formData = new FormData();
+      formData.append("sampleReceiptId", existingSampleReceipt?._id || "");
+      formData.append("projectId", project._id);
+
+      const result = await submitSampleReceiptForApproval({}, formData);
+
+      if (result.status === "ok") {
+        toast.success("Sample receipt submitted for approval successfully!");
+        setCurrentStatus("submitted");
+      } else {
+        toast.error(
+          result.error || "Failed to submit sample receipt for approval"
+        );
+      }
     } catch (error) {
       console.error("Failed to send for approval:", error);
+      toast.error("Failed to submit sample receipt for approval");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle approving sample receipt
+  const handleApprove = async () => {
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("sampleReceiptId", existingSampleReceipt?._id || "");
+      formData.append("projectId", project._id);
+      formData.append("getlabAcknowledgement", ""); // Empty for now, will be filled in the drawer
+
+      const result = await approveSampleReceipt({}, formData);
+
+      if (result.status === "ok") {
+        toast.success("Sample receipt approved successfully!");
+        setCurrentStatus("approved");
+      } else {
+        toast.error(result.error || "Failed to approve sample receipt");
+      }
+    } catch (error) {
+      console.error("Failed to approve sample receipt:", error);
+      toast.error("Failed to approve sample receipt");
     } finally {
       setIsLoading(false);
     }
@@ -312,7 +403,7 @@ export function SampleVerificationLifecycle({
         <div className="relative">
           <div className="w-full bg-gray-200 rounded-full h-1">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-1000 ease-in-out"
+              className="bg-primary h-1 rounded-full transition-all duration-1000 ease-in-out"
               style={{
                 width: `${((currentStage - 1) / (stages.length - 1)) * 100}%`,
               }}
@@ -358,6 +449,7 @@ export function SampleVerificationLifecycle({
               sampleAdequacyTemplate={sampleAdequacyTemplate}
               status={currentStatus}
               onSendForApproval={handleSendForApproval}
+              onApprove={handleApprove}
               isLoading={isLoading}
             />
           ))}
@@ -404,6 +496,7 @@ export function SampleVerificationLifecycle({
                   sampleAdequacyTemplate={sampleAdequacyTemplate}
                   status={currentStatus}
                   onSendForApproval={handleSendForApproval}
+                  onApprove={handleApprove}
                   isLoading={isLoading}
                 />
               </div>

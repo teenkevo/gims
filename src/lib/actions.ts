@@ -1467,7 +1467,6 @@ export async function createSampleReceipt(prevState: any, formData: FormData) {
         sampleReceiptPersonnel: {
           role: sampleReceiptPersonnel.role,
           name: sampleReceiptPersonnel.name,
-          signature: sampleReceiptPersonnel.signature,
           personnel: sampleReceiptPersonnel.personnel
             ? {
                 _type: "reference",
@@ -1481,11 +1480,201 @@ export async function createSampleReceipt(prevState: any, formData: FormData) {
       }
     );
 
-    revalidateTag("projects");
+    revalidateTag(`project-${projectId}`);
     return { result: sampleReceipt, status: "ok" };
   } catch (error) {
     console.error("Error creating sample receipt:", error);
     return { error: "Failed to create sample receipt", status: "error" };
+  }
+}
+
+// UPDATE SAMPLE RECEIPT
+export async function updateSampleReceipt(prevState: any, formData: FormData) {
+  try {
+    const projectId = formData.get("projectId") as string;
+    const sampleReceiptId = formData.get("sampleReceiptId") as string;
+    const verificationDate = formData.get("verificationDate") as string;
+    const reviewItems = JSON.parse(formData.get("reviewItems") as string);
+    const adequacyChecks = JSON.parse(formData.get("adequacyChecks") as string);
+    const overallStatus = formData.get("overallStatus") as string;
+    const overallComments = formData.get("overallComments") as string;
+    const clientAcknowledgement = JSON.parse(
+      formData.get("clientAcknowledgement") as string
+    );
+    const getlabAcknowledgement = JSON.parse(
+      formData.get("getlabAcknowledgement") as string
+    );
+    const sampleReceiptPersonnel = JSON.parse(
+      formData.get("sampleReceiptPersonnel") as string
+    );
+    const reviewTemplate = formData.get("reviewTemplate") as string;
+    const adequacyTemplate = formData.get("adequacyTemplate") as string;
+
+    // Update the sample receipt document
+    const sampleReceipt = await writeClient
+      .patch(sampleReceiptId)
+      .set({
+        verificationDate: new Date(verificationDate).toISOString(),
+        reviewTemplate: reviewTemplate
+          ? {
+              _type: "reference",
+              _ref: reviewTemplate,
+            }
+          : undefined,
+        reviewItems: reviewItems.map((item: any) => ({
+          templateItemId: item.id,
+          label: item.label,
+          status: item.status,
+          comments: item.comments || "",
+        })),
+        adequacyTemplate: adequacyTemplate
+          ? {
+              _type: "reference",
+              _ref: adequacyTemplate,
+            }
+          : undefined,
+        adequacyChecks: adequacyChecks.map((item: any) => ({
+          templateItemId: item.id,
+          label: item.label,
+          required: item.required,
+          status: item.status,
+          comments: item.comments || "",
+        })),
+        overallStatus,
+        overallComments: overallComments || "",
+        clientAcknowledgement: clientAcknowledgement
+          ? {
+              acknowledgementText:
+                clientAcknowledgement.acknowledgementText || "",
+              clientSignature: clientAcknowledgement.clientSignature || "",
+              clientRepresentative:
+                clientAcknowledgement.clientRepresentative || "",
+            }
+          : undefined,
+        getlabAcknowledgement: getlabAcknowledgement
+          ? {
+              sampleRetentionDuration:
+                getlabAcknowledgement.sampleRetentionDuration || "",
+              acknowledgementText:
+                getlabAcknowledgement.acknowledgementText || "",
+            }
+          : undefined,
+        sampleReceiptPersonnel: {
+          role: sampleReceiptPersonnel.role,
+          name: sampleReceiptPersonnel.name,
+          personnel: sampleReceiptPersonnel.personnel
+            ? {
+                _type: "reference",
+                _ref: sampleReceiptPersonnel.personnel,
+              }
+            : undefined,
+        },
+      })
+      .commit({ autoGenerateArrayKeys: true });
+
+    revalidateTag(`project-${projectId}`);
+    return { result: sampleReceipt, status: "ok" };
+  } catch (error) {
+    console.error("Error updating sample receipt:", error);
+    return { error: "Failed to update sample receipt", status: "error" };
+  }
+}
+
+// SUBMIT SAMPLE RECEIPT FOR APPROVAL
+export async function submitSampleReceiptForApproval(
+  prevState: any,
+  formData: FormData
+) {
+  try {
+    const sampleReceiptId = formData.get("sampleReceiptId") as string;
+    const projectId = formData.get("projectId") as string;
+
+    if (!sampleReceiptId) {
+      return { error: "Sample receipt ID is required", status: "error" };
+    }
+
+    // Update the sample receipt status to "submitted"
+    const sampleReceipt = await writeClient
+      .patch(sampleReceiptId)
+      .set({
+        status: "submitted",
+        submittedAt: new Date().toISOString(),
+      })
+      .commit({ autoGenerateArrayKeys: true });
+
+    revalidateTag(`project-${projectId}`);
+
+    return { result: sampleReceipt, status: "ok" };
+  } catch (error) {
+    console.error("Error submitting sample receipt for approval:", error);
+    return {
+      error: "Failed to submit sample receipt for approval",
+      status: "error",
+    };
+  }
+}
+
+// APPROVE SAMPLE RECEIPT
+export async function approveSampleReceipt(prevState: any, formData: FormData) {
+  try {
+    const sampleReceiptId = formData.get("sampleReceiptId") as string;
+    const projectId = formData.get("projectId") as string;
+    const getlabAcknowledgement = formData.get(
+      "getlabAcknowledgement"
+    ) as string;
+    const approvalDecision = formData.get("approvalDecision") as string;
+    const rejectionReason = formData.get("rejectionReason") as string;
+    const expectedDeliveryDate = formData.get("expectedDeliveryDate") as string;
+    const sampleRetentionDuration = formData.get(
+      "sampleRetentionDuration"
+    ) as string;
+
+    if (!sampleReceiptId) {
+      return { error: "Sample receipt ID is required", status: "error" };
+    }
+
+    if (!approvalDecision) {
+      return { error: "Approval decision is required", status: "error" };
+    }
+
+    // Determine the new status based on the decision
+    const newStatus = approvalDecision === "approve" ? "approved" : "rejected";
+
+    // Build the update object
+    const updateData: any = {
+      status: newStatus,
+      [`${approvalDecision === "approve" ? "approvedAt" : "rejectedAt"}`]:
+        new Date().toISOString(),
+      getlabAcknowledgement: {
+        acknowledgementText: getlabAcknowledgement || "",
+        approvalDecision: approvalDecision,
+        rejectionReason: rejectionReason || "",
+      },
+    };
+
+    // Add approval-specific fields only when approving
+    if (approvalDecision === "approve") {
+      updateData.getlabAcknowledgement.expectedDeliveryDate =
+        expectedDeliveryDate || "";
+      updateData.getlabAcknowledgement.sampleRetentionDuration =
+        sampleRetentionDuration || "";
+    }
+
+    // Update the sample receipt document
+    const sampleReceipt = await writeClient
+      .patch(sampleReceiptId)
+      .set(updateData)
+      .commit({ autoGenerateArrayKeys: true });
+
+    revalidateTag(`project-${projectId}`);
+
+    return { result: sampleReceipt, status: "ok" };
+  } catch (error) {
+    console.error("Error processing sample receipt:", error);
+    return {
+      error: "Failed to process sample receipt",
+      status: "error",
+    };
   }
 }
 

@@ -38,6 +38,7 @@ import {
   SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
   SAMPLE_REVIEW_TEMPLATES_QUERYResult,
 } from "../../../../../sanity.types";
+import { Badge } from "@/components/ui/badge";
 
 export function SampleVerificationDrawer({
   children,
@@ -45,12 +46,16 @@ export function SampleVerificationDrawer({
   personnel,
   sampleReviewTemplate,
   sampleAdequacyTemplate,
+  isReadOnly = false,
+  onApprove,
 }: {
   children: React.ReactNode;
   project: PROJECT_BY_ID_QUERYResult[number];
   personnel: ALL_PERSONNEL_QUERYResult;
   sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
   sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
+  isReadOnly?: boolean;
+  onApprove?: () => void;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
@@ -78,7 +83,14 @@ export function SampleVerificationDrawer({
           <SheetTrigger asChild>{children}</SheetTrigger>
           <SheetContent className="w-full sm:max-w-7xl flex flex-col h-full">
             <SheetHeader className="flex-shrink-0 border-b border-border pb-5">
-              <SheetTitle>Sample Receipt Verification</SheetTitle>
+              <SheetTitle>
+                {onApprove
+                  ? "Approve / Reject Sample Receipt"
+                  : "Sample Receipt Verification"}{" "}
+                <Badge className="" variant="destructive">
+                  Read Only
+                </Badge>
+              </SheetTitle>
               <SheetDescription>
                 Complete the sample receipt verification process for the
                 project.
@@ -92,6 +104,9 @@ export function SampleVerificationDrawer({
                 personnel={personnel}
                 sampleReviewTemplate={sampleReviewTemplate}
                 sampleAdequacyTemplate={sampleAdequacyTemplate}
+                existingSampleReceipt={project.sampleReceipt}
+                isReadOnly={isReadOnly}
+                onApprove={onApprove}
               />
             </div>
           </SheetContent>
@@ -137,6 +152,9 @@ export function SampleVerificationDrawer({
               personnel={personnel}
               sampleReviewTemplate={sampleReviewTemplate}
               sampleAdequacyTemplate={sampleAdequacyTemplate}
+              existingSampleReceipt={project.sampleReceipt}
+              isReadOnly={isReadOnly}
+              onApprove={onApprove}
             />
           </div>
           <DrawerFooter className="pt-2 flex-shrink-0">

@@ -117,7 +117,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
 
                   <div className="space-y-1">
                     {rfi.project && (
-                      <div className="text-xs text-foreground truncate">
+                      <div className="text-xs text-foreground truncate text-wrap">
                         <span className="font-medium text-muted-foreground">
                           Project:
                         </span>{" "}
@@ -125,7 +125,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
                       </div>
                     )}
                     {rfi.client && (
-                      <div className="text-xs text-foreground truncate">
+                      <div className="text-xs text-foreground truncate text-wrap">
                         <span className="font-medium text-muted-foreground">
                           Client:
                         </span>{" "}
