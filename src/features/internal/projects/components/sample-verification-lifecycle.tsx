@@ -141,8 +141,8 @@ function SampleVerificationStageCard({
           >
             <Button
               size="sm"
-              variant="secondary"
-              className="border border-primary/30"
+              variant={`${status === "not_started" ? "default" : "secondary"}`}
+              className={` ${status === "not_started" ? "" : "bg-secondary text-secondary-foreground border border-primary/30"}`}
             >
               {status === "not_started"
                 ? "Create Sample Receipt"
@@ -151,15 +151,9 @@ function SampleVerificationStageCard({
           </SampleVerificationDrawer>
 
           {status === "draft" && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="border border-primary/30"
-              onClick={onSendForApproval}
-              disabled={isLoading}
-            >
+            <Button size="sm" onClick={onSendForApproval} disabled={isLoading}>
               {isLoading ? "Submitting..." : "Submit for Approval"}
-              <ArrowRightCircle className="text-primary h-4 w-4 ml-2" />
+              <ArrowRightCircle className=" h-4 w-4 ml-2" />
             </Button>
           )}
         </div>
@@ -189,14 +183,9 @@ function SampleVerificationStageCard({
                   isReadOnly={true}
                   onApprove={onApprove}
                 >
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="border border-green-600 text-foreground"
-                    disabled={isLoading}
-                  >
+                  <Button size="sm" disabled={isLoading}>
                     {isLoading ? "Approving..." : "Approve"}
-                    <CheckCircle className="text-green-600 h-4 w-4 ml-2" />
+                    <CheckCircle className=" h-4 w-4 ml-2" />
                   </Button>
                 </SampleVerificationDrawer>
               </div>

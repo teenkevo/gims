@@ -67,7 +67,10 @@ export function ViewPaymentsDialog({
 
   const paymentStatus = calculatePaymentStatus(quotation);
 
-  const { totalApprovedPayments } = paymentStatus;
+  const { totalApprovedPayments, totalUnapprovedPayments } = paymentStatus;
+
+  const remainingAmount =
+    total - (totalApprovedPayments || 0) - (totalUnapprovedPayments || 0);
 
   const paymentsViewContent = (
     <div className="space-y-4 py-4">
@@ -75,7 +78,7 @@ export function ViewPaymentsDialog({
         <div className="flex items-center justify-between">
           <h3 className=" font-semibold">Summary</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           <div className="border-2 rounded-lg border-muted bg-popover p-4">
             <Badge variant="outline">Total Invoice</Badge>
             <div className="mt-4">
@@ -90,7 +93,7 @@ export function ViewPaymentsDialog({
 
           <div className="border-2 rounded-lg bg-popover p-4">
             <Badge variant="outline" className="text-primary ">
-              Received & Approved
+              Approved
             </Badge>
             <div className="mt-4">
               <div className="text-xs text-muted-foreground">
@@ -102,15 +105,28 @@ export function ViewPaymentsDialog({
             </div>
           </div>
           <div className="border-2 rounded-lg bg-popover p-4">
-            <Badge variant="outline" className="text-orange-600 ">
-              Pending (To pay & approve)
+            <Badge variant="outline" className="text-yellow-600 ">
+              Awaiting Approval
             </Badge>
             <div className="mt-4">
               <div className="text-xs text-muted-foreground">
                 {currency?.toUpperCase()}
               </div>
               <div className="font-semibold md:text-xl">
-                {formatAmount(total - (totalApprovedPayments || 0))}
+                {formatAmount(totalUnapprovedPayments)}
+              </div>
+            </div>
+          </div>
+          <div className="border-2 rounded-lg bg-popover p-4">
+            <Badge variant="outline" className="text-orange-600 ">
+              To Pay
+            </Badge>
+            <div className="mt-4">
+              <div className="text-xs text-muted-foreground">
+                {currency?.toUpperCase()}
+              </div>
+              <div className="font-semibold md:text-xl">
+                {formatAmount(remainingAmount)}
               </div>
             </div>
           </div>

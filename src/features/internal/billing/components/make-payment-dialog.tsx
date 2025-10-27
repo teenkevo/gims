@@ -110,16 +110,28 @@ export function MakePaymentDialog({
   // Include pending resubmissions when computing unapproved totals
   const totalUnapprovedPayments = existingPayments.reduce(
     (sum: number, payment: Payments[number]) => {
-      const pendingResubs = (payment.resubmissions ?? []).filter(
-        (resubmission: any) => resubmission.internalStatus !== "approved"
-      );
-      const latestPendingResub =
-        pendingResubs[pendingResubs.length - 1] ?? null;
+      const resubmissions = payment.resubmissions ?? [];
+      const latestResubmission =
+        resubmissions[resubmissions.length - 1] ?? null;
 
-      if (latestPendingResub) {
-        return sum + (latestPendingResub.amount || 0);
+      // If there's a resubmission, check its status
+      if (latestResubmission) {
+        // If latest resubmission is pending (not approved, not rejected), count it
+        if (latestResubmission.internalStatus === "pending") {
+          return sum + (latestResubmission.amount || 0);
+        }
+        // If latest resubmission is approved, it's already counted in approved
+        if (latestResubmission.internalStatus === "approved") {
+          return sum; // Don't double count
+        }
+        // If latest resubmission is rejected, check original payment status
+        if (payment.internalStatus !== "approved") {
+          return sum + (payment.amount || 0);
+        }
+        return sum;
       }
 
+      // No resubmissions, check original payment status
       if (payment.internalStatus !== "approved") {
         return sum + (payment.amount || 0);
       }
@@ -131,16 +143,21 @@ export function MakePaymentDialog({
 
   const totalApprovedAmount = existingPayments.reduce(
     (sum: number, payment: Payments[number]) => {
-      const approvedResubmissions = (payment.resubmissions ?? []).filter(
-        (resubmission: any) => resubmission.internalStatus === "approved"
-      );
-      const latestApprovedResubmission =
-        approvedResubmissions[approvedResubmissions.length - 1];
+      const resubmissions = payment.resubmissions ?? [];
+      const latestResubmission =
+        resubmissions[resubmissions.length - 1] ?? null;
 
-      if (latestApprovedResubmission) {
-        return sum + (latestApprovedResubmission.amount || 0);
+      // If there's a resubmission, check its status
+      if (latestResubmission) {
+        // Only count if the latest resubmission is approved
+        if (latestResubmission.internalStatus === "approved") {
+          return sum + (latestResubmission.amount || 0);
+        }
+        // If latest resubmission is rejected or pending, don't count
+        return sum;
       }
 
+      // No resubmissions, check original payment status
       if (payment.internalStatus === "approved") {
         return sum + (payment.amount || 0);
       }
@@ -149,8 +166,7 @@ export function MakePaymentDialog({
     },
     0
   );
-  const remainingAmount =
-    total - (totalApprovedAmount + totalUnapprovedPayments);
+  const remainingAmount = total - totalApprovedAmount - totalUnapprovedPayments;
 
   const handlePaymentTypeChange = (type: PaymentType) => {
     setPaymentType(type);
@@ -177,10 +193,11 @@ export function MakePaymentDialog({
         setTimeout(() => {
           handlePaymentTypeChange("advance");
         }, 100);
+      } else {
+        setTimeout(() => {
+          handlePaymentTypeChange("other");
+        }, 100);
       }
-      setTimeout(() => {
-        handlePaymentTypeChange("other");
-      }, 100);
     }
   };
 
@@ -191,7 +208,7 @@ export function MakePaymentDialog({
     }
 
     const amount = Number.parseFloat(data.amount);
-    const maxAllowedAmount = remainingAmount > 0 ? remainingAmount : total;
+    const maxAllowedAmount = remainingAmount;
     if (paymentType === "other" && amount > maxAllowedAmount) {
       toast.error(
         `Amount cannot exceed the remaining amount of ${currency.toUpperCase()} ${maxAllowedAmount.toLocaleString()}`
@@ -360,8 +377,7 @@ export function MakePaymentDialog({
               },
               validate: (value) => {
                 const numValue = Number.parseFloat(value);
-                const maxAllowedAmount =
-                  remainingAmount > 0 ? remainingAmount : total;
+                const maxAllowedAmount = remainingAmount;
                 if (paymentType === "other" && numValue > maxAllowedAmount) {
                   return `Amount cannot exceed the remaining amount of ${currency.toUpperCase()} ${maxAllowedAmount.toLocaleString()}`;
                 }
@@ -376,15 +392,10 @@ export function MakePaymentDialog({
                 <FormLabel required>Payment Amount</FormLabel>
                 {paymentType === "other" && (
                   <FormDescription className="text-xs">
-                    {remainingAmount > 0
-                      ? "Remaining amount: "
-                      : "Maximum amount: "}
+                    Remaining amount:{" "}
                     <span className="font-bold text-primary">
                       {currency.toUpperCase()}{" "}
-                      {(remainingAmount > 0
-                        ? remainingAmount
-                        : total
-                      )?.toLocaleString()}
+                      {remainingAmount?.toLocaleString()}
                     </span>
                   </FormDescription>
                 )}
@@ -483,17 +494,10 @@ export function MakePaymentDialog({
         <DrawerHeader className="text-left">
           <DrawerTitle>Make Payment</DrawerTitle>
           <DrawerDescription className="text-xs">
-            {remainingAmount > 0
-              ? "Pending amount: "
-              : "Total amount to be paid towards this invoice is "}
+            Pending amount:{" "}
             <span className="font-bold text-primary">
-              {currency.toUpperCase()}{" "}
-              {(remainingAmount > 0
-                ? remainingAmount
-                : total
-              )?.toLocaleString()}
+              {currency.toUpperCase()} {remainingAmount?.toLocaleString()}
             </span>
-
             <span className="text-gray-500 ml-2">
               (Total: {currency.toUpperCase()} {total?.toLocaleString()})
             </span>
@@ -525,17 +529,10 @@ export function MakePaymentDialog({
         <DialogHeader>
           <DialogTitle>Make Payment</DialogTitle>
           <DialogDescription className="text-xs">
-            {remainingAmount > 0
-              ? "Pending amount: "
-              : "Total amount to be paid towards this invoice is "}
+            Pending amount:{" "}
             <span className="font-bold text-primary">
-              {currency.toUpperCase()}{" "}
-              {(remainingAmount > 0
-                ? remainingAmount
-                : total
-              )?.toLocaleString()}
+              {currency.toUpperCase()} {remainingAmount?.toLocaleString()}
             </span>
-
             <span className="text-gray-500 ml-2">
               (Total: {currency.toUpperCase()} {total?.toLocaleString()})
             </span>

@@ -52,9 +52,21 @@ const formSchema = z.object({
   designation: z.string().min(1, "Required"),
 });
 
-export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYResult[number] }) {
-  const [open, setOpen] = useState(false);
+export function UpdateContactDialog({
+  contact,
+  open,
+  onClose,
+}: {
+  contact: ALL_CONTACTS_QUERYResult[number];
+  open?: boolean;
+  onClose?: () => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 640px)");
+
+  const isControlled = open !== undefined && onClose !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const handleClose = isControlled ? onClose : setInternalOpen;
 
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
@@ -72,7 +84,11 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
     const result = await updateContactPerson(contact._id, formData);
     if (result.status === "ok") {
       form.reset();
-      setOpen(false);
+      if (!isControlled) {
+        setInternalOpen(false);
+      } else {
+        onClose?.();
+      }
       toast.success("Contact has been updated");
     } else {
       toast.error("Something went wrong");
@@ -80,6 +96,19 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
   };
 
   const [_, dispatch, isPending] = useActionState(action, null);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(newOpen);
+    } else {
+      if (!newOpen) {
+        onClose?.();
+      }
+    }
+    if (newOpen) {
+      form.reset();
+    }
+  };
 
   const formContent = (
     <Form {...form}>
@@ -104,7 +133,11 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input disabled={isPending} placeholder="contact@email.com" {...field} />
+                <Input
+                  disabled={isPending}
+                  placeholder="contact@email.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -134,7 +167,11 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
             <FormItem>
               <FormLabel>Designation</FormLabel>
               <FormControl>
-                <Input disabled={isPending} placeholder="Technical Engineer" {...field} />
+                <Input
+                  disabled={isPending}
+                  placeholder="Technical Engineer"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -159,16 +196,25 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
   );
 
   if (isMobile) {
+    if (isControlled) {
+      return (
+        <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+          <DrawerContent>
+            <DrawerHeader className="gap-3 text-left">
+              <DrawerTitle>Update Contact Person</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4">{formContent}</div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
     return (
-      <Drawer
-        open={open}
-        onOpenChange={(isOpen) => {
-          setOpen(isOpen);
-          if (isOpen) {
-            form.reset();
-          }
-        }}
-      >
+      <Drawer open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>
           <Button size="icon" variant="outline">
             <PencilIcon className="h-4 w-4" />
@@ -189,22 +235,26 @@ export function UpdateContactDialog({ contact }: { contact: ALL_CONTACTS_QUERYRe
     );
   }
 
+  if (isControlled) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader className="gap-3 text-left">
+            <DialogTitle>Update Contact Person</DialogTitle>
+          </DialogHeader>
+          {formContent}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen) {
-          form.reset();
-        }
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="icon" variant="outline">
           <PencilIcon className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-
       <DialogContent aria-describedby={undefined}>
         <DialogHeader className="gap-3 text-left">
           <DialogTitle>Update Contact Person</DialogTitle>

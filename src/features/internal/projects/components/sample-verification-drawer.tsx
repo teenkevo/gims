@@ -87,9 +87,11 @@ export function SampleVerificationDrawer({
                 {onApprove
                   ? "Approve / Reject Sample Receipt"
                   : "Sample Receipt Verification"}{" "}
-                <Badge className="" variant="destructive">
-                  Read Only
-                </Badge>
+                {isReadOnly && (
+                  <Badge className="" variant="destructive">
+                    Read Only
+                  </Badge>
+                )}
               </SheetTitle>
               <SheetDescription>
                 Complete the sample receipt verification process for the
@@ -138,8 +140,17 @@ export function SampleVerificationDrawer({
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>{children}</DrawerTrigger>
         <DrawerContent>
-          <DrawerHeader className="text-left flex-shrink-0">
-            <DrawerTitle>Sample Receipt Verification</DrawerTitle>
+          <DrawerHeader className="text-left flex-shrink-0 border-b border-border pb-5">
+            <DrawerTitle>
+              {onApprove
+                ? "Approve / Reject Sample Receipt"
+                : "Sample Receipt Verification"}{" "}
+              {isReadOnly && (
+                <Badge className="" variant="destructive">
+                  Read Only
+                </Badge>
+              )}
+            </DrawerTitle>
             <DrawerDescription>
               Complete the sample receipt verification process for the project.
             </DrawerDescription>

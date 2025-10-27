@@ -228,7 +228,9 @@ export const columns = ({
       <DataTableColumnHeader column={column} title="Code" className="text-sm" />
     ),
     cell: ({ row }) => (
-      <div className="w-[70px] font-bold">{row.getValue("code")}</div>
+      <div className="w-[50px] md:w-[70px] font-bold text-xs md:text-sm">
+        {row.getValue("code")}
+      </div>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -246,7 +248,7 @@ export const columns = ({
     ),
     cell: ({ row }) => (
       <div className="flex space-x-2">
-        <span className="max-w-[200px] truncate font-normal">
+        <span className="max-w-[150px] md:max-w-[200px] truncate font-normal text-xs md:text-sm">
           {row.getValue("testParameter")}
         </span>
       </div>
@@ -277,8 +279,10 @@ export const columns = ({
       />
     ),
     cell: ({ row }) => (
-      <div className="flex w-[100px] items-center">
-        <span>{row.original.sampleClass?.name}</span>
+      <div className="flex w-[80px] md:w-[100px] items-center">
+        <span className="text-xs md:text-sm">
+          {row.original.sampleClass?.name}
+        </span>
       </div>
     ),
     filterFn: (row, id, value) => value.includes(row.getValue(id)),

@@ -5,7 +5,10 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
   useReactTable,
+  type ColumnFiltersState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -19,9 +22,12 @@ import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
 import { CreateContactDialog } from "./create-contact-dialog";
 import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
-import { RemoveContactFromProject } from "./remove-contact-from-project";
 import { motion } from "framer-motion";
-import { UpdateContactDialog } from "./update-contact-dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Cross2Icon } from "@radix-ui/react-icons";
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { ContactTableRowActions } from "./contact-table-row-actions";
 
 // Extend the type to include actions
 type ExtendedContact = ALL_CONTACTS_QUERYResult[number] & { actions?: string };
@@ -37,8 +43,8 @@ export function ContactTable({
   projectContacts: ALL_CONTACTS_QUERYResult;
   existingContacts: ALL_CONTACTS_QUERYResult;
 }) {
-  const existingContactsForClient = existingContacts.filter(
-    (contact) => contact.client?._id === clientId
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
   );
 
   // Update the column helper to use the new type
@@ -47,38 +53,46 @@ export function ContactTable({
   const columns = [
     columnHelper.accessor("name", {
       cell: (info) => (
-        <span className="max-w-[300px] truncate">{info.getValue()}</span>
+        <div className="w-[150px] font-bold">
+          <span className="max-w-[300px] truncate">{info.getValue()}</span>
+        </div>
       ),
       header: () => <span>Name</span>,
     }),
     columnHelper.accessor("email", {
       cell: (info) => (
-        <span className="max-w-[300px] truncate">{info.getValue()}</span>
+        <div className="flex space-x-2">
+          <span className="max-w-[350px] truncate font-normal">
+            {info.getValue()}
+          </span>
+        </div>
       ),
       header: () => <span>Email</span>,
     }),
     columnHelper.accessor("phone", {
       cell: (info) => (
-        <span className="max-w-[300px] truncate">{info.getValue()}</span>
+        <div className="flex space-x-2">
+          <span className="font-normal">{info.getValue()}</span>
+        </div>
       ),
       header: () => <span>Phone Number</span>,
     }),
     columnHelper.accessor("designation", {
       cell: (info) => (
-        <span className="max-w-[300px] truncate italic">{info.getValue()}</span>
+        <div className="flex space-x-2">
+          <span className="max-w-[350px] truncate font-normal">
+            <span className="font-bold text-primary">{info.getValue()}</span>
+          </span>
+        </div>
       ),
       header: () => <span>Designation</span>,
     }),
     columnHelper.accessor("actions", {
       cell: (info) => (
-        <div className="flex items-center gap-2">
-          <UpdateContactDialog contact={info.row.original} />
-          <RemoveContactFromProject
-            email={info.row.original.email!}
-            projectId={projectId}
-            contactId={info.row.original._id}
-          />
-        </div>
+        <ContactTableRowActions
+          contact={info.row.original}
+          projectId={projectId}
+        />
       ),
       header: () => <span>Actions</span>,
     }),
@@ -86,11 +100,19 @@ export function ContactTable({
   const table = useReactTable({
     data: projectContacts,
     columns,
+    state: {
+      columnFilters,
+    },
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const isFiltered = columnFilters.length > 0;
+
   return (
-    <div className="my-10 space-y-2">
+    <div className="my-10 space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm font-bold">Contact Persons</p>
         <CreateContactDialog
@@ -101,9 +123,34 @@ export function ContactTable({
         />
       </div>
 
-      <div className="border">
+      {/* Filter Toolbar */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-wrap gap-2 flex-1 items-center">
+          <Input
+            placeholder="Filter contacts by name"
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="h-8 lg:max-w-[400px]"
+          />
+
+          {isFiltered && (
+            <Button
+              variant="ghost"
+              onClick={() => table.resetColumnFilters()}
+              className="h-8 px-2 lg:px-3"
+            >
+              Reset
+              <Cross2Icon className="ml-2 h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-muted">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -153,6 +200,9 @@ export function ContactTable({
           </TableBody>
         </Table>
       </div>
+
+      <DataTablePagination table={table} />
+
       <span className="text-sm text-muted-foreground flex gap-2 flex-wrap">
         Learn about
         <a

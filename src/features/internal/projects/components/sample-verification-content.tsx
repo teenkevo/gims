@@ -135,7 +135,7 @@ const ReviewTable = React.memo(
           accessorKey: "label",
           header: "Points Reviewed",
           cell: ({ row }) => (
-            <div className="max-w-[400px] text-wrap break-words">
+            <div className="min-w-[200px] md:max-w-[400px] text-wrap break-words">
               {row.original.label}
               <span className="text-red-500 ml-1">*</span>
             </div>
@@ -148,24 +148,37 @@ const ReviewTable = React.memo(
             <RadioGroup
               value={row.original.status}
               onValueChange={(value) => onStatusChange(row.original.id, value)}
-              className="flex space-x-4"
+              className="flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0"
               disabled={isReadOnly}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id={`yes-${row.original.id}`} />
-                <Label htmlFor={`yes-${row.original.id}`}>Yes</Label>
+                <Label
+                  htmlFor={`yes-${row.original.id}`}
+                  className="text-xs md:text-sm whitespace-nowrap"
+                >
+                  Yes
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="no" id={`no-${row.original.id}`} />
-                <Label htmlFor={`no-${row.original.id}`}>No</Label>
+                <Label
+                  htmlFor={`no-${row.original.id}`}
+                  className="text-xs md:text-sm whitespace-nowrap"
+                >
+                  No
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="not-applicable"
                   id={`not-applicable-${row.original.id}`}
                 />
-                <Label htmlFor={`not-applicable-${row.original.id}`}>
-                  Not Applicable
+                <Label
+                  htmlFor={`not-applicable-${row.original.id}`}
+                  className="text-xs md:text-sm whitespace-nowrap"
+                >
+                  N/A
                 </Label>
               </div>
             </RadioGroup>
@@ -175,7 +188,7 @@ const ReviewTable = React.memo(
           accessorKey: "comments",
           header: "Comments",
           cell: ({ row }) => (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full min-w-[150px] md:min-w-[200px]">
               <Input
                 placeholder="Enter comments"
                 value={row.original.comments}
@@ -190,9 +203,7 @@ const ReviewTable = React.memo(
                 disabled={isReadOnly}
               />
               {row.original.status === "no" && !row.original.comments && (
-                <p className="text-sm text-red-500">
-                  Comments are required when status is 'No'
-                </p>
+                <p className="text-xs text-red-500">Comments are required</p>
               )}
             </div>
           ),
@@ -210,45 +221,50 @@ const ReviewTable = React.memo(
     return (
       <div
         className={`rounded-md border transition-all duration-500 ease-in-out ${
-          isValid ? "border-primary" : "border-destructive"
+          isValid ? "border-border" : "border-destructive"
         }`}
       >
-        <Table>
-          <TableHeader className="border-b border-border">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="border-r border-border last:border-r-0"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className="border-b border-border last:border-b-0"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className="border-r border-border last:border-r-0"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="border-b border-border">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="border-r border-border last:border-r-0 whitespace-nowrap"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="border-b border-border last:border-b-0"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="border-r border-border last:border-r-0"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -278,7 +294,7 @@ const AdequacyTable = React.memo(
           accessorKey: "label",
           header: "Requirements",
           cell: ({ row }) => (
-            <div>
+            <div className="max-w-[300px] md:max-w-[400px] text-wrap break-words">
               {row.original.label}
               <span className="text-red-500 ml-1">*</span>
             </div>
@@ -291,7 +307,7 @@ const AdequacyTable = React.memo(
             <RadioGroup
               value={row.original.status}
               onValueChange={(value) => onStatusChange(row.original.id, value)}
-              className="flex space-x-4"
+              className="flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0"
               disabled={isReadOnly}
             >
               <div className="flex items-center space-x-2">
@@ -299,14 +315,22 @@ const AdequacyTable = React.memo(
                   value="adequate"
                   id={`adequate-${row.original.id}`}
                 />
-                <Label htmlFor={`adequate-${row.original.id}`}>Adequate</Label>
+                <Label
+                  htmlFor={`adequate-${row.original.id}`}
+                  className="text-xs md:text-sm whitespace-nowrap"
+                >
+                  Adequate
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="inadequate"
                   id={`inadequate-${row.original.id}`}
                 />
-                <Label htmlFor={`inadequate-${row.original.id}`}>
+                <Label
+                  htmlFor={`inadequate-${row.original.id}`}
+                  className="text-xs md:text-sm whitespace-nowrap"
+                >
                   Inadequate
                 </Label>
               </div>
@@ -317,7 +341,7 @@ const AdequacyTable = React.memo(
           accessorKey: "comments",
           header: "Comments",
           cell: ({ row }) => (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full min-w-[150px] md:min-w-[200px]">
               <Input
                 placeholder="Enter comments"
                 value={row.original.comments}
@@ -333,9 +357,7 @@ const AdequacyTable = React.memo(
               />
               {row.original.status === "inadequate" &&
                 !row.original.comments && (
-                  <p className="text-sm text-red-500">
-                    Comments are required when status is 'Inadequate'
-                  </p>
+                  <p className="text-xs text-red-500">Comments are required</p>
                 )}
             </div>
           ),
@@ -353,45 +375,50 @@ const AdequacyTable = React.memo(
     return (
       <div
         className={`rounded-md border transition-all duration-500 ease-in-out ${
-          isValid ? "border-primary" : "border-destructive"
+          isValid ? "border-border" : "border-destructive"
         }`}
       >
-        <Table>
-          <TableHeader className="border-b border-border">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="border-r border-border last:border-r-0"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className="border-b border-border last:border-b-0"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className="border-r border-border last:border-r-0"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="border-b border-border">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="border-r border-border last:border-r-0 whitespace-nowrap"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="border-b border-border last:border-b-0"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="border-r border-border last:border-r-0"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -1115,7 +1142,7 @@ export function SampleVerificationContent({
   return (
     <div className="container">
       <div className="flex justify-between items-center mb-4">
-        <p className="text-sm mb-5 text-muted-foreground">
+        <p className="text-sm md:mb-5 mb-5 mt-5 text-muted-foreground">
           Every field marked with <span className="text-red-500 ml-1">*</span>{" "}
           is required.
         </p>
@@ -1148,7 +1175,6 @@ export function SampleVerificationContent({
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <CardTitle>General Checks</CardTitle>
-                <ValidityChecker isValid={isReviewValid} />
               </div>
 
               <div className="flex gap-2">
@@ -1174,6 +1200,9 @@ export function SampleVerificationContent({
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            <div className="my-5">
+              <ValidityChecker isValid={isReviewValid} />
+            </div>
             <ReviewTable
               data={reviewItems}
               onStatusChange={handleReviewStatusChange}
@@ -1189,7 +1218,6 @@ export function SampleVerificationContent({
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <CardTitle>Adequacy Checks</CardTitle>
-                <ValidityChecker isValid={isAdequacyValid} />
               </div>
               <div className="flex gap-2">
                 <Button
@@ -1205,6 +1233,9 @@ export function SampleVerificationContent({
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            <div className="my-5">
+              <ValidityChecker isValid={isAdequacyValid} />
+            </div>
             <AdequacyTable
               data={adequacyChecks}
               onStatusChange={handleAdequacyStatusChange}
@@ -1217,7 +1248,7 @@ export function SampleVerificationContent({
 
         <div
           className={`border transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
-            isOverallCommentsValid ? "border-primary" : "border-destructive"
+            isOverallCommentsValid ? "border-border" : "border-destructive"
           }`}
         >
           <CardHeader>
@@ -1226,17 +1257,19 @@ export function SampleVerificationContent({
                 Overall Comments on Sample Delivered{" "}
                 <span className="text-red-500 ml-1">*</span>
               </CardTitle>
-              <ValidityChecker isValid={isOverallCommentsValid} />
             </div>
           </CardHeader>
           <CardContent>
+            <div className="mb-5">
+              <ValidityChecker isValid={isOverallCommentsValid} />
+            </div>
             <RadioGroup
               value={overallStatus}
               onValueChange={(value) => {
                 setOverallStatus(value);
                 debouncedSetHasUnsavedEdits();
               }}
-              className="flex space-x-4 mb-4"
+              className="flex flex-col mb-4"
               disabled={isReadOnly}
             >
               <div className="flex items-center space-x-2">
@@ -1280,6 +1313,7 @@ export function SampleVerificationContent({
                 <CardContent>
                   <Textarea
                     disabled
+                    className="min-h-[100px]"
                     placeholder="I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
                     value={clientAcknowledgement}
                     onChange={(e) => {
@@ -1465,17 +1499,19 @@ export function SampleVerificationContent({
         <div
           className={`border transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
             isSampleReceiptPersonnelValid
-              ? "border-primary"
+              ? "border-border"
               : "border-destructive"
           }`}
         >
           <CardHeader>
             <div className="flex items-center gap-2">
               <CardTitle>Personnel</CardTitle>
-              <ValidityChecker isValid={isSampleReceiptPersonnelValid} />
             </div>
           </CardHeader>
           <CardContent>
+            <div className="mb-5">
+              <ValidityChecker isValid={isSampleReceiptPersonnelValid} />
+            </div>
             <div>
               <Label htmlFor="personnel-name">
                 Personnel responsible for this sample receipt
