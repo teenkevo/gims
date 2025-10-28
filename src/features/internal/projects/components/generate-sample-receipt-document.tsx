@@ -20,11 +20,20 @@ import {
   createSampleReceipt,
   updateSampleReceipt,
   approveSampleReceipt,
+  acknowledgeSampleReceipt,
 } from "@/lib/actions";
 import {
   ALL_PERSONNEL_QUERYResult,
   PROJECT_BY_ID_QUERYResult,
 } from "../../../../../sanity.types";
+import {
+  GetlabAcknowledgementDrawer,
+  GetlabAcknowledgementData,
+} from "./getlab-acknowledgement-drawer";
+import {
+  ClientAcknowledgementDrawer,
+  ClientAcknowledgementData as ClientAckData,
+} from "./client-acknowledgement-drawer";
 
 interface ReviewItem {
   id: number;
@@ -71,6 +80,8 @@ interface GenerateSampleReceiptDocumentProps {
   onCloseDrawers?: () => void;
   isReadOnly?: boolean;
   onApprove?: () => void;
+  onClientAcknowledgement?: (data: ClientAckData) => Promise<void>;
+  children?: React.ReactNode;
 }
 
 export const GenerateSampleReceiptDocument = ({
@@ -80,6 +91,8 @@ export const GenerateSampleReceiptDocument = ({
   onCloseDrawers,
   isReadOnly = false,
   onApprove,
+  onClientAcknowledgement,
+  children,
 }: GenerateSampleReceiptDocumentProps) => {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [open, setOpen] = React.useState(false);
@@ -348,33 +361,11 @@ export const GenerateSampleReceiptDocument = ({
     }
   };
 
-  const handleApproveSampleReceipt = async () => {
+  const handleApproveSampleReceipt = async (
+    data: GetlabAcknowledgementData
+  ) => {
     if (!existingSampleReceipt?._id) {
       toast.error("No sample receipt found to approve");
-      return;
-    }
-
-    if (!sampleReceiptData.approvalDecision) {
-      toast.error("Please select an approval decision");
-      return;
-    }
-
-    if (
-      sampleReceiptData.approvalDecision === "reject" &&
-      !sampleReceiptData.rejectionReason?.trim()
-    ) {
-      toast.error("Please provide a reason for rejection");
-      return;
-    }
-
-    if (
-      sampleReceiptData.approvalDecision === "approve" &&
-      (!sampleReceiptData.expectedDeliveryDate ||
-        !sampleReceiptData.sampleRetentionDuration)
-    ) {
-      toast.error(
-        "Expected delivery date and sample retention duration are required for approval"
-      );
       return;
     }
 
@@ -383,29 +374,25 @@ export const GenerateSampleReceiptDocument = ({
       const formData = new FormData();
       formData.append("sampleReceiptId", existingSampleReceipt._id);
       formData.append("projectId", project._id);
-      formData.append(
-        "getlabAcknowledgement",
-        sampleReceiptData.getlabAcknowledgement
-      );
-      formData.append("approvalDecision", sampleReceiptData.approvalDecision);
-      formData.append(
-        "rejectionReason",
-        sampleReceiptData.rejectionReason || ""
-      );
+      formData.append("acknowledgementText", data.getlabAcknowledgement);
+      formData.append("approvalDecision", data.approvalDecision);
+      formData.append("rejectionReason", data.rejectionReason || "");
       formData.append(
         "expectedDeliveryDate",
-        sampleReceiptData.expectedDeliveryDate || ""
+        data.expectedDeliveryDate
+          ? data.expectedDeliveryDate.toISOString().split("T")[0]
+          : ""
       );
       formData.append(
         "sampleRetentionDuration",
-        sampleReceiptData.sampleRetentionDuration || ""
+        data.sampleRetentionDuration?.toString() || ""
       );
 
       const result = await approveSampleReceipt({}, formData);
 
       if (result.status === "ok") {
         toast.success(
-          `Sample receipt ${sampleReceiptData.approvalDecision === "approve" ? "approved" : "rejected"} successfully!`
+          `Sample receipt ${data.approvalDecision === "approve" ? "approved" : "rejected"} successfully!`
         );
         setOpen(false);
         if (onApprove) {
@@ -432,17 +419,23 @@ export const GenerateSampleReceiptDocument = ({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          className="fixed right-0 top-[95%] -translate-y-1/2 rounded-l-full rounded-r-none border-r-0 px-3 transition-transform hover:translate-x-1 focus:translate-x-1"
-          onClick={handleOpenReview}
-        >
-          <FileText className="mr-2" strokeWidth={1} />
-          Review Sample Receipt
-        </Button>
-      </SheetTrigger>
+      {children ? (
+        <SheetTrigger asChild onClick={handleOpenReview}>
+          {children}
+        </SheetTrigger>
+      ) : (
+        <SheetTrigger asChild>
+          <Button
+            type="button"
+            size="sm"
+            className="fixed right-0 top-[95%] -translate-y-1/2 rounded-l-full rounded-r-none border-r-0 px-3 transition-transform hover:translate-x-1 focus:translate-x-1"
+            onClick={handleOpenReview}
+          >
+            <FileText className="mr-2" strokeWidth={1} />
+            Review Sample Receipt
+          </Button>
+        </SheetTrigger>
+      )}
       <SheetContent
         side="bottom"
         className={
@@ -459,22 +452,31 @@ export const GenerateSampleReceiptDocument = ({
             ) : (
               <>
                 {isReadOnly ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleApproveSampleReceipt}
-                    disabled={!sampleReceiptData.approvalDecision}
-                    className={
-                      !sampleReceiptData.approvalDecision
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {sampleReceiptData.approvalDecision === "reject"
-                      ? "Reject"
-                      : "Approve"}
-                  </Button>
+                  <>
+                    {onClientAcknowledgement ? (
+                      <ClientAcknowledgementDrawer
+                        project={project}
+                        existingSampleReceipt={existingSampleReceipt}
+                        onAcknowledgementSubmit={onClientAcknowledgement}
+                      >
+                        <Button type="button" size="sm">
+                          <Save className="mr-2 h-4 w-4" />
+                          Acknowledge Receipt
+                        </Button>
+                      </ClientAcknowledgementDrawer>
+                    ) : (
+                      <GetlabAcknowledgementDrawer
+                        project={project}
+                        existingSampleReceipt={existingSampleReceipt}
+                        onApprovalSubmit={handleApproveSampleReceipt}
+                      >
+                        <Button type="button" size="sm">
+                          <Save className="mr-2 h-4 w-4" />
+                          Approve
+                        </Button>
+                      </GetlabAcknowledgementDrawer>
+                    )}
+                  </>
                 ) : (
                   <Button
                     type="button"
@@ -508,11 +510,6 @@ export const GenerateSampleReceiptDocument = ({
             {!isFormComplete && !isReadOnly && (
               <Badge variant="outline" className="text-xs text-orange-500">
                 Complete form to enable action
-              </Badge>
-            )}
-            {isReadOnly && !sampleReceiptData.approvalDecision && (
-              <Badge variant="outline" className="text-xs text-orange-500">
-                Select approval decision to enable action
               </Badge>
             )}
           </div>

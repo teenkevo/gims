@@ -1,5 +1,3 @@
-"use client";
-
 import React, {
   useState,
   useCallback,
@@ -43,12 +41,6 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -56,7 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Moon, Sun, Database, Trash2, CalendarIcon } from "lucide-react";
+import { Moon, Sun, Database, Trash2 } from "lucide-react";
 import {
   seedSampleReceiptTemplates,
   deleteAllSampleReceiptTemplates,
@@ -1302,198 +1294,72 @@ export function SampleVerificationContent({
           </CardContent>
         </div>
 
-        {/* Only show acknowledgements after sample receipt has been submitted for approval */}
+        {/* Only show client acknowledgement after sample receipt has been submitted for approval */}
         {existingSampleReceipt?.status &&
           existingSampleReceipt.status !== "draft" && (
-            <>
-              <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
-                <CardHeader>
-                  <CardTitle>Client's Acknowledgement</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    disabled
-                    className="min-h-[100px]"
-                    placeholder="I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
-                    value={clientAcknowledgement}
+            <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
+              <CardHeader>
+                <CardTitle>Client's Acknowledgement</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  disabled
+                  className="min-h-[100px]"
+                  placeholder="I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
+                  value={clientAcknowledgement}
+                  onChange={(e) => {
+                    setClientAcknowledgement(e.target.value);
+                    debouncedSetHasUnsavedEdits();
+                  }}
+                />
+                <div className="mt-4">
+                  <Label htmlFor="client-signature">
+                    Signature of Customer
+                  </Label>
+                  <Input
+                    id="client-signature"
+                    type="text"
+                    placeholder="Enter name as signature"
+                    className="mt-1"
+                    value={clientSignature}
                     onChange={(e) => {
-                      setClientAcknowledgement(e.target.value);
+                      setClientSignature(e.target.value);
                       debouncedSetHasUnsavedEdits();
                     }}
+                    disabled={isReadOnly}
                   />
-                  <div className="mt-4">
-                    <Label htmlFor="client-signature">
-                      Signature of Customer
-                    </Label>
-                    <Input
-                      id="client-signature"
-                      type="text"
-                      placeholder="Enter name as signature"
-                      className="mt-1"
-                      value={clientSignature}
-                      onChange={(e) => {
-                        setClientSignature(e.target.value);
-                        debouncedSetHasUnsavedEdits();
-                      }}
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <RadioGroup
-                      value={clientRepresentative}
-                      onValueChange={(value) => {
-                        setClientRepresentative(value);
-                        debouncedSetHasUnsavedEdits();
-                      }}
-                      disabled={isReadOnly}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="client-rep" id="client-rep" />
-                        <Label htmlFor="client-rep">Client's Rep.</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value="contractor-rep"
-                          id="contractor-rep"
-                        />
-                        <Label htmlFor="contractor-rep">
-                          Contractor's Rep.
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value="consultant-rep"
-                          id="consultant-rep"
-                        />
-                        <Label htmlFor="consultant-rep">
-                          Consultant's Rep.
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </CardContent>
-              </div>
-
-              <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
-                <CardHeader>
-                  <CardTitle>GETLAB's Acknowledgement </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="expected-delivery-date">
-                        Expected delivery date
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            id="expected-delivery-date"
-                            variant="outline"
-                            className={`mt-1 w-full justify-start text-left font-normal ${
-                              !expectedDeliveryDate && "text-muted-foreground"
-                            }`}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {expectedDeliveryDate ? (
-                              format(expectedDeliveryDate, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={expectedDeliveryDate}
-                            onSelect={(date) => {
-                              setExpectedDeliveryDate(date);
-                              debouncedSetHasUnsavedEdits();
-                            }}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                </div>
+                <div className="mt-4">
+                  <RadioGroup
+                    value={clientRepresentative}
+                    onValueChange={(value) => {
+                      setClientRepresentative(value);
+                      debouncedSetHasUnsavedEdits();
+                    }}
+                    disabled={isReadOnly}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="client-rep" id="client-rep" />
+                      <Label htmlFor="client-rep">Client's Rep.</Label>
                     </div>
-                    <div>
-                      <Label htmlFor="sample-retention">
-                        Duration for Sample to be Retained Incase Sample Remains
-                        After Testing (days)
-                      </Label>
-                      <Input
-                        id="sample-retention"
-                        type="number"
-                        min="0"
-                        placeholder="Enter number of days"
-                        className="mt-1"
-                        value={sampleRetentionDuration || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setSampleRetentionDuration(
-                            value ? parseInt(value, 10) : undefined
-                          );
-                          debouncedSetHasUnsavedEdits();
-                        }}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="contractor-rep"
+                        id="contractor-rep"
                       />
+                      <Label htmlFor="contractor-rep">Contractor's Rep.</Label>
                     </div>
-
-                    {/* Approval Decision */}
-                    <div>
-                      <Label htmlFor="approval-decision">
-                        Approval Decision
-                        <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <RadioGroup
-                        value={approvalDecision}
-                        onValueChange={(value) => {
-                          setApprovalDecision(value);
-                          debouncedSetHasUnsavedEdits();
-                        }}
-                        className="flex space-x-4 mt-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="approve" id="approve" />
-                          <Label htmlFor="approve">Approve</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="reject" id="reject" />
-                          <Label htmlFor="reject">Reject</Label>
-                        </div>
-                      </RadioGroup>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="consultant-rep"
+                        id="consultant-rep"
+                      />
+                      <Label htmlFor="consultant-rep">Consultant's Rep.</Label>
                     </div>
-
-                    {/* Rejection Reason - only show when rejected */}
-                    {approvalDecision === "reject" && (
-                      <div>
-                        <Label htmlFor="rejection-reason">
-                          Rejection Reason
-                          <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Textarea
-                          id="rejection-reason"
-                          placeholder="Enter reason for rejection..."
-                          value={rejectionReason}
-                          onChange={(e) => {
-                            setRejectionReason(e.target.value);
-                            debouncedSetHasUnsavedEdits();
-                          }}
-                          className="mt-1"
-                        />
-                      </div>
-                    )}
-
-                    <Textarea
-                      placeholder="Additional acknowledgement notes..."
-                      value={getlabAcknowledgement}
-                      onChange={(e) => {
-                        setGetlabAcknowledgement(e.target.value);
-                        debouncedSetHasUnsavedEdits();
-                      }}
-                    />
-                  </div>
-                </CardContent>
-              </div>
-            </>
+                  </RadioGroup>
+                </div>
+              </CardContent>
+            </div>
           )}
 
         <div

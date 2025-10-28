@@ -1638,7 +1638,8 @@ export async function approveSampleReceipt(prevState: any, formData: FormData) {
     }
 
     // Determine the new status based on the decision
-    const newStatus = approvalDecision === "approve" ? "approved" : "rejected";
+    const newStatus =
+      approvalDecision === "approve" ? "sent_to_client" : "rejected";
 
     // Build the update object
     const updateData: any = {
@@ -1673,6 +1674,54 @@ export async function approveSampleReceipt(prevState: any, formData: FormData) {
     console.error("Error processing sample receipt:", error);
     return {
       error: "Failed to process sample receipt",
+      status: "error",
+    };
+  }
+}
+
+// ACKNOWLEDGE SAMPLE RECEIPT (CLIENT)
+export async function acknowledgeSampleReceipt(
+  prevState: any,
+  formData: FormData
+) {
+  try {
+    const sampleReceiptId = formData.get("sampleReceiptId") as string;
+    const projectId = formData.get("projectId") as string;
+    const acknowledgementText = formData.get("acknowledgementText") as string;
+    const clientSignature = formData.get("clientSignature") as string;
+    const clientRepresentative = formData.get("clientRepresentative") as string;
+
+    if (!sampleReceiptId) {
+      return { error: "Sample receipt ID is required", status: "error" };
+    }
+
+    if (!acknowledgementText || !clientSignature || !clientRepresentative) {
+      return {
+        error: "All acknowledgement fields are required",
+        status: "error",
+      };
+    }
+
+    // Update the sample receipt with client acknowledgement and set status to client_acknowledged
+    const sampleReceipt = await writeClient
+      .patch(sampleReceiptId)
+      .set({
+        status: "client_acknowledged",
+        clientAcknowledgement: {
+          acknowledgementText,
+          clientSignature,
+          clientRepresentative,
+        },
+      })
+      .commit({ autoGenerateArrayKeys: true });
+
+    revalidateTag(`project-${projectId}`);
+
+    return { result: sampleReceipt, status: "ok" };
+  } catch (error) {
+    console.error("Error acknowledging sample receipt:", error);
+    return {
+      error: "Failed to acknowledge sample receipt",
       status: "error",
     };
   }
