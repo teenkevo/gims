@@ -262,6 +262,8 @@ const ReviewTable = React.memo(
   }
 );
 
+ReviewTable.displayName = "ReviewTable";
+
 const AdequacyTable = React.memo(
   ({
     data,
@@ -416,6 +418,8 @@ const AdequacyTable = React.memo(
   }
 );
 
+AdequacyTable.displayName = "AdequacyTable";
+
 const SubmittedInfo = React.memo(({ data }: { data: any }) => {
   return (
     <Card className="mt-8">
@@ -533,6 +537,8 @@ const SubmittedInfo = React.memo(({ data }: { data: any }) => {
     </Card>
   );
 });
+
+SubmittedInfo.displayName = "SubmittedInfo";
 
 export function SampleVerificationContent({
   setDrawerOpen,
