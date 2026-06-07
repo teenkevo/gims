@@ -9,7 +9,7 @@ export const getAllProjects = async () => {
           name,
           startDate, 
           endDate, 
-          stagesCompleted, 
+          stagesCompleted,
           clients[]->{
             _id, 
             name,

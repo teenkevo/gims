@@ -21,6 +21,7 @@ import {
   updateSampleReceipt,
   approveSampleReceipt,
   acknowledgeSampleReceipt,
+  createSampleReceiptRevision,
 } from "@/lib/actions";
 import {
   ALL_PERSONNEL_QUERYResult,
@@ -70,6 +71,7 @@ interface SampleReceiptData {
   clientName?: string;
   email?: string;
   sampleReceiptNumber?: string;
+  revisionNumber?: string;
   personnel?: ALL_PERSONNEL_QUERYResult[number];
 }
 
@@ -102,6 +104,12 @@ export const GenerateSampleReceiptDocument = ({
   const isUpdate = React.useMemo(
     () => Boolean(existingSampleReceipt),
     [existingSampleReceipt]
+  );
+
+  // Check if this is a revision operation (existing sample receipt with rejected status)
+  const isRevision = React.useMemo(
+    () => existingSampleReceipt?.status === "rejected",
+    [existingSampleReceipt?.status]
   );
 
   // Validation function
@@ -215,10 +223,16 @@ export const GenerateSampleReceiptDocument = ({
   const Doc = useMemo(
     () => (
       <Document>
-        <SampleReceiptDocument {...sampleReceiptData} />
+        <SampleReceiptDocument
+          {...sampleReceiptData}
+          revisionNumber={
+            existingSampleReceipt?.revisionNumber ||
+            `R${new Date().getFullYear()}-00`
+          }
+        />
       </Document>
     ),
-    [sampleReceiptData]
+    [sampleReceiptData, existingSampleReceipt?.revisionNumber]
   );
 
   const handleDownloadPDF = async () => {
@@ -254,14 +268,48 @@ export const GenerateSampleReceiptDocument = ({
 
     setIsLoading(true);
     try {
+      // Generate PDF blob and upload to get fileId
+      const blob = await pdf(Doc).toBlob();
+      const uploadFormData = new FormData();
+      // Always use the existing number when updating, generate new only when creating
+      const receiptNumber =
+        (isUpdate || isRevision) && existingSampleReceipt?.sampleReceiptNumber
+          ? existingSampleReceipt.sampleReceiptNumber
+          : sampleReceiptData.sampleReceiptNumber ||
+            `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+      uploadFormData.append(
+        "files",
+        blob,
+        `Sample-Receipt-${receiptNumber}.pdf`
+      );
+
+      const uploadResponse = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResult.files || !uploadResult.files[0]?.fileId) {
+        toast.error("Failed to upload PDF file");
+        return;
+      }
+
+      const fileId = uploadResult.files[0].fileId;
+
       const formData = new FormData();
 
       // Add project ID (needed for cache invalidation)
       formData.append("projectId", project._id);
 
-      // Add sample receipt ID for updates
+      // Add sample receipt ID for updates or original receipt ID for revisions
       if (isUpdate && existingSampleReceipt?._id) {
         formData.append("sampleReceiptId", existingSampleReceipt._id);
+      }
+
+      // Add original sample receipt ID for revisions
+      if (isRevision && existingSampleReceipt?._id) {
+        formData.append("originalSampleReceiptId", existingSampleReceipt._id);
       }
 
       // Add verification date (current date)
@@ -326,15 +374,34 @@ export const GenerateSampleReceiptDocument = ({
         sampleReceiptData.sampleAdequacyTemplate
       );
 
-      const result = isUpdate
-        ? await updateSampleReceipt({}, formData)
-        : await createSampleReceipt({}, formData);
+      // Provide sample receipt number - always include it
+      // Use existing number when updating/revising, otherwise use the one from the data or generate a new one
+      const receiptNumberToSubmit =
+        (isUpdate || isRevision) && existingSampleReceipt?.sampleReceiptNumber
+          ? existingSampleReceipt.sampleReceiptNumber
+          : sampleReceiptData.sampleReceiptNumber ||
+            `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
+      formData.append("sampleReceiptNumber", receiptNumberToSubmit);
+
+      // Provide revision number - always include it (preserved when updating)
+      if (sampleReceiptData.revisionNumber) {
+        formData.append("revisionNumber", sampleReceiptData.revisionNumber);
+      }
+
+      const result = isRevision
+        ? await createSampleReceiptRevision({}, formData, fileId)
+        : isUpdate
+          ? await updateSampleReceipt({}, formData, fileId)
+          : await createSampleReceipt({}, formData, fileId);
 
       if (result.status === "ok") {
         toast.success(
-          isUpdate
-            ? "Sample receipt updated successfully!"
-            : "Sample receipt created successfully!"
+          isRevision
+            ? "Revised sample receipt submitted for approval successfully!"
+            : isUpdate
+              ? "Sample receipt updated successfully!"
+              : "Sample receipt created successfully!"
         );
         setOpen(false); // Close the sheet
         // Close both drawers if callback is provided
@@ -344,17 +411,21 @@ export const GenerateSampleReceiptDocument = ({
       } else {
         toast.error(
           result.error ||
-            (isUpdate
-              ? "Failed to update sample receipt"
-              : "Failed to create sample receipt")
+            (isRevision
+              ? "Failed to create sample receipt revision"
+              : isUpdate
+                ? "Failed to update sample receipt"
+                : "Failed to create sample receipt")
         );
       }
     } catch (error) {
       console.error("Error creating sample receipt:", error);
       toast.error(
-        isUpdate
-          ? "Failed to update sample receipt"
-          : "Failed to create sample receipt"
+        isRevision
+          ? "Failed to create sample receipt revision"
+          : isUpdate
+            ? "Failed to update sample receipt"
+            : "Failed to create sample receipt"
       );
     } finally {
       setIsLoading(false);
@@ -488,9 +559,11 @@ export const GenerateSampleReceiptDocument = ({
                     }
                   >
                     <Save className="mr-2 h-4 w-4" />
-                    {isUpdate
-                      ? "Update Sample Receipt"
-                      : "Create Sample Receipt"}
+                    {isRevision
+                      ? "Send Revised Sample Receipt"
+                      : isUpdate
+                        ? "Update Sample Receipt"
+                        : "Create Sample Receipt"}
                   </Button>
                 )}
                 {/* <Button

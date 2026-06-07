@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { SetDateRangeDialog } from "../set-project-date-range";
 import { quotationTotal } from "../../constants";
+import { ProjectTableRowActions } from "./project-table-row-actions";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
@@ -268,14 +269,15 @@ export const getColumns = (
   //     return value.includes(row.getValue);
   //   },
   // },
-  // {
-  //   id: "actions",
-  //   cell: ({ row }) => (
-  //     <DataTableRowActions
-  //       sampleClasses={sampleClasses || []}
-  //       testMethods={testMethods || []}
-  //       service={row.original as ALL_SERVICES_QUERYResult[number]}
-  //     />
-  //   ),
-  // },
+  {
+    id: "actions",
+    header: () => <span className="sr-only">Actions</span>,
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <ProjectTableRowActions project={row.original} />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
 ];

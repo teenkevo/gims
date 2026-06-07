@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ListEnd, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
+import { ClientTableRowActions } from "./client-table-row-actions";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
@@ -159,14 +160,15 @@ export const getColumns = (
     },
   },
 
-  // {
-  //   id: "actions",
-  //   cell: ({ row }) => (
-  //     <DataTableRowActions
-  //       sampleClasses={sampleClasses || []}
-  //       testMethods={testMethods || []}
-  //       service={row.original as ALL_SERVICES_QUERYResult[number]}
-  //     />
-  //   ),
-  // },
+  {
+    id: "actions",
+    header: () => <span className="sr-only">Actions</span>,
+    cell: ({ row }) => (
+      <div className="flex justify-end">
+        <ClientTableRowActions client={row.original} />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
 ];

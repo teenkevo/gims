@@ -86,7 +86,9 @@ export function SampleVerificationDrawer({
               <SheetTitle>
                 {onApprove
                   ? "Approve / Reject Sample Receipt"
-                  : "Sample Receipt Verification"}{" "}
+                  : project.sampleReceipt?.status === "rejected"
+                    ? "Revise Sample Receipt"
+                    : "Sample Receipt Verification"}{" "}
                 {isReadOnly && (
                   <Badge className="" variant="destructive">
                     Read Only
@@ -94,8 +96,9 @@ export function SampleVerificationDrawer({
                 )}
               </SheetTitle>
               <SheetDescription>
-                Complete the sample receipt verification process for the
-                project.
+                {project.sampleReceipt?.status === "rejected"
+                  ? "Revise and resubmit the sample receipt for approval."
+                  : "Complete the sample receipt verification process for the project."}
               </SheetDescription>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto py-4">
@@ -144,7 +147,9 @@ export function SampleVerificationDrawer({
             <DrawerTitle>
               {onApprove
                 ? "Approve / Reject Sample Receipt"
-                : "Sample Receipt Verification"}{" "}
+                : project.sampleReceipt?.status === "rejected"
+                  ? "Revise Sample Receipt"
+                  : "Sample Receipt Verification"}{" "}
               {isReadOnly && (
                 <Badge className="" variant="destructive">
                   Read Only
@@ -152,7 +157,9 @@ export function SampleVerificationDrawer({
               )}
             </DrawerTitle>
             <DrawerDescription>
-              Complete the sample receipt verification process for the project.
+              {project.sampleReceipt?.status === "rejected"
+                ? "Revise and resubmit the sample receipt for approval."
+                : "Complete the sample receipt verification process for the project."}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 overflow-y-auto max-h-[calc(80vh-10rem)]">

@@ -18,7 +18,6 @@ import {
   PieChart,
   Rocket,
   ScrollText,
-  ShieldCheck,
   Users,
   Wallet,
 } from "lucide-react";
@@ -97,31 +96,13 @@ const data = {
       isActive: false,
       isDisabled: false,
     },
-
-    // {
-    //   title: "Labs",
-    //   url: "#",
-    //   icon: FlaskConical,
-    //   items: [
-    //     {
-    //       title: "Introduction",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Get Started",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Tutorials",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Changelog",
-    //       url: "#",
-    //     },
-    //   ],
-    //   isDisabled: true,
-    // },
+    {
+      title: "Laboratories",
+      url: "/labs",
+      icon: FlaskConical,
+      isActive: false,
+      isDisabled: false,
+    },
     // {
     //   title: "Equipment",
     //   url: "#",

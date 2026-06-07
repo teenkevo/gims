@@ -332,7 +332,8 @@ export const getProjectById = async (projectId: string) => {
             && references(^._id)
           ][0] {
             _id,
-            verificationDate,
+            sampleReceiptNumber,
+            revisionNumber,
             status,
             reviewTemplate->{
               _id,
@@ -366,6 +367,15 @@ export const getProjectById = async (projectId: string) => {
               acknowledgementText,
               clientSignature,
               clientRepresentative,
+              acknowledgedAt,
+              acknowledgementDecisionBy {
+                contactPerson->{
+                  _id,
+                },
+                name,
+                email,
+                role,
+              },
             },
             getlabAcknowledgement {
               expectedDeliveryDate,
@@ -373,6 +383,15 @@ export const getProjectById = async (projectId: string) => {
               acknowledgementText,
               approvalDecision,
               rejectionReason,
+              approvalDecisionAt,
+              approvalDecisionBy {
+                personnel->{
+                  _id,
+                },
+                name,
+                email,
+                role,
+              },
             },
             sampleReceiptPersonnel {
               role,
@@ -384,6 +403,100 @@ export const getProjectById = async (projectId: string) => {
                 fullName,
                 email,
                 phone,
+              },
+            },
+            file {
+              asset->{
+                _id,
+                url,
+                originalFilename,
+                size,
+                mimeType,
+              },
+            },
+            revisions[]->|order(revisionNumber desc){
+              _id,
+              sampleReceiptNumber,
+              revisionNumber,
+              status,
+              reviewTemplate->{
+                _id,
+                name,
+                version,
+                description,
+                isActive,
+              },
+              reviewItems[] {
+                templateItemId,
+                label,
+                status,
+                comments,
+              },
+              adequacyTemplate->{
+                _id,
+                name,
+                version,
+                description,
+                isActive,
+              },
+              adequacyChecks[] {
+                templateItemId,
+                label,
+                status,
+                comments,
+              },
+              overallStatus,
+              overallComments,
+              clientAcknowledgement {
+                acknowledgementText,
+                clientSignature,
+                clientRepresentative,
+                acknowledgedAt,
+                acknowledgementDecisionBy {
+                  contactPerson->{
+                    _id,
+                  },
+                  name,
+                  email,
+                  role,
+                },
+              },
+              getlabAcknowledgement {
+                expectedDeliveryDate,
+                sampleRetentionDuration,
+                acknowledgementText,
+                approvalDecision,
+                rejectionReason,
+                approvalDecisionAt,
+                approvalDecisionBy {
+                  personnel->{
+                    _id,
+                  },
+                  name,
+                  email,
+                  role,
+                },
+              },
+              sampleReceiptPersonnel {
+                role,
+                name,
+                signature,
+                personnel->{
+                  _id,
+                  internalId,
+                  fullName,
+                  email,
+                  phone,
+                },
+              },
+              file {
+                asset->{
+                  _id,
+                  url,
+                  originalFilename,
+                  size,
+                  mimeType,
+                },
               },
             },
           }

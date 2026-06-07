@@ -12,6 +12,8 @@
  * ---------------------------------------------------------------------------------
  */
 
+export declare const internalGroqTypeReferenceTo: unique symbol;
+
 // Source: schema.json
 export type SanityImagePaletteSwatch = {
   _type: "sanity.imagePaletteSwatch";
@@ -37,6 +39,17 @@ export type SanityImageDimensions = {
   height?: number;
   width?: number;
   aspectRatio?: number;
+};
+
+export type SanityImageMetadata = {
+  _type: "sanity.imageMetadata";
+  location?: Geopoint;
+  dimensions?: SanityImageDimensions;
+  palette?: SanityImagePalette;
+  lqip?: string;
+  blurHash?: string;
+  hasAlpha?: boolean;
+  isOpaque?: boolean;
 };
 
 export type SanityImageHotspot = {
@@ -78,15 +91,11 @@ export type SanityImageAsset = {
   source?: SanityAssetSourceData;
 };
 
-export type SanityImageMetadata = {
-  _type: "sanity.imageMetadata";
-  location?: Geopoint;
-  dimensions?: SanityImageDimensions;
-  palette?: SanityImagePalette;
-  lqip?: string;
-  blurHash?: string;
-  hasAlpha?: boolean;
-  isOpaque?: boolean;
+export type SanityAssetSourceData = {
+  _type: "sanity.assetSourceData";
+  name?: string;
+  id?: string;
+  url?: string;
 };
 
 export type Geopoint = {
@@ -102,19 +111,64 @@ export type Slug = {
   source?: string;
 };
 
+export type ProjectReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "project";
+};
+
+export type SampleReviewTemplateReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sampleReviewTemplate";
+};
+
+export type SampleAdequacyTemplateReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sampleAdequacyTemplate";
+};
+
+export type ContactPersonReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "contactPerson";
+};
+
+export type PersonnelReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "personnel";
+};
+
+export type SampleReceiptReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sampleReceipt";
+};
+
+export type SanityFileAssetReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+};
+
 export type SampleReceipt = {
   _id: string;
   _type: "sampleReceipt";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  project?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "project";
-  };
-  verificationDate?: string;
+  project?: ProjectReference;
+  sampleReceiptNumber?: string;
+  revisionNumber?: string;
   status?:
     | "draft"
     | "submitted"
@@ -122,12 +176,7 @@ export type SampleReceipt = {
     | "sent_to_client"
     | "client_acknowledged"
     | "rejected";
-  reviewTemplate?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "sampleReviewTemplate";
-  };
+  reviewTemplate?: SampleReviewTemplateReference;
   reviewItems?: Array<{
     templateItemId?: number;
     label?: string;
@@ -135,16 +184,10 @@ export type SampleReceipt = {
     comments?: string;
     _key: string;
   }>;
-  adequacyTemplate?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "sampleAdequacyTemplate";
-  };
+  adequacyTemplate?: SampleAdequacyTemplateReference;
   adequacyChecks?: Array<{
     templateItemId?: number;
     label?: string;
-    required?: boolean;
     status?: "adequate" | "inadequate";
     comments?: string;
     _key: string;
@@ -155,6 +198,13 @@ export type SampleReceipt = {
     acknowledgementText?: string;
     clientSignature?: string;
     clientRepresentative?: "client-rep" | "contractor-rep" | "consultant-rep";
+    acknowledgedAt?: string;
+    acknowledgementDecisionBy?: {
+      contactPerson?: ContactPersonReference;
+      name?: string;
+      email?: string;
+      role?: string;
+    };
   };
   getlabAcknowledgement?: {
     expectedDeliveryDate?: string;
@@ -162,17 +212,30 @@ export type SampleReceipt = {
     acknowledgementText?: string;
     approvalDecision?: "approve" | "reject";
     rejectionReason?: string;
+    approvalDecisionAt?: string;
+    approvalDecisionBy?: {
+      personnel?: PersonnelReference;
+      name?: string;
+      email?: string;
+      role?: string;
+    };
   };
   sampleReceiptPersonnel?: {
-    personnel?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "personnel";
-    };
+    personnel?: PersonnelReference;
     role?: string;
     name?: string;
   };
+  revisions?: Array<
+    {
+      _key: string;
+    } & SampleReceiptReference
+  >;
+  file?: {
+    asset?: SanityFileAssetReference;
+    media?: unknown;
+    _type: "file";
+  };
+  rejectionNotes?: string;
 };
 
 export type SampleAdequacyTemplate = {
@@ -253,14 +316,23 @@ export type OtherItem = {
   lineTotal?: number;
 };
 
+export type ServiceReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "service";
+};
+
+export type TestMethodReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "testMethod";
+};
+
 export type ServiceItem = {
   _type: "serviceItem";
-  service?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "service";
-  };
+  service?: ServiceReference;
   unit?:
     | "number"
     | "meters"
@@ -272,12 +344,21 @@ export type ServiceItem = {
   unitPrice?: number;
   quantity?: number;
   lineTotal?: number;
-  testMethod?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "testMethod";
-  };
+  testMethod?: TestMethodReference;
+};
+
+export type LabReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "lab";
+};
+
+export type RfiReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "rfi";
 };
 
 export type LabApprovalWorkflow = {
@@ -286,31 +367,16 @@ export type LabApprovalWorkflow = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  lab?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "lab";
-  };
+  lab?: LabReference;
   workflowType?:
     | "equipment_release_approval"
     | "test_result_approval"
     | "lab_access_approval"
     | "sop_change_approval"
     | "funds_request_approval";
-  initiatedBy?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  };
+  initiatedBy?: PersonnelReference;
   approvalSteps?: Array<{
-    approver?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "personnel";
-    };
+    approver?: PersonnelReference;
     decision?: "pending" | "approved" | "rejected";
     approvalDate?: string;
     notes?: string;
@@ -318,13 +384,15 @@ export type LabApprovalWorkflow = {
   }>;
   finalDecision?: "pending" | "approved" | "rejected";
   finalDecisionDate?: string;
-  rfi?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "rfi";
-  };
+  rfi?: RfiReference;
   status?: "pending" | "in_progress" | "approved" | "rejected";
+};
+
+export type ClientReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "client";
 };
 
 export type Rfi = {
@@ -337,72 +405,31 @@ export type Rfi = {
     | "internal_internal"
     | "internal_external"
     | "external_internal";
-  rfiManager?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  };
-  project?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "project";
-  };
-  client?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "client";
-  };
-  labInitiator?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  };
-  labReceivers?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
-  labInitiatorExternal?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  };
-  clientReceivers?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "contactPerson";
-  }>;
-  clientInitiator?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "contactPerson";
-  };
-  labReceiversExternal?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
+  rfiManager?: PersonnelReference;
+  project?: ProjectReference;
+  client?: ClientReference;
+  labInitiator?: PersonnelReference;
+  labReceivers?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
+  labInitiatorExternal?: PersonnelReference;
+  clientReceivers?: Array<
+    {
+      _key: string;
+    } & ContactPersonReference
+  >;
+  clientInitiator?: ContactPersonReference;
+  labReceiversExternal?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
   subject?: string;
   description?: string;
   attachments?: Array<{
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-    };
+    asset?: SanityFileAssetReference;
     media?: unknown;
     _type: "file";
     _key: string;
@@ -411,12 +438,7 @@ export type Rfi = {
   statusHistory?: Array<{
     status?: "open" | "in_progress" | "resolved";
     timestamp?: string;
-    changedBy?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "personnel";
-    };
+    changedBy?: PersonnelReference;
     reason?: string;
     previousStatus?: "open" | "in_progress" | "resolved";
     officialMessageKey?: string;
@@ -426,25 +448,10 @@ export type Rfi = {
     isOfficialResponse?: boolean;
     message?: string;
     sentByClient?: boolean;
-    clientSender?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "contactPerson";
-    };
-    labSender?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "personnel";
-    };
+    clientSender?: ContactPersonReference;
+    labSender?: PersonnelReference;
     attachments?: Array<{
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-      };
+      asset?: SanityFileAssetReference;
       media?: unknown;
       _type: "file";
       _key: string;
@@ -456,25 +463,22 @@ export type Rfi = {
   dateResolved?: string;
 };
 
+export type EquipmentReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "equipment";
+};
+
 export type MaintenanceLog = {
   _id: string;
   _type: "maintenanceLog";
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  equipment?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "equipment";
-  };
+  equipment?: EquipmentReference;
   date?: string;
-  supervisedBy?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  };
+  supervisedBy?: PersonnelReference;
   maintenanceType?: "routine" | "repair" | "calibration" | "replacement";
   maintenanceNotes?: string;
   maintenanceCompany?: {
@@ -496,13 +500,11 @@ export type Equipment = {
   status?: "available" | "in_use" | "under_maintenance" | "retired";
   lastMaintenance?: string;
   nextMaintenance?: string;
-  assignedPersonnel?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
+  assignedPersonnel?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
   userManuals?: Array<string>;
   supplier?: {
     name?: string;
@@ -524,7 +526,9 @@ export type Lab = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
+  internalId?: string;
   name?: string;
+  description?: string;
   labSection?:
     | "soil_testing"
     | "rock_testing"
@@ -535,33 +539,34 @@ export type Lab = {
   status?: "available" | "under_maintenance" | "retired" | "fullCapacity";
   location?: string;
   capacity?: number;
-  personnel?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
-  labHead?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
+  accreditation?: {
+    standard?: string;
+    certificateNumber?: string;
+    accreditingBody?: string;
+    expiryDate?: string;
   };
-  equipment?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "equipment";
-  }>;
-  projects?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "project";
-  }>;
+  testCapabilities?: Array<
+    {
+      _key: string;
+    } & ServiceReference
+  >;
+  notes?: string;
+  personnel?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
+  labHead?: PersonnelReference;
+  equipment?: Array<
+    {
+      _key: string;
+    } & EquipmentReference
+  >;
+  projects?: Array<
+    {
+      _key: string;
+    } & ProjectReference
+  >;
   sopDocuments?: Array<{
     category?:
       | "health_safety"
@@ -583,21 +588,21 @@ export type FeedbackAction = {
   _rev: string;
   action?: string;
   description?: string;
-  assignedTo?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
+  assignedTo?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
   dueDate?: string;
   status?: "pending" | "completed";
-  reviewedBy?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  };
+  reviewedBy?: PersonnelReference;
+};
+
+export type FeedbackActionReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "feedbackAction";
 };
 
 export type ClientFeedback = {
@@ -606,18 +611,8 @@ export type ClientFeedback = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  client?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "client";
-  };
-  contactPerson?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "contactPerson";
-  };
+  client?: ClientReference;
+  contactPerson?: ContactPersonReference;
   date?: string;
   feedback?: Array<{
     category?:
@@ -634,13 +629,11 @@ export type ClientFeedback = {
   }>;
   suggestions?: string;
   actionNeeded?: boolean;
-  actions?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "feedbackAction";
-  }>;
+  actions?: Array<
+    {
+      _key: string;
+    } & FeedbackActionReference
+  >;
 };
 
 export type ContactPerson = {
@@ -653,12 +646,7 @@ export type ContactPerson = {
   email?: string;
   designation?: string;
   phone?: string;
-  client?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "client";
-  };
+  client?: ClientReference;
 };
 
 export type Client = {
@@ -669,6 +657,13 @@ export type Client = {
   _rev: string;
   internalId?: string;
   name?: string;
+};
+
+export type QuotationReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "quotation";
 };
 
 export type Project = {
@@ -682,41 +677,28 @@ export type Project = {
   priority?: "noPriority" | "urgent" | "high" | "medium" | "low";
   startDate?: string;
   endDate?: string;
-  projectPersonnel?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
-  projectSupervisors?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "personnel";
-  }>;
-  clients?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "client";
-  }>;
-  contactPersons?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "contactPerson";
-  }>;
+  projectPersonnel?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
+  projectSupervisors?: Array<
+    {
+      _key: string;
+    } & PersonnelReference
+  >;
+  clients?: Array<
+    {
+      _key: string;
+    } & ClientReference
+  >;
+  contactPersons?: Array<
+    {
+      _key: string;
+    } & ContactPersonReference
+  >;
   stagesCompleted?: Array<string>;
-  quotation?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "quotation";
-  };
+  quotation?: QuotationReference;
 };
 
 export type Quotation = {
@@ -743,13 +725,11 @@ export type Quotation = {
   vatPercentage?: number;
   advance?: number;
   paymentNotes?: string;
-  revisions?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "quotation";
-  }>;
+  revisions?: Array<
+    {
+      _key: string;
+    } & QuotationReference
+  >;
   subtotal?: number;
   grandTotal?: number;
   payments?: Array<{
@@ -759,31 +739,16 @@ export type Quotation = {
     paymentMode?: "mobile" | "bank" | "cash";
     currency?: "usd" | "eur" | "gbp" | "ugx";
     paymentProof?: {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-      };
+      asset?: SanityFileAssetReference;
       media?: unknown;
       _type: "file";
     };
     internalNotes?: string;
     internalStatus?: "approved" | "rejected" | "pending";
     internalDecisionTime?: string;
-    internalDecisionBy?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "personnel";
-    };
+    internalDecisionBy?: PersonnelReference;
     receipt?: {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-      };
+      asset?: SanityFileAssetReference;
       media?: unknown;
       _type: "file";
     };
@@ -792,31 +757,16 @@ export type Quotation = {
       paymentMode?: "mobile" | "bank" | "cash";
       paymentTime?: string;
       paymentProof?: {
-        asset?: {
-          _ref: string;
-          _type: "reference";
-          _weak?: boolean;
-          [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-        };
+        asset?: SanityFileAssetReference;
         media?: unknown;
         _type: "file";
       };
       internalNotes?: string;
       internalStatus?: "approved" | "rejected" | "pending";
       internalDecisionTime?: string;
-      internalDecisionBy?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "personnel";
-      };
+      internalDecisionBy?: PersonnelReference;
       receipt?: {
-        asset?: {
-          _ref: string;
-          _type: "reference";
-          _weak?: boolean;
-          [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-        };
+        asset?: SanityFileAssetReference;
         media?: unknown;
         _type: "file";
       };
@@ -826,12 +776,7 @@ export type Quotation = {
     _key: string;
   }>;
   file?: {
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-    };
+    asset?: SanityFileAssetReference;
     media?: unknown;
     _type: "file";
   };
@@ -845,15 +790,17 @@ export type Quotation = {
     | "fully_paid";
   rejectionNotes?: string;
   invoice?: {
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-    };
+    asset?: SanityFileAssetReference;
     media?: unknown;
     _type: "file";
   };
+};
+
+export type DepartmentReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "department";
 };
 
 export type Personnel = {
@@ -865,23 +812,13 @@ export type Personnel = {
   internalId?: string;
   fullName?: string;
   departmentRoles?: Array<{
-    department?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "department";
-    };
+    department?: DepartmentReference;
     role?: string;
     _key: string;
   }>;
   email?: string;
   phone?: string;
-  projects?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "project";
-  };
+  projects?: ProjectReference;
   status?:
     | "active"
     | "inactive"
@@ -920,17 +857,19 @@ export type Department = {
       _key: string;
     }>;
     jobDescriptionFile?: {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-      };
+      asset?: SanityFileAssetReference;
       media?: unknown;
       _type: "file";
     };
     _key: string;
   }>;
+};
+
+export type SampleClassReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sampleClass";
 };
 
 export type Service = {
@@ -941,19 +880,12 @@ export type Service = {
   _rev: string;
   code?: string;
   testParameter?: string;
-  testMethods?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "testMethod";
-  }>;
-  sampleClass?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "sampleClass";
-  };
+  testMethods?: Array<
+    {
+      _key: string;
+    } & TestMethodReference
+  >;
+  sampleClass?: SampleClassReference;
   status?: "active" | "inactive";
 };
 
@@ -965,13 +897,11 @@ export type FieldTest = {
   _rev: string;
   code?: string;
   testParameter?: string;
-  testMethods?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "testMethod";
-  }>;
+  testMethods?: Array<
+    {
+      _key: string;
+    } & TestMethodReference
+  >;
   status?: "active" | "inactive";
 };
 
@@ -983,20 +913,20 @@ export type LabTest = {
   _rev: string;
   code?: string;
   testParameter?: string;
-  testMethods?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "testMethod";
-  }>;
-  sampleClass?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "sampleClass";
-  };
+  testMethods?: Array<
+    {
+      _key: string;
+    } & TestMethodReference
+  >;
+  sampleClass?: SampleClassReference;
   status?: "active" | "inactive";
+};
+
+export type StandardReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "standard";
 };
 
 export type TestMethod = {
@@ -1005,21 +935,11 @@ export type TestMethod = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
-  standard?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "standard";
-  };
+  standard?: StandardReference;
   code?: string;
   description?: string;
   documents?: Array<{
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-    };
+    asset?: SanityFileAssetReference;
     media?: unknown;
     name?: string;
     _type: "file";
@@ -1047,13 +967,6 @@ export type SanityFileAsset = {
   path?: string;
   url?: string;
   source?: SanityAssetSourceData;
-};
-
-export type SanityAssetSourceData = {
-  _type: "sanity.assetSourceData";
-  name?: string;
-  id?: string;
-  url?: string;
 };
 
 export type SampleClass = {
@@ -1087,44 +1000,62 @@ export type AllSanitySchemaTypes =
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
+  | SanityImageMetadata
   | SanityImageHotspot
   | SanityImageCrop
   | SanityImageAsset
-  | SanityImageMetadata
+  | SanityAssetSourceData
   | Geopoint
   | Slug
+  | ProjectReference
+  | SampleReviewTemplateReference
+  | SampleAdequacyTemplateReference
+  | ContactPersonReference
+  | PersonnelReference
+  | SampleReceiptReference
+  | SanityFileAssetReference
   | SampleReceipt
   | SampleAdequacyTemplate
   | SampleReviewTemplate
   | Revision
   | OtherItem
+  | ServiceReference
+  | TestMethodReference
   | ServiceItem
+  | LabReference
+  | RfiReference
   | LabApprovalWorkflow
+  | ClientReference
   | Rfi
+  | EquipmentReference
   | MaintenanceLog
   | Equipment
   | Lab
   | FeedbackAction
+  | FeedbackActionReference
   | ClientFeedback
   | ContactPerson
   | Client
+  | QuotationReference
   | Project
   | Quotation
+  | DepartmentReference
   | Personnel
   | Department
+  | SampleClassReference
   | Service
   | FieldTest
   | LabTest
+  | StandardReference
   | TestMethod
   | SanityFileAsset
-  | SanityAssetSourceData
   | SampleClass
   | Standard;
-export declare const internalGroqTypeReferenceTo: unique symbol;
-// Source: ./src/sanity/lib/clients/getAllClients.ts
+
+// Source: src/sanity/lib/clients/getAllClients.ts
 // Variable: ALL_CLIENTS_QUERY
 // Query: *[_type == "client"] {      _id,      name,      internalId,      // Reverse‐lookup: find projects that reference this client      "projects": *[        _type == "project"         && references(^._id)      ] {        _id,        name,        internalId,        endDate,        contactPersons[]->{          _id,          name,          email,          phone,          designation,        }      }    }
-export type ALL_CLIENTS_QUERYResult = Array<{
+export type ALL_CLIENTS_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   internalId: string | null;
@@ -1143,10 +1074,10 @@ export type ALL_CLIENTS_QUERYResult = Array<{
   }>;
 }>;
 
-// Source: ./src/sanity/lib/clients/getAllContacts.ts
+// Source: src/sanity/lib/clients/getAllContacts.ts
 // Variable: ALL_CONTACTS_QUERY
 // Query: *[_type == "contactPerson"] {            _id,             name,            email,            designation,            phone,            client->{              _id,            },        }
-export type ALL_CONTACTS_QUERYResult = Array<{
+export type ALL_CONTACTS_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   email: string | null;
@@ -1157,10 +1088,10 @@ export type ALL_CONTACTS_QUERYResult = Array<{
   } | null;
 }>;
 
-// Source: ./src/sanity/lib/clients/getClientById.ts
+// Source: src/sanity/lib/clients/getClientById.ts
 // Variable: CLIENT_BY_ID_QUERY
 // Query: *[_type == "client" && _id == $clientId] {            _id,            name,            internalId,            // Reverse‐lookup: find projects that reference this client            "projects": *[                _type == "project"                 && references(^._id)            ] {              _id,              internalId,              name,              startDate,               endDate,               stagesCompleted,               clients[]->{                _id,                 name,                internalId              },              quotation->{                _id,                revisionNumber,                currency,                status,                rejectionNotes,                revisions[]->|order(revisionNumber desc){                  _id,                  revisionNumber,                  currency,                  status,                  rejectionNotes,                  items[] {                    lineTotal,                  },                  otherItems[] {                    lineTotal,                  },                  vatPercentage,                  advance,                },                items[] {                  lineTotal,                },                otherItems[] {                  lineTotal,                },                vatPercentage,                advance,              }            },            "contacts": *[_type == "contactPerson" && references(^._id)] {                _id,                name,                email,                designation,                phone,                "projects": *[_type == "project" && references(^._id)] {                    _id,                    name,                }            }        }
-export type CLIENT_BY_ID_QUERYResult = Array<{
+export type CLIENT_BY_ID_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   internalId: string | null;
@@ -1236,10 +1167,10 @@ export type CLIENT_BY_ID_QUERYResult = Array<{
   }>;
 }>;
 
-// Source: ./src/sanity/lib/clients/getContactByEmail.ts
+// Source: src/sanity/lib/clients/getContactByEmail.ts
 // Variable: CONTACT_BY_EMAIL_AND_CLIENT_QUERY
 // Query: *[_type == "contactPerson" && email == $email && client._ref == $clientId] {      _id,      name,      email,      client->{        _id,        name      }    }
-export type CONTACT_BY_EMAIL_AND_CLIENT_QUERYResult = Array<{
+export type CONTACT_BY_EMAIL_AND_CLIENT_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   email: string | null;
@@ -1249,10 +1180,10 @@ export type CONTACT_BY_EMAIL_AND_CLIENT_QUERYResult = Array<{
   } | null;
 }>;
 
-// Source: ./src/sanity/lib/departments/getAllDepartments.ts
+// Source: src/sanity/lib/departments/getAllDepartments.ts
 // Variable: ALL_DEPARTMENTS_QUERY
 // Query: *[_type == "department"] {          _id,          department,          roles        }
-export type ALL_DEPARTMENTS_QUERYResult = Array<{
+export type ALL_DEPARTMENTS_QUERY_RESULT = Array<{
   _id: string;
   department: string | null;
   roles: Array<{
@@ -1276,12 +1207,7 @@ export type ALL_DEPARTMENTS_QUERYResult = Array<{
       _key: string;
     }>;
     jobDescriptionFile?: {
-      asset?: {
-        _ref: string;
-        _type: "reference";
-        _weak?: boolean;
-        [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
-      };
+      asset?: SanityFileAssetReference;
       media?: unknown;
       _type: "file";
     };
@@ -1289,10 +1215,155 @@ export type ALL_DEPARTMENTS_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/personnel/getAllPersonnel.ts
+// Source: src/sanity/lib/equipment/getAllEquipment.ts
+// Variable: ALL_EQUIPMENT_QUERY
+// Query: *[_type == "equipment"] | order(name asc) {      _id,      name,      serialNumber,      status    }
+export type ALL_EQUIPMENT_QUERY_RESULT = Array<{
+  _id: string;
+  name: string | null;
+  serialNumber: string | null;
+  status: "available" | "in_use" | "retired" | "under_maintenance" | null;
+}>;
+
+// Source: src/sanity/lib/labs/getAllLabs.ts
+// Variable: ALL_LABS_QUERY
+// Query: *[_type == "lab"] | order(internalId desc) {      _id,      internalId,      name,      labSection,      status,      location,      capacity,      personnel[]->{        _id,        internalId,        fullName      },      labHead->{        _id,        internalId,        fullName      },      equipment[]->{        _id,        name,        serialNumber,        status      },      "projects": projects[]->{        _id,        name,        internalId,        endDate      },      testCapabilities[]->{        _id,        code,        testParameter      }    }
+export type ALL_LABS_QUERY_RESULT = Array<{
+  _id: string;
+  internalId: string | null;
+  name: string | null;
+  labSection:
+    | "asphalt_lab"
+    | "concrete_testing"
+    | "general_materials"
+    | "rock_testing"
+    | "seismic_testing"
+    | "soil_testing"
+    | null;
+  status: "available" | "fullCapacity" | "retired" | "under_maintenance" | null;
+  location: string | null;
+  capacity: number | null;
+  personnel: Array<{
+    _id: string;
+    internalId: string | null;
+    fullName: string | null;
+  }> | null;
+  labHead: {
+    _id: string;
+    internalId: string | null;
+    fullName: string | null;
+  } | null;
+  equipment: Array<{
+    _id: string;
+    name: string | null;
+    serialNumber: string | null;
+    status: "available" | "in_use" | "retired" | "under_maintenance" | null;
+  }> | null;
+  projects: Array<{
+    _id: string;
+    name: string | null;
+    internalId: string | null;
+    endDate: string | null;
+  }> | null;
+  testCapabilities: Array<{
+    _id: string;
+    code: string | null;
+    testParameter: string | null;
+  }> | null;
+}>;
+
+// Source: src/sanity/lib/labs/getLabById.ts
+// Variable: LAB_BY_ID_QUERY
+// Query: *[_type == "lab" && _id == $labId] {      _id,      internalId,      name,      description,      labSection,      status,      location,      capacity,      notes,      accreditation {        standard,        certificateNumber,        accreditingBody,        expiryDate      },      personnel[]->{        _id,        internalId,        fullName,        email,        phone,        departmentRoles[] {          department->{ department },          role        }      },      labHead->{        _id,        internalId,        fullName      },      equipment[]->{        _id,        name,        serialNumber,        status,        lastMaintenance,        nextMaintenance      },      "projects": projects[]->{        _id,        name,        internalId,        endDate,        startDate      },      testCapabilities[]->{        _id,        code,        testParameter,        status,        testMethods[]->{          _id,          code,          description,          standard->{ name, acronym }        }      },      sopDocuments[] {        _key,        category,        documentUrl,        description      }    }
+export type LAB_BY_ID_QUERY_RESULT = Array<{
+  _id: string;
+  internalId: string | null;
+  name: string | null;
+  description: string | null;
+  labSection:
+    | "asphalt_lab"
+    | "concrete_testing"
+    | "general_materials"
+    | "rock_testing"
+    | "seismic_testing"
+    | "soil_testing"
+    | null;
+  status: "available" | "fullCapacity" | "retired" | "under_maintenance" | null;
+  location: string | null;
+  capacity: number | null;
+  notes: string | null;
+  accreditation: {
+    standard: string | null;
+    certificateNumber: string | null;
+    accreditingBody: string | null;
+    expiryDate: string | null;
+  } | null;
+  personnel: Array<{
+    _id: string;
+    internalId: string | null;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        department: string | null;
+      } | null;
+      role: string | null;
+    }> | null;
+  }> | null;
+  labHead: {
+    _id: string;
+    internalId: string | null;
+    fullName: string | null;
+  } | null;
+  equipment: Array<{
+    _id: string;
+    name: string | null;
+    serialNumber: string | null;
+    status: "available" | "in_use" | "retired" | "under_maintenance" | null;
+    lastMaintenance: string | null;
+    nextMaintenance: string | null;
+  }> | null;
+  projects: Array<{
+    _id: string;
+    name: string | null;
+    internalId: string | null;
+    endDate: string | null;
+    startDate: string | null;
+  }> | null;
+  testCapabilities: Array<{
+    _id: string;
+    code: string | null;
+    testParameter: string | null;
+    status: "active" | "inactive" | null;
+    testMethods: Array<{
+      _id: string;
+      code: string | null;
+      description: string | null;
+      standard: {
+        name: string | null;
+        acronym: string | null;
+      } | null;
+    }> | null;
+  }> | null;
+  sopDocuments: Array<{
+    _key: string;
+    category:
+      | "equipment_handling"
+      | "evacuation"
+      | "general_operations"
+      | "health_safety"
+      | "quality_control"
+      | null;
+    documentUrl: string | null;
+    description: string | null;
+  }> | null;
+}>;
+
+// Source: src/sanity/lib/personnel/getAllPersonnel.ts
 // Variable: ALL_PERSONNEL_QUERY
 // Query: *[_type == "personnel"] | order(internalId desc) {          _id,          internalId,          fullName,          email,          phone,          departmentRoles[] {            department->{              _id,              department            },            role          },          projects[]->{            _id,            name,            internalId          },          status        }
-export type ALL_PERSONNEL_QUERYResult = Array<{
+export type ALL_PERSONNEL_QUERY_RESULT = Array<{
   _id: string;
   internalId: string | null;
   fullName: string | null;
@@ -1317,10 +1388,10 @@ export type ALL_PERSONNEL_QUERYResult = Array<{
     | null;
 }>;
 
-// Source: ./src/sanity/lib/projects/getAllProjects.ts
+// Source: src/sanity/lib/projects/getAllProjects.ts
 // Variable: ALL_PROJECTS_QUERY
-// Query: *[_type == "project"] | order(internalId desc) {          _id,          internalId,          name,          startDate,           endDate,           stagesCompleted,           clients[]->{            _id,             name,            internalId          },          contactPersons[]->{            _id,            name,            email,            phone,            designation,            client->{              _id,            },          },          quotation->{            _id,            revisionNumber,            currency,            status,            rejectionNotes,            revisions[]->|order(revisionNumber desc){              _id,              revisionNumber,              currency,              status,              rejectionNotes,              items[] {                lineTotal,              },              otherItems[] {                lineTotal,              },              vatPercentage,              advance,            },            items[] {              lineTotal,            },            otherItems[] {              lineTotal,            },            vatPercentage,            advance,          }        }
-export type ALL_PROJECTS_QUERYResult = Array<{
+// Query: *[_type == "project"] | order(internalId desc) {          _id,          internalId,          name,          startDate,           endDate,           stagesCompleted,          clients[]->{            _id,             name,            internalId          },          contactPersons[]->{            _id,            name,            email,            phone,            designation,            client->{              _id,            },          },          quotation->{            _id,            revisionNumber,            currency,            status,            rejectionNotes,            revisions[]->|order(revisionNumber desc){              _id,              revisionNumber,              currency,              status,              rejectionNotes,              items[] {                lineTotal,              },              otherItems[] {                lineTotal,              },              vatPercentage,              advance,            },            items[] {              lineTotal,            },            otherItems[] {              lineTotal,            },            vatPercentage,            advance,          }        }
+export type ALL_PROJECTS_QUERY_RESULT = Array<{
   _id: string;
   internalId: string | null;
   name: string | null;
@@ -1390,10 +1461,10 @@ export type ALL_PROJECTS_QUERYResult = Array<{
   } | null;
 }>;
 
-// Source: ./src/sanity/lib/projects/getProjectById.ts
+// Source: src/sanity/lib/projects/getProjectById.ts
 // Variable: PROJECT_BY_ID_QUERY
-// Query: *[_type == "project" && _id == $projectId] {          _id,          internalId,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            client->{              _id,            },          },          clients[]->{            _id,             name,          },          quotation->{            _id,            revisionNumber,            quotationNumber,            quotationDate,            acquisitionNumber,            currency,            status,            rejectionNotes,            invoice {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            revisions[]->|order(revisionNumber desc){              _id,              revisionNumber,              quotationNumber,              quotationDate,              acquisitionNumber,              currency,              status,              rejectionNotes,              invoice {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },              items[] {                service -> {                  _id,                  testParameter,                  sampleClass -> {                    _id,                    name,                  },                },                unit,                unitPrice,                quantity,                lineTotal,                testMethod->{                  _id,                  code,                  standard->{                    _id,                    acronym,                  },                },              },              otherItems[] {                type,                activity,                unit,                unitPrice,                quantity,                lineTotal,              },              vatPercentage,              paymentNotes,              advance,              grandTotal,              subtotal,              payments[] {                _key,                paymentTime,                paymentType,                amount,                paymentMode,                currency,                internalNotes,                internalStatus,                internalDecisionTime,                internalDecisionBy->{                  _id,                  internalId,                  fullName,                  email,                  phone,                  status,                  departmentRoles[]->{                    department->{                      _id,                      name,                    },                    role,                  },                },                paymentProof {                  asset->{                    _id,                    url,                    originalFilename,                    size,                    mimeType,                  },                },                receipt {                  asset->{                    _id,                    url,                    originalFilename,                    name,                    mimeType,                    size,                  },                },                resubmissions[] {                  _key,                  amount,                  paymentTime,                  paymentMode,                  internalNotes,                  internalStatus,                  internalDecisionTime,                  internalDecisionBy->{                    _id,                    internalId,                    fullName,                    email,                    phone,                    status,                    departmentRoles[]->{                      department->{                        _id,                        name,                      },                      role,                    },                  },                  paymentProof {                    asset->{                      _id,                      url,                      originalFilename,                      size,                      mimeType,                    },                  },                  receipt {                    asset->{                      _id,                      url,                      originalFilename,                      name,                      mimeType,                      size,                    },                  },                },              },              file {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },            },            items[] {              service -> {                _id,                testParameter,                sampleClass -> {                  _id,                  name,                },              },              unit,              unitPrice,              quantity,              lineTotal,              testMethod->{                _id,                code,                standard->{                  _id,                  acronym,                },              },            },            otherItems[] {              type,              activity,              unit,              unitPrice,              quantity,              lineTotal,            },            vatPercentage,            paymentNotes,            advance,            grandTotal,            subtotal,            payments[] {              _key,              paymentTime,              paymentType,              amount,              paymentMode,              currency,              internalNotes,              internalStatus,              internalDecisionTime,              internalDecisionBy->{                _id,                internalId,                fullName,                email,                phone,                status,                departmentRoles[]->{                  department->{                    _id,                    name,                  },                  role,                },              },              resubmissions[] {                _key,                amount,                paymentTime,                paymentMode,                internalNotes,                internalStatus,                internalDecisionTime,                internalDecisionBy->{                  _id,                  internalId,                  fullName,                  email,                  phone,                  status,                  departmentRoles[]->{                    department->{                      _id,                      name,                    },                    role,                  },                },                paymentProof {                  asset->{                    _id,                    url,                    originalFilename,                    size,                    mimeType,                  },                },                receipt {                  asset->{                    _id,                    url,                    originalFilename,                    name,                    mimeType,                    size,                  },                },              },              paymentProof {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },              receipt {                asset->{                  _id,                  url,                  originalFilename,                  name,                  mimeType,                  size,                },              },                          },            file {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },          },          // Reverse‐lookup: find sample verification that reference this project          "sampleReceipt": *[            _type == "sampleReceipt"             && references(^._id)          ][0] {            _id,            verificationDate,            status,            reviewTemplate->{              _id,              name,              version,              description,              isActive,            },            reviewItems[] {              templateItemId,              label,              status,              comments,            },            adequacyTemplate->{              _id,              name,              version,              description,              isActive,            },            adequacyChecks[] {              templateItemId,              label,              status,              comments,            },            overallStatus,            overallComments,            clientAcknowledgement {              acknowledgementText,              clientSignature,              clientRepresentative,            },            getlabAcknowledgement {              expectedDeliveryDate,              sampleRetentionDuration,              acknowledgementText,              approvalDecision,              rejectionReason,            },            sampleReceiptPersonnel {              role,              name,              signature,              personnel->{                _id,                internalId,                fullName,                email,                phone,              },            },          }        }
-export type PROJECT_BY_ID_QUERYResult = Array<{
+// Query: *[_type == "project" && _id == $projectId] {          _id,          internalId,          name,           startDate,           endDate,           stagesCompleted,           contactPersons[]->{            _id,            name,            email,            phone,            designation,            client->{              _id,            },          },          clients[]->{            _id,             name,          },          quotation->{            _id,            revisionNumber,            quotationNumber,            quotationDate,            acquisitionNumber,            currency,            status,            rejectionNotes,            invoice {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            revisions[]->|order(revisionNumber desc){              _id,              revisionNumber,              quotationNumber,              quotationDate,              acquisitionNumber,              currency,              status,              rejectionNotes,              invoice {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },              items[] {                service -> {                  _id,                  testParameter,                  sampleClass -> {                    _id,                    name,                  },                },                unit,                unitPrice,                quantity,                lineTotal,                testMethod->{                  _id,                  code,                  standard->{                    _id,                    acronym,                  },                },              },              otherItems[] {                type,                activity,                unit,                unitPrice,                quantity,                lineTotal,              },              vatPercentage,              paymentNotes,              advance,              grandTotal,              subtotal,              payments[] {                _key,                paymentTime,                paymentType,                amount,                paymentMode,                currency,                internalNotes,                internalStatus,                internalDecisionTime,                internalDecisionBy->{                  _id,                  internalId,                  fullName,                  email,                  phone,                  status,                  departmentRoles[]->{                    department->{                      _id,                      name,                    },                    role,                  },                },                paymentProof {                  asset->{                    _id,                    url,                    originalFilename,                    size,                    mimeType,                  },                },                receipt {                  asset->{                    _id,                    url,                    originalFilename,                    name,                    mimeType,                    size,                  },                },                resubmissions[] {                  _key,                  amount,                  paymentTime,                  paymentMode,                  internalNotes,                  internalStatus,                  internalDecisionTime,                  internalDecisionBy->{                    _id,                    internalId,                    fullName,                    email,                    phone,                    status,                    departmentRoles[]->{                      department->{                        _id,                        name,                      },                      role,                    },                  },                  paymentProof {                    asset->{                      _id,                      url,                      originalFilename,                      size,                      mimeType,                    },                  },                  receipt {                    asset->{                      _id,                      url,                      originalFilename,                      name,                      mimeType,                      size,                    },                  },                },              },              file {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },            },            items[] {              service -> {                _id,                testParameter,                sampleClass -> {                  _id,                  name,                },              },              unit,              unitPrice,              quantity,              lineTotal,              testMethod->{                _id,                code,                standard->{                  _id,                  acronym,                },              },            },            otherItems[] {              type,              activity,              unit,              unitPrice,              quantity,              lineTotal,            },            vatPercentage,            paymentNotes,            advance,            grandTotal,            subtotal,            payments[] {              _key,              paymentTime,              paymentType,              amount,              paymentMode,              currency,              internalNotes,              internalStatus,              internalDecisionTime,              internalDecisionBy->{                _id,                internalId,                fullName,                email,                phone,                status,                departmentRoles[]->{                  department->{                    _id,                    name,                  },                  role,                },              },              resubmissions[] {                _key,                amount,                paymentTime,                paymentMode,                internalNotes,                internalStatus,                internalDecisionTime,                internalDecisionBy->{                  _id,                  internalId,                  fullName,                  email,                  phone,                  status,                  departmentRoles[]->{                    department->{                      _id,                      name,                    },                    role,                  },                },                paymentProof {                  asset->{                    _id,                    url,                    originalFilename,                    size,                    mimeType,                  },                },                receipt {                  asset->{                    _id,                    url,                    originalFilename,                    name,                    mimeType,                    size,                  },                },              },              paymentProof {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },              receipt {                asset->{                  _id,                  url,                  originalFilename,                  name,                  mimeType,                  size,                },              },                          },            file {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },          },          // Reverse‐lookup: find sample verification that reference this project          "sampleReceipt": *[            _type == "sampleReceipt"             && references(^._id)          ][0] {            _id,            sampleReceiptNumber,            revisionNumber,            status,            reviewTemplate->{              _id,              name,              version,              description,              isActive,            },            reviewItems[] {              templateItemId,              label,              status,              comments,            },            adequacyTemplate->{              _id,              name,              version,              description,              isActive,            },            adequacyChecks[] {              templateItemId,              label,              status,              comments,            },            overallStatus,            overallComments,            clientAcknowledgement {              acknowledgementText,              clientSignature,              clientRepresentative,              acknowledgedAt,              acknowledgementDecisionBy {                contactPerson->{                  _id,                },                name,                email,                role,              },            },            getlabAcknowledgement {              expectedDeliveryDate,              sampleRetentionDuration,              acknowledgementText,              approvalDecision,              rejectionReason,              approvalDecisionAt,              approvalDecisionBy {                personnel->{                  _id,                },                name,                email,                role,              },            },            sampleReceiptPersonnel {              role,              name,              signature,              personnel->{                _id,                internalId,                fullName,                email,                phone,              },            },            file {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            revisions[]->|order(revisionNumber desc){              _id,              sampleReceiptNumber,              revisionNumber,              status,              reviewTemplate->{                _id,                name,                version,                description,                isActive,              },              reviewItems[] {                templateItemId,                label,                status,                comments,              },              adequacyTemplate->{                _id,                name,                version,                description,                isActive,              },              adequacyChecks[] {                templateItemId,                label,                status,                comments,              },              overallStatus,              overallComments,              clientAcknowledgement {                acknowledgementText,                clientSignature,                clientRepresentative,                acknowledgedAt,                acknowledgementDecisionBy {                  contactPerson->{                    _id,                  },                  name,                  email,                  role,                },              },              getlabAcknowledgement {                expectedDeliveryDate,                sampleRetentionDuration,                acknowledgementText,                approvalDecision,                rejectionReason,                approvalDecisionAt,                approvalDecisionBy {                  personnel->{                    _id,                  },                  name,                  email,                  role,                },              },              sampleReceiptPersonnel {                role,                name,                signature,                personnel->{                  _id,                  internalId,                  fullName,                  email,                  phone,                },              },              file {                asset->{                  _id,                  url,                  originalFilename,                  size,                  mimeType,                },              },            },          }        }
+export type PROJECT_BY_ID_QUERY_RESULT = Array<{
   _id: string;
   internalId: string | null;
   name: string | null;
@@ -1774,7 +1845,8 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
   } | null;
   sampleReceipt: {
     _id: string;
-    verificationDate: string | null;
+    sampleReceiptNumber: string | null;
+    revisionNumber: string | null;
     status:
       | "approved"
       | "client_acknowledged"
@@ -1819,6 +1891,15 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
         | "consultant-rep"
         | "contractor-rep"
         | null;
+      acknowledgedAt: string | null;
+      acknowledgementDecisionBy: {
+        contactPerson: {
+          _id: string;
+        } | null;
+        name: string | null;
+        email: string | null;
+        role: string | null;
+      } | null;
     } | null;
     getlabAcknowledgement: {
       expectedDeliveryDate: string | null;
@@ -1826,6 +1907,15 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
       acknowledgementText: string | null;
       approvalDecision: "approve" | "reject" | null;
       rejectionReason: string | null;
+      approvalDecisionAt: string | null;
+      approvalDecisionBy: {
+        personnel: {
+          _id: string;
+        } | null;
+        name: string | null;
+        email: string | null;
+        role: string | null;
+      } | null;
     } | null;
     sampleReceiptPersonnel: {
       role: string | null;
@@ -1839,18 +1929,123 @@ export type PROJECT_BY_ID_QUERYResult = Array<{
         phone: string | null;
       } | null;
     } | null;
+    file: {
+      asset: {
+        _id: string;
+        url: string | null;
+        originalFilename: string | null;
+        size: number | null;
+        mimeType: string | null;
+      } | null;
+    } | null;
+    revisions: Array<{
+      _id: string;
+      sampleReceiptNumber: string | null;
+      revisionNumber: string | null;
+      status:
+        | "approved"
+        | "client_acknowledged"
+        | "draft"
+        | "rejected"
+        | "sent_to_client"
+        | "submitted"
+        | null;
+      reviewTemplate: {
+        _id: string;
+        name: string | null;
+        version: string | null;
+        description: string | null;
+        isActive: boolean | null;
+      } | null;
+      reviewItems: Array<{
+        templateItemId: number | null;
+        label: string | null;
+        status: "no" | "not-applicable" | "yes" | null;
+        comments: string | null;
+      }> | null;
+      adequacyTemplate: {
+        _id: string;
+        name: string | null;
+        version: string | null;
+        description: string | null;
+        isActive: boolean | null;
+      } | null;
+      adequacyChecks: Array<{
+        templateItemId: number | null;
+        label: string | null;
+        status: "adequate" | "inadequate" | null;
+        comments: string | null;
+      }> | null;
+      overallStatus: "satisfactory" | "unsatisfactory" | null;
+      overallComments: string | null;
+      clientAcknowledgement: {
+        acknowledgementText: string | null;
+        clientSignature: string | null;
+        clientRepresentative:
+          | "client-rep"
+          | "consultant-rep"
+          | "contractor-rep"
+          | null;
+        acknowledgedAt: string | null;
+        acknowledgementDecisionBy: {
+          contactPerson: {
+            _id: string;
+          } | null;
+          name: string | null;
+          email: string | null;
+          role: string | null;
+        } | null;
+      } | null;
+      getlabAcknowledgement: {
+        expectedDeliveryDate: string | null;
+        sampleRetentionDuration: string | null;
+        acknowledgementText: string | null;
+        approvalDecision: "approve" | "reject" | null;
+        rejectionReason: string | null;
+        approvalDecisionAt: string | null;
+        approvalDecisionBy: {
+          personnel: {
+            _id: string;
+          } | null;
+          name: string | null;
+          email: string | null;
+          role: string | null;
+        } | null;
+      } | null;
+      sampleReceiptPersonnel: {
+        role: string | null;
+        name: string | null;
+        signature: null;
+        personnel: {
+          _id: string;
+          internalId: string | null;
+          fullName: string | null;
+          email: string | null;
+          phone: string | null;
+        } | null;
+      } | null;
+      file: {
+        asset: {
+          _id: string;
+          url: string | null;
+          originalFilename: string | null;
+          size: number | null;
+          mimeType: string | null;
+        } | null;
+      } | null;
+    }> | null;
   } | null;
 }>;
 
-// Source: ./src/sanity/lib/projects/getSampleAdequacyTemplates.ts
+// Source: src/sanity/lib/projects/getSampleAdequacyTemplates.ts
 // Variable: SAMPLE_ADEQUACY_TEMPLATES_QUERY
 // Query: *[_type == "sampleAdequacyTemplate" && isActive == true]  {          _id,          name,          version,          description,          isActive,          adequacyChecks[] {            id,            label,            required,            category,          }        }
-export type SAMPLE_ADEQUACY_TEMPLATES_QUERYResult = Array<{
+export type SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   version: string | null;
   description: string | null;
-  isActive: boolean | null;
+  isActive: true;
   adequacyChecks: Array<{
     id: number | null;
     label: string | null;
@@ -1866,15 +2061,15 @@ export type SAMPLE_ADEQUACY_TEMPLATES_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/projects/getSampleReviewTemplates.ts
+// Source: src/sanity/lib/projects/getSampleReviewTemplates.ts
 // Variable: SAMPLE_REVIEW_TEMPLATES_QUERY
 // Query: *[_type == "sampleReviewTemplate" && isActive == true]  {          _id,          name,          version,          description,          isActive,          reviewItems[] {            id,            label,            category,            required,          }        }
-export type SAMPLE_REVIEW_TEMPLATES_QUERYResult = Array<{
+export type SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   version: string | null;
   description: string | null;
-  isActive: boolean | null;
+  isActive: true;
   reviewItems: Array<{
     id: number | null;
     label: string | null;
@@ -1890,10 +2085,10 @@ export type SAMPLE_REVIEW_TEMPLATES_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/requests-for-information/getAllRFIs.ts
+// Source: src/sanity/lib/requests-for-information/getAllRFIs.ts
 // Variable: ALL_RFIS_QUERY
 // Query: *[_type == "rfi"] | order(dateSubmitted desc) {          _id,          initiationType,          rfiManager->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          project->{            _id,            name,            internalId          },          client->{            _id,            name,            internalId          },          subject,          description,          labInitiator->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labReceivers[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labInitiatorExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          clientReceivers[]->{            _id,            name,            email,            phone,            designation,          },          clientInitiator->{            _id,            name,            email,            phone,            designation,          },          labReceiversExternal[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          attachments[] {            asset->{                _id,                url,                originalFilename,                size,                mimeType,            },          },          status,          statusHistory[] {            _key,            status,            timestamp,            previousStatus,            reason,            officialMessageKey,            changedBy->{              _id,              email,            },          },          dateSubmitted,          dateResolved,          conversation[] {            _key,            isOfficialResponse,            message,            sentByClient,            clientSender->{              _id,              name,              email,              phone,              designation,            },            labSender->{              _id,              fullName,              email,              phone,              departmentRoles[]{                department->{                  _id,                  name,                },                role,              },            },            attachments[] {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            timestamp,          },        }
-export type ALL_RFIS_QUERYResult = Array<{
+export type ALL_RFIS_QUERY_RESULT = Array<{
   _id: string;
   initiationType:
     | "external_internal"
@@ -2053,10 +2248,10 @@ export type ALL_RFIS_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/requests-for-information/getRFIById.ts
+// Source: src/sanity/lib/requests-for-information/getRFIById.ts
 // Variable: RFI_BY_ID_QUERY
 // Query: *[_type == "rfi" && _id == $rfiId][0] {          _id,          initiationType,          rfiManager->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          project->{            _id,            name,            internalId          },          client->{            _id,            name,            internalId          },          subject,          description,          labInitiator->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labReceivers[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          labInitiatorExternal->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          clientReceivers[]->{            _id,            name,            email,            phone,            designation,          },          clientInitiator->{            _id,            name,            email,            phone,            designation,          },          labReceiversExternal[]->{            _id,            fullName,            email,            phone,            departmentRoles[]{              department->{                _id,                name,              },              role,            },          },          attachments[] {            asset->{                _id,                url,                originalFilename,                size,                mimeType,            },          },          status,          dateSubmitted,          dateResolved,          conversation[] {            _key,            isOfficialResponse,            message,            sentByClient,            clientSender->{              _id,              name,              email,              phone,              designation,            },            labSender->{              _id,              fullName,              email,              phone,              departmentRoles[]{                department->{                  _id,                  name,                },                role,              },            },            attachments[] {              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },            },            timestamp,          },        }
-export type RFI_BY_ID_QUERYResult = {
+export type RFI_BY_ID_QUERY_RESULT = {
   _id: string;
   initiationType:
     | "external_internal"
@@ -2204,10 +2399,10 @@ export type RFI_BY_ID_QUERYResult = {
   }> | null;
 } | null;
 
-// Source: ./src/sanity/lib/services/getAllSampleClasses.ts
+// Source: src/sanity/lib/services/getAllSampleClasses.ts
 // Variable: ALL_SAMPLE_CLASSES_QUERY
 // Query: *[_type == "sampleClass"] {            _id,             name,            description,            subclasses[] {                name,                key            }        }
-export type ALL_SAMPLE_CLASSES_QUERYResult = Array<{
+export type ALL_SAMPLE_CLASSES_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   description: string | null;
@@ -2217,10 +2412,10 @@ export type ALL_SAMPLE_CLASSES_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getAllServices.ts
+// Source: src/sanity/lib/services/getAllServices.ts
 // Variable: ALL_SERVICES_QUERY
 // Query: *[_type == "service"] {            _id,             status,            code,            testParameter,            testMethods[] -> {                _id,                code,                description,                standard -> {                    _id,                    name,                    acronym                }            },            sampleClass -> {                _id,                name,                description            },                    }
-export type ALL_SERVICES_QUERYResult = Array<{
+export type ALL_SERVICES_QUERY_RESULT = Array<{
   _id: string;
   status: "active" | "inactive" | null;
   code: string | null;
@@ -2242,20 +2437,20 @@ export type ALL_SERVICES_QUERYResult = Array<{
   } | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getAllStandards.ts
+// Source: src/sanity/lib/services/getAllStandards.ts
 // Variable: ALL_STANDARDS_QUERY
 // Query: *[_type == "standard"] {            _id,             name,            acronym,            description        }
-export type ALL_STANDARDS_QUERYResult = Array<{
+export type ALL_STANDARDS_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   acronym: string | null;
   description: string | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getAllTestMethods.ts
+// Source: src/sanity/lib/services/getAllTestMethods.ts
 // Variable: ALL_TEST_METHODS_QUERY
 // Query: *[_type == "testMethod"] {            _id,             code,            description,            standard -> {                _id,                name,                acronym            },            documents[] {              _key,              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },              name            }        }
-export type ALL_TEST_METHODS_QUERYResult = Array<{
+export type ALL_TEST_METHODS_QUERY_RESULT = Array<{
   _id: string;
   code: string | null;
   description: string | null;
@@ -2277,10 +2472,10 @@ export type ALL_TEST_METHODS_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getSampleClassById.ts
+// Source: src/sanity/lib/services/getSampleClassById.ts
 // Variable: SAMPLE_CLASS_BY_ID_QUERY
 // Query: *[_type == "sampleClass" && _id == $sampleClassId] {          _id,           name,          description,          subclasses[] {              name,              key          }        }
-export type SAMPLE_CLASS_BY_ID_QUERYResult = Array<{
+export type SAMPLE_CLASS_BY_ID_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   description: string | null;
@@ -2290,10 +2485,10 @@ export type SAMPLE_CLASS_BY_ID_QUERYResult = Array<{
   }> | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getServiceById.ts
+// Source: src/sanity/lib/services/getServiceById.ts
 // Variable: SERVICE_BY_ID_QUERY
 // Query: *[_type == "service" && _id == $serviceId] {            _id,             code,            testParameter,            testMethods[] -> {                _id,                code,                description,                standard -> {                    _id,                    name,                    acronym                },                documents[] {                  _key,                  asset->{                    url,                    originalFilename,                    size,                    mimeType,                  }                }              },            sampleClass -> {                _id,                name,                description            },            status        }
-export type SERVICE_BY_ID_QUERYResult = Array<{
+export type SERVICE_BY_ID_QUERY_RESULT = Array<{
   _id: string;
   code: string | null;
   testParameter: string | null;
@@ -2324,20 +2519,20 @@ export type SERVICE_BY_ID_QUERYResult = Array<{
   status: "active" | "inactive" | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getStandardById.ts
+// Source: src/sanity/lib/services/getStandardById.ts
 // Variable: STANDARD_BY_ID_QUERY
 // Query: *[_type == "standard" && _id == $standardId] {            _id,             name,            acronym,            description        }
-export type STANDARD_BY_ID_QUERYResult = Array<{
+export type STANDARD_BY_ID_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
   acronym: string | null;
   description: string | null;
 }>;
 
-// Source: ./src/sanity/lib/services/getTestMethodById.ts
+// Source: src/sanity/lib/services/getTestMethodById.ts
 // Variable: TEST_METHOD_BY_ID_QUERY
 // Query: *[_type == "testMethod" && _id == $testMethodId] {            _id,             code,            description,            standard -> {                _id,                name,                acronym            },            documents[] {              _key,              asset->{                _id,                url,                originalFilename,                size,                mimeType,              },              name            }        }
-export type TEST_METHOD_BY_ID_QUERYResult = Array<{
+export type TEST_METHOD_BY_ID_QUERY_RESULT = Array<{
   _id: string;
   code: string | null;
   description: string | null;
@@ -2363,25 +2558,28 @@ export type TEST_METHOD_BY_ID_QUERYResult = Array<{
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate,\n        contactPersons[]->{\n          _id,\n          name,\n          email,\n          phone,\n          designation,\n        }\n      }\n    }\n  ': ALL_CLIENTS_QUERYResult;
-    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            client->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERYResult;
-    '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n              _id,\n              internalId,\n              name,\n              startDate, \n              endDate, \n              stagesCompleted, \n              clients[]->{\n                _id, \n                name,\n                internalId\n              },\n              quotation->{\n                _id,\n                revisionNumber,\n                currency,\n                status,\n                rejectionNotes,\n                revisions[]->|order(revisionNumber desc){\n                  _id,\n                  revisionNumber,\n                  currency,\n                  status,\n                  rejectionNotes,\n                  items[] {\n                    lineTotal,\n                  },\n                  otherItems[] {\n                    lineTotal,\n                  },\n                  vatPercentage,\n                  advance,\n                },\n                items[] {\n                  lineTotal,\n                },\n                otherItems[] {\n                  lineTotal,\n                },\n                vatPercentage,\n                advance,\n              }\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERYResult;
-    '\n    *[_type == "contactPerson" && email == $email && client._ref == $clientId] {\n      _id,\n      name,\n      email,\n      client->{\n        _id,\n        name\n      }\n    }\n  ': CONTACT_BY_EMAIL_AND_CLIENT_QUERYResult;
-    '\n        *[_type == "department"] {\n          _id,\n          department,\n          roles\n        }\n  ': ALL_DEPARTMENTS_QUERYResult;
-    '\n        *[_type == "personnel"] | order(internalId desc) {\n          _id,\n          internalId,\n          fullName,\n          email,\n          phone,\n          departmentRoles[] {\n            department->{\n              _id,\n              department\n            },\n            role\n          },\n          projects[]->{\n            _id,\n            name,\n            internalId\n          },\n          status\n        }\n  ': ALL_PERSONNEL_QUERYResult;
-    '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted, \n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              items[] {\n                lineTotal,\n              },\n              otherItems[] {\n                lineTotal,\n              },\n              vatPercentage,\n              advance,\n            },\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n            advance,\n          }\n        }\n  ': ALL_PROJECTS_QUERYResult;
-    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            invoice {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              quotationNumber,\n              quotationDate,\n              acquisitionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              invoice {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              items[] {\n                service -> {\n                  _id,\n                  testParameter,\n                  sampleClass -> {\n                    _id,\n                    name,\n                  },\n                },\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n                testMethod->{\n                  _id,\n                  code,\n                  standard->{\n                    _id,\n                    acronym,\n                  },\n                },\n              },\n              otherItems[] {\n                type,\n                activity,\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n              },\n              vatPercentage,\n              paymentNotes,\n              advance,\n              grandTotal,\n              subtotal,\n              payments[] {\n                _key,\n                paymentTime,\n                paymentType,\n                amount,\n                paymentMode,\n                currency,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n                resubmissions[] {\n                  _key,\n                  amount,\n                  paymentTime,\n                  paymentMode,\n                  internalNotes,\n                  internalStatus,\n                  internalDecisionTime,\n                  internalDecisionBy->{\n                    _id,\n                    internalId,\n                    fullName,\n                    email,\n                    phone,\n                    status,\n                    departmentRoles[]->{\n                      department->{\n                        _id,\n                        name,\n                      },\n                      role,\n                    },\n                  },\n                  paymentProof {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      size,\n                      mimeType,\n                    },\n                  },\n                  receipt {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      name,\n                      mimeType,\n                      size,\n                    },\n                  },\n                },\n              },\n              file {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n            },\n            items[] {\n              service -> {\n                _id,\n                testParameter,\n                sampleClass -> {\n                  _id,\n                  name,\n                },\n              },\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                code,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            advance,\n            grandTotal,\n            subtotal,\n            payments[] {\n              _key,\n              paymentTime,\n              paymentType,\n              amount,\n              paymentMode,\n              currency,\n              internalNotes,\n              internalStatus,\n              internalDecisionTime,\n              internalDecisionBy->{\n                _id,\n                internalId,\n                fullName,\n                email,\n                phone,\n                status,\n                departmentRoles[]->{\n                  department->{\n                    _id,\n                    name,\n                  },\n                  role,\n                },\n              },\n              resubmissions[] {\n                _key,\n                amount,\n                paymentTime,\n                paymentMode,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n              },\n              paymentProof {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              receipt {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  name,\n                  mimeType,\n                  size,\n                },\n              },              \n            },\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          },\n          // Reverse\u2010lookup: find sample verification that reference this project\n          "sampleReceipt": *[\n            _type == "sampleReceipt" \n            && references(^._id)\n          ][0] {\n            _id,\n            verificationDate,\n            status,\n            reviewTemplate->{\n              _id,\n              name,\n              version,\n              description,\n              isActive,\n            },\n            reviewItems[] {\n              templateItemId,\n              label,\n              status,\n              comments,\n            },\n            adequacyTemplate->{\n              _id,\n              name,\n              version,\n              description,\n              isActive,\n            },\n            adequacyChecks[] {\n              templateItemId,\n              label,\n              status,\n              comments,\n            },\n            overallStatus,\n            overallComments,\n            clientAcknowledgement {\n              acknowledgementText,\n              clientSignature,\n              clientRepresentative,\n            },\n            getlabAcknowledgement {\n              expectedDeliveryDate,\n              sampleRetentionDuration,\n              acknowledgementText,\n              approvalDecision,\n              rejectionReason,\n            },\n            sampleReceiptPersonnel {\n              role,\n              name,\n              signature,\n              personnel->{\n                _id,\n                internalId,\n                fullName,\n                email,\n                phone,\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERYResult;
-    '\n        *[_type == "sampleAdequacyTemplate" && isActive == true]  {\n          _id,\n          name,\n          version,\n          description,\n          isActive,\n          adequacyChecks[] {\n            id,\n            label,\n            required,\n            category,\n          }\n        }\n  ': SAMPLE_ADEQUACY_TEMPLATES_QUERYResult;
-    '\n        *[_type == "sampleReviewTemplate" && isActive == true]  {\n          _id,\n          name,\n          version,\n          description,\n          isActive,\n          reviewItems[] {\n            id,\n            label,\n            category,\n            required,\n          }\n        }\n  ': SAMPLE_REVIEW_TEMPLATES_QUERYResult;
-    '\n        *[_type == "rfi"] | order(dateSubmitted desc) {\n          _id,\n          initiationType,\n          rfiManager->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceivers[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceivers[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiversExternal[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          statusHistory[] {\n            _key,\n            status,\n            timestamp,\n            previousStatus,\n            reason,\n            officialMessageKey,\n            changedBy->{\n              _id,\n              email,\n            },\n          },\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            isOfficialResponse,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': ALL_RFIS_QUERYResult;
-    '\n        *[_type == "rfi" && _id == $rfiId][0] {\n          _id,\n          initiationType,\n          rfiManager->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceivers[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceivers[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiversExternal[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            isOfficialResponse,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': RFI_BY_ID_QUERYResult;
-    '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERYResult;
-    '\n        *[_type == "service"] {\n            _id, \n            status,\n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            \n        }\n  ': ALL_SERVICES_QUERYResult;
-    '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERYResult;
-    '\n        *[_type == "testMethod"] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': ALL_TEST_METHODS_QUERYResult;
-    '\n        *[_type == "sampleClass" && _id == $sampleClassId] {\n          _id, \n          name,\n          description,\n          subclasses[] {\n              name,\n              key\n          }\n        }\n  ': SAMPLE_CLASS_BY_ID_QUERYResult;
-    '\n        *[_type == "service" && _id == $serviceId] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                },\n                documents[] {\n                  _key,\n                  asset->{\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  }\n                }  \n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': SERVICE_BY_ID_QUERYResult;
-    '\n        *[_type == "standard" && _id == $standardId] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': STANDARD_BY_ID_QUERYResult;
-    '\n        *[_type == "testMethod" && _id == $testMethodId] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': TEST_METHOD_BY_ID_QUERYResult;
+    '\n    *[_type == "client"] {\n      _id,\n      name,\n      internalId,\n      // Reverse\u2010lookup: find projects that reference this client\n      "projects": *[\n        _type == "project" \n        && references(^._id)\n      ] {\n        _id,\n        name,\n        internalId,\n        endDate,\n        contactPersons[]->{\n          _id,\n          name,\n          email,\n          phone,\n          designation,\n        }\n      }\n    }\n  ': ALL_CLIENTS_QUERY_RESULT;
+    '\n        *[_type == "contactPerson"] {\n            _id, \n            name,\n            email,\n            designation,\n            phone,\n            client->{\n              _id,\n            },\n\n        }\n  ': ALL_CONTACTS_QUERY_RESULT;
+    '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n              _id,\n              internalId,\n              name,\n              startDate, \n              endDate, \n              stagesCompleted, \n              clients[]->{\n                _id, \n                name,\n                internalId\n              },\n              quotation->{\n                _id,\n                revisionNumber,\n                currency,\n                status,\n                rejectionNotes,\n                revisions[]->|order(revisionNumber desc){\n                  _id,\n                  revisionNumber,\n                  currency,\n                  status,\n                  rejectionNotes,\n                  items[] {\n                    lineTotal,\n                  },\n                  otherItems[] {\n                    lineTotal,\n                  },\n                  vatPercentage,\n                  advance,\n                },\n                items[] {\n                  lineTotal,\n                },\n                otherItems[] {\n                  lineTotal,\n                },\n                vatPercentage,\n                advance,\n              }\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERY_RESULT;
+    '\n    *[_type == "contactPerson" && email == $email && client._ref == $clientId] {\n      _id,\n      name,\n      email,\n      client->{\n        _id,\n        name\n      }\n    }\n  ': CONTACT_BY_EMAIL_AND_CLIENT_QUERY_RESULT;
+    '\n        *[_type == "department"] {\n          _id,\n          department,\n          roles\n        }\n  ': ALL_DEPARTMENTS_QUERY_RESULT;
+    '\n    *[_type == "equipment"] | order(name asc) {\n      _id,\n      name,\n      serialNumber,\n      status\n    }\n  ': ALL_EQUIPMENT_QUERY_RESULT;
+    '\n    *[_type == "lab"] | order(internalId desc) {\n      _id,\n      internalId,\n      name,\n      labSection,\n      status,\n      location,\n      capacity,\n      personnel[]->{\n        _id,\n        internalId,\n        fullName\n      },\n      labHead->{\n        _id,\n        internalId,\n        fullName\n      },\n      equipment[]->{\n        _id,\n        name,\n        serialNumber,\n        status\n      },\n      "projects": projects[]->{\n        _id,\n        name,\n        internalId,\n        endDate\n      },\n      testCapabilities[]->{\n        _id,\n        code,\n        testParameter\n      }\n    }\n  ': ALL_LABS_QUERY_RESULT;
+    '\n    *[_type == "lab" && _id == $labId] {\n      _id,\n      internalId,\n      name,\n      description,\n      labSection,\n      status,\n      location,\n      capacity,\n      notes,\n      accreditation {\n        standard,\n        certificateNumber,\n        accreditingBody,\n        expiryDate\n      },\n      personnel[]->{\n        _id,\n        internalId,\n        fullName,\n        email,\n        phone,\n        departmentRoles[] {\n          department->{ department },\n          role\n        }\n      },\n      labHead->{\n        _id,\n        internalId,\n        fullName\n      },\n      equipment[]->{\n        _id,\n        name,\n        serialNumber,\n        status,\n        lastMaintenance,\n        nextMaintenance\n      },\n      "projects": projects[]->{\n        _id,\n        name,\n        internalId,\n        endDate,\n        startDate\n      },\n      testCapabilities[]->{\n        _id,\n        code,\n        testParameter,\n        status,\n        testMethods[]->{\n          _id,\n          code,\n          description,\n          standard->{ name, acronym }\n        }\n      },\n      sopDocuments[] {\n        _key,\n        category,\n        documentUrl,\n        description\n      }\n    }\n  ': LAB_BY_ID_QUERY_RESULT;
+    '\n        *[_type == "personnel"] | order(internalId desc) {\n          _id,\n          internalId,\n          fullName,\n          email,\n          phone,\n          departmentRoles[] {\n            department->{\n              _id,\n              department\n            },\n            role\n          },\n          projects[]->{\n            _id,\n            name,\n            internalId\n          },\n          status\n        }\n  ': ALL_PERSONNEL_QUERY_RESULT;
+    '\n        *[_type == "project"] | order(internalId desc) {\n          _id,\n          internalId,\n          name,\n          startDate, \n          endDate, \n          stagesCompleted,\n          clients[]->{\n            _id, \n            name,\n            internalId\n          },\n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              items[] {\n                lineTotal,\n              },\n              otherItems[] {\n                lineTotal,\n              },\n              vatPercentage,\n              advance,\n            },\n            items[] {\n              lineTotal,\n            },\n            otherItems[] {\n              lineTotal,\n            },\n            vatPercentage,\n            advance,\n          }\n        }\n  ': ALL_PROJECTS_QUERY_RESULT;
+    '\n        *[_type == "project" && _id == $projectId] {\n          _id,\n          internalId,\n          name, \n          startDate, \n          endDate, \n          stagesCompleted, \n          contactPersons[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n            client->{\n              _id,\n            },\n          },\n          clients[]->{\n            _id, \n            name,\n          },\n          quotation->{\n            _id,\n            revisionNumber,\n            quotationNumber,\n            quotationDate,\n            acquisitionNumber,\n            currency,\n            status,\n            rejectionNotes,\n            invoice {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              revisionNumber,\n              quotationNumber,\n              quotationDate,\n              acquisitionNumber,\n              currency,\n              status,\n              rejectionNotes,\n              invoice {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              items[] {\n                service -> {\n                  _id,\n                  testParameter,\n                  sampleClass -> {\n                    _id,\n                    name,\n                  },\n                },\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n                testMethod->{\n                  _id,\n                  code,\n                  standard->{\n                    _id,\n                    acronym,\n                  },\n                },\n              },\n              otherItems[] {\n                type,\n                activity,\n                unit,\n                unitPrice,\n                quantity,\n                lineTotal,\n              },\n              vatPercentage,\n              paymentNotes,\n              advance,\n              grandTotal,\n              subtotal,\n              payments[] {\n                _key,\n                paymentTime,\n                paymentType,\n                amount,\n                paymentMode,\n                currency,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n                resubmissions[] {\n                  _key,\n                  amount,\n                  paymentTime,\n                  paymentMode,\n                  internalNotes,\n                  internalStatus,\n                  internalDecisionTime,\n                  internalDecisionBy->{\n                    _id,\n                    internalId,\n                    fullName,\n                    email,\n                    phone,\n                    status,\n                    departmentRoles[]->{\n                      department->{\n                        _id,\n                        name,\n                      },\n                      role,\n                    },\n                  },\n                  paymentProof {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      size,\n                      mimeType,\n                    },\n                  },\n                  receipt {\n                    asset->{\n                      _id,\n                      url,\n                      originalFilename,\n                      name,\n                      mimeType,\n                      size,\n                    },\n                  },\n                },\n              },\n              file {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n            },\n            items[] {\n              service -> {\n                _id,\n                testParameter,\n                sampleClass -> {\n                  _id,\n                  name,\n                },\n              },\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n              testMethod->{\n                _id,\n                code,\n                standard->{\n                  _id,\n                  acronym,\n                },\n              },\n            },\n            otherItems[] {\n              type,\n              activity,\n              unit,\n              unitPrice,\n              quantity,\n              lineTotal,\n            },\n            vatPercentage,\n            paymentNotes,\n            advance,\n            grandTotal,\n            subtotal,\n            payments[] {\n              _key,\n              paymentTime,\n              paymentType,\n              amount,\n              paymentMode,\n              currency,\n              internalNotes,\n              internalStatus,\n              internalDecisionTime,\n              internalDecisionBy->{\n                _id,\n                internalId,\n                fullName,\n                email,\n                phone,\n                status,\n                departmentRoles[]->{\n                  department->{\n                    _id,\n                    name,\n                  },\n                  role,\n                },\n              },\n              resubmissions[] {\n                _key,\n                amount,\n                paymentTime,\n                paymentMode,\n                internalNotes,\n                internalStatus,\n                internalDecisionTime,\n                internalDecisionBy->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                  status,\n                  departmentRoles[]->{\n                    department->{\n                      _id,\n                      name,\n                    },\n                    role,\n                  },\n                },\n                paymentProof {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  },\n                },\n                receipt {\n                  asset->{\n                    _id,\n                    url,\n                    originalFilename,\n                    name,\n                    mimeType,\n                    size,\n                  },\n                },\n              },\n              paymentProof {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n              receipt {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  name,\n                  mimeType,\n                  size,\n                },\n              },              \n            },\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n          },\n          // Reverse\u2010lookup: find sample verification that reference this project\n          "sampleReceipt": *[\n            _type == "sampleReceipt" \n            && references(^._id)\n          ][0] {\n            _id,\n            sampleReceiptNumber,\n            revisionNumber,\n            status,\n            reviewTemplate->{\n              _id,\n              name,\n              version,\n              description,\n              isActive,\n            },\n            reviewItems[] {\n              templateItemId,\n              label,\n              status,\n              comments,\n            },\n            adequacyTemplate->{\n              _id,\n              name,\n              version,\n              description,\n              isActive,\n            },\n            adequacyChecks[] {\n              templateItemId,\n              label,\n              status,\n              comments,\n            },\n            overallStatus,\n            overallComments,\n            clientAcknowledgement {\n              acknowledgementText,\n              clientSignature,\n              clientRepresentative,\n              acknowledgedAt,\n              acknowledgementDecisionBy {\n                contactPerson->{\n                  _id,\n                },\n                name,\n                email,\n                role,\n              },\n            },\n            getlabAcknowledgement {\n              expectedDeliveryDate,\n              sampleRetentionDuration,\n              acknowledgementText,\n              approvalDecision,\n              rejectionReason,\n              approvalDecisionAt,\n              approvalDecisionBy {\n                personnel->{\n                  _id,\n                },\n                name,\n                email,\n                role,\n              },\n            },\n            sampleReceiptPersonnel {\n              role,\n              name,\n              signature,\n              personnel->{\n                _id,\n                internalId,\n                fullName,\n                email,\n                phone,\n              },\n            },\n            file {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            revisions[]->|order(revisionNumber desc){\n              _id,\n              sampleReceiptNumber,\n              revisionNumber,\n              status,\n              reviewTemplate->{\n                _id,\n                name,\n                version,\n                description,\n                isActive,\n              },\n              reviewItems[] {\n                templateItemId,\n                label,\n                status,\n                comments,\n              },\n              adequacyTemplate->{\n                _id,\n                name,\n                version,\n                description,\n                isActive,\n              },\n              adequacyChecks[] {\n                templateItemId,\n                label,\n                status,\n                comments,\n              },\n              overallStatus,\n              overallComments,\n              clientAcknowledgement {\n                acknowledgementText,\n                clientSignature,\n                clientRepresentative,\n                acknowledgedAt,\n                acknowledgementDecisionBy {\n                  contactPerson->{\n                    _id,\n                  },\n                  name,\n                  email,\n                  role,\n                },\n              },\n              getlabAcknowledgement {\n                expectedDeliveryDate,\n                sampleRetentionDuration,\n                acknowledgementText,\n                approvalDecision,\n                rejectionReason,\n                approvalDecisionAt,\n                approvalDecisionBy {\n                  personnel->{\n                    _id,\n                  },\n                  name,\n                  email,\n                  role,\n                },\n              },\n              sampleReceiptPersonnel {\n                role,\n                name,\n                signature,\n                personnel->{\n                  _id,\n                  internalId,\n                  fullName,\n                  email,\n                  phone,\n                },\n              },\n              file {\n                asset->{\n                  _id,\n                  url,\n                  originalFilename,\n                  size,\n                  mimeType,\n                },\n              },\n            },\n          }\n        }\n  ': PROJECT_BY_ID_QUERY_RESULT;
+    '\n        *[_type == "sampleAdequacyTemplate" && isActive == true]  {\n          _id,\n          name,\n          version,\n          description,\n          isActive,\n          adequacyChecks[] {\n            id,\n            label,\n            required,\n            category,\n          }\n        }\n  ': SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT;
+    '\n        *[_type == "sampleReviewTemplate" && isActive == true]  {\n          _id,\n          name,\n          version,\n          description,\n          isActive,\n          reviewItems[] {\n            id,\n            label,\n            category,\n            required,\n          }\n        }\n  ': SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT;
+    '\n        *[_type == "rfi"] | order(dateSubmitted desc) {\n          _id,\n          initiationType,\n          rfiManager->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceivers[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceivers[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiversExternal[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          statusHistory[] {\n            _key,\n            status,\n            timestamp,\n            previousStatus,\n            reason,\n            officialMessageKey,\n            changedBy->{\n              _id,\n              email,\n            },\n          },\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            isOfficialResponse,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': ALL_RFIS_QUERY_RESULT;
+    '\n        *[_type == "rfi" && _id == $rfiId][0] {\n          _id,\n          initiationType,\n          rfiManager->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          project->{\n            _id,\n            name,\n            internalId\n          },\n          client->{\n            _id,\n            name,\n            internalId\n          },\n          subject,\n          description,\n          labInitiator->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labReceivers[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          labInitiatorExternal->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          clientReceivers[]->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          clientInitiator->{\n            _id,\n            name,\n            email,\n            phone,\n            designation,\n          },\n          labReceiversExternal[]->{\n            _id,\n            fullName,\n            email,\n            phone,\n            departmentRoles[]{\n              department->{\n                _id,\n                name,\n              },\n              role,\n            },\n          },\n          attachments[] {\n            asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n            },\n          },\n          status,\n          dateSubmitted,\n          dateResolved,\n          conversation[] {\n            _key,\n            isOfficialResponse,\n            message,\n            sentByClient,\n            clientSender->{\n              _id,\n              name,\n              email,\n              phone,\n              designation,\n            },\n            labSender->{\n              _id,\n              fullName,\n              email,\n              phone,\n              departmentRoles[]{\n                department->{\n                  _id,\n                  name,\n                },\n                role,\n              },\n            },\n            attachments[] {\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n            },\n            timestamp,\n          },\n        }\n  ': RFI_BY_ID_QUERY_RESULT;
+    '\n        *[_type == "sampleClass"] {\n            _id, \n            name,\n            description,\n            subclasses[] {\n                name,\n                key\n            }\n        }\n  ': ALL_SAMPLE_CLASSES_QUERY_RESULT;
+    '\n        *[_type == "service"] {\n            _id, \n            status,\n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                }\n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            \n        }\n  ': ALL_SERVICES_QUERY_RESULT;
+    '\n        *[_type == "standard"] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': ALL_STANDARDS_QUERY_RESULT;
+    '\n        *[_type == "testMethod"] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': ALL_TEST_METHODS_QUERY_RESULT;
+    '\n        *[_type == "sampleClass" && _id == $sampleClassId] {\n          _id, \n          name,\n          description,\n          subclasses[] {\n              name,\n              key\n          }\n        }\n  ': SAMPLE_CLASS_BY_ID_QUERY_RESULT;
+    '\n        *[_type == "service" && _id == $serviceId] {\n            _id, \n            code,\n            testParameter,\n            testMethods[] -> {\n                _id,\n                code,\n                description,\n                standard -> {\n                    _id,\n                    name,\n                    acronym\n                },\n                documents[] {\n                  _key,\n                  asset->{\n                    url,\n                    originalFilename,\n                    size,\n                    mimeType,\n                  }\n                }  \n            },\n            sampleClass -> {\n                _id,\n                name,\n                description\n            },\n            status\n        }\n  ': SERVICE_BY_ID_QUERY_RESULT;
+    '\n        *[_type == "standard" && _id == $standardId] {\n            _id, \n            name,\n            acronym,\n            description\n        }\n  ': STANDARD_BY_ID_QUERY_RESULT;
+    '\n        *[_type == "testMethod" && _id == $testMethodId] {\n            _id, \n            code,\n            description,\n            standard -> {\n                _id,\n                name,\n                acronym\n            },\n            documents[] {\n              _key,\n              asset->{\n                _id,\n                url,\n                originalFilename,\n                size,\n                mimeType,\n              },\n              name\n            }\n        }\n  ': TEST_METHOD_BY_ID_QUERY_RESULT;
   }
 }

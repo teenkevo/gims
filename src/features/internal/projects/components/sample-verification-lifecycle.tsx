@@ -27,10 +27,14 @@ import {
 } from "@/lib/actions";
 import { toast } from "sonner";
 import { GenerateSampleReceiptDocument } from "./generate-sample-receipt-document";
+import { format } from "date-fns";
 import {
   ClientAcknowledgementDrawer,
   ClientAcknowledgementData,
 } from "./client-acknowledgement-drawer";
+import { SampleReceiptRevisionNotesDialog } from "./sample-receipt-revision-notes-dialog";
+import SampleReceiptFile from "./sample-receipt-file";
+import { GetlabAcknowledgementDrawer } from "./getlab-acknowledgement-drawer";
 
 type SampleVerificationStage = {
   id: number;
@@ -62,7 +66,7 @@ function getSampleVerificationStage(status: SampleVerificationStatus): number {
   const stageMap: Record<SampleVerificationStatus, number> = {
     not_started: 1,
     draft: 1,
-    submitted: 2,
+    submitted: 3, // When submitted for approval, go to stage 3 (approval stage)
     approved: 3,
     sent_to_client: 4,
     client_acknowledged: 5,
@@ -98,6 +102,7 @@ function SampleVerificationStageCard({
   status,
   onSendForApproval,
   onApprove,
+  onGetlabApproval,
   onClientAcknowledgement,
   isLoading,
 }: {
@@ -111,6 +116,9 @@ function SampleVerificationStageCard({
   status: SampleVerificationStatus;
   onSendForApproval: () => void;
   onApprove: () => void;
+  onGetlabApproval?: (
+    data: import("./getlab-acknowledgement-drawer").GetlabAcknowledgementData
+  ) => Promise<void>;
   onClientAcknowledgement: (data: ClientAcknowledgementData) => Promise<void>;
   isLoading: boolean;
 }) {
@@ -124,10 +132,12 @@ function SampleVerificationStageCard({
       className={cn(
         "bg-gradient-to-b from-muted/20 to-muted/40 p-4 rounded-lg transition-all duration-500",
         isActive &&
-          status === "sent_to_client" &&
+          (status === "sent_to_client" ||
+            (status === "submitted" && stage.id === 3)) &&
           "border border-orange-500 bg-orange-500/10",
         isActive &&
           status !== "sent_to_client" &&
+          !(status === "submitted" && stage.id === 3) &&
           "border border-primary bg-primary/10",
         isCompleted && "border border-muted-foreground",
         isUpcoming && "border border-muted"
@@ -175,22 +185,112 @@ function SampleVerificationStageCard({
         </div>
       )}
 
-      {/* STAGE 2: Awaiting Approval */}
+      {/* STAGE 2: Needs Revision or Revision Submitted */}
       {stage.id === 2 && isActive && (
         <div className="mt-4 flex-col items-center text-orange-500 text-xs">
-          <div className="flex items-center">
-            <Clock className="h-3 w-3 mr-1" />
-            <span>
-              {status === "rejected"
-                ? "Rejected - needs revision"
-                : "Awaiting approval"}
-            </span>
-          </div>
+          {status === "submitted" ? (
+            // Revision has been submitted
+            <>
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>Waitingfor approval</span>
+              </div>
+              {role === "admin" && (
+                <div className="mt-3">
+                  <GetlabAcknowledgementDrawer
+                    project={project}
+                    existingSampleReceipt={existingSampleReceipt}
+                    onApprovalSubmit={onGetlabApproval!}
+                  >
+                    <Button size="sm" disabled={isLoading}>
+                      Approve Revision
+                      <CheckCircle className=" h-4 w-4 ml-2" />
+                    </Button>
+                  </GetlabAcknowledgementDrawer>
+                </div>
+              )}
+            </>
+          ) : (
+            // Rejected - needs revision
+            <>
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>Rejected - needs revision</span>
+              </div>
 
-          {/* Approve button for admin users */}
-          {role === "admin" &&
-            (status === "submitted" || status === "rejected") && (
-              <div className="mt-3">
+              <div className="flex flex-row gap-2">
+                {/* Show rejection notes if rejected */}
+                {existingSampleReceipt?.getlabAcknowledgement
+                  ?.rejectionReason && (
+                  <div className="mt-3">
+                    <SampleReceiptRevisionNotesDialog
+                      revisionText={
+                        existingSampleReceipt?.getlabAcknowledgement
+                          ?.rejectionReason || ""
+                      }
+                    />
+                  </div>
+                )}
+
+                {/* Review button for rejected state - opens editable drawer */}
+                {role === "admin" && (
+                  <div className="mt-3 flex flex-row">
+                    <SampleVerificationDrawer
+                      project={project}
+                      personnel={personnel}
+                      sampleReviewTemplate={sampleReviewTemplate}
+                      sampleAdequacyTemplate={sampleAdequacyTemplate}
+                      isReadOnly={false}
+                    >
+                      <Button size="sm" variant="default">
+                        Revise
+                      </Button>
+                    </SampleVerificationDrawer>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* STAGE 3: Internal Approval */}
+      {stage.id === 3 && isActive && (
+        <div className="mt-4 flex-col items-center text-xs">
+          {status === "approved" || status === "sent_to_client" ? (
+            <div className="flex items-center text-green-600">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              <span>Completed</span>
+            </div>
+          ) : status === "submitted" ? (
+            <>
+              <div className="flex items-center text-orange-500 mb-3">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>Waiting for approval</span>
+              </div>
+
+              {/* Approve/Reject revision button for admins */}
+              {role === "admin" && onGetlabApproval && (
+                <GetlabAcknowledgementDrawer
+                  project={project}
+                  existingSampleReceipt={existingSampleReceipt}
+                  onApprovalSubmit={onGetlabApproval!}
+                >
+                  <Button size="sm" disabled={isLoading}>
+                    Approve / Reject
+                  </Button>
+                </GetlabAcknowledgementDrawer>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center text-orange-500 mb-3">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>Awaiting approval</span>
+              </div>
+
+              {/* Approve/Reject button for admins */}
+              {role === "admin" && (
                 <GenerateSampleReceiptDocument
                   project={project}
                   sampleReceiptData={{
@@ -243,7 +343,10 @@ function SampleVerificationStageCard({
                     projectName: project.name || "",
                     clientName: project.clients?.[0]?.name || "",
                     email: project.contactPersons?.[0]?.email || "",
-                    sampleReceiptNumber: `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+                    sampleReceiptNumber:
+                      existingSampleReceipt?.sampleReceiptNumber || undefined,
+                    revisionNumber:
+                      existingSampleReceipt?.revisionNumber || undefined,
                     personnel:
                       personnel?.find(
                         (person) =>
@@ -256,20 +359,13 @@ function SampleVerificationStageCard({
                   onApprove={onApprove}
                 >
                   <Button size="sm" disabled={isLoading}>
-                    {isLoading ? "Approving..." : "Approve"}
+                    {isLoading ? "Processing..." : "Approve/Reject"}
                     <CheckCircle className=" h-4 w-4 ml-2" />
                   </Button>
                 </GenerateSampleReceiptDocument>
-              </div>
-            )}
-        </div>
-      )}
-
-      {/* STAGE 3: Approved Internally */}
-      {stage.id === 3 && isActive && (
-        <div className="mt-4 flex items-center text-green-600 text-xs">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          <span>Completed</span>
+              )}
+            </>
+          )}
         </div>
       )}
 
@@ -334,7 +430,10 @@ function SampleVerificationStageCard({
                   projectName: project.name || "",
                   clientName: project.clients?.[0]?.name || "",
                   email: project.contactPersons?.[0]?.email || "",
-                  sampleReceiptNumber: `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+                  sampleReceiptNumber:
+                    existingSampleReceipt?.sampleReceiptNumber || undefined,
+                  revisionNumber:
+                    existingSampleReceipt?.revisionNumber || undefined,
                   personnel:
                     personnel?.find(
                       (person) =>
@@ -441,7 +540,12 @@ function SampleVerificationStageCard({
                       projectName={project.name || ""}
                       clientName={project.clients?.[0]?.name || ""}
                       email={project.contactPersons?.[0]?.email || ""}
-                      sampleReceiptNumber={`SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`}
+                      sampleReceiptNumber={
+                        existingSampleReceipt?.sampleReceiptNumber || undefined
+                      }
+                      revisionNumber={
+                        existingSampleReceipt?.revisionNumber || undefined
+                      }
                       personnel={
                         personnel?.find(
                           (person) =>
@@ -552,6 +656,54 @@ export function SampleVerificationLifecycle({
     }
   };
 
+  // Handle approval from GETLAB acknowledgement drawer
+  const handleGetlabApproval = async (
+    data: import("./getlab-acknowledgement-drawer").GetlabAcknowledgementData
+  ) => {
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("sampleReceiptId", existingSampleReceipt?._id || "");
+      formData.append("projectId", project._id);
+      formData.append(
+        "getlabAcknowledgement",
+        data.getlabAcknowledgement || ""
+      );
+      formData.append("approvalDecision", data.approvalDecision);
+      formData.append("rejectionReason", data.rejectionReason || "");
+      formData.append(
+        "expectedDeliveryDate",
+        data.expectedDeliveryDate
+          ? format(data.expectedDeliveryDate, "yyyy-MM-dd")
+          : ""
+      );
+      formData.append(
+        "sampleRetentionDuration",
+        data.sampleRetentionDuration?.toString() || ""
+      );
+
+      const result = await approveSampleReceipt({}, formData);
+
+      if (result.status === "ok") {
+        toast.success(
+          data.approvalDecision === "approve"
+            ? "Sample receipt approved successfully!"
+            : "Sample receipt rejected"
+        );
+        setCurrentStatus(
+          data.approvalDecision === "approve" ? "sent_to_client" : "rejected"
+        );
+      } else {
+        toast.error(result.error || "Failed to process sample receipt");
+      }
+    } catch (error) {
+      console.error("Failed to process sample receipt:", error);
+      toast.error("Failed to process sample receipt");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handle client acknowledgement
   const handleClientAcknowledgement = async (
     data: ClientAcknowledgementData
@@ -602,7 +754,7 @@ export function SampleVerificationLifecycle({
         if (currentStatus === "approved") {
           return "Sample receipt has been approved internally and ready to send to client";
         }
-        return "Sample receipt approved internally and ready for client communication";
+        return "Received by approval personnel and pending approval";
       case 4:
         if (currentStatus === "sent_to_client") {
           return "Sample receipt has been sent to client for acknowledgement";
@@ -630,13 +782,13 @@ export function SampleVerificationLifecycle({
     },
     {
       id: 2,
-      title: currentStatus === "rejected" ? "Rejected" : "Awaiting Approval",
+      title: currentStatus === "rejected" ? "Rejected" : "Sent for Approval",
       icon: <UserCheck className="h-3 w-3" />,
       description: getStageDescription(2),
     },
     {
       id: 3,
-      title: "Approved Internally",
+      title: "Internal Approval",
       icon: <CheckCircle className="h-3 w-3" />,
       description: getStageDescription(3),
     },
@@ -697,7 +849,8 @@ export function SampleVerificationLifecycle({
               <div
                 className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500",
-                  currentStatus === "sent_to_client" && stage.id === 4
+                  (currentStatus === "sent_to_client" && stage.id === 4) ||
+                    (currentStatus === "submitted" && stage.id === 3)
                     ? "bg-orange-500 text-white"
                     : stage.id <= currentStage
                       ? "bg-primary text-primary-foreground"
@@ -725,6 +878,7 @@ export function SampleVerificationLifecycle({
               status={currentStatus}
               onSendForApproval={handleSendForApproval}
               onApprove={handleApprove}
+              onGetlabApproval={handleGetlabApproval}
               onClientAcknowledgement={handleClientAcknowledgement}
               isLoading={isLoading}
             />
@@ -753,7 +907,8 @@ export function SampleVerificationLifecycle({
                   <div
                     className={cn(
                       "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500",
-                      currentStatus === "sent_to_client" && stage.id === 4
+                      (currentStatus === "sent_to_client" && stage.id === 4) ||
+                        (currentStatus === "submitted" && stage.id === 3)
                         ? "bg-orange-500 text-white"
                         : stage.id <= currentStage
                           ? "bg-primary text-primary-foreground"
@@ -784,6 +939,13 @@ export function SampleVerificationLifecycle({
           </div>
         </div>
       </div>
+
+      {/* Sample Receipt Files */}
+      {existingSampleReceipt && (
+        <div className="mt-10">
+          <SampleReceiptFile project={project} />
+        </div>
+      )}
     </div>
   );
 }

@@ -13,14 +13,18 @@ export const sampleReceipt = defineType({
       to: [{ type: "project" }],
       validation: (Rule) => Rule.required(),
     }),
-
-    // Verification Metadata
     defineField({
-      name: "verificationDate",
-      title: "Verification Date",
-      type: "datetime",
-      options: { dateFormat: "YYYY-MM-DD HH:mm" },
+      name: "sampleReceiptNumber",
+      title: "Sample Receipt Number",
+      type: "string",
+      readOnly: true,
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "revisionNumber",
+      title: "Revision Number",
+      type: "string",
+      readOnly: true,
     }),
     defineField({
       name: "status",
@@ -150,12 +154,6 @@ export const sampleReceipt = defineType({
               validation: (Rule) => Rule.required(),
             }),
             defineField({
-              name: "required",
-              title: "Required",
-              type: "boolean",
-              initialValue: false,
-            }),
-            defineField({
               name: "status",
               title: "Status",
               type: "string",
@@ -190,14 +188,14 @@ export const sampleReceipt = defineType({
             select: {
               label: "label",
               status: "status",
-              required: "required",
+              comments: "comments",
             },
             prepare(selection) {
-              const { label, status, required } = selection;
+              const { label, status, comments } = selection;
               return {
                 title:
                   label?.substring(0, 50) + (label?.length > 50 ? "..." : ""),
-                subtitle: `${status}${required ? " (Required)" : ""}`,
+                subtitle: `${status}${comments ? ` - ${comments.substring(0, 30)}...` : ""}`,
               };
             },
           },
@@ -254,6 +252,40 @@ export const sampleReceipt = defineType({
               { title: "Consultant's Rep.", value: "consultant-rep" },
             ],
           },
+        }),
+        defineField({
+          name: "acknowledgedAt",
+          title: "Acknowledgement Date Time",
+          type: "datetime",
+          readOnly: true,
+        }),
+        defineField({
+          name: "acknowledgementDecisionBy",
+          title: "Acknowledgement Decision By",
+          type: "object",
+          fields: [
+            defineField({
+              name: "contactPerson",
+              title: "Contact Person",
+              type: "reference",
+              to: [{ type: "contactPerson" }],
+            }),
+            defineField({
+              name: "name",
+              title: "Name",
+              type: "string",
+            }),
+            defineField({
+              name: "email",
+              title: "Email",
+              type: "email",
+            }),
+            defineField({
+              name: "role",
+              title: "Role",
+              type: "string",
+            }),
+          ],
         }),
       ],
       validation: (Rule) =>
@@ -349,6 +381,41 @@ export const sampleReceipt = defineType({
               return true;
             }),
         }),
+        defineField({
+          name: "approvalDecisionAt",
+          title: "Approval/Rejection Date Time",
+          type: "datetime",
+          readOnly: true,
+        }),
+        defineField({
+          name: "approvalDecisionBy",
+          title: "Approved/Rejected By",
+          type: "object",
+          fields: [
+            defineField({
+              name: "personnel",
+              title: "Personnel Reference",
+              type: "reference",
+              to: [{ type: "personnel" }],
+            }),
+            defineField({
+              name: "name",
+              title: "Name",
+              type: "string",
+            }),
+            defineField({
+              name: "email",
+              title: "Email",
+              type: "email",
+            }),
+            defineField({
+              name: "role",
+              title: "Role",
+              type: "string",
+            }),
+          ],
+          description: "Personnel who approved or rejected the sample receipt",
+        }),
       ],
       validation: (Rule) =>
         Rule.custom((getlabAcknowledgement, context) => {
@@ -419,6 +486,35 @@ export const sampleReceipt = defineType({
           validation: (Rule) => Rule.required(),
         }),
       ],
+    }),
+
+    // Sample Receipt Revisions
+    defineField({
+      name: "revisions",
+      title: "Sample Receipt Revisions",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "sampleReceipt" }] }],
+      validation: (Rule) => Rule.unique(),
+      description:
+        "Previous versions of this sample receipt when rejections occur",
+    }),
+
+    // File for PDF document
+    defineField({
+      name: "file",
+      type: "file",
+      title: "Sample Receipt PDF File",
+      options: {
+        accept: "application/pdf",
+      },
+    }),
+
+    // Rejection notes (similar to quotation)
+    defineField({
+      name: "rejectionNotes",
+      title: "Rejection Notes",
+      type: "text",
+      description: "Notes from GETLAB when rejecting the sample receipt",
     }),
   ],
   preview: {

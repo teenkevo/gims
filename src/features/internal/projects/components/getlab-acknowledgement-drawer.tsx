@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
@@ -181,60 +179,7 @@ export function GetlabAcknowledgementDrawer({
     <div className="space-y-6 p-1">
       <div>
         {/* <CardTitle className="mb-4">GETLAB's Acknowledgement</CardTitle> */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="expected-delivery-date">
-              Expected delivery date
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="expected-delivery-date"
-                  variant="outline"
-                  className={`mt-1 w-full justify-start text-left font-normal ${
-                    !expectedDeliveryDate && "text-muted-foreground"
-                  }`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {expectedDeliveryDate ? (
-                    format(expectedDeliveryDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={expectedDeliveryDate}
-                  onSelect={(date) => setExpectedDeliveryDate(date)}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div>
-            <Label htmlFor="sample-retention">
-              Duration for Sample to be Retained Incase Sample Remains After
-              Testing (days)
-            </Label>
-            <Input
-              id="sample-retention"
-              type="number"
-              min="0"
-              placeholder="Enter number of days"
-              className="mt-1"
-              value={sampleRetentionDuration || ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSampleRetentionDuration(
-                  value ? parseInt(value, 10) : undefined
-                );
-              }}
-            />
-          </div>
-
+        <div className="space-y-8">
           {/* Approval Decision */}
           <div>
             <Label htmlFor="approval-decision">
@@ -257,6 +202,76 @@ export function GetlabAcknowledgementDrawer({
             </RadioGroup>
           </div>
 
+          {/* Approval fields - only show when approved */}
+          {approvalDecision === "approve" && (
+            <>
+              <div>
+                <Label htmlFor="expected-delivery-date">
+                  Expected delivery date
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="expected-delivery-date"
+                      variant="outline"
+                      className={`mt-1 w-full justify-start text-left font-normal ${
+                        !expectedDeliveryDate && "text-muted-foreground"
+                      }`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {expectedDeliveryDate ? (
+                        format(expectedDeliveryDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={expectedDeliveryDate}
+                      onSelect={(date) => setExpectedDeliveryDate(date)}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label htmlFor="sample-retention">
+                  Duration for Sample to be Retained Incase Sample Remains After
+                  Testing (days)
+                </Label>
+                <Input
+                  id="sample-retention"
+                  type="number"
+                  min="0"
+                  placeholder="Enter number of days"
+                  className="mt-1"
+                  value={sampleRetentionDuration || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSampleRetentionDuration(
+                      value ? parseInt(value, 10) : undefined
+                    );
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor="acknowledgement-text">
+                  Additional acknowledgement notes
+                </Label>
+                <Textarea
+                  id="acknowledgement-text"
+                  placeholder="Additional acknowledgement notes..."
+                  value={getlabAcknowledgement}
+                  onChange={(e) => setGetlabAcknowledgement(e.target.value)}
+                  className="mt-1 min-h-[100px]"
+                />
+              </div>
+            </>
+          )}
+
           {/* Rejection Reason - only show when rejected */}
           {approvalDecision === "reject" && (
             <div>
@@ -273,19 +288,6 @@ export function GetlabAcknowledgementDrawer({
               />
             </div>
           )}
-
-          <div>
-            <Label htmlFor="acknowledgement-text">
-              Additional acknowledgement notes
-            </Label>
-            <Textarea
-              id="acknowledgement-text"
-              placeholder="Additional acknowledgement notes..."
-              value={getlabAcknowledgement}
-              onChange={(e) => setGetlabAcknowledgement(e.target.value)}
-              className="mt-1 min-h-[100px]"
-            />
-          </div>
         </div>
       </div>
     </div>

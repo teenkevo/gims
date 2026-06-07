@@ -487,15 +487,10 @@ const SubmittedInfo = React.memo(({ data }: { data: any }) => {
                 variant={
                   data.overallStatus === "satisfactory"
                     ? "default"
-                    : data.overallStatus ===
-                        "client-should-deliver-more-samples"
-                      ? "secondary"
-                      : "destructive"
+                    : "destructive"
                 }
               >
-                {data.overallStatus === "client-should-deliver-more-samples"
-                  ? "Client Should Deliver More Samples"
-                  : data.overallStatus}
+                {data.overallStatus}
               </Badge>
               <p className="mt-2">{data.comments}</p>
             </AccordionContent>
@@ -1278,15 +1273,7 @@ export function SampleVerificationContent({
                 <RadioGroupItem value="unsatisfactory" id="unsatisfactory" />
                 <Label htmlFor="unsatisfactory">Unsatisfactory/Rejected</Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="client-should-deliver-more-samples"
-                  id="client-should-deliver-more-samples"
-                />
-                <Label htmlFor="client-should-deliver-more-samples">
-                  Client Should Deliver More Samples
-                </Label>
-              </div>
+              {null}
             </RadioGroup>
             <Textarea
               placeholder="Enter any additional comments here..."
@@ -1299,74 +1286,6 @@ export function SampleVerificationContent({
             />
           </CardContent>
         </div>
-
-        {/* Only show client acknowledgement after sample receipt has been submitted for approval */}
-        {existingSampleReceipt?.status &&
-          existingSampleReceipt.status !== "draft" && (
-            <div className="border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
-              <CardHeader>
-                <CardTitle>Client's Acknowledgement</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  disabled
-                  className="min-h-[100px]"
-                  placeholder="I/We agree that GETLAB carries out the above tests and issue test report/certificate and I/We further agree to the applicable terms and conditions stated overleaf"
-                  value={clientAcknowledgement}
-                  onChange={(e) => {
-                    setClientAcknowledgement(e.target.value);
-                    debouncedSetHasUnsavedEdits();
-                  }}
-                />
-                <div className="mt-4">
-                  <Label htmlFor="client-signature">
-                    Signature of Customer
-                  </Label>
-                  <Input
-                    id="client-signature"
-                    type="text"
-                    placeholder="Enter name as signature"
-                    className="mt-1"
-                    value={clientSignature}
-                    onChange={(e) => {
-                      setClientSignature(e.target.value);
-                      debouncedSetHasUnsavedEdits();
-                    }}
-                    disabled={isReadOnly}
-                  />
-                </div>
-                <div className="mt-4">
-                  <RadioGroup
-                    value={clientRepresentative}
-                    onValueChange={(value) => {
-                      setClientRepresentative(value);
-                      debouncedSetHasUnsavedEdits();
-                    }}
-                    disabled={isReadOnly}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="client-rep" id="client-rep" />
-                      <Label htmlFor="client-rep">Client's Rep.</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value="contractor-rep"
-                        id="contractor-rep"
-                      />
-                      <Label htmlFor="contractor-rep">Contractor's Rep.</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem
-                        value="consultant-rep"
-                        id="consultant-rep"
-                      />
-                      <Label htmlFor="consultant-rep">Consultant's Rep.</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </CardContent>
-            </div>
-          )}
 
         <div
           className={`border transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
@@ -1443,7 +1362,9 @@ export function SampleVerificationContent({
           projectName: projectName,
           clientName: clientName,
           email: email,
-          sampleReceiptNumber: `SR${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+          sampleReceiptNumber:
+            existingSampleReceipt?.sampleReceiptNumber || undefined,
+          revisionNumber: existingSampleReceipt?.revisionNumber || undefined,
           personnel:
             personnel?.find(
               (person) => person.fullName === sampleReceiptName

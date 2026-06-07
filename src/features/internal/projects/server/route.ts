@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { writeClient } from "@/sanity/lib/write-client";
+import { deleteProjectById } from "@/lib/actions";
 
 // Schema for creating a project
 const createProjectSchema = z.object({
@@ -118,9 +119,13 @@ const app = new Hono()
   .post("/delete", zValidator("json", deleteProjectSchema), async (c) => {
     const { projectId } = c.req.valid("json");
 
-    const deletedProject = await writeClient.delete(projectId);
+    const result = await deleteProjectById(projectId);
 
-    return c.json({ deletedProject });
+    if (result.status === "error") {
+      return c.json({ error: result.error }, 500);
+    }
+
+    return c.json({ deletedProject: result.result });
   });
 
 export default app;

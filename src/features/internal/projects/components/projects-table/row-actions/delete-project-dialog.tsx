@@ -8,34 +8,34 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
 import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
-import { deleteProject } from "@/lib/actions";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { deleteProjectById } from "@/lib/actions";
 
-export function DeleteProject({
-  project,
+export function DeleteProjectDialog({
+  projectId,
+  internalId,
+  open,
+  onClose,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  projectId: string;
+  internalId: string | null;
+  open: boolean;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(""); // Track input value
+  const [inputValue, setInputValue] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const router = useRouter();
-
-  // Reset input value when dialog opens/closes
   React.useEffect(() => {
     if (!open) {
       setInputValue("");
@@ -43,26 +43,43 @@ export function DeleteProject({
   }, [open]);
 
   const action = async (_: void | null) => {
-    const result = await deleteProject(project);
+    const result = await deleteProjectById(projectId);
     if (result.status === "ok") {
       toast.success("Project has been deleted");
-      router.push("/projects");
+      onClose();
     } else {
       toast.error("Something went wrong");
     }
   };
 
   const [_, dispatch, isPending] = useActionState(action, null);
+  const isDeleteDisabled = inputValue !== internalId;
 
-  // Use internalId for validation in both desktop and mobile
-  const isDeleteDisabled = inputValue !== project.internalId;
+  const content = (
+    <>
+      <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
+        <span className="font-bold">Warning</span>: This action is not
+        reversible. Please be certain
+      </div>
+      <div className="grid gap-4 py-4">
+        <p className="text-sm text-muted-foreground">
+          Enter the project internal ID{" "}
+          <span className="font-bold text-foreground">{internalId}</span> to
+          confirm this action
+        </p>
+        <Input
+          id="internalId"
+          placeholder="Type project internal ID here"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+        />
+      </div>
+    </>
+  );
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="destructive">Delete</Button>
-        </DialogTrigger>
+      <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader className="space-y-3">
             <DialogTitle>Delete Project</DialogTitle>
@@ -72,28 +89,12 @@ export function DeleteProject({
               approval workflows, and uploaded files. Lab and personnel
               assignments will be detached first.
             </DialogDescription>
-            <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-              <span className="font-bold">Warning</span>: This action is not
-              reversible. Please be certain
-            </div>
+            {content}
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              Enter the project internal ID{" "}
-              <span className="font-bold text-foreground">
-                {project.internalId}
-              </span>{" "}
-              to confirm this action
-            </p>
-            <Input
-              id="internalId"
-              placeholder="Type project internal ID here"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)} // Track input value
-              className="col-span-3"
-            />
-          </div>
           <DialogFooter>
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
             {isPending ? (
               <DestructiveButtonLoading />
             ) : (
@@ -101,7 +102,7 @@ export function DeleteProject({
                 onClick={() => React.startTransition(() => dispatch())}
                 variant="destructive"
                 type="submit"
-                disabled={isDeleteDisabled} // Disable button if names don't match
+                disabled={isDeleteDisabled}
               >
                 Delete
               </Button>
@@ -113,10 +114,7 @@ export function DeleteProject({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="destructive">Delete</Button>
-      </DialogTrigger>
+    <Drawer open={open} onOpenChange={onClose}>
       <DrawerContent>
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Delete Project</DialogTitle>
@@ -126,28 +124,12 @@ export function DeleteProject({
             approval workflows, and uploaded files. Lab and personnel
             assignments will be detached first.
           </DialogDescription>
-          <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
-            <span className="font-bold">Warning</span>: This action is not
-            reversible. Please be certain
-          </div>
+          {content}
         </DrawerHeader>
-        <div className="grid gap-4 py-4 px-4">
-          <p className="text-sm text-muted-foreground">
-            Enter the project internal ID{" "}
-            <span className="font-bold text-foreground">
-              {project.internalId}
-            </span>{" "}
-            to confirm this action
-          </p>
-          <Input
-            id="internalId"
-            placeholder="Type project internal ID here"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)} // Track input value
-            className="col-span-3"
-          />
-        </div>
         <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button variant="secondary">Cancel</Button>
+          </DrawerClose>
           {isPending ? (
             <DestructiveButtonLoading />
           ) : (
@@ -155,7 +137,7 @@ export function DeleteProject({
               onClick={() => React.startTransition(() => dispatch())}
               variant="destructive"
               type="submit"
-              disabled={isDeleteDisabled} // Disable button if names don't match
+              disabled={isDeleteDisabled}
             >
               Delete
             </Button>

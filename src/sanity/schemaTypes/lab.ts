@@ -4,12 +4,49 @@ export const lab = defineType({
   name: "lab",
   type: "document",
   title: "Laboratory",
+  preview: {
+    select: {
+      title: "name",
+      subtitle: "internalId",
+      section: "labSection",
+      status: "status",
+    },
+    prepare({ title, subtitle, section, status }) {
+      const sectionLabels: Record<string, string> = {
+        soil_testing: "Soil Testing",
+        rock_testing: "Rock Testing",
+        seismic_testing: "Seismic Testing",
+        asphalt_lab: "Asphalt Lab",
+        concrete_testing: "Concrete Testing",
+        general_materials: "General Materials",
+      };
+      return {
+        title: title || "Untitled Lab",
+        subtitle: [subtitle, sectionLabels[section] || section, status]
+          .filter(Boolean)
+          .join(" · "),
+      };
+    },
+  },
   fields: [
+    defineField({
+      name: "internalId",
+      type: "string",
+      title: "Lab ID",
+      description: "Internal identifier for the laboratory (e.g. LAB-10001)",
+      validation: (Rule) => Rule.required(),
+    }),
     defineField({
       name: "name",
       type: "string",
       title: "Lab Name",
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "description",
+      type: "text",
+      title: "Description",
+      description: "Brief overview of the laboratory's scope and responsibilities",
     }),
     // TODO: Allow on-demand creation of lab types
     defineField({
@@ -54,6 +91,49 @@ export const lab = defineType({
       type: "number",
       title: "Capacity (No. of Workstations)",
       validation: (Rule) => Rule.min(1),
+    }),
+    defineField({
+      name: "accreditation",
+      type: "object",
+      title: "Accreditation",
+      description: "ISO 17025 or equivalent laboratory accreditation details",
+      fields: [
+        defineField({
+          name: "standard",
+          type: "string",
+          title: "Accreditation Standard",
+          initialValue: "ISO 17025",
+        }),
+        defineField({
+          name: "certificateNumber",
+          type: "string",
+          title: "Certificate Number",
+        }),
+        defineField({
+          name: "accreditingBody",
+          type: "string",
+          title: "Accrediting Body",
+          description: "e.g. UNBS, SANAS, UKAS",
+        }),
+        defineField({
+          name: "expiryDate",
+          type: "date",
+          title: "Expiry Date",
+        }),
+      ],
+    }),
+    defineField({
+      name: "testCapabilities",
+      type: "array",
+      title: "Test Capabilities",
+      description: "Catalogued test methods this laboratory is accredited to perform",
+      of: [{ type: "reference", to: [{ type: "service" }] }],
+    }),
+    defineField({
+      name: "notes",
+      type: "text",
+      title: "Operational Notes",
+      description: "Operating hours, access restrictions, or other operational details",
     }),
     defineField({
       name: "personnel",
