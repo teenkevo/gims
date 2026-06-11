@@ -41,7 +41,7 @@ import {
 import { setProjectDateRange, updateProjectDates } from "@/lib/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { toast } from "sonner";
-import type { ALL_PROJECTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_PROJECTS_QUERY_RESULT } from "../../../../../sanity.types";
 
 interface DateRangeType {
   dateRange: {
@@ -58,7 +58,7 @@ export function SetDateRangeDialog({
 }: {
   buttonText: string;
   icon: React.ReactNode;
-  project: ALL_PROJECTS_QUERYResult[number];
+  project: ALL_PROJECTS_QUERY_RESULT[number];
   role: string;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -131,7 +131,7 @@ function DateRangeForm({
   project,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  project: ALL_PROJECTS_QUERYResult[number];
+  project: ALL_PROJECTS_QUERY_RESULT[number];
 }) {
   const { _id, startDate, endDate } = project;
 

@@ -4,7 +4,7 @@
 import * as React from "react";
 
 // types
-import { ALL_PROJECTS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_PROJECTS_QUERY_RESULT } from "../../../../../sanity.types";
 
 // components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,13 +19,13 @@ import { useRBAC } from "@/components/rbac-context";
 export function ProjectsView({
   projects,
 }: {
-  projects: ALL_PROJECTS_QUERYResult;
+  projects: ALL_PROJECTS_QUERY_RESULT;
 }) {
   const { role } = useRBAC();
 
   const quotedProjects = projects.filter((project) => project.quotation);
   // TODO: get completed projects
-  const completedProjects: ALL_PROJECTS_QUERYResult = [];
+  const completedProjects: ALL_PROJECTS_QUERY_RESULT = [];
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Projects</h1>

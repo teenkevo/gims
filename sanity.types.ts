@@ -495,8 +495,22 @@ export type Equipment = {
   _createdAt: string;
   _updatedAt: string;
   _rev: string;
+  internalId?: string;
   name?: string;
   serialNumber?: string;
+  category?:
+    | "compression_testing"
+    | "sieving_grading"
+    | "moisture_density"
+    | "triaxial_shear"
+    | "consolidation"
+    | "rock_mechanics"
+    | "calibration_standard"
+    | "field_instrument"
+    | "general_lab";
+  manufacturer?: string;
+  model?: string;
+  notes?: string;
   status?: "available" | "in_use" | "under_maintenance" | "retired";
   lastMaintenance?: string;
   nextMaintenance?: string;
@@ -1217,12 +1231,129 @@ export type ALL_DEPARTMENTS_QUERY_RESULT = Array<{
 
 // Source: src/sanity/lib/equipment/getAllEquipment.ts
 // Variable: ALL_EQUIPMENT_QUERY
-// Query: *[_type == "equipment"] | order(name asc) {      _id,      name,      serialNumber,      status    }
+// Query: *[_type == "equipment"] | order(internalId desc) {      _id,      internalId,      name,      serialNumber,      category,      manufacturer,      model,      status,      lastMaintenance,      nextMaintenance,      assignedPersonnel[]->{        _id,        internalId,        fullName      },      "labs": *[_type == "lab" && references(^._id)] {        _id,        internalId,        name      }    }
 export type ALL_EQUIPMENT_QUERY_RESULT = Array<{
   _id: string;
+  internalId: string | null;
   name: string | null;
   serialNumber: string | null;
+  category:
+    | "calibration_standard"
+    | "compression_testing"
+    | "consolidation"
+    | "field_instrument"
+    | "general_lab"
+    | "moisture_density"
+    | "rock_mechanics"
+    | "sieving_grading"
+    | "triaxial_shear"
+    | null;
+  manufacturer: string | null;
+  model: string | null;
   status: "available" | "in_use" | "retired" | "under_maintenance" | null;
+  lastMaintenance: string | null;
+  nextMaintenance: string | null;
+  assignedPersonnel: Array<{
+    _id: string;
+    internalId: string | null;
+    fullName: string | null;
+  }> | null;
+  labs: Array<{
+    _id: string;
+    internalId: string | null;
+    name: string | null;
+  }>;
+}>;
+
+// Source: src/sanity/lib/equipment/getEquipmentById.ts
+// Variable: EQUIPMENT_BY_ID_QUERY
+// Query: *[_type == "equipment" && _id == $equipmentId] {      _id,      internalId,      name,      serialNumber,      category,      manufacturer,      model,      status,      notes,      lastMaintenance,      nextMaintenance,      userManuals,      assignedPersonnel[]->{        _id,        internalId,        fullName,        email,        phone,        departmentRoles[] {          department->{ department },          role        }      },      supplier {        name,        contactPerson,        contactEmail,        contactPhone      },      maintenanceCompany {        companyName,        contactPerson,        contactEmail,        contactPhone      },      "labs": *[_type == "lab" && references(^._id)] {        _id,        internalId,        name,        labSection,        status      },      "maintenanceLogs": *[_type == "maintenanceLog" && references(^._id)] | order(date desc) {        _id,        date,        maintenanceType,        maintenanceNotes,        supervisedBy->{ _id, fullName, internalId },        maintenanceCompany { companyName }      }    }
+export type EQUIPMENT_BY_ID_QUERY_RESULT = Array<{
+  _id: string;
+  internalId: string | null;
+  name: string | null;
+  serialNumber: string | null;
+  category:
+    | "calibration_standard"
+    | "compression_testing"
+    | "consolidation"
+    | "field_instrument"
+    | "general_lab"
+    | "moisture_density"
+    | "rock_mechanics"
+    | "sieving_grading"
+    | "triaxial_shear"
+    | null;
+  manufacturer: string | null;
+  model: string | null;
+  status: "available" | "in_use" | "retired" | "under_maintenance" | null;
+  notes: string | null;
+  lastMaintenance: string | null;
+  nextMaintenance: string | null;
+  userManuals: Array<string> | null;
+  assignedPersonnel: Array<{
+    _id: string;
+    internalId: string | null;
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    departmentRoles: Array<{
+      department: {
+        department: string | null;
+      } | null;
+      role: string | null;
+    }> | null;
+  }> | null;
+  supplier: {
+    name: string | null;
+    contactPerson: string | null;
+    contactEmail: string | null;
+    contactPhone: string | null;
+  } | null;
+  maintenanceCompany: {
+    companyName: string | null;
+    contactPerson: string | null;
+    contactEmail: string | null;
+    contactPhone: string | null;
+  } | null;
+  labs: Array<{
+    _id: string;
+    internalId: string | null;
+    name: string | null;
+    labSection:
+      | "asphalt_lab"
+      | "concrete_testing"
+      | "general_materials"
+      | "rock_testing"
+      | "seismic_testing"
+      | "soil_testing"
+      | null;
+    status:
+      | "available"
+      | "fullCapacity"
+      | "retired"
+      | "under_maintenance"
+      | null;
+  }>;
+  maintenanceLogs: Array<{
+    _id: string;
+    date: string | null;
+    maintenanceType:
+      | "calibration"
+      | "repair"
+      | "replacement"
+      | "routine"
+      | null;
+    maintenanceNotes: string | null;
+    supervisedBy: {
+      _id: string;
+      fullName: string | null;
+      internalId: string | null;
+    } | null;
+    maintenanceCompany: {
+      companyName: string | null;
+    } | null;
+  }>;
 }>;
 
 // Source: src/sanity/lib/labs/getAllLabs.ts
@@ -2563,7 +2694,8 @@ declare module "@sanity/client" {
     '\n        *[_type == "client" && _id == $clientId] {\n            _id,\n            name,\n            internalId,\n            // Reverse\u2010lookup: find projects that reference this client\n            "projects": *[\n                _type == "project" \n                && references(^._id)\n            ] {\n              _id,\n              internalId,\n              name,\n              startDate, \n              endDate, \n              stagesCompleted, \n              clients[]->{\n                _id, \n                name,\n                internalId\n              },\n              quotation->{\n                _id,\n                revisionNumber,\n                currency,\n                status,\n                rejectionNotes,\n                revisions[]->|order(revisionNumber desc){\n                  _id,\n                  revisionNumber,\n                  currency,\n                  status,\n                  rejectionNotes,\n                  items[] {\n                    lineTotal,\n                  },\n                  otherItems[] {\n                    lineTotal,\n                  },\n                  vatPercentage,\n                  advance,\n                },\n                items[] {\n                  lineTotal,\n                },\n                otherItems[] {\n                  lineTotal,\n                },\n                vatPercentage,\n                advance,\n              }\n            },\n            "contacts": *[_type == "contactPerson" && references(^._id)] {\n                _id,\n                name,\n                email,\n                designation,\n                phone,\n                "projects": *[_type == "project" && references(^._id)] {\n                    _id,\n                    name,\n                }\n            }\n        }\n  ': CLIENT_BY_ID_QUERY_RESULT;
     '\n    *[_type == "contactPerson" && email == $email && client._ref == $clientId] {\n      _id,\n      name,\n      email,\n      client->{\n        _id,\n        name\n      }\n    }\n  ': CONTACT_BY_EMAIL_AND_CLIENT_QUERY_RESULT;
     '\n        *[_type == "department"] {\n          _id,\n          department,\n          roles\n        }\n  ': ALL_DEPARTMENTS_QUERY_RESULT;
-    '\n    *[_type == "equipment"] | order(name asc) {\n      _id,\n      name,\n      serialNumber,\n      status\n    }\n  ': ALL_EQUIPMENT_QUERY_RESULT;
+    '\n    *[_type == "equipment"] | order(internalId desc) {\n      _id,\n      internalId,\n      name,\n      serialNumber,\n      category,\n      manufacturer,\n      model,\n      status,\n      lastMaintenance,\n      nextMaintenance,\n      assignedPersonnel[]->{\n        _id,\n        internalId,\n        fullName\n      },\n      "labs": *[_type == "lab" && references(^._id)] {\n        _id,\n        internalId,\n        name\n      }\n    }\n  ': ALL_EQUIPMENT_QUERY_RESULT;
+    '\n    *[_type == "equipment" && _id == $equipmentId] {\n      _id,\n      internalId,\n      name,\n      serialNumber,\n      category,\n      manufacturer,\n      model,\n      status,\n      notes,\n      lastMaintenance,\n      nextMaintenance,\n      userManuals,\n      assignedPersonnel[]->{\n        _id,\n        internalId,\n        fullName,\n        email,\n        phone,\n        departmentRoles[] {\n          department->{ department },\n          role\n        }\n      },\n      supplier {\n        name,\n        contactPerson,\n        contactEmail,\n        contactPhone\n      },\n      maintenanceCompany {\n        companyName,\n        contactPerson,\n        contactEmail,\n        contactPhone\n      },\n      "labs": *[_type == "lab" && references(^._id)] {\n        _id,\n        internalId,\n        name,\n        labSection,\n        status\n      },\n      "maintenanceLogs": *[_type == "maintenanceLog" && references(^._id)] | order(date desc) {\n        _id,\n        date,\n        maintenanceType,\n        maintenanceNotes,\n        supervisedBy->{ _id, fullName, internalId },\n        maintenanceCompany { companyName }\n      }\n    }\n  ': EQUIPMENT_BY_ID_QUERY_RESULT;
     '\n    *[_type == "lab"] | order(internalId desc) {\n      _id,\n      internalId,\n      name,\n      labSection,\n      status,\n      location,\n      capacity,\n      personnel[]->{\n        _id,\n        internalId,\n        fullName\n      },\n      labHead->{\n        _id,\n        internalId,\n        fullName\n      },\n      equipment[]->{\n        _id,\n        name,\n        serialNumber,\n        status\n      },\n      "projects": projects[]->{\n        _id,\n        name,\n        internalId,\n        endDate\n      },\n      testCapabilities[]->{\n        _id,\n        code,\n        testParameter\n      }\n    }\n  ': ALL_LABS_QUERY_RESULT;
     '\n    *[_type == "lab" && _id == $labId] {\n      _id,\n      internalId,\n      name,\n      description,\n      labSection,\n      status,\n      location,\n      capacity,\n      notes,\n      accreditation {\n        standard,\n        certificateNumber,\n        accreditingBody,\n        expiryDate\n      },\n      personnel[]->{\n        _id,\n        internalId,\n        fullName,\n        email,\n        phone,\n        departmentRoles[] {\n          department->{ department },\n          role\n        }\n      },\n      labHead->{\n        _id,\n        internalId,\n        fullName\n      },\n      equipment[]->{\n        _id,\n        name,\n        serialNumber,\n        status,\n        lastMaintenance,\n        nextMaintenance\n      },\n      "projects": projects[]->{\n        _id,\n        name,\n        internalId,\n        endDate,\n        startDate\n      },\n      testCapabilities[]->{\n        _id,\n        code,\n        testParameter,\n        status,\n        testMethods[]->{\n          _id,\n          code,\n          description,\n          standard->{ name, acronym }\n        }\n      },\n      sopDocuments[] {\n        _key,\n        category,\n        documentUrl,\n        description\n      }\n    }\n  ': LAB_BY_ID_QUERY_RESULT;
     '\n        *[_type == "personnel"] | order(internalId desc) {\n          _id,\n          internalId,\n          fullName,\n          email,\n          phone,\n          departmentRoles[] {\n            department->{\n              _id,\n              department\n            },\n            role\n          },\n          projects[]->{\n            _id,\n            name,\n            internalId\n          },\n          status\n        }\n  ': ALL_PERSONNEL_QUERY_RESULT;

@@ -22,14 +22,14 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteClient } from "@/lib/actions";
-import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { AlertTriangle, File } from "lucide-react";
 import Link from "next/link";
 
 export function DeleteClient({
   client,
 }: {
-  client: CLIENT_BY_ID_QUERYResult[number];
+  client: CLIENT_BY_ID_QUERY_RESULT[number];
 }) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(""); // Track input value

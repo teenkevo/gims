@@ -27,9 +27,9 @@ import {
 
 import { DataTableToolbar } from "@/features/customer/services/components/services-table/data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import type { ALL_PROJECTS_QUERYResult } from "../../../../../../sanity.types";
-import type { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
-import type { ALL_STANDARDS_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_PROJECTS_QUERY_RESULT } from "../../../../../../sanity.types";
+import type { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../sanity.types";
+import type { ALL_STANDARDS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import { deleteMultipleServices } from "@/lib/actions";
 import { DeleteMultipleServices } from "./delete-multiple-services";
@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { useRBAC } from "@/components/rbac-context";
 
 interface DataTableProps<TData, TValue> {
-  data: ALL_PROJECTS_QUERYResult;
+  data: ALL_PROJECTS_QUERY_RESULT;
 }
 
 export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>) {
@@ -54,7 +54,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns(data, role) as ColumnDef<ALL_PROJECTS_QUERYResult[number]>[],
+    () => getColumns(data, role) as ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[],
     [data, role]
   );
 

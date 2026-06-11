@@ -5,9 +5,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import type {
-  ALL_PROJECTS_QUERYResult,
-  CLIENT_BY_ID_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_PROJECTS_QUERY_RESULT,
+  CLIENT_BY_ID_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
   Quotation,
 } from "../../../../../../sanity.types";
 import Link from "next/link";
@@ -19,8 +19,8 @@ import { calculatePaymentStatus } from "@/features/internal/billing/components/b
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  client: CLIENT_BY_ID_QUERYResult[number]
-): ColumnDef<ALL_PROJECTS_QUERYResult[number]>[] => [
+  client: CLIENT_BY_ID_QUERY_RESULT[number]
+): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -135,7 +135,7 @@ export const getColumns = (
       const currency = quotation?.currency;
 
       const paymentStatus = calculatePaymentStatus(
-        quotation as NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>
+        quotation as NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>
       );
 
       const { allClear, advanceRejected } = paymentStatus;

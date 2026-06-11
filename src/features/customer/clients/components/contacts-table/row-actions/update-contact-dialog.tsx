@@ -23,7 +23,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 import { ButtonLoading } from "@/components/button-loading";
-import type { CLIENT_BY_ID_QUERYResult } from "../../../../../../../sanity.types";
+import type { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { updateContactPerson } from "@/lib/actions";
 
 const formSchema = z.object({
@@ -56,7 +56,7 @@ export function UpdateContactDialog({
   open,
   onClose,
 }: {
-  contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
+  contact: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number];
   open: boolean;
   onClose: () => void;
 }) {

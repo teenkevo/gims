@@ -47,7 +47,7 @@ import FileUpload from "@/components/file-upload";
 import { NumericFormat } from "react-number-format";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { makeResubmission } from "@/lib/actions";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { WarningOutlineIcon } from "@sanity/icons";
 
 type PaymentFormData = {
@@ -60,7 +60,7 @@ type PaymentFormData = {
 
 type PaymentType = "advance" | "full" | "other";
 
-type Quotation = NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>;
+type Quotation = NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>;
 export type Payments = NonNullable<Quotation["payments"]>;
 
 export function RemakePaymentDialog({
@@ -139,6 +139,8 @@ export function RemakePaymentDialog({
   }, [state, form, rejectedPayment]);
 
   const isMobile = useMediaQuery("(max-width: 640px)");
+  const paymentMode = form.watch("paymentMode");
+  const paymentProof = form.watch("paymentProof");
 
   const formContent = (
     <Form {...form}>
@@ -210,7 +212,7 @@ export function RemakePaymentDialog({
               <Select
                 disabled={isPending || loading}
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -231,9 +233,18 @@ export function RemakePaymentDialog({
         <FormField
           control={form.control}
           name="paymentProof"
+          rules={{
+            validate: (files) =>
+              files.length > 0 || "Payment proof is required",
+          }}
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel className="mb-1">Payment Proof</FormLabel>
+              <FormLabel required className="mb-1">
+                Payment Proof
+              </FormLabel>
+              <FormDescription className="text-xs">
+                Please upload a proof of payment
+              </FormDescription>
               <FormControl>
                 <FileUpload
                   accept=".pdf,.doc,.docx,.txt"
@@ -250,6 +261,7 @@ export function RemakePaymentDialog({
         <FormSubmitButton
           text="Resubmit Payment"
           isSubmitting={isPending || loading}
+          disabled={!paymentMode || paymentProof.length === 0}
         />
       </form>
     </Form>

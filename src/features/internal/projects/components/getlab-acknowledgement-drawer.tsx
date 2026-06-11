@@ -34,14 +34,14 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
-  PROJECT_BY_ID_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
+  PROJECT_BY_ID_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
 } from "../../../../../sanity.types";
 
 interface GetlabAcknowledgementDrawerProps {
   children: React.ReactNode;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  existingSampleReceipt?: PROJECT_BY_ID_QUERY_RESULT[number]["sampleReceipt"];
   onApprovalSubmit: (data: GetlabAcknowledgementData) => Promise<void>;
 }
 

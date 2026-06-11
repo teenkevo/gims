@@ -4,7 +4,7 @@
 import * as React from "react";
 
 // types
-import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_CLIENTS_QUERY_RESULT } from "../../../../../sanity.types";
 
 // components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,7 +16,7 @@ import { PlusCircleIcon } from "lucide-react";
 import { DataTable } from "./clients-table/data-table";
 import NoClientsPlaceholder from "./no-clients-placeholder";
 
-export function ClientsView({ clients }: { clients: ALL_CLIENTS_QUERYResult }) {
+export function ClientsView({ clients }: { clients: ALL_CLIENTS_QUERY_RESULT }) {
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Clients</h1>

@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
 import { CreateContactDialog } from "./create-contact-dialog";
-import { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_CONTACTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { ContactTableRowActions } from "./contact-table-row-actions";
 
 // Extend the type to include actions
-type ExtendedContact = ALL_CONTACTS_QUERYResult[number] & { actions?: string };
+type ExtendedContact = ALL_CONTACTS_QUERY_RESULT[number] & { actions?: string };
 
 export function ContactTable({
   projectId,
@@ -40,8 +40,8 @@ export function ContactTable({
 }: {
   projectId: string;
   clientId: string;
-  projectContacts: ALL_CONTACTS_QUERYResult;
-  existingContacts: ALL_CONTACTS_QUERYResult;
+  projectContacts: ALL_CONTACTS_QUERY_RESULT;
+  existingContacts: ALL_CONTACTS_QUERY_RESULT;
 }) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []

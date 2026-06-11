@@ -33,10 +33,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ChevronsUpDown, Pencil, PlusCircleIcon } from "lucide-react";
 import {
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_SERVICES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { MultiSelectTestMethodField } from "../../multi-select-test-methods";
 import { CommandItem } from "@/components/ui/command";
@@ -65,9 +65,9 @@ export function EditServiceDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
-  testMethods: ALL_TEST_METHODS_QUERYResult;
-  service: ALL_SERVICES_QUERYResult[number];
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
+  service: ALL_SERVICES_QUERY_RESULT[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -129,9 +129,9 @@ function ServiceForm({
   service,
 }: {
   onClose: () => void;
-  testMethods: ALL_TEST_METHODS_QUERYResult;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
-  service?: ALL_SERVICES_QUERYResult[number];
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
+  service?: ALL_SERVICES_QUERY_RESULT[number];
 }) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
 

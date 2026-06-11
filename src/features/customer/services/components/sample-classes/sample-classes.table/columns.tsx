@@ -7,17 +7,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type {
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_SERVICES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  sampleClasses?: ALL_SAMPLE_CLASSES_QUERYResult
-): ColumnDef<ALL_SAMPLE_CLASSES_QUERYResult[number]>[] => [
+  sampleClasses?: ALL_SAMPLE_CLASSES_QUERY_RESULT
+): ColumnDef<ALL_SAMPLE_CLASSES_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -115,7 +115,7 @@ export const getColumns = (
     id: "actions",
     cell: ({ row }) => (
       <DataTableRowActions
-        sampleClass={row.original as ALL_SAMPLE_CLASSES_QUERYResult[number]}
+        sampleClass={row.original as ALL_SAMPLE_CLASSES_QUERY_RESULT[number]}
       />
     ),
   },

@@ -22,7 +22,7 @@ import { useActionState } from "react";
 import { deleteMultipleTestMethods } from "@/lib/actions";
 import { AlertTriangle, File } from "lucide-react";
 import Link from "next/link";
-import { ALL_TEST_METHODS_QUERYResult } from "../../../../../../../sanity.types";
+import { ALL_TEST_METHODS_QUERY_RESULT } from "../../../../../../../sanity.types";
 
 export function DeleteMultipleTestMethods({
   ids,
@@ -32,7 +32,7 @@ export function DeleteMultipleTestMethods({
   referencingDocs,
 }: {
   ids: string[];
-  testMethods: ALL_TEST_METHODS_QUERYResult;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
   open: boolean;
   onClose: () => void;
   referencingDocs: any[];

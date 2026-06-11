@@ -24,12 +24,12 @@ import { toast } from "sonner";
 import { useActionState } from "react";
 import { sendQuotation } from "@/lib/actions";
 import { Send } from "lucide-react";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 
 export function SendQuotationDialog({
   project,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
 }) {
   const [open, setOpen] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");

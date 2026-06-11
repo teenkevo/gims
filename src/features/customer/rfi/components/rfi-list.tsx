@@ -16,16 +16,16 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { ALL_RFIS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_RFIS_QUERY_RESULT } from "../../../../../sanity.types";
 interface RFIListProps {
-  rfis: ALL_RFIS_QUERYResult;
-  selectedRFI: ALL_RFIS_QUERYResult[number] | null;
-  onSelectRFI: (rfi: ALL_RFIS_QUERYResult[number]) => void;
+  rfis: ALL_RFIS_QUERY_RESULT;
+  selectedRFI: ALL_RFIS_QUERY_RESULT[number] | null;
+  onSelectRFI: (rfi: ALL_RFIS_QUERY_RESULT[number]) => void;
 }
 
 export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
   const getInitiationTypeIcon = (
-    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+    type: ALL_RFIS_QUERY_RESULT[number]["initiationType"]
   ) => {
     switch (type) {
       case "internal_internal":
@@ -38,7 +38,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
   };
 
   const getInitiationTypeLabel = (
-    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+    type: ALL_RFIS_QUERY_RESULT[number]["initiationType"]
   ) => {
     switch (type) {
       case "internal_internal":
@@ -50,7 +50,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     }
   };
 
-  const getStatusIcon = (status: ALL_RFIS_QUERYResult[number]["status"]) => {
+  const getStatusIcon = (status: ALL_RFIS_QUERY_RESULT[number]["status"]) => {
     switch (status) {
       case "open":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
@@ -61,7 +61,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     }
   };
 
-  const getStatusColor = (status: ALL_RFIS_QUERYResult[number]["status"]) => {
+  const getStatusColor = (status: ALL_RFIS_QUERY_RESULT[number]["status"]) => {
     switch (status) {
       case "open":
         return "bg-red-100 hover:bg-red-200 text-red-800 border-red-200";
@@ -76,7 +76,7 @@ export function RFIList({ rfis, selectedRFI, onSelectRFI }: RFIListProps) {
     <div className="h-full flex flex-col">
       <ScrollArea className="h-full overflow-hidden">
         <div className="md:pl-1 pl-0 md:pr-4 pr-0 py-2 space-y-3">
-          {rfis.map((rfi: ALL_RFIS_QUERYResult[number]) => (
+          {rfis.map((rfi: ALL_RFIS_QUERY_RESULT[number]) => (
             <div
               key={uuidv4()}
               className={cn(

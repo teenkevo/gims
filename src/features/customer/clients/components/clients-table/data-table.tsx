@@ -26,12 +26,12 @@ import {
 } from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
-  data: ALL_CLIENTS_QUERYResult;
+  data: ALL_CLIENTS_QUERY_RESULT;
 }
 
 export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>) {
@@ -45,7 +45,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns(data) as ColumnDef<ALL_CLIENTS_QUERYResult[number]>[],
+    () => getColumns(data) as ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]>[],
     [data]
   );
 

@@ -22,7 +22,7 @@ import { FormSubmitButton } from "@/components/form-submit-button";
 // Form schema
 import { createProjectSchema } from "@/features/internal/projects/schemas";
 
-import { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_CLIENTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
 import { createProject } from "@/lib/actions";
 import { useActionState } from "react";
@@ -36,7 +36,7 @@ const formVariants = {
 export function CreateProjectForm({
   clients,
 }: {
-  clients: ALL_CLIENTS_QUERYResult;
+  clients: ALL_CLIENTS_QUERY_RESULT;
 }) {
   const router = useRouter();
 

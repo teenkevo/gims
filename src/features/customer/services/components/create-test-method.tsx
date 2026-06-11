@@ -46,7 +46,7 @@ import { AnimatePresence } from "framer-motion";
 import { CommandEmpty } from "@/components/ui/command";
 import { CommandInput } from "@/components/ui/command";
 import { CommandList } from "@/components/ui/command";
-import { ALL_STANDARDS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_STANDARDS_QUERY_RESULT } from "../../../../../sanity.types";
 import FileUpload from "@/components/file-upload";
 import { useRouter } from "next/navigation";
 
@@ -61,7 +61,7 @@ export function CreateTestMethodDialog({
   standards,
   trigger,
 }: {
-  standards: ALL_STANDARDS_QUERYResult;
+  standards: ALL_STANDARDS_QUERY_RESULT;
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -123,7 +123,7 @@ function TestMethodForm({
   standards,
   setOpen,
 }: {
-  standards: ALL_STANDARDS_QUERYResult;
+  standards: ALL_STANDARDS_QUERY_RESULT;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const router = useRouter();

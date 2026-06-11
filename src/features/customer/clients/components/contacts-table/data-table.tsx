@@ -26,14 +26,14 @@ import {
 } from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import type { CLIENT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import type { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DeleteMultipleContacts } from "./delete-multiple-contacts";
 import { toast } from "sonner";
 
 interface DataTableProps<TData, TValue> {
-  data: CLIENT_BY_ID_QUERYResult[number]["contacts"];
+  data: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"];
 }
 
 export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>) {
@@ -46,7 +46,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns() as ColumnDef<CLIENT_BY_ID_QUERYResult[number]["contacts"][number]>[],
+    () => getColumns() as ColumnDef<CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]>[],
     [data]
   );
 

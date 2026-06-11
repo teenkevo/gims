@@ -2,7 +2,7 @@ import React from "react";
 import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
-import { ALL_PERSONNEL_QUERYResult } from "../../../../../sanity.types";
+import { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../sanity.types";
 
 const tw = createTw({
   theme: {
@@ -72,7 +72,7 @@ interface SampleReceiptDocumentProps {
   receiptDate?: string;
   sampleReceiptNumber?: string;
   revisionNumber?: string;
-  personnel?: ALL_PERSONNEL_QUERYResult[number];
+  personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
 }
 
 export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {

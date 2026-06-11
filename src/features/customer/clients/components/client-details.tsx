@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import ClientUpdateNameForm from "./client-update-name-form";
 import { DataTable } from "./contacts-table/data-table";
 import { DataTable as ProjectsDataTable } from "./projects-table/data-table";
@@ -26,7 +26,7 @@ import NoProjectsForClientPlaceholder from "./no-projects-for-client-placeholder
 export default function ClientDetails({
   client,
 }: {
-  client: CLIENT_BY_ID_QUERYResult[number];
+  client: CLIENT_BY_ID_QUERY_RESULT[number];
 }) {
   const { _id, internalId, name, projects, contacts } = client;
 

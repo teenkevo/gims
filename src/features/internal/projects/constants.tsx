@@ -5,7 +5,7 @@ import {
   SignalLow,
   SignalMedium,
 } from "lucide-react";
-import { ALL_PROJECTS_QUERYResult, Quotation } from "../../../../sanity.types";
+import { ALL_PROJECTS_QUERY_RESULT, Quotation } from "../../../../sanity.types";
 import { Priority, ProjectStage } from "./types";
 
 export const possibleStages: ProjectStage[] = [
@@ -45,7 +45,7 @@ export const priorities: Priority[] = [
 ];
 
 export const getCurrentStageIndex = (
-  project: ALL_PROJECTS_QUERYResult[number]
+  project: ALL_PROJECTS_QUERY_RESULT[number]
 ): number => {
   const currentStage = project.stagesCompleted![
     project.stagesCompleted!.length - 1

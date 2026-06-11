@@ -60,7 +60,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ALL_RFIS_QUERYResult } from "../../../../../sanity.types.js";
+import { ALL_RFIS_QUERY_RESULT } from "../../../../../sanity.types.js";
 import { sendMessageToRFI, deleteRFI, updateRFIStatus } from "@/lib/actions";
 import { toast } from "sonner";
 import FileUpload from "@/components/file-upload";
@@ -69,8 +69,8 @@ import { StatusHistory } from "./status-history";
 import { ReopenRFIDialog } from "./reopen-rfi-dialog";
 
 interface RFIDetailProps {
-  rfi: ALL_RFIS_QUERYResult[number];
-  onUpdateRFI: (rfi: ALL_RFIS_QUERYResult[number]) => void;
+  rfi: ALL_RFIS_QUERY_RESULT[number];
+  onUpdateRFI: (rfi: ALL_RFIS_QUERY_RESULT[number]) => void;
   onDeleteRFI?: () => void;
   onBackToList?: () => void;
 }
@@ -158,7 +158,7 @@ export function RFIDetail({
           const newStatus =
             currentConversationLength === 0 ? "in_progress" : rfi.status;
 
-          const updatedRFI: ALL_RFIS_QUERYResult[number] = {
+          const updatedRFI: ALL_RFIS_QUERY_RESULT[number] = {
             ...rfi,
             conversation: [...(rfi.conversation || []), message],
             status: newStatus,
@@ -181,7 +181,7 @@ export function RFIDetail({
   };
 
   const updateStatusDirectly = async (
-    status: ALL_RFIS_QUERYResult[number]["status"],
+    status: ALL_RFIS_QUERY_RESULT[number]["status"],
     reason?: string,
     officialMessageKey?: string
   ) => {
@@ -197,7 +197,7 @@ export function RFIDetail({
 
       if (result.status === "ok") {
         // Update local state optimistically
-        const updatedRFI: ALL_RFIS_QUERYResult[number] = {
+        const updatedRFI: ALL_RFIS_QUERY_RESULT[number] = {
           ...rfi,
           status,
           dateResolved: status === "resolved" ? new Date().toISOString() : null,
@@ -247,7 +247,7 @@ export function RFIDetail({
     // Determine new status - if marking as official, change to resolved
     const newStatus = isOfficial ? "resolved" : rfi.status;
 
-    const updatedRFI: ALL_RFIS_QUERYResult[number] = {
+    const updatedRFI: ALL_RFIS_QUERY_RESULT[number] = {
       ...rfi,
       conversation: updatedConversation,
       status: newStatus,
@@ -277,7 +277,7 @@ export function RFIDetail({
   };
 
   const getInitiationTypeIcon = (
-    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+    type: ALL_RFIS_QUERY_RESULT[number]["initiationType"]
   ) => {
     switch (type) {
       case "internal_internal":
@@ -290,7 +290,7 @@ export function RFIDetail({
   };
 
   const getInitiationTypeLabel = (
-    type: ALL_RFIS_QUERYResult[number]["initiationType"]
+    type: ALL_RFIS_QUERY_RESULT[number]["initiationType"]
   ) => {
     switch (type) {
       case "internal_internal":
@@ -600,7 +600,7 @@ export function RFIDetail({
             </div>
 
             {/* Status History */}
-            {(rfi as ALL_RFIS_QUERYResult[number]).statusHistory &&
+            {(rfi as ALL_RFIS_QUERY_RESULT[number]).statusHistory &&
               (rfi as any).statusHistory.length > 0 && (
                 <StatusHistory
                   statusHistory={(rfi as any).statusHistory}

@@ -1,0 +1,53 @@
+import { Button } from "@/components/ui/button";
+import { PlusCircleIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+export default function NoEquipmentPlaceholder({
+  helperText = "equipment",
+  needAction,
+}: {
+  helperText?: string;
+  needAction?: boolean;
+}) {
+  return (
+    <motion.div
+      className="flex flex-1 items-center justify-center h-[72vh] rounded-lg border border-dashed shadow-sm p-4"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.1, ease: "easeOut" }}
+    >
+      <div className="flex flex-col items-center gap-1 text-center">
+        {needAction && (
+          <Image
+            src="https://res.cloudinary.com/teenkevo-cloud/image/upload/v1714345451/hasura_new_project.72d74b03527711e12ed017d57b54ca79_jrvqju.svg"
+            width="0"
+            height="0"
+            priority
+            alt="Empty state"
+            className="w-full h-auto md:mb-4"
+          />
+        )}
+        <h3 className="text-2xl font-bold tracking-tight">
+          You have no {helperText}
+        </h3>
+        {needAction && (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Let&apos;s start off with registering laboratory equipment.
+            </p>
+            <div className="mx-4 my-2">
+              <Button asChild className="sm:w-auto" variant="default">
+                <Link href="/equipment/create" className="my-2">
+                  <PlusCircleIcon className="h-5 w-5 mr-2" />
+                  Register Equipment
+                </Link>
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+}

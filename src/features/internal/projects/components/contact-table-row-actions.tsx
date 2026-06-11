@@ -10,14 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CONTACTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { useState } from "react";
 import { Pencil, Trash } from "lucide-react";
 import { UpdateContactDialog } from "./update-contact-dialog";
 import { RemoveContactFromProject } from "./remove-contact-from-project";
 
 interface ContactTableRowActionsProps {
-  contact: ALL_CONTACTS_QUERYResult[number];
+  contact: ALL_CONTACTS_QUERY_RESULT[number];
   projectId: string;
 }
 

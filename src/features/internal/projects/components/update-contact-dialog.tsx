@@ -39,7 +39,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 import { ButtonLoading } from "@/components/button-loading";
-import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CONTACTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { updateContactPerson } from "@/lib/actions";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -57,7 +57,7 @@ export function UpdateContactDialog({
   open,
   onClose,
 }: {
-  contact: ALL_CONTACTS_QUERYResult[number];
+  contact: ALL_CONTACTS_QUERY_RESULT[number];
   open?: boolean;
   onClose?: () => void;
 }) {

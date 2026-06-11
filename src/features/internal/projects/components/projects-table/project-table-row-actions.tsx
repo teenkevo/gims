@@ -12,13 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ALL_PROJECTS_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_PROJECTS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { DeleteProjectDialog } from "./row-actions/delete-project-dialog";
 
 export function ProjectTableRowActions({
   project,
 }: {
-  project: ALL_PROJECTS_QUERYResult[number];
+  project: ALL_PROJECTS_QUERY_RESULT[number];
 }) {
   const [openDialog, setOpenDialog] = useState<"delete" | null>(null);
 

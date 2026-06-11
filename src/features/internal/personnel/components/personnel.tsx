@@ -11,8 +11,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  ALL_DEPARTMENTS_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
+  ALL_DEPARTMENTS_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import Image from "next/image";
 
@@ -20,8 +20,8 @@ export default function PersonnelManager({
   personnel,
   departments,
 }: {
-  personnel: ALL_PERSONNEL_QUERYResult;
-  departments: ALL_DEPARTMENTS_QUERYResult;
+  personnel: ALL_PERSONNEL_QUERY_RESULT;
+  departments: ALL_DEPARTMENTS_QUERY_RESULT;
 }) {
   const departmentRoles: Record<
     string,
@@ -65,12 +65,12 @@ export default function PersonnelManager({
   const { executives, departmentsWithPersonnel, hasActiveFilters } =
     useMemo(() => {
       const executives: Array<{
-        person: ALL_PERSONNEL_QUERYResult[number];
+        person: ALL_PERSONNEL_QUERY_RESULT[number];
         role: string;
       }> = [];
       const personnelByDepartment = new Map<
         string,
-        Array<{ person: ALL_PERSONNEL_QUERYResult[number]; role: string }>
+        Array<{ person: ALL_PERSONNEL_QUERY_RESULT[number]; role: string }>
       >();
 
       // Check if there are active filters
@@ -109,7 +109,7 @@ export default function PersonnelManager({
           roleName?: string;
         }> | null;
         personnel: Array<{
-          person: ALL_PERSONNEL_QUERYResult[number];
+          person: ALL_PERSONNEL_QUERY_RESULT[number];
           role: string;
         }>;
         count: number;

@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import Link from "next/link";
 import type { Payments } from "./make-payment-dialog";
 import { ApproveRejectPaymentDialog } from "./approve-reject-payment-dialog";
@@ -40,7 +40,7 @@ import { MakePaymentDialog } from "./make-payment-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-type Quotation = NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>;
+type Quotation = NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>;
 
 export function ViewPaymentsDialog({
   quotationId,
@@ -54,7 +54,7 @@ export function ViewPaymentsDialog({
   currency: string;
   total: number;
   existingPayments?: Payments;
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
   quotation: Quotation;
 }) {
   const [open, setOpen] = useState(false);
@@ -309,7 +309,7 @@ export function ViewPaymentsDialog({
                                     "pending" && (
                                     <ApproveRejectPaymentDialog
                                       project={
-                                        project as PROJECT_BY_ID_QUERYResult[number]
+                                        project as PROJECT_BY_ID_QUERY_RESULT[number]
                                       }
                                       quotation={quotation as Quotation}
                                       payment={payment as Payments[number]}

@@ -45,17 +45,17 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import type { RFI } from "../types/rfi.ts";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import {
-  ALL_CLIENTS_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
-  ALL_RFIS_QUERYResult,
+  ALL_CLIENTS_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
+  ALL_RFIS_QUERY_RESULT,
 } from "../../../../../sanity.types.js";
 import { createRFI } from "@/lib/actions";
 
 interface CreateRFIDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  labPersonnel: ALL_PERSONNEL_QUERYResult;
-  clients: ALL_CLIENTS_QUERYResult;
+  labPersonnel: ALL_PERSONNEL_QUERY_RESULT;
+  clients: ALL_CLIENTS_QUERY_RESULT;
 }
 
 export function CreateRFIDialog({

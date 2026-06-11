@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil } from "lucide-react";
-import { ALL_STANDARDS_QUERYResult } from "../../../../../../../../sanity.types";
+import { ALL_STANDARDS_QUERY_RESULT } from "../../../../../../../../sanity.types";
 
 interface EditStandardType {
   name: string;
@@ -47,7 +47,7 @@ export function EditStandardDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  standard: ALL_STANDARDS_QUERYResult[number];
+  standard: ALL_STANDARDS_QUERY_RESULT[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -97,7 +97,7 @@ function StandardForm({
   standard,
 }: {
   onClose: () => void;
-  standard: ALL_STANDARDS_QUERYResult[number];
+  standard: ALL_STANDARDS_QUERY_RESULT[number];
 }) {
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(

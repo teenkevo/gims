@@ -43,12 +43,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Formheader from "@/components/form-header";
 import FormSpacerWrapper from "@/components/form-spacer-wrapper";
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { CardSelector } from "../../../internal/projects/components/card-selector";
 
 interface ClientProfileFormProps {
   isSubmitting: boolean;
-  clients: ALL_CLIENTS_QUERYResult;
+  clients: ALL_CLIENTS_QUERY_RESULT;
 }
 
 export function ClientProfileForm({

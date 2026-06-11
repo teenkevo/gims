@@ -2858,6 +2858,13 @@
           "type": "string"
         }
       },
+      "internalId": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
       "name": {
         "type": "objectAttribute",
         "value": {
@@ -2866,6 +2873,72 @@
         "optional": true
       },
       "serialNumber": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "category": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "compression_testing"
+            },
+            {
+              "type": "string",
+              "value": "sieving_grading"
+            },
+            {
+              "type": "string",
+              "value": "moisture_density"
+            },
+            {
+              "type": "string",
+              "value": "triaxial_shear"
+            },
+            {
+              "type": "string",
+              "value": "consolidation"
+            },
+            {
+              "type": "string",
+              "value": "rock_mechanics"
+            },
+            {
+              "type": "string",
+              "value": "calibration_standard"
+            },
+            {
+              "type": "string",
+              "value": "field_instrument"
+            },
+            {
+              "type": "string",
+              "value": "general_lab"
+            }
+          ]
+        },
+        "optional": true
+      },
+      "manufacturer": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "model": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "notes": {
         "type": "objectAttribute",
         "value": {
           "type": "string"

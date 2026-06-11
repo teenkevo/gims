@@ -50,7 +50,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { createPersonnel, updatePersonnel } from "@/lib/actions";
 import { toast } from "sonner";
 import { isValidPhoneNumber } from "react-phone-number-input";
-import { ALL_PERSONNEL_QUERYResult } from "../../../../../sanity.types";
+import { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../sanity.types";
 
 // Define a type for department-role pairs
 type DepartmentRole = {
@@ -79,7 +79,7 @@ export function CreatePersonnelDialog({
     { roles: (string | undefined)[]; departmentId: string }
   >;
   isEdit?: boolean;
-  personnel?: ALL_PERSONNEL_QUERYResult[number];
+  personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
   open?: boolean;
   onClose?: () => void;
 }) {
@@ -145,7 +145,7 @@ function CreatePersonnelForm({
   >;
   onClose?: () => void;
   isEdit?: boolean;
-  personnel?: ALL_PERSONNEL_QUERYResult[number];
+  personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
 }) {
   const [roleOpen, setRoleOpen] = useState(false);
 

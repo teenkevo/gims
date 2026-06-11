@@ -28,7 +28,7 @@ import {
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { getColumns } from "./columns"; // Import the function instead of the constant
-import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../../sanity.types";
+import { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { DeleteMultipleSampleClasses } from "./delete-multiple-sample-classes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ import {
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
 }
 
 export function DataTable<TData, TValue>({

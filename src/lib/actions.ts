@@ -5,19 +5,19 @@ import { redirect } from "next/navigation";
 import { sanitizePhoneNumber } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
-  ALL_RFIS_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
+  ALL_RFIS_QUERY_RESULT,
 } from "../../sanity.types";
 import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 
 interface QuotationProps {
-  labTests: (ALL_SERVICES_QUERYResult[number] & {
+  labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
     price: number;
     quantity: number;
     unit: string;
   })[];
-  fieldTests: (ALL_SERVICES_QUERYResult[number] & {
+  fieldTests: (ALL_SERVICES_QUERY_RESULT[number] & {
     price: number;
     quantity: number;
     unit: string;
@@ -34,7 +34,7 @@ interface QuotationProps {
     price: number;
     quantity: number;
   }[];
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
   currency: string;
   vatPercentage: number;
   paymentNotes: string;
@@ -1681,8 +1681,9 @@ export async function approveSampleReceipt(prevState: any, formData: FormData) {
       return { error: "Approval decision is required", status: "error" };
     }
 
-    // Determine the new status based on the decision
-    const newStatus = approvalDecision === "approve" ? "approved" : "rejected";
+    // On approval, automatically send to the client for acknowledgement
+    const newStatus =
+      approvalDecision === "approve" ? "sent_to_client" : "rejected";
 
     // Build the update object
     const updateData: any = {
@@ -2833,7 +2834,7 @@ export async function deleteProjectById(projectId: string) {
 }
 
 export async function deleteProject(
-  project: PROJECT_BY_ID_QUERYResult[number]
+  project: PROJECT_BY_ID_QUERY_RESULT[number]
 ) {
   const projectId = project._id;
   const tx = writeClient.transaction();
@@ -3006,7 +3007,7 @@ export async function deleteProject(
 }
 
 // DELETE RFI
-export async function deleteRFI(rfi: ALL_RFIS_QUERYResult[number]) {
+export async function deleteRFI(rfi: ALL_RFIS_QUERY_RESULT[number]) {
   const rfiId = rfi._id;
   const tx = writeClient.transaction();
 
@@ -4241,6 +4242,241 @@ export async function deleteLab(labId: string) {
     return { status: "ok" as const };
   } catch (error) {
     console.error("Error deleting lab:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+// CREATE EQUIPMENT
+export async function createEquipment(prevState: any, formData: FormData) {
+  try {
+    const internalId = formData.get("internalId");
+    const name = formData.get("name");
+    const serialNumber = formData.get("serialNumber");
+    const category = formData.get("category");
+    const manufacturer = formData.get("manufacturer");
+    const model = formData.get("model");
+    const status = formData.get("status") || "available";
+    const notes = formData.get("notes");
+    const lastMaintenance = formData.get("lastMaintenance");
+    const nextMaintenance = formData.get("nextMaintenance");
+
+    const personnelIds = JSON.parse(
+      (formData.get("personnelIds") as string) || "[]"
+    ) as string[];
+    const userManualUrls = JSON.parse(
+      (formData.get("userManualUrls") as string) || "[]"
+    ) as string[];
+
+    const supplierName = formData.get("supplierName");
+    const supplierContactPerson = formData.get("supplierContactPerson");
+    const supplierContactEmail = formData.get("supplierContactEmail");
+    const supplierContactPhone = formData.get("supplierContactPhone");
+
+    const maintenanceCompanyName = formData.get("maintenanceCompanyName");
+    const maintenanceContactPerson = formData.get("maintenanceContactPerson");
+    const maintenanceContactEmail = formData.get("maintenanceContactEmail");
+    const maintenanceContactPhone = formData.get("maintenanceContactPhone");
+
+    const equipment = await writeClient.create(
+      {
+        _type: "equipment",
+        internalId,
+        name,
+        serialNumber,
+        category,
+        manufacturer: manufacturer || undefined,
+        model: model || undefined,
+        status,
+        notes: notes || undefined,
+        lastMaintenance: lastMaintenance || undefined,
+        nextMaintenance: nextMaintenance || undefined,
+        assignedPersonnel: personnelIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+        userManuals: userManualUrls.filter(Boolean),
+        supplier:
+          supplierName ||
+          supplierContactPerson ||
+          supplierContactEmail ||
+          supplierContactPhone
+            ? {
+                name: supplierName || undefined,
+                contactPerson: supplierContactPerson || undefined,
+                contactEmail: supplierContactEmail || undefined,
+                contactPhone: supplierContactPhone || undefined,
+              }
+            : undefined,
+        maintenanceCompany:
+          maintenanceCompanyName ||
+          maintenanceContactPerson ||
+          maintenanceContactEmail ||
+          maintenanceContactPhone
+            ? {
+                companyName: maintenanceCompanyName || undefined,
+                contactPerson: maintenanceContactPerson || undefined,
+                contactEmail: maintenanceContactEmail || undefined,
+                contactPhone: maintenanceContactPhone || undefined,
+              }
+            : undefined,
+      },
+      { autoGenerateArrayKeys: true }
+    );
+
+    revalidateTag("equipment");
+    revalidatePath("/equipment");
+    return { result: equipment, status: "ok" as const };
+  } catch (error) {
+    console.error("Error creating equipment:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+// UPDATE EQUIPMENT
+export async function updateEquipment(prevState: any, formData: FormData) {
+  try {
+    const equipmentId = formData.get("equipmentId");
+    const internalId = formData.get("internalId");
+    const name = formData.get("name");
+    const serialNumber = formData.get("serialNumber");
+    const category = formData.get("category");
+    const manufacturer = formData.get("manufacturer");
+    const model = formData.get("model");
+    const status = formData.get("status");
+    const notes = formData.get("notes");
+    const lastMaintenance = formData.get("lastMaintenance");
+    const nextMaintenance = formData.get("nextMaintenance");
+
+    const personnelIds = JSON.parse(
+      (formData.get("personnelIds") as string) || "[]"
+    ) as string[];
+    const userManualUrls = JSON.parse(
+      (formData.get("userManualUrls") as string) || "[]"
+    ) as string[];
+
+    const supplierName = formData.get("supplierName");
+    const supplierContactPerson = formData.get("supplierContactPerson");
+    const supplierContactEmail = formData.get("supplierContactEmail");
+    const supplierContactPhone = formData.get("supplierContactPhone");
+
+    const maintenanceCompanyName = formData.get("maintenanceCompanyName");
+    const maintenanceContactPerson = formData.get("maintenanceContactPerson");
+    const maintenanceContactEmail = formData.get("maintenanceContactEmail");
+    const maintenanceContactPhone = formData.get("maintenanceContactPhone");
+
+    const result = await writeClient
+      .patch(equipmentId as string)
+      .set({
+        internalId,
+        name,
+        serialNumber,
+        category,
+        manufacturer: manufacturer || undefined,
+        model: model || undefined,
+        status,
+        notes: notes || undefined,
+        lastMaintenance: lastMaintenance || undefined,
+        nextMaintenance: nextMaintenance || undefined,
+        assignedPersonnel: personnelIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+        userManuals: userManualUrls.filter(Boolean),
+        supplier: {
+          name: supplierName || undefined,
+          contactPerson: supplierContactPerson || undefined,
+          contactEmail: supplierContactEmail || undefined,
+          contactPhone: supplierContactPhone || undefined,
+        },
+        maintenanceCompany: {
+          companyName: maintenanceCompanyName || undefined,
+          contactPerson: maintenanceContactPerson || undefined,
+          contactEmail: maintenanceContactEmail || undefined,
+          contactPhone: maintenanceContactPhone || undefined,
+        },
+      })
+      .commit();
+
+    revalidateTag("equipment");
+    revalidatePath("/equipment");
+    revalidatePath(`/equipment/${equipmentId}`);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error updating equipment:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+// DELETE EQUIPMENT
+export async function deleteEquipment(equipmentId: string) {
+  try {
+    const dependencies = await writeClient.fetch<{
+      labs: Array<{ _id: string; name: string; internalId: string }>;
+      maintenanceLogs: Array<{ _id: string }>;
+      unknownReferencers: Array<{ _id: string; _type: string }>;
+    }>(
+      `{
+        "labs": *[_type == "lab" && references($equipmentId)] {
+          _id, name, internalId
+        },
+        "maintenanceLogs": *[_type == "maintenanceLog" && references($equipmentId)] {
+          _id
+        },
+        "unknownReferencers": *[
+          _id != $equipmentId
+          && references($equipmentId)
+          && _type != "lab"
+          && _type != "maintenanceLog"
+        ] {
+          _id,
+          _type
+        }
+      }`,
+      { equipmentId }
+    );
+
+    if ((dependencies.labs ?? []).length > 0) {
+      return {
+        status: "error" as const,
+        error: "Cannot delete equipment assigned to laboratories",
+        labs: dependencies.labs,
+      };
+    }
+
+    if ((dependencies.unknownReferencers ?? []).length > 0) {
+      const types = [
+        ...new Set(
+          dependencies.unknownReferencers.map((referencer) => referencer._type)
+        ),
+      ];
+      return {
+        status: "error" as const,
+        error: `Cannot delete equipment: unsupported referencers found (${types.join(", ")})`,
+      };
+    }
+
+    const tx = writeClient.transaction();
+
+    for (const lab of dependencies.labs ?? []) {
+      tx.patch(lab._id, (p) =>
+        p.unset([`equipment[_ref == "${equipmentId}"]`])
+      );
+    }
+
+    for (const log of dependencies.maintenanceLogs ?? []) {
+      tx.delete(log._id);
+    }
+
+    tx.delete(equipmentId);
+    await tx.commit();
+
+    revalidateTag("equipment");
+    revalidatePath("/equipment");
+    return { status: "ok" as const };
+  } catch (error) {
+    console.error("Error deleting equipment:", error);
     return { error, status: "error" as const };
   }
 }

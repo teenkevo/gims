@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CreateStandardDialog } from "./create-standard";
 import { getAllStandards } from "@/sanity/lib/services/getAllStandards";
-import { ALL_STANDARDS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_STANDARDS_QUERY_RESULT } from "../../../../../sanity.types";
 import { CreateTestMethodDialog } from "./create-test-method";
 import { CreateSampleClassDialog } from "./create-sample-class";
 import Link from "next/link";
@@ -28,7 +28,7 @@ import Link from "next/link";
 export default function SummaryCards({
   standards,
 }: {
-  standards: ALL_STANDARDS_QUERYResult;
+  standards: ALL_STANDARDS_QUERY_RESULT;
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">

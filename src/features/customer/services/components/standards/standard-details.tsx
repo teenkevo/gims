@@ -4,10 +4,10 @@ import { ArrowLeftCircle } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import {
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../sanity.types";
-import { STANDARD_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import { STANDARD_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 import { Badge } from "@/components/ui/badge";
 import { DeleteStandard } from "./standards-table/row-actions/delete-standard";
 import { EditStandardDialog } from "./standards-table/row-actions/edit-standard";
@@ -19,9 +19,9 @@ export default function StandardDetails({
   existingTestMethods,
   standards,
 }: {
-  standard: STANDARD_BY_ID_QUERYResult[number];
-  existingTestMethods: ALL_TEST_METHODS_QUERYResult;
-  standards: ALL_STANDARDS_QUERYResult;
+  standard: STANDARD_BY_ID_QUERY_RESULT[number];
+  existingTestMethods: ALL_TEST_METHODS_QUERY_RESULT;
+  standards: ALL_STANDARDS_QUERY_RESULT;
 }) {
   const { _id, name, acronym, description } = standard;
 

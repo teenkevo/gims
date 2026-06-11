@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type {
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { useState } from "react";
 import { EditSampleClassDialog } from "./row-actions/edit-sample-class";
@@ -21,7 +21,7 @@ import { Delete, Pencil } from "lucide-react";
 import { getDocumentsReferencingSampleClass } from "@/lib/actions";
 
 interface DataTableRowActionsProps<TData> {
-  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
 }
 
 export function DataTableRowActions<TData>({

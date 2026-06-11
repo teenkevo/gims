@@ -58,15 +58,15 @@ import { toast } from "sonner";
 import { GenerateSampleReceiptDocument } from "./generate-sample-receipt-document";
 import { format } from "date-fns";
 import {
-  PROJECT_BY_ID_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
-  SAMPLE_REVIEW_TEMPLATES_QUERYResult,
-  SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
+  PROJECT_BY_ID_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
+  SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT,
 } from "../../../../../sanity.types";
 
 // Get initial data from templates
 const getInitialReviewItems = (
-  template: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number]
+  template: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT[number]
 ) => {
   return (
     template.reviewItems?.map((item) => ({
@@ -77,7 +77,7 @@ const getInitialReviewItems = (
 };
 
 const getInitialAdequacyChecks = (
-  template: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number]
+  template: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT[number]
 ) => {
   return (
     template.adequacyChecks?.map((check) => ({
@@ -548,11 +548,11 @@ export function SampleVerificationContent({
 }: {
   setDrawerOpen: (open: boolean) => void;
   setHasUnsavedEdits: (hasEdits: boolean) => void;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  personnel: ALL_PERSONNEL_QUERYResult;
-  sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
-  sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
-  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  personnel: ALL_PERSONNEL_QUERY_RESULT;
+  sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT[number];
+  sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT[number];
+  existingSampleReceipt?: PROJECT_BY_ID_QUERY_RESULT[number]["sampleReceipt"];
   isReadOnly?: boolean;
   onApprove?: () => void;
 }) {

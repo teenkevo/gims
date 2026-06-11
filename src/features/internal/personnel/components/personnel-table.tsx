@@ -11,10 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePersonnelTable } from "../hooks/use-personnel-table";
-import { ALL_PERSONNEL_QUERYResult } from "../../../../../sanity.types";
+import { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../sanity.types";
 
 interface PersonnelTableProps {
-  personnel: Array<{ person: ALL_PERSONNEL_QUERYResult[number]; role: string }>;
+  personnel: Array<{ person: ALL_PERSONNEL_QUERY_RESULT[number]; role: string }>;
   departmentRoles: Record<
     string,
     { roles: (string | undefined)[]; departmentId: string }

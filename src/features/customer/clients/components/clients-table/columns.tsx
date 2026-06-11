@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../../sanity.types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ListEnd, TriangleAlert } from "lucide-react";
@@ -13,8 +13,8 @@ import { ClientTableRowActions } from "./client-table-row-actions";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  clients: ALL_CLIENTS_QUERYResult
-): ColumnDef<ALL_CLIENTS_QUERYResult[number]>[] => [
+  clients: ALL_CLIENTS_QUERY_RESULT
+): ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (

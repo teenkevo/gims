@@ -4,7 +4,7 @@ import { CardContent } from "@/components/ui/card";
 import { Download, ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
 import { Badge } from "@/components/ui/badge";
@@ -106,7 +106,7 @@ const QuotationFileDisplay: React.FC<QuotationFileDisplayProps> = ({
 export default function QuotationFile({
   project,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
 }) {
   const { role } = useRBAC();
   const { quotation, number_parent_revisions, rejected } = useQuotation(

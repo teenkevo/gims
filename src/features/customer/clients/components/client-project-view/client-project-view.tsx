@@ -6,8 +6,14 @@ import React, { useState } from "react";
 
 import { BillingLifecycle } from "@/features/internal/billing/components/billing-lifecycle";
 import QuotationFile from "@/features/internal/billing/components/quotation-file";
-import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import { SampleVerificationLifecycle } from "@/features/internal/projects/components/sample-verification-lifecycle";
+import SampleReceiptFile from "@/features/internal/projects/components/sample-receipt-file";
+import {
+  ALL_SERVICES_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT,
+  SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT,
+} from "../../../../../../sanity.types";
 import { useParams } from "next/navigation";
 import ProjectHeader from "./project-header";
 import { useQuotation } from "@/features/internal/billing/components/useQuotation";
@@ -16,9 +22,13 @@ import { useRBAC } from "@/components/rbac-context";
 export default function ClientProjectView({
   project,
   allServices,
+  sampleReviewTemplates,
+  sampleAdequacyTemplates,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
-  allServices: ALL_SERVICES_QUERYResult;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT;
+  sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT;
 }) {
   const { clientId } = useParams();
 
@@ -58,9 +68,9 @@ export default function ClientProjectView({
 
   // billing services table states
   const [selectedLabTests, setSelectedLabTests] =
-    useState<ALL_SERVICES_QUERYResult>([]);
+    useState<ALL_SERVICES_QUERY_RESULT>([]);
   const [selectedFieldTests, setSelectedFieldTests] =
-    useState<ALL_SERVICES_QUERYResult>([]);
+    useState<ALL_SERVICES_QUERY_RESULT>([]);
   const [mobilizationActivities, setMobilizationActivities] = useState<
     { activity: string; price: number; quantity: number; unit: string }[]
   >([]);
@@ -104,6 +114,34 @@ export default function ClientProjectView({
         />
         {quotation && <QuotationFile project={project} />}
       </div>
+
+      {project.sampleReceipt &&
+        (project.sampleReceipt.status === "sent_to_client" ||
+          project.sampleReceipt.status === "approved" ||
+          project.sampleReceipt.status === "client_acknowledged") && (
+        <div className="space-y-8 my-10">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Sample Receipt
+          </h2>
+          <SampleVerificationLifecycle
+            project={project}
+            sampleReviewTemplate={
+              sampleReviewTemplates.find(
+                (template) =>
+                  template._id === project.sampleReceipt?.reviewTemplate?._id
+              ) ?? sampleReviewTemplates[0]
+            }
+            sampleAdequacyTemplate={
+              sampleAdequacyTemplates.find(
+                (template) =>
+                  template._id === project.sampleReceipt?.adequacyTemplate?._id
+              ) ?? sampleAdequacyTemplates[0]
+            }
+            existingSampleReceipt={project.sampleReceipt}
+          />
+          <SampleReceiptFile project={project} />
+        </div>
+        )}
     </>
   );
 }

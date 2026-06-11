@@ -27,13 +27,13 @@ import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
 import { SampleVerificationLifecycle } from "./sample-verification-lifecycle";
 import {
-  ALL_CLIENTS_QUERYResult,
-  ALL_CONTACTS_QUERYResult,
-  ALL_SERVICES_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
-  SAMPLE_REVIEW_TEMPLATES_QUERYResult,
-  SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
+  ALL_CLIENTS_QUERY_RESULT,
+  ALL_CONTACTS_QUERY_RESULT,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
+  SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
@@ -62,13 +62,13 @@ export default function ProjectDetails({
   sampleReviewTemplates,
   sampleAdequacyTemplates,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
-  existingContacts: ALL_CONTACTS_QUERYResult;
-  existingClients: ALL_CLIENTS_QUERYResult;
-  allServices: ALL_SERVICES_QUERYResult;
-  personnel: ALL_PERSONNEL_QUERYResult;
-  sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERYResult;
-  sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  existingContacts: ALL_CONTACTS_QUERY_RESULT;
+  existingClients: ALL_CLIENTS_QUERY_RESULT;
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  personnel: ALL_PERSONNEL_QUERY_RESULT;
+  sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT;
+  sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT;
 }) {
   const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
@@ -104,9 +104,9 @@ export default function ProjectDetails({
 
   // billing services table states
   const [selectedLabTests, setSelectedLabTests] =
-    useState<ALL_SERVICES_QUERYResult>([]);
+    useState<ALL_SERVICES_QUERY_RESULT>([]);
   const [selectedFieldTests, setSelectedFieldTests] =
-    useState<ALL_SERVICES_QUERYResult>([]);
+    useState<ALL_SERVICES_QUERY_RESULT>([]);
   const [mobilizationActivities, setMobilizationActivities] = useState<
     { activity: string; price: number; quantity: number; unit: string }[]
   >([]);

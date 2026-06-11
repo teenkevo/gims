@@ -5,10 +5,10 @@ import Link from "next/link";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import {
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
-  SERVICE_BY_ID_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
+  SERVICE_BY_ID_QUERY_RESULT,
 } from "../../../../../../sanity.types";
 import DataTable from "./service-test-methods-table/data-table";
 import { DataTableRowActions } from "../services-table/data-table-row-actions";
@@ -21,10 +21,10 @@ export default function ServiceDetails({
   sampleClasses,
   testMethods,
 }: {
-  service: SERVICE_BY_ID_QUERYResult[number];
-  standards: ALL_STANDARDS_QUERYResult;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
-  testMethods: ALL_TEST_METHODS_QUERYResult;
+  service: SERVICE_BY_ID_QUERY_RESULT[number];
+  standards: ALL_STANDARDS_QUERY_RESULT;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
 }) {
   const { _id, code, testParameter, status } = service;
 
@@ -71,7 +71,7 @@ export default function ServiceDetails({
         </div>
       </div>
       <DataTable
-        testMethods={service.testMethods as ALL_TEST_METHODS_QUERYResult}
+        testMethods={service.testMethods as ALL_TEST_METHODS_QUERY_RESULT}
         standards={standards || []}
         service={service}
       />

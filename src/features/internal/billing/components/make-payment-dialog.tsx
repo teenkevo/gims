@@ -50,7 +50,7 @@ import { makePayment } from "@/lib/actions";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 
 type PaymentFormData = {
   amount: string;
@@ -61,7 +61,7 @@ type PaymentFormData = {
 
 type PaymentType = "advance" | "full" | "other";
 
-type Quotation = NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>;
+type Quotation = NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>;
 export type Payments = NonNullable<Quotation["payments"]>;
 
 export function MakePaymentDialog({

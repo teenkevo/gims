@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { Document, pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 import { PaymentReceipt } from "./payment-receipt";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { approvePayment, rejectPayment } from "@/lib/actions";
 import { ResponsiveActionDialog } from "./responsive-action-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Payments } from "./make-payment-dialog";
 
 interface ApproveRejectPaymentDialogProps {
-  project: PROJECT_BY_ID_QUERYResult[number];
-  quotation: NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  quotation: NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>;
   payment: Payments[number];
   resubmissionKey?: string;
 }

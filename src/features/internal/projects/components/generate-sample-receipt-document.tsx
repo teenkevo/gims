@@ -24,8 +24,8 @@ import {
   createSampleReceiptRevision,
 } from "@/lib/actions";
 import {
-  ALL_PERSONNEL_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_PERSONNEL_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import {
   GetlabAcknowledgementDrawer,
@@ -51,7 +51,7 @@ interface AdequacyCheck {
   comments: string;
 }
 
-interface SampleReceiptData {
+export interface SampleReceiptData {
   sampleReviewTemplate: string;
   sampleAdequacyTemplate: string;
   reviewItems: ReviewItem[];
@@ -72,13 +72,13 @@ interface SampleReceiptData {
   email?: string;
   sampleReceiptNumber?: string;
   revisionNumber?: string;
-  personnel?: ALL_PERSONNEL_QUERYResult[number];
+  personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
 }
 
 interface GenerateSampleReceiptDocumentProps {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
   sampleReceiptData: SampleReceiptData;
-  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
+  existingSampleReceipt?: PROJECT_BY_ID_QUERY_RESULT[number]["sampleReceipt"];
   onCloseDrawers?: () => void;
   isReadOnly?: boolean;
   onApprove?: () => void;
@@ -445,7 +445,7 @@ export const GenerateSampleReceiptDocument = ({
       const formData = new FormData();
       formData.append("sampleReceiptId", existingSampleReceipt._id);
       formData.append("projectId", project._id);
-      formData.append("acknowledgementText", data.getlabAcknowledgement);
+      formData.append("getlabAcknowledgement", data.getlabAcknowledgement || "");
       formData.append("approvalDecision", data.approvalDecision);
       formData.append("rejectionReason", data.rejectionReason || "");
       formData.append(

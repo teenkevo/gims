@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteSampleClass } from "@/lib/actions";
 import { AlertTriangle, File } from "lucide-react";
-import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../../../sanity.types";
+import { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../../../sanity.types";
 import Link from "next/link";
 export function DeleteSampleClass({
   sampleClass,
@@ -29,7 +29,7 @@ export function DeleteSampleClass({
   onClose,
   referencingDocs,
 }: {
-  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
   open: boolean;
   onClose: () => void;
   referencingDocs: any[];

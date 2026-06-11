@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { useActionState } from "react";
 import { createInvoice, respondToQuotation } from "@/lib/actions";
 import { Check, MessageSquareReply, Send, X } from "lucide-react";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,7 @@ import { InvoiceDocument } from "./invoice-document";
 export function RespondToQuotationDialog({
   project,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
 }) {
   const [open, setOpen] = React.useState(false);
   const [status, setStatus] = React.useState<

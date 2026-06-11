@@ -46,8 +46,8 @@ import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
 import type {
-  ALL_CLIENTS_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_CLIENTS_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
@@ -106,8 +106,8 @@ export function CreateClientDialog({
   projectClients,
 }: {
   projectId: string;
-  existingClients: ALL_CLIENTS_QUERYResult;
-  projectClients: PROJECT_BY_ID_QUERYResult[number]["clients"];
+  existingClients: ALL_CLIENTS_QUERY_RESULT;
+  projectClients: PROJECT_BY_ID_QUERY_RESULT[number]["clients"];
 }) {
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);

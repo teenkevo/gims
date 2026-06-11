@@ -14,16 +14,16 @@ import {
 import { useState } from "react";
 import { EditTestMethodDialog } from "./row-actions/edit-test-method";
 import {
-  ALL_SERVICES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { DeleteTestMethod } from "./row-actions/delete-test-method";
 import { Pencil, Trash } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
-  standards: ALL_STANDARDS_QUERYResult;
-  testMethod: ALL_TEST_METHODS_QUERYResult[number];
+  standards: ALL_STANDARDS_QUERY_RESULT;
+  testMethod: ALL_TEST_METHODS_QUERY_RESULT[number];
   row: Row<TData>;
 }
 
@@ -73,7 +73,7 @@ export function DataTableRowActions<TData>({
       </DropdownMenu>
       <EditTestMethodDialog
         standards={standards}
-        testMethod={row.original as ALL_TEST_METHODS_QUERYResult[number]}
+        testMethod={row.original as ALL_TEST_METHODS_QUERY_RESULT[number]}
         open={openDialog === "dialog1"}
         onClose={handleCloseDialog}
       />

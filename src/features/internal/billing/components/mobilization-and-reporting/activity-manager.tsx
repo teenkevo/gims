@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Activity, type ActivityValue } from "./Activity";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 import { v4 as uuidv4 } from "uuid";
 interface ActivityItem extends ActivityValue {
   id: string;
@@ -14,7 +14,7 @@ export interface ActivityManagerProps {
   onActivitiesChange: (activities: Array<Partial<ActivityValue>>) => void;
   onValidationChange: (isValid: boolean) => void;
   currency: string;
-  quotation?: PROJECT_BY_ID_QUERYResult[number]["quotation"];
+  quotation?: PROJECT_BY_ID_QUERY_RESULT[number]["quotation"];
 }
 
 export function ActivityManager({

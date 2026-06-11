@@ -17,14 +17,14 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { deleteContactPerson, removeContactFromProject } from "@/lib/actions";
 import { startTransition, useActionState } from "react";
-import { CLIENT_BY_ID_QUERYResult } from "../../../../../../../sanity.types";
+import { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../../sanity.types";
 
 export function DeleteContactDialog({
   contact,
   open,
   onClose,
 }: {
-  contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
+  contact: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number];
   open: boolean;
   onClose: () => void;
 }) {

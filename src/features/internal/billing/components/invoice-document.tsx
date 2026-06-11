@@ -3,7 +3,7 @@ import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
 import { numberToWords } from "../../projects/constants";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { currencyCodeToName } from "@/lib/utils";
 const tw = createTw({
   theme: {
@@ -73,7 +73,7 @@ interface BillingDocumentProps {
   fieldTests: Test[];
   reportingActivities: Activity[];
   mobilizationActivities: Activity[];
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
   currency: string;
   paymentNotes: string;
   vatPercentage: number;

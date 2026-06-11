@@ -5,7 +5,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { v4 as uuidv4 } from "uuid";
-import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
+import { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../sanity.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -14,7 +14,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function TestMethodDetails({
   sampleClass,
 }: {
-  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
 }) {
   const [activeTab, setActiveTab] = useState("description");
 

@@ -26,12 +26,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 
 interface ClientAcknowledgementDrawerProps {
   children: React.ReactNode;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  existingSampleReceipt?: PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  existingSampleReceipt?: PROJECT_BY_ID_QUERY_RESULT[number]["sampleReceipt"];
   onAcknowledgementSubmit: (data: ClientAcknowledgementData) => Promise<void>;
 }
 

@@ -103,30 +103,13 @@ const data = {
       isActive: false,
       isDisabled: false,
     },
-    // {
-    //   title: "Equipment",
-    //   url: "#",
-    //   icon: Cable,
-    //   items: [
-    //     {
-    //       title: "General",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Team",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Billing",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Limits",
-    //       url: "#",
-    //     },
-    //   ],
-    //   isDisabled: true,
-    // },
+    {
+      title: "Equipment",
+      url: "/equipment",
+      icon: Cable,
+      isActive: false,
+      isDisabled: false,
+    },
     // {
     //   title: "Repository",
     //   url: "#",

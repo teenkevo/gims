@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { CLIENT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import type { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 import { useState } from "react";
 import { Delete, Pencil, Trash } from "lucide-react";
 import { UpdateContactDialog } from "./row-actions/update-contact-dialog";
@@ -17,7 +17,7 @@ import { DeleteContactDialog } from "./row-actions/delete-contact-dialog";
 import { toast } from "sonner";
 
 interface DataTableRowActionsProps<TData> {
-  contact: CLIENT_BY_ID_QUERYResult[number]["contacts"][number];
+  contact: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number];
 }
 
 export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps<TData>) {

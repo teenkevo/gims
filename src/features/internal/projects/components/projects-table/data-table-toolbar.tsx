@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
-import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
+import { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../sanity.types";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
   statuses: string[];
   openDialog: () => void;
 }

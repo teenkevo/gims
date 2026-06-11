@@ -12,12 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_SERVICES_QUERY_RESULT } from "../../../../../../sanity.types";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
 /* ------------------------------------------------------------------ */
-export type ExtendedService = ALL_SERVICES_QUERYResult[number] & {
+export type ExtendedService = ALL_SERVICES_QUERY_RESULT[number] & {
   price?: number;
   quantity?: number;
   unit?: string;

@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type {
-  ALL_PROJECTS_QUERYResult,
-  CLIENT_BY_ID_QUERYResult,
+  ALL_PROJECTS_QUERY_RESULT,
+  CLIENT_BY_ID_QUERY_RESULT,
 } from "../../../../../../sanity.types";
 import { getColumns } from "./columns";
 import { DeleteMultipleServices } from "./delete-multiple-services";
@@ -35,8 +35,8 @@ import { useState } from "react";
 import { useRBAC } from "@/components/rbac-context";
 
 interface DataTableProps<TData, TValue> {
-  data: CLIENT_BY_ID_QUERYResult[number]["projects"];
-  client: CLIENT_BY_ID_QUERYResult[number];
+  data: CLIENT_BY_ID_QUERY_RESULT[number]["projects"];
+  client: CLIENT_BY_ID_QUERY_RESULT[number];
 }
 
 export function DataTable<TData, TValue>({
@@ -60,7 +60,7 @@ export function DataTable<TData, TValue>({
   const columns = React.useMemo(
     () =>
       getColumns(client) as ColumnDef<
-        CLIENT_BY_ID_QUERYResult[number]["projects"][number]
+        CLIENT_BY_ID_QUERY_RESULT[number]["projects"][number]
       >[],
     [data, role]
   );

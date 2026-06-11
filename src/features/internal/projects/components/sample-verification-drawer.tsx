@@ -33,10 +33,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SampleVerificationContent } from "@/features/internal/projects/components/sample-verification-content";
 import {
-  PROJECT_BY_ID_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
-  SAMPLE_ADEQUACY_TEMPLATES_QUERYResult,
-  SAMPLE_REVIEW_TEMPLATES_QUERYResult,
+  PROJECT_BY_ID_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
+  SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT,
+  SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import { Badge } from "@/components/ui/badge";
 
@@ -50,10 +50,10 @@ export function SampleVerificationDrawer({
   onApprove,
 }: {
   children: React.ReactNode;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  personnel: ALL_PERSONNEL_QUERYResult;
-  sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERYResult[number];
-  sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  personnel: ALL_PERSONNEL_QUERY_RESULT;
+  sampleReviewTemplate: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT[number];
+  sampleAdequacyTemplate: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT[number];
   isReadOnly?: boolean;
   onApprove?: () => void;
 }) {

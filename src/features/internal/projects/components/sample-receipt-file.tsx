@@ -4,7 +4,7 @@ import { CardContent } from "@/components/ui/card";
 import { Download, ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { useRBAC } from "@/components/rbac-context";
 import { Badge } from "@/components/ui/badge";
 import { SampleReceiptRevisionNotesDialog } from "./sample-receipt-revision-notes-dialog";
@@ -103,7 +103,7 @@ const SampleReceiptFileDisplay: React.FC<SampleReceiptFileDisplayProps> = ({
 export default function SampleReceiptFile({
   project,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
 }) {
   const { role } = useRBAC();
   const sampleReceipt = project.sampleReceipt;
@@ -119,7 +119,7 @@ export default function SampleReceiptFile({
       );
     }
     return false;
-  }) as PROJECT_BY_ID_QUERYResult[number]["sampleReceipt"][];
+  }) as PROJECT_BY_ID_QUERY_RESULT[number]["sampleReceipt"][];
 
   return (
     <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
@@ -137,22 +137,20 @@ export default function SampleReceiptFile({
                   ? "bg-primary text-primary-foreground"
                   : sampleReceipt?.status === "rejected"
                     ? "text-destructive"
-                    : sampleReceipt?.status === "sent_to_client"
+                    : sampleReceipt?.status === "sent_to_client" ||
+                        sampleReceipt?.status === "approved"
                       ? "text-orange-500"
-                      : sampleReceipt?.status === "approved"
-                        ? "text-green-600"
-                        : "text-muted-foreground"
+                      : "text-muted-foreground"
               }`}
             >
               {sampleReceipt?.status === "client_acknowledged"
                 ? "Acknowledged"
                 : sampleReceipt?.status === "rejected"
                   ? "Rejected"
-                  : sampleReceipt?.status === "sent_to_client"
-                    ? "Sent to Client"
-                    : sampleReceipt?.status === "approved"
-                      ? "Approved"
-                      : "Pending"}
+                  : sampleReceipt?.status === "sent_to_client" ||
+                      sampleReceipt?.status === "approved"
+                    ? "Awaiting Client Acknowledgement"
+                    : "Pending"}
             </Badge>
           </div>
           {sampleReceipt && (

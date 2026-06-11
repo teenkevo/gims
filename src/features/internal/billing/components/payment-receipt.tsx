@@ -2,7 +2,7 @@ import React from "react";
 import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { currencyCodeToName } from "@/lib/utils";
 import { numberToWords } from "../../projects/constants";
 import { Payments } from "./make-payment-dialog";
@@ -41,8 +41,8 @@ Font.register({
 });
 
 interface PaymentReceiptProps {
-  project: PROJECT_BY_ID_QUERYResult[number];
-  quotation: NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  quotation: NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>;
   payment: Payments[number];
   receiptNumber: string;
   receiptDate: string;

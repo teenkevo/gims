@@ -20,7 +20,7 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteMultipleContacts } from "@/lib/actions";
-import { CLIENT_BY_ID_QUERYResult } from "../../../../../../sanity.types";
+import { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 import { AlertTriangle, File } from "lucide-react";
 import Link from "next/link";
 
@@ -29,7 +29,7 @@ export function DeleteMultipleContacts({
   open,
   onClose,
 }: {
-  contacts: CLIENT_BY_ID_QUERYResult[number]["contacts"];
+  contacts: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"];
   open: boolean;
   onClose: () => void;
 }) {

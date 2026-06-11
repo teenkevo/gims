@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import type {
-  ALL_PROJECTS_QUERYResult,
+  ALL_PROJECTS_QUERY_RESULT,
   Quotation,
 } from "../../../../../../sanity.types";
 import Link from "next/link";
@@ -18,9 +18,9 @@ import { ProjectTableRowActions } from "./project-table-row-actions";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  projects: ALL_PROJECTS_QUERYResult,
+  projects: ALL_PROJECTS_QUERY_RESULT,
   role: string
-): ColumnDef<ALL_PROJECTS_QUERYResult[number]>[] => [
+): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (

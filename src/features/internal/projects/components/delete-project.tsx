@@ -22,12 +22,12 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteProject } from "@/lib/actions";
-import { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 
 export function DeleteProject({
   project,
 }: {
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
 }) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState(""); // Track input value

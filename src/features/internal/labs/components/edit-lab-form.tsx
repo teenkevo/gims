@@ -13,7 +13,8 @@ import type {
   ALL_SERVICES_QUERY_RESULT,
   LAB_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
-import { LabFormFields, type LabFormValues } from "./lab-form-fields";
+import { LabFormFields } from "./lab-form-fields";
+import type { LabFormValues } from "./lab-form-types";
 
 export function EditLabForm({
   lab,
@@ -96,9 +97,8 @@ export function EditLabForm({
   return (
     <FormProvider {...form}>
       <ScrollToFieldError />
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-24">
         <LabFormFields
-          form={form}
           personnel={personnel}
           equipment={equipment}
           services={services}

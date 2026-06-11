@@ -33,8 +33,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Plus } from "lucide-react";
 import {
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
 } from "../../../../../../../../sanity.types";
 
 interface EditSampleClassType {
@@ -50,7 +50,7 @@ export function EditSampleClassDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -100,7 +100,7 @@ function SampleClassForm({
   sampleClass,
 }: {
   onClose: () => void;
-  sampleClass: ALL_SAMPLE_CLASSES_QUERYResult[number];
+  sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
 }) {
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(

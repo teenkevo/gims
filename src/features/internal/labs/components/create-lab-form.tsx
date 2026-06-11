@@ -1,14 +1,14 @@
 "use client";
 
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { startTransition, useActionState, useEffect } from "react";
+import { startTransition, useActionState } from "react";
 import { ArrowLeftCircle } from "lucide-react";
 
-import { FormSubmitButton } from "@/components/form-submit-button";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
 import { createLab } from "@/lib/actions";
 import type {
@@ -16,12 +16,22 @@ import type {
   ALL_PERSONNEL_QUERY_RESULT,
   ALL_SERVICES_QUERY_RESULT,
 } from "../../../../../sanity.types";
-import { LabFormFields, type LabFormValues } from "./lab-form-fields";
+import {
+  LAB_CREATE_STEPS,
+  getLabFormDefaultValues,
+  type LabFormValues,
+} from "./lab-form-types";
+import { LabCreateStepIndicator } from "./lab-create-step-indicator";
+import { LabFormNavigation } from "./lab-form-navigation";
+import { LabIdentityStep } from "./create-lab-steps/lab-identity-step";
+import { LabStaffingStep } from "./create-lab-steps/lab-staffing-step";
+import { LabResourcesStep } from "./create-lab-steps/lab-resources-step";
+import { LabAccreditationStep } from "./create-lab-steps/lab-accreditation-step";
 
-const formVariants = {
-  hidden: { opacity: 0, x: -50 },
+const stepVariants = {
+  hidden: { opacity: 0, x: 40 },
   visible: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: 50, transition: { ease: "easeOut" } },
+  exit: { opacity: 0, x: -40, transition: { ease: "easeOut" } },
 };
 
 export function CreateLabForm({
@@ -34,32 +44,50 @@ export function CreateLabForm({
   services: ALL_SERVICES_QUERY_RESULT;
 }) {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [hasRegistered, setHasRegistered] = useState(false);
   const [state, dispatch, isPending] = useActionState(createLab, null);
 
   const form = useForm<LabFormValues>({
     mode: "onChange",
     reValidateMode: "onChange",
-    defaultValues: {
-      internalId: `LAB-${Math.floor(10000 + Math.random() * 90000).toString()}`,
-      name: "",
-      description: "",
-      labSection: "",
-      status: "available",
-      location: "",
-      capacity: "",
-      notes: "",
-      personnelIds: [],
-      labHeadId: "",
-      equipmentIds: [],
-      testCapabilityIds: [],
-      accreditationStandard: "ISO 17025",
-      accreditationCertificateNumber: "",
-      accreditationAccreditingBody: "",
-      accreditationExpiryDate: "",
-    },
+    defaultValues: getLabFormDefaultValues(),
   });
 
+  const totalSteps = LAB_CREATE_STEPS.length;
+  const activeStep = LAB_CREATE_STEPS[currentStep - 1];
+
+  const handleNext = async () => {
+    const valid = await form.trigger([...activeStep.fields]);
+    if (valid) {
+      setCurrentStep((step) => Math.min(step + 1, totalSteps));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep === 1) {
+      router.push("/labs");
+      return;
+    }
+    setCurrentStep((step) => step - 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (currentStep < totalSteps) {
+      await handleNext();
+      return;
+    }
+
+    await form.handleSubmit(onSubmit)();
+  };
+
   const onSubmit = (data: LabFormValues) => {
+    if (currentStep !== totalSteps) return;
+
     const formData = new FormData();
     formData.append("internalId", data.internalId);
     formData.append("name", data.name);
@@ -72,7 +100,10 @@ export function CreateLabForm({
     formData.append("labHeadId", data.labHeadId);
     formData.append("personnelIds", JSON.stringify(data.personnelIds));
     formData.append("equipmentIds", JSON.stringify(data.equipmentIds));
-    formData.append("testCapabilityIds", JSON.stringify(data.testCapabilityIds));
+    formData.append(
+      "testCapabilityIds",
+      JSON.stringify(data.testCapabilityIds)
+    );
     formData.append("accreditationStandard", data.accreditationStandard);
     formData.append(
       "accreditationCertificateNumber",
@@ -89,52 +120,90 @@ export function CreateLabForm({
 
   useEffect(() => {
     if (state?.status === "ok") {
+      setHasRegistered(true);
       toast.success("Laboratory registered successfully");
       router.push("/labs");
     } else if (state?.status === "error") {
       toast.error(
-        typeof state.error === "string"
-          ? state.error
-          : "Something went wrong"
+        typeof state.error === "string" ? state.error : "Something went wrong"
       );
     }
   }, [state, router]);
 
+  if (hasRegistered) {
+    return null;
+  }
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <LabIdentityStep isSubmitting={isPending} showHeader={false} />;
+      case 2:
+        return (
+          <LabStaffingStep
+            personnel={personnel}
+            isSubmitting={isPending}
+            showHeader={false}
+          />
+        );
+      case 3:
+        return (
+          <LabResourcesStep
+            equipment={equipment}
+            services={services}
+            isSubmitting={isPending}
+            showHeader={false}
+          />
+        );
+      case 4:
+        return (
+          <LabAccreditationStep isSubmitting={isPending} showHeader={false} />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <>
+    <div className="w-full pb-24">
       <Link
-        className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
+        className="mb-8 text-sm inline-flex tracking-tight underline underline-offset-4"
         href="/labs"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
-      <h1 className="text-xl md:text-3xl font-extrabold mb-6">
-        Register Laboratory
-      </h1>
+
+      <LabCreateStepIndicator currentStep={currentStep} />
+
       <FormProvider {...form}>
         <ScrollToFieldError />
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <motion.div
-            variants={formVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <LabFormFields
-              form={form}
-              personnel={personnel}
-              equipment={equipment}
-              services={services}
-              isSubmitting={isPending}
-            />
-          </motion.div>
-          <FormSubmitButton
-            text="Register Laboratory"
+        <form onSubmit={handleFormSubmit}>
+          <div className="mt-6 border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                variants={stepVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                transition={{ duration: 0.2 }}
+              >
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <LabFormNavigation
+            currentStep={currentStep}
+            totalSteps={totalSteps}
             isSubmitting={isPending}
+            onBack={handleBack}
+            onNext={handleNext}
+            onSubmit={() => void form.handleSubmit(onSubmit)()}
           />
         </form>
       </FormProvider>
-    </>
+    </div>
   );
 }

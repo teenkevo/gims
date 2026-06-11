@@ -21,7 +21,7 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { activateDeactivateService } from "@/lib/actions";
-import { ALL_SERVICES_QUERYResult } from "../../../../../../../sanity.types";
+import { ALL_SERVICES_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 
 export function ActivateDeactivateService({
@@ -31,7 +31,7 @@ export function ActivateDeactivateService({
 }: {
   open: boolean;
   onClose: () => void;
-  service: ALL_SERVICES_QUERYResult[number];
+  service: ALL_SERVICES_QUERY_RESULT[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 

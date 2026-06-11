@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 
 /**
  * Custom hook to encapsulate all quotation-related logic and checks.
@@ -8,7 +8,7 @@ import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
  * @returns Quotation state and helper booleans
  */
 export function useQuotation(
-  project: PROJECT_BY_ID_QUERYResult[number] | undefined,
+  project: PROJECT_BY_ID_QUERY_RESULT[number] | undefined,
   role: string
 ) {
   return useMemo(() => {

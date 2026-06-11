@@ -25,13 +25,13 @@ import {
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { Toolbar } from "./toolbar";
-import { ALL_SERVICES_QUERYResult } from "../../../../../../sanity.types";
+import { ALL_SERVICES_QUERY_RESULT } from "../../../../../../sanity.types";
 import { ExtendedService } from "./columns";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   setSelectedServices: React.Dispatch<
-    React.SetStateAction<ALL_SERVICES_QUERYResult>
+    React.SetStateAction<ALL_SERVICES_QUERY_RESULT>
   >;
   onValidationChange: (isValid: boolean) => void;
 }

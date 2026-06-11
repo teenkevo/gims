@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowLeftCircle, Link } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ALL_CLIENTS_QUERYResult,
-  ALL_PERSONNEL_QUERYResult,
-  ALL_RFIS_QUERYResult,
+  ALL_CLIENTS_QUERY_RESULT,
+  ALL_PERSONNEL_QUERY_RESULT,
+  ALL_RFIS_QUERY_RESULT,
 } from "../../../../../sanity.types";
 
 export default function RFIModule({
@@ -18,12 +18,12 @@ export default function RFIModule({
   labPersonnel,
   clients,
 }: {
-  rfis: ALL_RFIS_QUERYResult;
-  labPersonnel: ALL_PERSONNEL_QUERYResult;
-  clients: ALL_CLIENTS_QUERYResult;
+  rfis: ALL_RFIS_QUERY_RESULT;
+  labPersonnel: ALL_PERSONNEL_QUERY_RESULT;
+  clients: ALL_CLIENTS_QUERY_RESULT;
 }) {
   const [selectedRFI, setSelectedRFI] = useState<
-    ALL_RFIS_QUERYResult[number] | null
+    ALL_RFIS_QUERY_RESULT[number] | null
   >(null);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -40,7 +40,7 @@ export default function RFIModule({
     setSelectedRFI(null); // Reset selected RFI when switching tabs
   };
 
-  const handleUpdateRFI = (updatedRFI: ALL_RFIS_QUERYResult[number]) => {
+  const handleUpdateRFI = (updatedRFI: ALL_RFIS_QUERY_RESULT[number]) => {
     setSelectedRFI(updatedRFI);
   };
 
@@ -58,7 +58,7 @@ export default function RFIModule({
   }, [rfis, selectedRFI?._id]);
 
   // Helper function to render RFI list and detail view
-  const renderRFIContent = (filteredRFIs: ALL_RFIS_QUERYResult) => (
+  const renderRFIContent = (filteredRFIs: ALL_RFIS_QUERY_RESULT) => (
     <div className="flex h-[calc(100vh-15rem)] overflow-hidden">
       {/* Mobile: Show list OR detail, Desktop: Show both */}
       <div
@@ -81,7 +81,7 @@ export default function RFIModule({
       >
         {selectedRFI ? (
           <RFIDetail
-            rfi={selectedRFI as ALL_RFIS_QUERYResult[number]}
+            rfi={selectedRFI as ALL_RFIS_QUERY_RESULT[number]}
             onUpdateRFI={handleUpdateRFI}
             onDeleteRFI={handleDeleteRFI}
             onBackToList={() => setSelectedRFI(null)}

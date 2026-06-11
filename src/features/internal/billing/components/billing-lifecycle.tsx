@@ -22,8 +22,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import { QuotationDrawer } from "./quotation-drawer";
 import { SendQuotationDialog } from "./send-quotation-dialog";
@@ -47,12 +47,12 @@ type Stage = {
 interface BillingLifecycleProps {
   currentStage?: number;
   rejectionStage?: number;
-  allServices: ALL_SERVICES_QUERYResult;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  selectedLabTests: ALL_SERVICES_QUERYResult;
-  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
-  selectedFieldTests: ALL_SERVICES_QUERYResult;
-  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  selectedLabTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
+  selectedFieldTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
   mobilizationActivities: {
     activity: string;
     price: number;
@@ -78,7 +78,7 @@ interface BillingLifecycleProps {
 }
 
 export function calculatePaymentStatus(
-  quotation: NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>
+  quotation: NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>
 ) {
   if (!quotation) {
     return {
@@ -476,12 +476,12 @@ function StageCard({
   quotation: any;
   quotationNeedsRevision: boolean;
   role: string;
-  allServices: ALL_SERVICES_QUERYResult;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  selectedLabTests: ALL_SERVICES_QUERYResult;
-  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
-  selectedFieldTests: ALL_SERVICES_QUERYResult;
-  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  selectedLabTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
+  selectedFieldTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
   mobilizationActivities: {
     activity: string;
     price: number;
@@ -721,10 +721,10 @@ function StageCard({
                 total={quotation?.grandTotal as number}
                 currency={quotation?.currency as string}
                 existingPayments={quotation?.payments || []}
-                project={project as PROJECT_BY_ID_QUERYResult[number]}
+                project={project as PROJECT_BY_ID_QUERY_RESULT[number]}
                 quotation={
                   quotation as NonNullable<
-                    PROJECT_BY_ID_QUERYResult[number]["quotation"]
+                    PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
                   >
                 }
               />
@@ -764,7 +764,7 @@ export function BillingLifecycle({
   } = useQuotation(project, role);
 
   const paymentStatus = calculatePaymentStatus(
-    quotation as NonNullable<PROJECT_BY_ID_QUERYResult[number]["quotation"]>
+    quotation as NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>
   );
   const paymentStageInfo = getPaymentStageInfo(
     paymentStatus,

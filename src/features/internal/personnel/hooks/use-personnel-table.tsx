@@ -13,17 +13,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { ALL_PERSONNEL_QUERYResult } from "../../../../../sanity.types";
+import { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../sanity.types";
 import { DataTableRowActions } from "../components/row-actions/data-table-row-actions";
 
-type PersonnelWithRole = ALL_PERSONNEL_QUERYResult[number] & {
+type PersonnelWithRole = ALL_PERSONNEL_QUERY_RESULT[number] & {
   currentRole: string;
   currentDepartment: string;
   currentStatus: string;
 };
 
 export function usePersonnelTable(
-  data: Array<{ person: ALL_PERSONNEL_QUERYResult[number]; role: string }>,
+  data: Array<{ person: ALL_PERSONNEL_QUERY_RESULT[number]; role: string }>,
   departmentRoles: Record<
     string,
     { roles: (string | undefined)[]; departmentId: string }

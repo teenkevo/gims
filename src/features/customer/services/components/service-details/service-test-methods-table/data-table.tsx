@@ -41,9 +41,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  ALL_SERVICES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import Link from "next/link";
@@ -53,9 +53,9 @@ import { DeleteMultipleTestMethodsFromService } from "./delete-multiple-test-met
 import { toast } from "sonner";
 // Define columns
 const getColumns = (
-  service: ALL_SERVICES_QUERYResult[number],
-  standards?: ALL_STANDARDS_QUERYResult
-): ColumnDef<ALL_TEST_METHODS_QUERYResult[number]>[] => [
+  service: ALL_SERVICES_QUERY_RESULT[number],
+  standards?: ALL_STANDARDS_QUERY_RESULT
+): ColumnDef<ALL_TEST_METHODS_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -187,7 +187,7 @@ const getColumns = (
     cell: ({ row }) => (
       <DataTableRowActions
         standards={standards || []}
-        testMethod={row.original as ALL_TEST_METHODS_QUERYResult[number]}
+        testMethod={row.original as ALL_TEST_METHODS_QUERY_RESULT[number]}
         row={row}
         service={service}
       />
@@ -200,9 +200,9 @@ export default function DataTable({
   standards,
   service,
 }: {
-  testMethods: ALL_TEST_METHODS_QUERYResult;
-  standards: ALL_STANDARDS_QUERYResult;
-  service: ALL_SERVICES_QUERYResult[number];
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
+  standards: ALL_STANDARDS_QUERY_RESULT;
+  service: ALL_SERVICES_QUERY_RESULT[number];
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -210,7 +210,7 @@ export default function DataTable({
   const [rowSelection, setRowSelection] = useState({});
 
   const [filteredData, setFilteredData] =
-    useState<ALL_TEST_METHODS_QUERYResult>(testMethods);
+    useState<ALL_TEST_METHODS_QUERY_RESULT>(testMethods);
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
@@ -229,7 +229,7 @@ export default function DataTable({
   const columns = useMemo(
     () =>
       getColumns(service, standards) as ColumnDef<
-        ALL_TEST_METHODS_QUERYResult[number]
+        ALL_TEST_METHODS_QUERY_RESULT[number]
       >[],
     [standards, testMethods, service]
   );

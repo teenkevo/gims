@@ -21,7 +21,7 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteClient } from "@/lib/actions";
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { AlertTriangle, File } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export function DeleteClientDialog({
   open,
   onClose,
 }: {
-  client: ALL_CLIENTS_QUERYResult[number];
+  client: ALL_CLIENTS_QUERY_RESULT[number];
   open: boolean;
   onClose: () => void;
 }) {

@@ -22,8 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { GenerateBillingDocument } from "./generate-billing-document";
 import ValidityChecker from "./validity-checker";
 import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import { ActivityValue } from "./mobilization-and-reporting/Activity";
 import { ActivityManager } from "./mobilization-and-reporting/activity-manager";
@@ -40,8 +40,8 @@ import AdvanceToggle from "./advance";
 // Helper ▸ merge the quotation info into each service BEFORE the UI renders.
 // -----------------------------------------------------------------------------
 function mergeQuotation(
-  services: ALL_SERVICES_QUERYResult,
-  quotation?: PROJECT_BY_ID_QUERYResult[number]["quotation"]
+  services: ALL_SERVICES_QUERY_RESULT,
+  quotation?: PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
 ) {
   return services.map((svc) => {
     const item = quotation?.items?.find((i) => i.service?._id === svc._id);
@@ -141,9 +141,9 @@ const SwitchField = ({
 
   // The table data is state because the user can edit it later
   const [labTestsTableData, setLabTestsTableData] =
-    useState<ALL_SERVICES_QUERYResult>(labData);
+    useState<ALL_SERVICES_QUERY_RESULT>(labData);
   const [fieldTestsTableData, setFieldTestsTableData] =
-    useState<ALL_SERVICES_QUERYResult>(fieldData);
+    useState<ALL_SERVICES_QUERY_RESULT>(fieldData);
 
   // Column definitions (no hooks inside thanks to separate cell components)
   const fieldInvestigationsColumns = useMemo(
@@ -330,12 +330,12 @@ const SwitchField = ({
 //   Parent component (unchanged except for currency default and props pass‑through)
 // -----------------------------------------------------------------------------
 interface QuotationOptionsProps {
-  allServices: ALL_SERVICES_QUERYResult;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  selectedLabTests: ALL_SERVICES_QUERYResult;
-  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
-  selectedFieldTests: ALL_SERVICES_QUERYResult;
-  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  selectedLabTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
+  selectedFieldTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
   mobilizationActivities: {
     activity: string;
     unit: string;
@@ -446,14 +446,14 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     advance: Number(advanceEnabled ? advancePercentage : "0"),
     labTests: (isLabTestsValid
       ? selectedLabTests
-      : []) as (ALL_SERVICES_QUERYResult[number] & {
+      : []) as (ALL_SERVICES_QUERY_RESULT[number] & {
       price: number;
       quantity: number;
       unit: string;
     })[],
     fieldTests: (isFieldsValid
       ? selectedFieldTests
-      : []) as (ALL_SERVICES_QUERYResult[number] & {
+      : []) as (ALL_SERVICES_QUERY_RESULT[number] & {
       price: number;
       quantity: number;
       unit: string;

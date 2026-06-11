@@ -46,7 +46,7 @@ import { ButtonLoading } from "@/components/button-loading";
 import { createContactPerson } from "@/lib/actions";
 import { PlusCircleIcon } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { CLIENT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 
 export function CreateContactDialog({ clientId }: { clientId: string }) {
@@ -110,7 +110,7 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
 
   const onSubmit = (
     data: Omit<
-      CLIENT_BY_ID_QUERYResult[number]["contacts"][number],
+      CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number],
       "_id" | "projects"
     >
   ) => {

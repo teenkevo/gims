@@ -8,20 +8,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type {
-  ALL_SERVICES_QUERYResult,
-  ALL_STANDARDS_QUERYResult,
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../sanity.types";
 import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  standards?: ALL_STANDARDS_QUERYResult,
-  sampleClasses?: ALL_SAMPLE_CLASSES_QUERYResult,
-  testMethods?: ALL_TEST_METHODS_QUERYResult
-): ColumnDef<ALL_SERVICES_QUERYResult[number]>[] => [
+  standards?: ALL_STANDARDS_QUERY_RESULT,
+  sampleClasses?: ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  testMethods?: ALL_TEST_METHODS_QUERY_RESULT
+): ColumnDef<ALL_SERVICES_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -153,7 +153,7 @@ export const getColumns = (
       <DataTableRowActions
         sampleClasses={sampleClasses || []}
         testMethods={testMethods || []}
-        service={row.original as ALL_SERVICES_QUERYResult[number]}
+        service={row.original as ALL_SERVICES_QUERY_RESULT[number]}
       />
     ),
   },

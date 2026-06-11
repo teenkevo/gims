@@ -16,8 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React, { Dispatch, SetStateAction, useMemo } from "react";
 import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import Loading from "@/app/loading";
 import {
@@ -36,12 +36,12 @@ interface GenerateBillingDocumentProps {
   paymentNotes: string;
   vatPercentage: number;
   advance: number;
-  labTests: (ALL_SERVICES_QUERYResult[number] & {
+  labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
     price: number;
     quantity: number;
     unit: string;
   })[];
-  fieldTests: (ALL_SERVICES_QUERYResult[number] & {
+  fieldTests: (ALL_SERVICES_QUERY_RESULT[number] & {
     price: number;
     quantity: number;
     unit: string;
@@ -58,7 +58,7 @@ interface GenerateBillingDocumentProps {
     price: number;
     quantity: number;
   }[];
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
   subtotal: number;
   grandTotal: number;
 }

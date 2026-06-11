@@ -51,7 +51,7 @@ import { CommandInput } from "@/components/ui/command";
 import { CommandEmpty } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "@/components/ui/command";
-import type { ALL_CONTACTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CONTACTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { useCreateContact } from "@/features/customer/clients/api/use-create-contact";
 import { ButtonLoading } from "@/components/button-loading";
 import { Badge } from "@/components/ui/badge";
@@ -165,8 +165,8 @@ export function CreateContactDialog({
 }: {
   projectId: string;
   clientId: string;
-  existingContacts: ALL_CONTACTS_QUERYResult;
-  projectContacts: ALL_CONTACTS_QUERYResult;
+  existingContacts: ALL_CONTACTS_QUERY_RESULT;
+  projectContacts: ALL_CONTACTS_QUERY_RESULT;
 }) {
   const [open, setOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);

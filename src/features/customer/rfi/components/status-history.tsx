@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { ALL_RFIS_QUERYResult } from "../../../../../sanity.types.js";
+import type { ALL_RFIS_QUERY_RESULT } from "../../../../../sanity.types.js";
 
 interface StatusHistoryProps {
   statusHistory: any[]; // Using any[] since the schema types haven't been regenerated yet

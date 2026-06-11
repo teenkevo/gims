@@ -33,8 +33,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ChevronsUpDown, Pencil, Plus } from "lucide-react";
 import {
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../../../sanity.types";
 import {
   Popover,
@@ -67,8 +67,8 @@ export function EditTestMethodDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  standards: ALL_STANDARDS_QUERYResult;
-  testMethod: ALL_TEST_METHODS_QUERYResult[number];
+  standards: ALL_STANDARDS_QUERY_RESULT;
+  testMethod: ALL_TEST_METHODS_QUERY_RESULT[number];
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -126,8 +126,8 @@ function TestMethodForm({
   testMethod,
   onClose,
 }: {
-  standards: ALL_STANDARDS_QUERYResult;
-  testMethod: ALL_TEST_METHODS_QUERYResult[number];
+  standards: ALL_STANDARDS_QUERY_RESULT;
+  testMethod: ALL_TEST_METHODS_QUERY_RESULT[number];
   onClose: () => void;
 }) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);

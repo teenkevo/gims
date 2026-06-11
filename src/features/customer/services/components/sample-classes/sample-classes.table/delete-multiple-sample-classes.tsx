@@ -20,7 +20,7 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteMultipleSampleClasses } from "@/lib/actions";
-import { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../../sanity.types";
+import { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { AlertTriangle, File } from "lucide-react";
 import Link from "next/link";
 import { v4 as uuidv4 } from "uuid";
@@ -32,7 +32,7 @@ export function DeleteMultipleSampleClasses({
   referencingDocs,
 }: {
   ids: string[];
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
   open: boolean;
   onClose: () => void;
   referencingDocs: any[];

@@ -28,11 +28,11 @@ import {
 import { DataTableToolbar } from "@/features/customer/services/components/services-table/data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type {
-  ALL_SERVICES_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../sanity.types";
-import type { ALL_SAMPLE_CLASSES_QUERYResult } from "../../../../../../sanity.types";
-import type { ALL_STANDARDS_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../sanity.types";
+import type { ALL_STANDARDS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import { deleteMultipleServices } from "@/lib/actions";
 import { DeleteMultipleServices } from "./delete-multiple-services";
@@ -42,9 +42,9 @@ import { Button } from "@/components/ui/button";
 interface DataTableProps<TData, TValue> {
   columns?: ColumnDef<TData, TValue>[]; // Make columns optional
   data: TData[];
-  standards: ALL_STANDARDS_QUERYResult;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
-  testMethods: ALL_TEST_METHODS_QUERYResult;
+  standards: ALL_STANDARDS_QUERY_RESULT;
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
 }
 
 export function DataTable<TData, TValue>({

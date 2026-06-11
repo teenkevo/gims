@@ -1,7 +1,7 @@
 import React from "react";
 import { getCurrentStageIndex, possibleStages } from "../constants";
 import { HoverCard, HoverCardTrigger } from "@/components/ui/hover-card";
-import { ALL_PROJECTS_QUERYResult } from "../../../../../sanity.types";
+import { ALL_PROJECTS_QUERY_RESULT } from "../../../../../sanity.types";
 
 export function Stage({
   stage,
@@ -32,7 +32,7 @@ export function Stage({
 }
 
 export default function ProjectStage(
-  project: ALL_PROJECTS_QUERYResult[number]
+  project: ALL_PROJECTS_QUERY_RESULT[number]
 ) {
   const currentStage = getCurrentStageIndex(project);
 

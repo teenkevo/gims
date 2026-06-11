@@ -11,9 +11,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type {
-  ALL_SAMPLE_CLASSES_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
-  ALL_SERVICES_QUERYResult,
+  ALL_SAMPLE_CLASSES_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
+  ALL_SERVICES_QUERY_RESULT,
 } from "../../../../../../sanity.types";
 import { useState } from "react";
 import { EditServiceDialog } from "./row-actions/edit-service";
@@ -22,9 +22,9 @@ import { ActivateDeactivateService } from "./row-actions/activate-deactivate-ser
 import { Delete, Pencil } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERYResult;
-  testMethods: ALL_TEST_METHODS_QUERYResult;
-  service?: ALL_SERVICES_QUERYResult[number];
+  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
+  service?: ALL_SERVICES_QUERY_RESULT[number];
 }
 
 export function DataTableRowActions<TData>({ sampleClasses, testMethods, service }: DataTableRowActionsProps<TData>) {
@@ -79,12 +79,12 @@ export function DataTableRowActions<TData>({ sampleClasses, testMethods, service
       <EditServiceDialog
         sampleClasses={sampleClasses}
         testMethods={testMethods}
-        service={service as ALL_SERVICES_QUERYResult[number]}
+        service={service as ALL_SERVICES_QUERY_RESULT[number]}
         open={openDialog === "dialog1"}
         onClose={handleCloseDialog}
       />
       <ActivateDeactivateService
-        service={service as ALL_SERVICES_QUERYResult[number]}
+        service={service as ALL_SERVICES_QUERY_RESULT[number]}
         open={openDialog === "dialog2"}
         onClose={handleCloseDialog}
       />

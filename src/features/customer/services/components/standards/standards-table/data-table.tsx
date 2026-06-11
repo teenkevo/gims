@@ -29,14 +29,14 @@ import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import {
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { DeleteMultipleStandards } from "./delete-multiple-standards";
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
-  testMethods: ALL_TEST_METHODS_QUERYResult;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
 }
 
 export function DataTable<TData, TValue>({

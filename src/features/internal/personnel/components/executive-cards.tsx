@@ -1,11 +1,11 @@
 "use client";
 
-import type { ALL_PERSONNEL_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../sanity.types";
 import { DataTableRowActions } from "./row-actions/data-table-row-actions";
 
 interface ExecutiveCardsProps {
   executives: Array<{
-    person: ALL_PERSONNEL_QUERYResult[number];
+    person: ALL_PERSONNEL_QUERY_RESULT[number];
     role: string;
   }>;
   departmentRoles: Record<

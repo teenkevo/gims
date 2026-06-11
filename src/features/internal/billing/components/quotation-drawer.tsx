@@ -12,10 +12,10 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { QuotationOptions } from "./quotation-options";
-import type { PROJECT_BY_ID_QUERYResult } from "../../../../../sanity.types";
+import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import type { SetStateAction } from "react";
 import type { Dispatch } from "react";
-import type { ALL_SERVICES_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_SERVICES_QUERY_RESULT } from "../../../../../sanity.types";
 import {
   Sheet,
   SheetContent,
@@ -50,12 +50,12 @@ export function QuotationDrawer({
   reportingActivities,
   setReportingActivities,
 }: {
-  allServices: ALL_SERVICES_QUERYResult;
-  project: PROJECT_BY_ID_QUERYResult[number];
-  selectedLabTests: ALL_SERVICES_QUERYResult;
-  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
-  selectedFieldTests: ALL_SERVICES_QUERYResult;
-  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERYResult>>;
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  selectedLabTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedLabTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
+  selectedFieldTests: ALL_SERVICES_QUERY_RESULT;
+  setSelectedFieldTests: Dispatch<SetStateAction<ALL_SERVICES_QUERY_RESULT>>;
   mobilizationActivities: {
     activity: string;
     unit: string;

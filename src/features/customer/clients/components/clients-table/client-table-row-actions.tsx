@@ -12,13 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { DeleteClientDialog } from "./row-actions/delete-client-dialog";
 
 export function ClientTableRowActions({
   client,
 }: {
-  client: ALL_CLIENTS_QUERYResult[number];
+  client: ALL_CLIENTS_QUERY_RESULT[number];
 }) {
   const [openDialog, setOpenDialog] = useState<"delete" | null>(null);
 

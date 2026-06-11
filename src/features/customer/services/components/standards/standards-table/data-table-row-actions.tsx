@@ -10,14 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ALL_STANDARDS_QUERYResult } from "../../../../../../../sanity.types";
+import type { ALL_STANDARDS_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { useState } from "react";
 import { EditStandardDialog } from "./row-actions/edit-standard";
 import { DeleteStandard } from "./row-actions/delete-standard";
 import { Delete, Pencil, Trash } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
-  standard: ALL_STANDARDS_QUERYResult[number];
+  standard: ALL_STANDARDS_QUERY_RESULT[number];
 }
 
 export function DataTableRowActions<TData>({

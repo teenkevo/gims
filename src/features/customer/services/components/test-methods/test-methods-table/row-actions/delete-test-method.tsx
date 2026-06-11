@@ -20,7 +20,7 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteTestMethod } from "@/lib/actions";
-import { ALL_TEST_METHODS_QUERYResult } from "../../../../../../../../sanity.types";
+import { ALL_TEST_METHODS_QUERY_RESULT } from "../../../../../../../../sanity.types";
 import { AlertTriangle, File } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,7 +32,7 @@ export function DeleteTestMethod({
   referencingDocs,
   redirect,
 }: {
-  testMethod: ALL_TEST_METHODS_QUERYResult[number];
+  testMethod: ALL_TEST_METHODS_QUERY_RESULT[number];
   open: boolean;
   onClose: () => void;
   referencingDocs: any[];

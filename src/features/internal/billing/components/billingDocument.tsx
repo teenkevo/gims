@@ -10,8 +10,8 @@ import {
 } from "@/features/customer/services/data/schema";
 import { numberToWords } from "../../projects/constants";
 import {
-  ALL_SERVICES_QUERYResult,
-  PROJECT_BY_ID_QUERYResult,
+  ALL_SERVICES_QUERY_RESULT,
+  PROJECT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import { currencyCodeToName } from "@/lib/utils";
 import { computeBillingTotals } from "../constants";
@@ -48,11 +48,11 @@ Font.register({
 });
 
 interface BillingDocumentProps {
-  labTests: ALL_SERVICES_QUERYResult;
-  fieldTests: ALL_SERVICES_QUERYResult;
+  labTests: ALL_SERVICES_QUERY_RESULT;
+  fieldTests: ALL_SERVICES_QUERY_RESULT;
   reportingActivities: ReportingService[];
   mobilizationActivities: MobilizationService[];
-  project: PROJECT_BY_ID_QUERYResult[number];
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
   currency: string;
   paymentNotes: string;
   vatPercentage: number;

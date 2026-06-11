@@ -2,7 +2,7 @@ import {
   MobilizationService,
   ReportingService,
 } from "@/features/customer/services/data/schema";
-import { ALL_SERVICES_QUERYResult } from "../../../../sanity.types";
+import { ALL_SERVICES_QUERY_RESULT } from "../../../../sanity.types";
 
 export type BillingItem = {
   price: number;
@@ -10,8 +10,8 @@ export type BillingItem = {
 };
 
 export type BillingItemsByCategory = {
-  labTests: ALL_SERVICES_QUERYResult;
-  fieldTests: ALL_SERVICES_QUERYResult;
+  labTests: ALL_SERVICES_QUERY_RESULT;
+  fieldTests: ALL_SERVICES_QUERY_RESULT;
   reportingActivities: ReportingService[];
   mobilizationActivities: MobilizationService[];
 };

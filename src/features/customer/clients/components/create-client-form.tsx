@@ -18,7 +18,7 @@ import { ClientProfileForm } from "./client-profile-form";
 // Components
 import { FormSubmitButton } from "@/components/form-submit-button";
 
-import type { ALL_CLIENTS_QUERYResult } from "../../../../../sanity.types";
+import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
 import { createClient } from "@/lib/actions";
 import { useActionState } from "react";
@@ -33,7 +33,7 @@ const formVariants = {
 export function CreateClientForm({
   clients,
 }: {
-  clients: ALL_CLIENTS_QUERYResult;
+  clients: ALL_CLIENTS_QUERY_RESULT;
 }) {
   const router = useRouter();
 

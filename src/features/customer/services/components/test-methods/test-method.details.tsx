@@ -12,9 +12,9 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
-  TEST_METHOD_BY_ID_QUERYResult,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
+  TEST_METHOD_BY_ID_QUERY_RESULT,
 } from "../../../../../../sanity.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,13 +42,13 @@ export default function TestMethodDetails({
   testMethod,
   standards,
 }: {
-  testMethod: TEST_METHOD_BY_ID_QUERYResult[number];
-  standards: ALL_STANDARDS_QUERYResult;
+  testMethod: TEST_METHOD_BY_ID_QUERY_RESULT[number];
+  standards: ALL_STANDARDS_QUERY_RESULT;
 }) {
   const [activeTab, setActiveTab] = useState("description");
   const [openDeleteFileDialog, setOpenDeleteFileDialog] = useState(false);
   const [referencingDocs, setReferencingDocs] = useState<
-    ALL_TEST_METHODS_QUERYResult[number][]
+    ALL_TEST_METHODS_QUERY_RESULT[number][]
   >([]);
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);

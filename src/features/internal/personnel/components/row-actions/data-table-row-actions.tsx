@@ -14,14 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ALL_PERSONNEL_QUERYResult } from "../../../../../../sanity.types";
+import type { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../../sanity.types";
 import { useState } from "react";
 import { CreatePersonnelDialog } from "../create-personnel-dialog";
 import { DeletePersonnel } from "./delete-personnel";
 import { Delete, Pencil } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
-  personnel?: ALL_PERSONNEL_QUERYResult[number];
+  personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
   departmentRoles: Record<
     string,
     { roles: (string | undefined)[]; departmentId: string }

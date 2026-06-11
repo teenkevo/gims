@@ -41,8 +41,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  ALL_STANDARDS_QUERYResult,
-  ALL_TEST_METHODS_QUERYResult,
+  ALL_STANDARDS_QUERY_RESULT,
+  ALL_TEST_METHODS_QUERY_RESULT,
 } from "../../../../../../../sanity.types";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import Link from "next/link";
@@ -53,8 +53,8 @@ import { getDocumentsReferencingMultipleTestMethods } from "@/lib/actions";
 
 // Define columns
 const getColumns = (
-  standards?: ALL_STANDARDS_QUERYResult
-): ColumnDef<ALL_TEST_METHODS_QUERYResult[number]>[] => [
+  standards?: ALL_STANDARDS_QUERY_RESULT
+): ColumnDef<ALL_TEST_METHODS_QUERY_RESULT[number]>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -186,7 +186,7 @@ const getColumns = (
     cell: ({ row }) => (
       <DataTableRowActions
         standards={standards || []}
-        testMethod={row.original as ALL_TEST_METHODS_QUERYResult[number]}
+        testMethod={row.original as ALL_TEST_METHODS_QUERY_RESULT[number]}
       />
     ),
   },
@@ -196,8 +196,8 @@ export default function DataTable({
   testMethods,
   standards,
 }: {
-  testMethods: ALL_TEST_METHODS_QUERYResult;
-  standards: ALL_STANDARDS_QUERYResult;
+  testMethods: ALL_TEST_METHODS_QUERY_RESULT;
+  standards: ALL_STANDARDS_QUERY_RESULT;
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -205,7 +205,7 @@ export default function DataTable({
   const [rowSelection, setRowSelection] = useState({});
 
   const [filteredData, setFilteredData] =
-    useState<ALL_TEST_METHODS_QUERYResult>(testMethods);
+    useState<ALL_TEST_METHODS_QUERY_RESULT>(testMethods);
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
@@ -221,7 +221,7 @@ export default function DataTable({
   const columns = useMemo(
     () =>
       getColumns(standards) as ColumnDef<
-        ALL_TEST_METHODS_QUERYResult[number]
+        ALL_TEST_METHODS_QUERY_RESULT[number]
       >[],
     [standards, testMethods]
   );

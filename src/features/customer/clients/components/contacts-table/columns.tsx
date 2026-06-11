@@ -6,14 +6,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type {
-  ALL_CLIENTS_QUERYResult,
-  CLIENT_BY_ID_QUERYResult,
+  ALL_CLIENTS_QUERY_RESULT,
+  CLIENT_BY_ID_QUERY_RESULT,
 } from "../../../../../../sanity.types";
 import Link from "next/link";
 
 // Convert columns to a function that accepts parameters
 export const getColumns = (): ColumnDef<
-  CLIENT_BY_ID_QUERYResult[number]["contacts"][number]
+  CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
 >[] => [
   {
     id: "select",
