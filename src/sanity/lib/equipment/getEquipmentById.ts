@@ -15,7 +15,17 @@ export const getEquipmentById = async (equipmentId: string) => {
       notes,
       lastMaintenance,
       nextMaintenance,
-      userManuals,
+      userManuals[] {
+        _key,
+        name,
+        asset->{
+          _id,
+          url,
+          originalFilename,
+          mimeType,
+          size
+        }
+      },
       assignedPersonnel[]->{
         _id,
         internalId,

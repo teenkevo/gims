@@ -2,7 +2,7 @@
 
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { startTransition, useActionState, useEffect } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
@@ -12,7 +12,20 @@ import type {
   EQUIPMENT_BY_ID_QUERY_RESULT,
 } from "../../../../../sanity.types";
 import { EquipmentFormFields } from "./equipment-form-fields";
-import type { EquipmentFormValues } from "./equipment-form-types";
+import type {
+  EquipmentFormValues,
+  EquipmentUserManual,
+} from "./equipment-form-types";
+import { appendUserManualUploads } from "./equipment-user-manual-upload";
+
+function isEquipmentUserManual(value: unknown): value is EquipmentUserManual {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "_key" in value &&
+    typeof (value as EquipmentUserManual)._key === "string"
+  );
+}
 
 export function EditEquipmentForm({
   item,
@@ -21,6 +34,7 @@ export function EditEquipmentForm({
   item: EQUIPMENT_BY_ID_QUERY_RESULT[number];
   personnel: ALL_PERSONNEL_QUERY_RESULT;
 }) {
+  const [isUploading, setIsUploading] = useState(false);
   const [state, dispatch, isPending] = useActionState(updateEquipment, null);
 
   const form = useForm<EquipmentFormValues>({
@@ -38,10 +52,8 @@ export function EditEquipmentForm({
       lastMaintenance: item.lastMaintenance ?? "",
       nextMaintenance: item.nextMaintenance ?? "",
       personnelIds: (item.assignedPersonnel ?? []).map((p) => p._id),
-      userManualUrls:
-        item.userManuals && item.userManuals.length > 0
-          ? item.userManuals
-          : [""],
+      userManualFiles: [],
+      existingUserManuals: (item.userManuals ?? []).filter(isEquipmentUserManual),
       supplierName: item.supplier?.name ?? "",
       supplierContactPerson: item.supplier?.contactPerson ?? "",
       supplierContactEmail: item.supplier?.contactEmail ?? "",
@@ -53,7 +65,7 @@ export function EditEquipmentForm({
     },
   });
 
-  const onSubmit = (data: EquipmentFormValues) => {
+  const onSubmit = async (data: EquipmentFormValues) => {
     const formData = new FormData();
     formData.append("equipmentId", item._id);
     formData.append("internalId", data.internalId);
@@ -68,8 +80,14 @@ export function EditEquipmentForm({
     formData.append("nextMaintenance", data.nextMaintenance);
     formData.append("personnelIds", JSON.stringify(data.personnelIds));
     formData.append(
-      "userManualUrls",
-      JSON.stringify(data.userManualUrls.filter(Boolean))
+      "existingUserManuals",
+      JSON.stringify(
+        data.existingUserManuals.map((manual) => ({
+          _key: manual._key,
+          assetId: manual.asset?._id,
+          name: manual.name || manual.asset?.originalFilename,
+        }))
+      )
     );
     formData.append("supplierName", data.supplierName);
     formData.append("supplierContactPerson", data.supplierContactPerson);
@@ -79,6 +97,18 @@ export function EditEquipmentForm({
     formData.append("maintenanceContactPerson", data.maintenanceContactPerson);
     formData.append("maintenanceContactEmail", data.maintenanceContactEmail);
     formData.append("maintenanceContactPhone", data.maintenanceContactPhone);
+
+    setIsUploading(true);
+    const uploaded = await appendUserManualUploads(
+      formData,
+      data.userManualFiles
+    );
+    setIsUploading(false);
+
+    if (!uploaded) {
+      toast.error("Failed to upload user manuals");
+      return;
+    }
 
     startTransition(() => dispatch(formData));
   };
@@ -95,8 +125,14 @@ export function EditEquipmentForm({
     <FormProvider {...form}>
       <ScrollToFieldError />
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-24">
-        <EquipmentFormFields personnel={personnel} isSubmitting={isPending} />
-        <FormSubmitButton text="Save Changes" isSubmitting={isPending} />
+        <EquipmentFormFields
+          personnel={personnel}
+          isSubmitting={isPending || isUploading}
+        />
+        <FormSubmitButton
+          text="Save Changes"
+          isSubmitting={isPending || isUploading}
+        />
       </form>
     </FormProvider>
   );

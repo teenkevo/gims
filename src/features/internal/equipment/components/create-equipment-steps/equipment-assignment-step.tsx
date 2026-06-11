@@ -1,17 +1,18 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 
+import FileUpload from "@/components/file-upload";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import type { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../../sanity.types";
 import { LabFormMultiSelect } from "@/features/internal/labs/components/lab-form-multi-select";
 import { EquipmentStepContainer } from "../equipment-step-container";
@@ -27,7 +28,7 @@ export function EquipmentAssignmentStep({
   showHeader?: boolean;
 }) {
   const form = useFormContext<EquipmentFormValues>();
-  const userManualUrls = form.watch("userManualUrls");
+  const existingUserManuals = form.watch("existingUserManuals");
 
   const personnelOptions = personnel.map((p) => ({
     value: p._id,
@@ -60,55 +61,67 @@ export function EquipmentAssignmentStep({
       />
 
       <div className="space-y-3">
-        <FormLabel>User Manuals</FormLabel>
-        {userManualUrls.map((_, index) => (
-          <FormField
-            key={index}
-            control={form.control}
-            name={`userManualUrls.${index}`}
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      type="url"
-                      placeholder="https://..."
-                      {...field}
-                      disabled={isSubmitting}
-                    />
-                  </FormControl>
-                  {userManualUrls.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        const next = userManualUrls.filter((_, i) => i !== index);
-                        form.setValue("userManualUrls", next.length ? next : [""]);
-                      }}
-                      disabled={isSubmitting}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+        {existingUserManuals.length > 0 && (
+          <div className="space-y-2">
+            <FormLabel>Uploaded Manuals</FormLabel>
+            {existingUserManuals.map((manual) => (
+              <div
+                key={manual._key}
+                className="flex items-center justify-between gap-2 rounded-md border p-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {manual.name || manual.asset?.originalFilename || "Manual"}
+                  </p>
+                  {manual.asset?.mimeType && (
+                    <p className="text-xs text-muted-foreground">
+                      {manual.asset.mimeType.toUpperCase()}
+                      {manual.asset.size
+                        ? ` • ${(manual.asset.size / (1024 * 1024)).toFixed(2)} MB`
+                        : ""}
+                    </p>
                   )}
                 </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            form.setValue("userManualUrls", [...userManualUrls, ""])
-          }
-          disabled={isSubmitting}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add manual link
-        </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    form.setValue(
+                      "existingUserManuals",
+                      existingUserManuals.filter((m) => m._key !== manual._key)
+                    );
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <FormField
+          control={form.control}
+          name="userManualFiles"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>User Manuals</FormLabel>
+              <FormDescription>
+                Upload equipment manuals (PDF, Word, or text files)
+              </FormDescription>
+              <FormControl>
+                <FileUpload
+                  multiple
+                  accept=".pdf,.doc,.docx,.txt"
+                  maxSize={20}
+                  onFilesChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </EquipmentStepContainer>
   );

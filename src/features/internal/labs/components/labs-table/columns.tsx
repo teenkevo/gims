@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import type { ALL_LABS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getLabSectionLabel } from "../../constants";
@@ -10,6 +11,30 @@ import { LabStatusBadge } from "../lab-status-badge";
 import { LabTableRowActions } from "./lab-table-row-actions";
 
 export const getColumns = (): ColumnDef<ALL_LABS_QUERY_RESULT[number]>[] => [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "internalId",
     header: ({ column }) => (
@@ -33,6 +58,12 @@ export const getColumns = (): ColumnDef<ALL_LABS_QUERY_RESULT[number]>[] => [
         </span>
       </Link>
     ),
+    filterFn: (row, _id, value) => {
+      const search = String(value).toLowerCase();
+      const name = row.original.name?.toLowerCase() ?? "";
+      const internalId = row.original.internalId?.toLowerCase() ?? "";
+      return name.includes(search) || internalId.includes(search);
+    },
   },
   {
     accessorKey: "labSection",
@@ -51,6 +82,7 @@ export const getColumns = (): ColumnDef<ALL_LABS_QUERY_RESULT[number]>[] => [
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => <LabStatusBadge status={row.original.status} />,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: "labHead",

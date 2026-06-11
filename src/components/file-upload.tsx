@@ -179,6 +179,7 @@ export default function FileUpload({
                     {fileData.file.name}
                   </p>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 rounded-full"

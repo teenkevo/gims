@@ -107,8 +107,19 @@ export const equipment = defineType({
     defineField({
       name: "userManuals",
       type: "array",
-      title: "User Manuals (URLs)",
-      of: [{ type: "url" }],
+      title: "User Manuals",
+      of: [
+        {
+          type: "file",
+          fields: [
+            defineField({
+              name: "name",
+              type: "string",
+              title: "Name",
+            }),
+          ],
+        },
+      ],
     }),
     defineField({
       name: "supplier",

@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowLeftCircle, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowLeftCircle, Download, ExternalLink, File, Trash2 } from "lucide-react";
 import Link from "next/link";
+import mime from "mime-types";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 
@@ -185,18 +186,50 @@ export default function EquipmentDetails({
               <CardHeader>
                 <CardTitle>User Manuals</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {item.userManuals?.map((url) => (
-                  <a
-                    key={url}
-                    href={url ?? "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm inline-flex items-center gap-1 text-primary hover:underline"
+              <CardContent className="space-y-3">
+                {item.userManuals?.map((manual) => (
+                  <div
+                    key={manual._key}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
                   >
-                    {url}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                    <div className="flex min-w-0 items-start gap-3">
+                      <File className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {manual.name ||
+                            manual.asset?.originalFilename ||
+                            "Manual"}
+                        </p>
+                        {manual.asset?.mimeType && (
+                          <p className="text-xs text-muted-foreground">
+                            {manual.asset.mimeType.toUpperCase()}
+                            {manual.asset.size
+                              ? ` • ${(manual.asset.size / (1024 * 1024)).toFixed(2)} MB`
+                              : ""}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {manual.asset?.url && (
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={manual.asset.url}
+                          target="_blank"
+                          className="inline-flex items-center text-sm text-primary hover:underline"
+                        >
+                          <ExternalLink className="mr-1 h-4 w-4" />
+                          View
+                        </Link>
+                        <Link
+                          href={`${manual.asset.url}?dl=${manual.name || manual.asset.originalFilename || "manual"}.${mime.extension(manual.asset.mimeType || "")}`}
+                          className="inline-flex items-center text-sm text-primary hover:underline"
+                        >
+                          <Download className="mr-1 h-4 w-4" />
+                          Download
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </CardContent>
             </Card>

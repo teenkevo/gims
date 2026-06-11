@@ -36,6 +36,17 @@ export const getColumns = (): ColumnDef<ALL_EQUIPMENT_QUERY_RESULT[number]>[] =>
         </span>
       </Link>
     ),
+    filterFn: (row, _id, value) => {
+      const search = String(value).toLowerCase();
+      const name = row.original.name?.toLowerCase() ?? "";
+      const internalId = row.original.internalId?.toLowerCase() ?? "";
+      const serialNumber = row.original.serialNumber?.toLowerCase() ?? "";
+      return (
+        name.includes(search) ||
+        internalId.includes(search) ||
+        serialNumber.includes(search)
+      );
+    },
   },
   {
     accessorKey: "serialNumber",
@@ -63,6 +74,7 @@ export const getColumns = (): ColumnDef<ALL_EQUIPMENT_QUERY_RESULT[number]>[] =>
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => <EquipmentStatusBadge status={row.original.status} />,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: "nextMaintenance",

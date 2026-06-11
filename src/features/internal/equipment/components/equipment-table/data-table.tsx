@@ -27,6 +27,7 @@ import {
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type { ALL_EQUIPMENT_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns";
+import { DataTableToolbar } from "./data-table-toolbar";
 
 export function DataTable({ data }: { data: ALL_EQUIPMENT_QUERY_RESULT }) {
   const [rowSelection, setRowSelection] = React.useState({});
@@ -61,6 +62,7 @@ export function DataTable({ data }: { data: ALL_EQUIPMENT_QUERY_RESULT }) {
 
   return (
     <div className="space-y-4">
+      <DataTableToolbar table={table} />
       <div className="rounded-md border">
         <Table>
           <TableHeader>

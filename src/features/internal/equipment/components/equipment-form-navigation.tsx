@@ -8,14 +8,14 @@ export function EquipmentFormNavigation({
   totalSteps,
   isSubmitting,
   onBack,
-  onNext,
+  onPrimaryAction,
   isNextDisabled,
 }: {
   currentStep: number;
   totalSteps: number;
   isSubmitting?: boolean;
   onBack: () => void;
-  onNext: () => void;
+  onPrimaryAction: () => void;
   isNextDisabled?: boolean;
 }) {
   const isLastStep = currentStep === totalSteps;
@@ -40,10 +40,10 @@ export function EquipmentFormNavigation({
             <ButtonLoading />
           ) : (
             <Button
-              type={isLastStep ? "submit" : "button"}
+              type="button"
               variant="default"
               disabled={isNextDisabled}
-              onClick={isLastStep ? undefined : onNext}
+              onClick={onPrimaryAction}
             >
               {isLastStep ? "Register Equipment" : "Continue"}
               <ArrowRightCircle className="ml-2 h-4 w-4" />

@@ -4183,6 +4183,25 @@ export async function updateLab(prevState: any, formData: FormData) {
   }
 }
 
+// DELETE MULTIPLE LABS
+export async function deleteMultipleLabs(labIds: string[]) {
+  try {
+    const results = await Promise.all(labIds.map((labId) => deleteLab(labId)));
+    const deletedItems = results.filter((result) => result.status === "ok").length;
+
+    if (deletedItems > 0) {
+      revalidateTag("labs");
+      revalidatePath("/labs");
+      return { results, status: "ok" as const, deletedItems };
+    }
+
+    return { results, status: "no_deletions" as const, deletedItems: 0 };
+  } catch (error) {
+    console.error("Error deleting laboratories:", error);
+    return { error, status: "error" as const };
+  }
+}
+
 // DELETE LAB
 export async function deleteLab(labId: string) {
   try {
@@ -4265,9 +4284,8 @@ export async function createEquipment(prevState: any, formData: FormData) {
     const personnelIds = JSON.parse(
       (formData.get("personnelIds") as string) || "[]"
     ) as string[];
-    const userManualUrls = JSON.parse(
-      (formData.get("userManualUrls") as string) || "[]"
-    ) as string[];
+    const userManualIds = formData.getAll("userManuals") as string[];
+    const userManualNames = formData.getAll("userManualNames") as string[];
 
     const supplierName = formData.get("supplierName");
     const supplierContactPerson = formData.get("supplierContactPerson");
@@ -4297,7 +4315,14 @@ export async function createEquipment(prevState: any, formData: FormData) {
           _ref: id,
           _key: uuidv4(),
         })),
-        userManuals: userManualUrls.filter(Boolean),
+        userManuals: userManualIds.map((fileId, index) => ({
+          _type: "file",
+          asset: {
+            _type: "reference",
+            _ref: fileId,
+          },
+          name: userManualNames[index] || undefined,
+        })),
         supplier:
           supplierName ||
           supplierContactPerson ||
@@ -4353,9 +4378,11 @@ export async function updateEquipment(prevState: any, formData: FormData) {
     const personnelIds = JSON.parse(
       (formData.get("personnelIds") as string) || "[]"
     ) as string[];
-    const userManualUrls = JSON.parse(
-      (formData.get("userManualUrls") as string) || "[]"
-    ) as string[];
+    const existingUserManuals = JSON.parse(
+      (formData.get("existingUserManuals") as string) || "[]"
+    ) as Array<{ _key: string; assetId: string; name?: string }>;
+    const userManualIds = formData.getAll("userManuals") as string[];
+    const userManualNames = formData.getAll("userManualNames") as string[];
 
     const supplierName = formData.get("supplierName");
     const supplierContactPerson = formData.get("supplierContactPerson");
@@ -4385,7 +4412,27 @@ export async function updateEquipment(prevState: any, formData: FormData) {
           _ref: id,
           _key: uuidv4(),
         })),
-        userManuals: userManualUrls.filter(Boolean),
+        userManuals: [
+          ...existingUserManuals
+            .filter((manual) => manual.assetId)
+            .map((manual) => ({
+              _type: "file",
+              _key: manual._key,
+              asset: {
+                _type: "reference",
+                _ref: manual.assetId,
+              },
+              name: manual.name || undefined,
+            })),
+          ...userManualIds.map((fileId, index) => ({
+            _type: "file",
+            asset: {
+              _type: "reference",
+              _ref: fileId,
+            },
+            name: userManualNames[index] || undefined,
+          })),
+        ],
         supplier: {
           name: supplierName || undefined,
           contactPerson: supplierContactPerson || undefined,

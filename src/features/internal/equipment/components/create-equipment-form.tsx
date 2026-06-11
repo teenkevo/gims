@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { startTransition, useActionState, useEffect } from "react";
 import { ArrowLeftCircle } from "lucide-react";
 
@@ -23,6 +23,7 @@ import { EquipmentFormNavigation } from "./equipment-form-navigation";
 import { EquipmentIdentityStep } from "./create-equipment-steps/equipment-identity-step";
 import { EquipmentAssignmentStep } from "./create-equipment-steps/equipment-assignment-step";
 import { EquipmentVendorStep } from "./create-equipment-steps/equipment-vendor-step";
+import { appendUserManualUploads } from "./equipment-user-manual-upload";
 
 const stepVariants = {
   hidden: { opacity: 0, x: 40 },
@@ -43,10 +44,6 @@ function buildFormData(data: EquipmentFormValues) {
   formData.append("lastMaintenance", data.lastMaintenance);
   formData.append("nextMaintenance", data.nextMaintenance);
   formData.append("personnelIds", JSON.stringify(data.personnelIds));
-  formData.append(
-    "userManualUrls",
-    JSON.stringify(data.userManualUrls.filter(Boolean))
-  );
   formData.append("supplierName", data.supplierName);
   formData.append("supplierContactPerson", data.supplierContactPerson);
   formData.append("supplierContactEmail", data.supplierContactEmail);
@@ -65,11 +62,13 @@ export function CreateEquipmentForm({
 }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isUploading, setIsUploading] = useState(false);
   const [state, dispatch, isPending] = useActionState(createEquipment, null);
 
   const form = useForm<EquipmentFormValues>({
     mode: "onChange",
     reValidateMode: "onChange",
+    shouldUnregister: false,
     defaultValues: getEquipmentFormDefaultValues(),
   });
 
@@ -93,8 +92,40 @@ export function CreateEquipmentForm({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const onSubmit = (data: EquipmentFormValues) => {
-    startTransition(() => dispatch(buildFormData(data)));
+  const registerEquipment = async () => {
+    const allFields = EQUIPMENT_CREATE_STEPS.flatMap((step) => [...step.fields]);
+    const valid = await form.trigger(allFields);
+    if (!valid) return;
+
+    const data = form.getValues();
+    const formData = buildFormData(data);
+    setIsUploading(true);
+
+    const uploaded = await appendUserManualUploads(
+      formData,
+      data.userManualFiles
+    );
+    setIsUploading(false);
+
+    if (!uploaded) {
+      toast.error("Failed to upload user manuals");
+      return;
+    }
+
+    startTransition(() => dispatch(formData));
+  };
+
+  const handlePrimaryAction = async () => {
+    if (currentStep < totalSteps) {
+      await handleNext();
+      return;
+    }
+
+    await registerEquipment();
+  };
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
   };
 
   useEffect(() => {
@@ -110,19 +141,25 @@ export function CreateEquipmentForm({
     switch (currentStep) {
       case 1:
         return (
-          <EquipmentIdentityStep isSubmitting={isPending} showHeader={false} />
+          <EquipmentIdentityStep
+            isSubmitting={isPending || isUploading}
+            showHeader={false}
+          />
         );
       case 2:
         return (
           <EquipmentAssignmentStep
             personnel={personnel}
-            isSubmitting={isPending}
+            isSubmitting={isPending || isUploading}
             showHeader={false}
           />
         );
       case 3:
         return (
-          <EquipmentVendorStep isSubmitting={isPending} showHeader={false} />
+          <EquipmentVendorStep
+            isSubmitting={isPending || isUploading}
+            showHeader={false}
+          />
         );
       default:
         return null;
@@ -143,30 +180,28 @@ export function CreateEquipmentForm({
 
       <FormProvider {...form}>
         <ScrollToFieldError />
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <Card className="mt-6 border-dashed bg-card shadow-sm">
-            <CardContent className="pt-6">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep}
-                  variants={stepVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  transition={{ duration: 0.2 }}
-                >
-                  {renderStep()}
-                </motion.div>
-              </AnimatePresence>
-            </CardContent>
-          </Card>
+        <form onSubmit={handleFormSubmit}>
+          <div className="mt-6 border border-border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                variants={stepVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                transition={{ duration: 0.2 }}
+              >
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
           <EquipmentFormNavigation
             currentStep={currentStep}
             totalSteps={totalSteps}
-            isSubmitting={isPending}
+            isSubmitting={isPending || isUploading}
             onBack={handleBack}
-            onNext={handleNext}
+            onPrimaryAction={() => void handlePrimaryAction()}
           />
         </form>
       </FormProvider>

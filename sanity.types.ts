@@ -519,7 +519,13 @@ export type Equipment = {
       _key: string;
     } & PersonnelReference
   >;
-  userManuals?: Array<string>;
+  userManuals?: Array<{
+    asset?: SanityFileAssetReference;
+    media?: unknown;
+    name?: string;
+    _type: "file";
+    _key: string;
+  }>;
   supplier?: {
     name?: string;
     contactPerson?: string;
@@ -1290,7 +1296,17 @@ export type EQUIPMENT_BY_ID_QUERY_RESULT = Array<{
   notes: string | null;
   lastMaintenance: string | null;
   nextMaintenance: string | null;
-  userManuals: Array<string> | null;
+  userManuals: Array<{
+    _key: string;
+    name: string | null;
+    asset: {
+      _id: string;
+      url: string | null;
+      originalFilename: string | null;
+      mimeType: string | null;
+      size: number | null;
+    } | null;
+  }> | null;
   assignedPersonnel: Array<{
     _id: string;
     internalId: string | null;

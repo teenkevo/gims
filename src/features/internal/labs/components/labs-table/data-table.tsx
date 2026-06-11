@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -15,7 +16,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -28,12 +28,15 @@ import {
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type { ALL_LABS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns";
+import { DataTableToolbar } from "./data-table-toolbar";
+import { DeleteMultipleLabs } from "./delete-multiple-labs";
 
 interface DataTableProps {
   data: ALL_LABS_QUERY_RESULT;
 }
 
 export function DataTable({ data }: DataTableProps) {
+  const router = useRouter();
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -41,6 +44,7 @@ export function DataTable({ data }: DataTableProps) {
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [openDialog, setOpenDialog] = React.useState(false);
 
   const columns = React.useMemo(
     () => getColumns() as ColumnDef<ALL_LABS_QUERY_RESULT[number]>[],
@@ -69,8 +73,29 @@ export function DataTable({ data }: DataTableProps) {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
+  const selectedLabs = table
+    .getFilteredSelectedRowModel()
+    .rows.map((row) => row.original);
+
+  const handleOpenDeleteDialog = () => {
+    setOpenDialog(true);
+  };
+
   return (
     <div className="space-y-4">
+      <DataTableToolbar
+        table={table}
+        onDeleteSelected={handleOpenDeleteDialog}
+      />
+      <DeleteMultipleLabs
+        labs={selectedLabs}
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onDeleted={() => {
+          setRowSelection({});
+          router.refresh();
+        }}
+      />
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -80,7 +105,11 @@ export function DataTable({ data }: DataTableProps) {
                   <TableHead
                     key={header.id}
                     className={
-                      header.column.id === "actions" ? "w-[50px]" : undefined
+                      header.column.id === "select"
+                        ? "w-[40px]"
+                        : header.column.id === "actions"
+                          ? "w-[50px]"
+                          : undefined
                     }
                   >
                     {header.isPlaceholder

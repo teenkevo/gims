@@ -1,3 +1,15 @@
+export type EquipmentUserManual = {
+  _key: string;
+  name?: string | null;
+  asset?: {
+    _id: string;
+    url?: string | null;
+    originalFilename?: string | null;
+    mimeType?: string | null;
+    size?: number | null;
+  } | null;
+};
+
 export type EquipmentFormValues = {
   internalId: string;
   name: string;
@@ -10,7 +22,8 @@ export type EquipmentFormValues = {
   lastMaintenance: string;
   nextMaintenance: string;
   personnelIds: string[];
-  userManualUrls: string[];
+  userManualFiles: File[];
+  existingUserManuals: EquipmentUserManual[];
   supplierName: string;
   supplierContactPerson: string;
   supplierContactEmail: string;
@@ -42,8 +55,8 @@ export const EQUIPMENT_CREATE_STEPS = [
   {
     step: 2,
     title: "Assignment & Manuals",
-    description: "Responsible personnel and documentation links",
-    fields: ["personnelIds", "userManualUrls"] as const,
+    description: "Responsible personnel and user manual files",
+    fields: ["personnelIds", "userManualFiles"] as const,
   },
   {
     step: 3,
@@ -75,7 +88,8 @@ export function getEquipmentFormDefaultValues(): EquipmentFormValues {
     lastMaintenance: "",
     nextMaintenance: "",
     personnelIds: [],
-    userManualUrls: [""],
+    userManualFiles: [],
+    existingUserManuals: [],
     supplierName: "",
     supplierContactPerson: "",
     supplierContactEmail: "",
