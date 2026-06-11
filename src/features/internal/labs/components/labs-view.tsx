@@ -1,14 +1,32 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PlusCircleIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import type { ALL_LABS_QUERY_RESULT } from "../../../../../sanity.types";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "./labs-table/data-table";
 import NoLabsPlaceholder from "./no-labs-placeholder";
 
-export function LabsView({ labs }: { labs: ALL_LABS_QUERY_RESULT }) {
+export function LabsView({
+  labs,
+  showRegisteredToast = false,
+}: {
+  labs: ALL_LABS_QUERY_RESULT;
+  showRegisteredToast?: boolean;
+}) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!showRegisteredToast) return;
+
+    toast.success("Laboratory registered successfully");
+    router.replace("/labs");
+  }, [showRegisteredToast, router]);
+
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Laboratories</h1>

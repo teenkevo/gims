@@ -1,6 +1,7 @@
 "use server";
 import { writeClient } from "@/sanity/lib/write-client";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import { sanitizePhoneNumber } from "./utils";
 import { v4 as uuidv4 } from "uuid";
@@ -4075,8 +4076,9 @@ export async function createLab(prevState: any, formData: FormData) {
 
     revalidateTag("labs");
     revalidatePath("/labs");
-    return { result: lab, status: "ok" as const };
+    redirect("/labs?registered=1");
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error creating lab:", error);
     return { error, status: "error" as const };
   }

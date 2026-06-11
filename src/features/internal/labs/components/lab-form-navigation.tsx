@@ -8,8 +8,7 @@ interface LabFormNavigationProps {
   totalSteps: number;
   isSubmitting?: boolean;
   onBack: () => void;
-  onNext: () => void;
-  onSubmit: () => void;
+  onPrimaryAction: () => void;
   isNextDisabled?: boolean;
 }
 
@@ -18,19 +17,10 @@ export function LabFormNavigation({
   totalSteps,
   isSubmitting,
   onBack,
-  onNext,
-  onSubmit,
+  onPrimaryAction,
   isNextDisabled,
 }: LabFormNavigationProps) {
   const isLastStep = currentStep === totalSteps;
-
-  const handlePrimaryAction = () => {
-    if (isLastStep) {
-      onSubmit();
-      return;
-    }
-    onNext();
-  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -58,7 +48,7 @@ export function LabFormNavigation({
                 type="button"
                 variant="default"
                 disabled={isNextDisabled}
-                onClick={handlePrimaryAction}
+                onClick={onPrimaryAction}
               >
                 {isLastStep ? "Register Laboratory" : "Continue"}
                 <ArrowRightCircle className="ml-2 h-4 w-4" />

@@ -34,6 +34,33 @@ const stepVariants = {
   exit: { opacity: 0, x: -40, transition: { ease: "easeOut" } },
 };
 
+function buildFormData(data: LabFormValues) {
+  const formData = new FormData();
+  formData.append("internalId", data.internalId);
+  formData.append("name", data.name);
+  formData.append("description", data.description);
+  formData.append("labSection", data.labSection);
+  formData.append("status", data.status);
+  formData.append("location", data.location);
+  formData.append("capacity", data.capacity);
+  formData.append("notes", data.notes);
+  formData.append("labHeadId", data.labHeadId);
+  formData.append("personnelIds", JSON.stringify(data.personnelIds));
+  formData.append("equipmentIds", JSON.stringify(data.equipmentIds));
+  formData.append("testCapabilityIds", JSON.stringify(data.testCapabilityIds));
+  formData.append("accreditationStandard", data.accreditationStandard);
+  formData.append(
+    "accreditationCertificateNumber",
+    data.accreditationCertificateNumber
+  );
+  formData.append(
+    "accreditationAccreditingBody",
+    data.accreditationAccreditingBody
+  );
+  formData.append("accreditationExpiryDate", data.accreditationExpiryDate);
+  return formData;
+}
+
 export function CreateLabForm({
   personnel,
   equipment,
@@ -45,12 +72,12 @@ export function CreateLabForm({
 }) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [hasRegistered, setHasRegistered] = useState(false);
   const [state, dispatch, isPending] = useActionState(createLab, null);
 
   const form = useForm<LabFormValues>({
     mode: "onChange",
     reValidateMode: "onChange",
+    shouldUnregister: false,
     defaultValues: getLabFormDefaultValues(),
   });
 
@@ -74,65 +101,34 @@ export function CreateLabForm({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const registerLab = async () => {
+    const allFields = LAB_CREATE_STEPS.flatMap((step) => [...step.fields]);
+    const valid = await form.trigger(allFields);
+    if (!valid) return;
 
+    startTransition(() => dispatch(buildFormData(form.getValues())));
+  };
+
+  const handlePrimaryAction = async () => {
     if (currentStep < totalSteps) {
       await handleNext();
       return;
     }
 
-    await form.handleSubmit(onSubmit)();
+    await registerLab();
   };
 
-  const onSubmit = (data: LabFormValues) => {
-    if (currentStep !== totalSteps) return;
-
-    const formData = new FormData();
-    formData.append("internalId", data.internalId);
-    formData.append("name", data.name);
-    formData.append("description", data.description);
-    formData.append("labSection", data.labSection);
-    formData.append("status", data.status);
-    formData.append("location", data.location);
-    formData.append("capacity", data.capacity);
-    formData.append("notes", data.notes);
-    formData.append("labHeadId", data.labHeadId);
-    formData.append("personnelIds", JSON.stringify(data.personnelIds));
-    formData.append("equipmentIds", JSON.stringify(data.equipmentIds));
-    formData.append(
-      "testCapabilityIds",
-      JSON.stringify(data.testCapabilityIds)
-    );
-    formData.append("accreditationStandard", data.accreditationStandard);
-    formData.append(
-      "accreditationCertificateNumber",
-      data.accreditationCertificateNumber
-    );
-    formData.append(
-      "accreditationAccreditingBody",
-      data.accreditationAccreditingBody
-    );
-    formData.append("accreditationExpiryDate", data.accreditationExpiryDate);
-
-    startTransition(() => dispatch(formData));
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
   };
 
   useEffect(() => {
-    if (state?.status === "ok") {
-      setHasRegistered(true);
-      toast.success("Laboratory registered successfully");
-      router.push("/labs");
-    } else if (state?.status === "error") {
+    if (state?.status === "error") {
       toast.error(
         typeof state.error === "string" ? state.error : "Something went wrong"
       );
     }
-  }, [state, router]);
-
-  if (hasRegistered) {
-    return null;
-  }
+  }, [state]);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -199,8 +195,7 @@ export function CreateLabForm({
             totalSteps={totalSteps}
             isSubmitting={isPending}
             onBack={handleBack}
-            onNext={handleNext}
-            onSubmit={() => void form.handleSubmit(onSubmit)()}
+            onPrimaryAction={() => void handlePrimaryAction()}
           />
         </form>
       </FormProvider>
