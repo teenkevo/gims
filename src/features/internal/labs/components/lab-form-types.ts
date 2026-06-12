@@ -1,3 +1,25 @@
+export type CreateLabIdentityValues = {
+  internalId: string;
+  name: string;
+  description: string;
+  labSection: string;
+  status: string;
+  location: string;
+  capacity: string;
+};
+
+export function getCreateLabDefaultValues(): CreateLabIdentityValues {
+  return {
+    internalId: `LAB-${Math.floor(10000 + Math.random() * 90000).toString()}`,
+    name: "",
+    description: "",
+    labSection: "",
+    status: "available",
+    location: "",
+    capacity: "",
+  };
+}
+
 export type LabFormValues = {
   internalId: string;
   name: string;

@@ -3,7 +3,8 @@
 import { ArrowLeftCircle, ExternalLink, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,14 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type {
   ALL_EQUIPMENT_QUERY_RESULT,
   ALL_PERSONNEL_QUERY_RESULT,
@@ -30,8 +23,13 @@ import type {
 } from "../../../../../sanity.types";
 import { getLabSectionLabel, getSopCategoryLabel } from "../constants";
 import { LabStatusBadge } from "./lab-status-badge";
-import { EditLabForm } from "./edit-lab-form";
 import { DeleteLabDialog } from "./labs-table/row-actions/delete-lab-dialog";
+import { LabUpdateNameForm } from "./lab-update-name-form";
+import { LabUpdateIdentityForm } from "./lab-update-identity-form";
+import { LabUpdateStaffingForm } from "./lab-update-staffing-form";
+import { LabUpdateResourcesForm } from "./lab-update-resources-form";
+import { LabUpdateAccreditationForm } from "./lab-update-accreditation-form";
+import { LabUpdateProjectsForm } from "./lab-update-projects-form";
 
 export default function LabDetails({
   lab,
@@ -44,7 +42,8 @@ export default function LabDetails({
   equipment: ALL_EQUIPMENT_QUERY_RESULT;
   services: ALL_SERVICES_QUERY_RESULT;
 }) {
-  const [activeTab, setActiveTab] = useState("overview");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("laboratory");
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
@@ -53,7 +52,14 @@ export default function LabDetails({
     if (tab) {
       setActiveTab(tab);
     }
-  }, []);
+
+    if (urlParams.get("registered") === "1") {
+      toast.success("Laboratory registered successfully");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("registered");
+      router.replace(url.pathname + url.search);
+    }
+  }, [router]);
 
   const setTab = (tab: string) => {
     setActiveTab(tab);
@@ -87,12 +93,15 @@ export default function LabDetails({
       </div>
 
       <Tabs value={activeTab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="edit">Edit</TabsTrigger>
+        <TabsList className="h-auto w-full flex-wrap justify-start">
+          <TabsTrigger value="laboratory">Laboratory</TabsTrigger>
+          <TabsTrigger value="staffing">Staffing</TabsTrigger>
           <TabsTrigger value="resources">Resources</TabsTrigger>
           <TabsTrigger value="projects">
-            Projects ({lab.projects?.length ?? 0})
+            Projects{" "}
+            <div className="ml-2 rounded-md border-dotted border h-6 w-6 border-muted-foreground text-primary">
+              {lab.projects?.length ?? 0}
+            </div>
           </TabsTrigger>
           <TabsTrigger value="sops">SOPs</TabsTrigger>
           <TabsTrigger
@@ -103,286 +112,61 @@ export default function LabDetails({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-6 space-y-6">
-          {lab.description && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {lab.description}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Lab Head</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-medium">{lab.labHead?.fullName ?? "—"}</p>
-                <p className="text-sm text-muted-foreground">
-                  {lab.labHead?.internalId}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Capacity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-medium">
-                  {lab.capacity ? `${lab.capacity} workstations` : "Not set"}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Staff</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-medium">
-                  {lab.personnel?.length ?? 0} assigned
-                </p>
-              </CardContent>
-            </Card>
+        <TabsContent value="laboratory" className="mt-6">
+          <div className="space-y-8">
+            <LabUpdateNameForm initialValue={lab.name ?? ""} labId={lab._id} />
+            <LabUpdateIdentityForm
+              labId={lab._id}
+              initialValues={{
+                description: lab.description ?? "",
+                labSection: lab.labSection ?? "",
+                status: lab.status ?? "available",
+                location: lab.location ?? "",
+                capacity: lab.capacity?.toString() ?? "",
+              }}
+            />
+            <LabUpdateAccreditationForm
+              labId={lab._id}
+              initialValues={{
+                accreditationStandard:
+                  lab.accreditation?.standard ?? "ISO 17025",
+                accreditationCertificateNumber:
+                  lab.accreditation?.certificateNumber ?? "",
+                accreditationAccreditingBody:
+                  lab.accreditation?.accreditingBody ?? "",
+                accreditationExpiryDate: lab.accreditation?.expiryDate ?? "",
+                notes: lab.notes ?? "",
+              }}
+            />
           </div>
-
-          {lab.accreditation && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Accreditation</CardTitle>
-                <CardDescription>
-                  Laboratory quality system certification
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-2 sm:grid-cols-2 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Standard: </span>
-                  {lab.accreditation.standard ?? "—"}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Certificate: </span>
-                  {lab.accreditation.certificateNumber ?? "—"}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Body: </span>
-                  {lab.accreditation.accreditingBody ?? "—"}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Expires: </span>
-                  {lab.accreditation.expiryDate
-                    ? format(
-                        new Date(lab.accreditation.expiryDate),
-                        "dd MMM yyyy"
-                      )
-                    : "—"}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {lab.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Operational Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {lab.notes}
-                </p>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
-        <TabsContent value="edit" className="mt-6">
-          <EditLabForm
-            lab={lab}
+        <TabsContent value="staffing" className="mt-6">
+          <LabUpdateStaffingForm
+            labId={lab._id}
             personnel={personnel}
-            equipment={equipment}
-            services={services}
+            assignedIds={(lab.personnel ?? []).map((p) => p._id)}
+            labHeadId={lab.labHead?._id ?? ""}
           />
         </TabsContent>
 
-        <TabsContent value="resources" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assigned Personnel</CardTitle>
-              <CardDescription>
-                Technicians and officers working in this laboratory
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(lab.personnel ?? []).length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Department</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lab.personnel?.map((person) => (
-                      <TableRow key={person._id}>
-                        <TableCell className="font-medium">
-                          {person.internalId}
-                        </TableCell>
-                        <TableCell>{person.fullName}</TableCell>
-                        <TableCell>
-                          {person.departmentRoles?.[0]?.role ?? "—"}
-                        </TableCell>
-                        <TableCell>
-                          {person.departmentRoles?.[0]?.department
-                            ?.department ?? "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No personnel assigned.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Equipment</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(lab.equipment ?? []).length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Serial No.</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Next Maintenance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lab.equipment?.map((item) => (
-                      <TableRow key={item._id}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.serialNumber}</TableCell>
-                        <TableCell className="capitalize">
-                          {item.status?.replace(/_/g, " ") ?? "—"}
-                        </TableCell>
-                        <TableCell>
-                          {item.nextMaintenance
-                            ? format(
-                                new Date(item.nextMaintenance),
-                                "dd MMM yyyy"
-                              )
-                            : "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No equipment assigned.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Test Capabilities</CardTitle>
-              <CardDescription>
-                Accredited test methods available in this laboratory
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(lab.testCapabilities ?? []).length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Test Parameter</TableHead>
-                      <TableHead>Methods</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lab.testCapabilities?.map((test) => (
-                      <TableRow key={test._id}>
-                        <TableCell className="font-medium">
-                          {test.code}
-                        </TableCell>
-                        <TableCell>{test.testParameter}</TableCell>
-                        <TableCell>
-                          {test.testMethods?.length ?? 0} method
-                          {(test.testMethods?.length ?? 0) !== 1 ? "s" : ""}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No test capabilities configured.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="resources" className="mt-6">
+          <LabUpdateResourcesForm
+            labId={lab._id}
+            equipment={equipment}
+            services={services}
+            assignedEquipmentIds={(lab.equipment ?? []).map((e) => e._id)}
+            assignedTestCapabilityIds={(lab.testCapabilities ?? []).map(
+              (s) => s._id
+            )}
+          />
         </TabsContent>
 
         <TabsContent value="projects" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assigned Projects</CardTitle>
-              <CardDescription>
-                Projects currently routed through this laboratory
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(lab.projects ?? []).length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Project ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>End Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lab.projects?.map((project) => (
-                      <TableRow key={project._id}>
-                        <TableCell>
-                          <Link
-                            href={`/projects/${project._id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {project.internalId}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{project.name}</TableCell>
-                        <TableCell>
-                          {project.endDate
-                            ? format(new Date(project.endDate), "dd MMM yyyy")
-                            : "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No projects assigned to this laboratory.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <LabUpdateProjectsForm
+            labId={lab._id}
+            projects={lab.projects ?? []}
+          />
         </TabsContent>
 
         <TabsContent value="sops" className="mt-6">

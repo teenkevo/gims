@@ -1970,6 +1970,7 @@ export async function createProject(prevState: any, formData: FormData) {
     const projectName = formData.get("projectName");
     const dateFrom = formData.get("dateFrom");
     const dateTo = formData.get("dateTo");
+    const labId = formData.get("labId") as string | null;
     const clients = formData
       .getAll("clients")
       .map((client) => JSON.parse(client as string));
@@ -2009,6 +2010,32 @@ export async function createProject(prevState: any, formData: FormData) {
         autoGenerateArrayKeys: true,
       }
     );
+    if (labId) {
+      const lab = await writeClient.fetch<{
+        projects?: Array<{ _ref: string }>;
+      }>(`*[_type == "lab" && _id == $labId][0]{ projects[]{ _ref } }`, {
+        labId,
+      });
+
+      if (lab) {
+        const existingIds = (lab.projects ?? []).map((item) => item._ref);
+        const mergedIds = [...new Set([...existingIds, project._id])];
+
+        await writeClient
+          .patch(labId)
+          .set({
+            projects: mergedIds.map((id) => ({
+              _type: "reference",
+              _ref: id,
+              _key: uuidv4(),
+            })),
+          })
+          .commit();
+
+        revalidateTag("labs");
+        revalidatePath(`/labs/${labId}`);
+      }
+    }
     revalidateTag("projects");
     return { result: project, status: "ok" };
   } catch (error) {
@@ -3992,6 +4019,12 @@ export async function deleteAllSampleReceiptTemplates() {
   }
 }
 
+function revalidateLab(labId: string) {
+  revalidateTag("labs");
+  revalidatePath("/labs");
+  revalidatePath(`/labs/${labId}`);
+}
+
 // CREATE LAB
 export async function createLab(prevState: any, formData: FormData) {
   try {
@@ -4002,27 +4035,198 @@ export async function createLab(prevState: any, formData: FormData) {
     const location = formData.get("location");
     const capacity = formData.get("capacity");
     const description = formData.get("description");
-    const notes = formData.get("notes");
-    const labHeadId = formData.get("labHeadId");
 
+    const lab = await writeClient.create({
+      _type: "lab",
+      internalId,
+      name,
+      labSection,
+      status,
+      location: location || undefined,
+      capacity: capacity ? Number(capacity) : undefined,
+      description: description || undefined,
+    });
+
+    revalidateTag("labs");
+    revalidatePath("/labs");
+    redirect(`/labs/${lab._id}?registered=1&tab=staffing`);
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    console.error("Error creating lab:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function updateLabName(formData: FormData, labId: string) {
+  try {
+    const name = formData.get("name");
+    const result = await writeClient
+      .patch(labId)
+      .set({ name: name as string })
+      .commit();
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error updating lab name:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function updateLabIdentity(formData: FormData, labId: string) {
+  try {
+    const description = formData.get("description");
+    const labSection = formData.get("labSection");
+    const status = formData.get("status");
+    const location = formData.get("location");
+    const capacity = formData.get("capacity");
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        description: description || undefined,
+        labSection,
+        status,
+        location: location || undefined,
+        capacity: capacity ? Number(capacity) : undefined,
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error updating lab identity:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function addLabStaff(labId: string, personnelIds: string[]) {
+  try {
+    if (personnelIds.length === 0) {
+      return { status: "error" as const, error: "No personnel selected" };
+    }
+
+    const lab = await writeClient.fetch<{
+      personnel?: Array<{ _ref: string }>;
+    }>(`*[_type == "lab" && _id == $labId][0]{ personnel[]{ _ref } }`, {
+      labId,
+    });
+
+    if (!lab) {
+      return { status: "error" as const, error: "Laboratory not found" };
+    }
+
+    const existingIds = (lab.personnel ?? []).map((person) => person._ref);
+    const mergedIds = [...new Set([...existingIds, ...personnelIds])];
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        personnel: mergedIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error adding lab staff:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function removeLabStaff(labId: string, personnelId: string) {
+  return removeLabStaffBulk(labId, [personnelId]);
+}
+
+export async function removeLabStaffBulk(labId: string, personnelIds: string[]) {
+  try {
+    if (personnelIds.length === 0) {
+      return { status: "error" as const, error: "No personnel selected" };
+    }
+
+    const lab = await writeClient.fetch<{
+      personnel?: Array<{ _ref: string }>;
+      labHead?: { _ref: string };
+    }>(
+      `*[_type == "lab" && _id == $labId][0]{ personnel[]{ _ref }, labHead }`,
+      { labId }
+    );
+
+    if (!lab) {
+      return { status: "error" as const, error: "Laboratory not found" };
+    }
+
+    const idsToRemove = new Set(personnelIds);
+    const remainingIds = (lab.personnel ?? [])
+      .map((person) => person._ref)
+      .filter((id) => !idsToRemove.has(id));
+
+    let patch = writeClient.patch(labId).set({
+      personnel: remainingIds.map((id) => ({
+        _type: "reference",
+        _ref: id,
+        _key: uuidv4(),
+      })),
+    });
+
+    if (lab.labHead?._ref && idsToRemove.has(lab.labHead._ref)) {
+      patch = patch.unset(["labHead"]);
+    }
+
+    const result = await patch.commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error removing lab staff:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function updateLabHead(labId: string, labHeadId: string) {
+  try {
+    if (!labHeadId) {
+      const result = await writeClient.patch(labId).unset(["labHead"]).commit();
+      revalidateLab(labId);
+      return { result, status: "ok" as const };
+    }
+
+    const lab = await writeClient.fetch<{
+      personnel?: Array<{ _ref: string }>;
+    }>(`*[_type == "lab" && _id == $labId][0]{ personnel[]{ _ref } }`, {
+      labId,
+    });
+
+    const personnelIds = (lab?.personnel ?? []).map((person) => person._ref);
+    if (!personnelIds.includes(labHeadId)) {
+      return {
+        status: "error" as const,
+        error: "Lab head must be selected from assigned personnel",
+      };
+    }
+
+    const result = await writeClient
+      .patch(labId)
+      .set({ labHead: { _type: "reference", _ref: labHeadId } })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error updating lab head:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function updateLabStaffing(formData: FormData, labId: string) {
+  try {
+    const labHeadId = formData.get("labHeadId");
     const personnelIds = JSON.parse(
       (formData.get("personnelIds") as string) || "[]"
     ) as string[];
-    const equipmentIds = JSON.parse(
-      (formData.get("equipmentIds") as string) || "[]"
-    ) as string[];
-    const testCapabilityIds = JSON.parse(
-      (formData.get("testCapabilityIds") as string) || "[]"
-    ) as string[];
-
-    const accreditationStandard = formData.get("accreditationStandard");
-    const accreditationCertificateNumber = formData.get(
-      "accreditationCertificateNumber"
-    );
-    const accreditationAccreditingBody = formData.get(
-      "accreditationAccreditingBody"
-    );
-    const accreditationExpiryDate = formData.get("accreditationExpiryDate");
 
     if (!labHeadId || !personnelIds.includes(labHeadId as string)) {
       return {
@@ -4031,23 +4235,38 @@ export async function createLab(prevState: any, formData: FormData) {
       };
     }
 
-    const lab = await writeClient.create(
-      {
-        _type: "lab",
-        internalId,
-        name,
-        labSection,
-        status,
-        location: location || undefined,
-        capacity: capacity ? Number(capacity) : undefined,
-        description: description || undefined,
-        notes: notes || undefined,
+    const result = await writeClient
+      .patch(labId)
+      .set({
         personnel: personnelIds.map((id) => ({
           _type: "reference",
           _ref: id,
           _key: uuidv4(),
         })),
         labHead: { _type: "reference", _ref: labHeadId },
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error updating lab staffing:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function updateLabResources(formData: FormData, labId: string) {
+  try {
+    const equipmentIds = JSON.parse(
+      (formData.get("equipmentIds") as string) || "[]"
+    ) as string[];
+    const testCapabilityIds = JSON.parse(
+      (formData.get("testCapabilityIds") as string) || "[]"
+    ) as string[];
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
         equipment: equipmentIds.map((id) => ({
           _type: "reference",
           _ref: id,
@@ -4058,6 +4277,200 @@ export async function createLab(prevState: any, formData: FormData) {
           _ref: id,
           _key: uuidv4(),
         })),
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error updating lab resources:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function addLabEquipment(labId: string, equipmentIds: string[]) {
+  try {
+    if (equipmentIds.length === 0) {
+      return { status: "error" as const, error: "No equipment selected" };
+    }
+
+    const lab = await writeClient.fetch<{
+      equipment?: Array<{ _ref: string }>;
+    }>(`*[_type == "lab" && _id == $labId][0]{ equipment[]{ _ref } }`, {
+      labId,
+    });
+
+    if (!lab) {
+      return { status: "error" as const, error: "Laboratory not found" };
+    }
+
+    const existingIds = (lab.equipment ?? []).map((item) => item._ref);
+    const mergedIds = [...new Set([...existingIds, ...equipmentIds])];
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        equipment: mergedIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error adding lab equipment:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function removeLabEquipmentBulk(
+  labId: string,
+  equipmentIds: string[]
+) {
+  try {
+    if (equipmentIds.length === 0) {
+      return { status: "error" as const, error: "No equipment selected" };
+    }
+
+    const lab = await writeClient.fetch<{
+      equipment?: Array<{ _ref: string }>;
+    }>(`*[_type == "lab" && _id == $labId][0]{ equipment[]{ _ref } }`, {
+      labId,
+    });
+
+    if (!lab) {
+      return { status: "error" as const, error: "Laboratory not found" };
+    }
+
+    const idsToRemove = new Set(equipmentIds);
+    const remainingIds = (lab.equipment ?? [])
+      .map((item) => item._ref)
+      .filter((id) => !idsToRemove.has(id));
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        equipment: remainingIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error removing lab equipment:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function addLabTestCapabilities(
+  labId: string,
+  testCapabilityIds: string[]
+) {
+  try {
+    if (testCapabilityIds.length === 0) {
+      return { status: "error" as const, error: "No test capabilities selected" };
+    }
+
+    const lab = await writeClient.fetch<{
+      testCapabilities?: Array<{ _ref: string }>;
+    }>(
+      `*[_type == "lab" && _id == $labId][0]{ testCapabilities[]{ _ref } }`,
+      { labId }
+    );
+
+    if (!lab) {
+      return { status: "error" as const, error: "Laboratory not found" };
+    }
+
+    const existingIds = (lab.testCapabilities ?? []).map((item) => item._ref);
+    const mergedIds = [...new Set([...existingIds, ...testCapabilityIds])];
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        testCapabilities: mergedIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error adding lab test capabilities:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function removeLabTestCapabilitiesBulk(
+  labId: string,
+  testCapabilityIds: string[]
+) {
+  try {
+    if (testCapabilityIds.length === 0) {
+      return { status: "error" as const, error: "No test capabilities selected" };
+    }
+
+    const lab = await writeClient.fetch<{
+      testCapabilities?: Array<{ _ref: string }>;
+    }>(
+      `*[_type == "lab" && _id == $labId][0]{ testCapabilities[]{ _ref } }`,
+      { labId }
+    );
+
+    if (!lab) {
+      return { status: "error" as const, error: "Laboratory not found" };
+    }
+
+    const idsToRemove = new Set(testCapabilityIds);
+    const remainingIds = (lab.testCapabilities ?? [])
+      .map((item) => item._ref)
+      .filter((id) => !idsToRemove.has(id));
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        testCapabilities: remainingIds.map((id) => ({
+          _type: "reference",
+          _ref: id,
+          _key: uuidv4(),
+        })),
+      })
+      .commit();
+
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
+  } catch (error) {
+    console.error("Error removing lab test capabilities:", error);
+    return { error, status: "error" as const };
+  }
+}
+
+export async function updateLabAccreditation(formData: FormData, labId: string) {
+  try {
+    const accreditationStandard = formData.get("accreditationStandard");
+    const accreditationCertificateNumber = formData.get(
+      "accreditationCertificateNumber"
+    );
+    const accreditationAccreditingBody = formData.get(
+      "accreditationAccreditingBody"
+    );
+    const accreditationExpiryDate = formData.get("accreditationExpiryDate");
+    const notes = formData.get("notes");
+
+    const result = await writeClient
+      .patch(labId)
+      .set({
+        notes: notes || undefined,
         accreditation:
           accreditationStandard ||
           accreditationCertificateNumber ||
@@ -4070,16 +4483,13 @@ export async function createLab(prevState: any, formData: FormData) {
                 expiryDate: accreditationExpiryDate || undefined,
               }
             : undefined,
-      },
-      { autoGenerateArrayKeys: true }
-    );
+      })
+      .commit();
 
-    revalidateTag("labs");
-    revalidatePath("/labs");
-    redirect("/labs?registered=1");
+    revalidateLab(labId);
+    return { result, status: "ok" as const };
   } catch (error) {
-    if (isRedirectError(error)) throw error;
-    console.error("Error creating lab:", error);
+    console.error("Error updating lab accreditation:", error);
     return { error, status: "error" as const };
   }
 }

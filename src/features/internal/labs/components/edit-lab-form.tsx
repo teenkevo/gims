@@ -45,7 +45,7 @@ export function EditLabForm({
       labHeadId: lab.labHead?._id ?? "",
       equipmentIds: (lab.equipment ?? []).map((e) => e._id),
       testCapabilityIds: (lab.testCapabilities ?? []).map((s) => s._id),
-      accreditationStandard: lab.accreditation?.standard ?? "ISO 17025",
+      accreditationStandard: lab.accreditation?.standard ?? "",
       accreditationCertificateNumber:
         lab.accreditation?.certificateNumber ?? "",
       accreditationAccreditingBody: lab.accreditation?.accreditingBody ?? "",
@@ -67,7 +67,10 @@ export function EditLabForm({
     formData.append("labHeadId", data.labHeadId);
     formData.append("personnelIds", JSON.stringify(data.personnelIds));
     formData.append("equipmentIds", JSON.stringify(data.equipmentIds));
-    formData.append("testCapabilityIds", JSON.stringify(data.testCapabilityIds));
+    formData.append(
+      "testCapabilityIds",
+      JSON.stringify(data.testCapabilityIds)
+    );
     formData.append("accreditationStandard", data.accreditationStandard);
     formData.append(
       "accreditationCertificateNumber",
@@ -87,9 +90,7 @@ export function EditLabForm({
       toast.success("Laboratory updated successfully");
     } else if (state?.status === "error") {
       toast.error(
-        typeof state.error === "string"
-          ? state.error
-          : "Something went wrong"
+        typeof state.error === "string" ? state.error : "Something went wrong"
       );
     }
   }, [state]);

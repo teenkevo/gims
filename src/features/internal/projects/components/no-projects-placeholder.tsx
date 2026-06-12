@@ -7,14 +7,20 @@ import { motion } from "framer-motion";
 
 export default function NoProjectsPlaceholder({
   helperText,
+  description = "Let's start off with creating a project.",
+  createHref = "/projects/create",
   needAction,
+  className = "h-[72vh]",
 }: {
   helperText?: string;
+  description?: string;
+  createHref?: string;
   needAction?: boolean;
+  className?: string;
 }) {
   return (
     <motion.div
-      className="flex flex-1 items-center justify-center h-[72vh] rounded-lg border border-dashed shadow-sm p-4"
+      className={`flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm p-4 ${className}`}
       initial={{ opacity: 0, y: 10 }} // Start hidden and slightly below
       animate={{ opacity: 1, y: 0 }} // Fade in and slide up
       transition={{ duration: 0.1, ease: "easeOut" }} // Control the speed of the animation
@@ -27,21 +33,19 @@ export default function NoProjectsPlaceholder({
             height="0"
             priority
             alt="Success Icon"
-            className="w-full h-auto md:mb-4"
+            className="mx-auto mb-2 h-auto w-48 max-w-[200px] md:mb-4 md:max-w-[300px]"
           />
         )}
-        <h3 className="text-2xl font-bold tracking-tight">
-          You have no {helperText}
+        <h3 className="text-lg md:text-xl font-bold tracking-tight">
+          You have no {helperText ?? "projects"}
         </h3>
         {needAction && (
           <>
-            <p className="text-sm text-muted-foreground">
-              Let&apos;s start off with creating a project.
-            </p>
+            <p className="text-sm text-muted-foreground">{description}</p>
 
             <div className="mx-4 my-2">
               <Button asChild className="sm:w-auto" variant="default">
-                <Link href="/projects/create" className="my-2">
+                <Link href={createHref} className="my-2">
                   <PlusCircleIcon className="h-5 w-5 mr-2" />
                   Create New Project
                 </Link>

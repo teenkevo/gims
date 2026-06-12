@@ -140,7 +140,6 @@ export const lab = defineType({
       type: "array",
       title: "Assigned Personnel",
       of: [{ type: "reference", to: [{ type: "personnel" }] }],
-      validation: (Rule) => Rule.required().min(1),
     }),
     defineField({
       name: "labHead",
@@ -148,7 +147,6 @@ export const lab = defineType({
       to: [{ type: "personnel" }],
       title: "Lab Head",
       description: "Must be selected from assigned personnel",
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "equipment",

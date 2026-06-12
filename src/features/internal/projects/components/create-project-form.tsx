@@ -35,8 +35,10 @@ const formVariants = {
 
 export function CreateProjectForm({
   clients,
+  labId,
 }: {
   clients: ALL_CLIENTS_QUERY_RESULT;
+  labId?: string;
 }) {
   const router = useRouter();
 
@@ -91,23 +93,31 @@ export function CreateProjectForm({
       )
     );
 
+    if (labId) {
+      formData.append("labId", labId);
+    }
+
     startTransition(() => dispatch(formData)); // Use dispatch instead of createProject
   };
 
   useEffect(() => {
     if (state?.status === "ok") {
       toast.success("Project created successfully");
-      router.push("/projects");
+      if (labId) {
+        router.push(`/labs/${labId}?tab=projects`);
+      } else {
+        router.push("/projects");
+      }
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
-  }, [state]);
+  }, [state, labId, router]);
 
   return (
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/projects"
+        href={labId ? `/labs/${labId}?tab=projects` : "/projects"}
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back

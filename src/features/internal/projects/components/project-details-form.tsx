@@ -170,7 +170,6 @@ export function ProjectDetailsForm({
                 />
               </PopoverContent>
             </Popover>
-            <FormDescription>This can be configured later</FormDescription>
             <FormMessage />
           </FormItem>
         )}
