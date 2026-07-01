@@ -3,6 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { writeClient } from "@/sanity/lib/write-client";
 import { deleteProjectById } from "@/lib/actions";
+import { authMiddleware } from "@/lib/auth/api";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 // Schema for creating a project
 const createProjectSchema = z.object({
@@ -43,7 +45,11 @@ const deleteProjectSchema = z.object({
 
 const app = new Hono()
   // Create a new project
-  .post("/create", zValidator("json", createProjectSchema), async (c) => {
+  .post(
+    "/create",
+    authMiddleware(PERMISSIONS["projects:create"]),
+    zValidator("json", createProjectSchema),
+    async (c) => {
     const { projectName, dateRange, priority, clients } = c.req.valid("json");
 
     const clientIds = await Promise.all(
@@ -87,6 +93,7 @@ const app = new Hono()
   // Update project name
   .post(
     "/update-name",
+    authMiddleware(PERMISSIONS["projects:update"]),
     zValidator("json", updateProjectNameSchema),
     async (c) => {
       const { projectId, projectName } = c.req.valid("json");
@@ -103,6 +110,7 @@ const app = new Hono()
   // Update project dates
   .post(
     "/update-dates",
+    authMiddleware(PERMISSIONS["projects:update"]),
     zValidator("json", updateProjectDatesSchema),
     async (c) => {
       const { projectId, dateRange } = c.req.valid("json");
@@ -116,7 +124,11 @@ const app = new Hono()
     }
   )
   // Delete project
-  .post("/delete", zValidator("json", deleteProjectSchema), async (c) => {
+  .post(
+    "/delete",
+    authMiddleware(PERMISSIONS["projects:delete"]),
+    zValidator("json", deleteProjectSchema),
+    async (c) => {
     const { projectId } = c.req.valid("json");
 
     const result = await deleteProjectById(projectId);

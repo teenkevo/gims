@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { writeClient } from "@/sanity/lib/write-client";
+import { authMiddleware } from "@/lib/auth/api";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 // Schema for updating client name
 const updateClientNameSchema = z.object({
@@ -47,7 +49,11 @@ const addClientToProjectSchema = z.object({
 
 const app = new Hono()
   // Update client name
-  .post("/update-name", zValidator("json", updateClientNameSchema), async (c) => {
+  .post(
+    "/update-name",
+    authMiddleware(PERMISSIONS["clients:update"]),
+    zValidator("json", updateClientNameSchema),
+    async (c) => {
     const { clientId, clientName } = c.req.valid("json");
 
     const updatedClient = await writeClient.patch(clientId).set({ name: clientName }).commit();
@@ -55,7 +61,11 @@ const app = new Hono()
     return c.json({ updatedClient });
   })
 
-  .post("/create-contact", zValidator("json", createContactSchema), async (c) => {
+  .post(
+    "/create-contact",
+    authMiddleware(PERMISSIONS["clients:update"]),
+    zValidator("json", createContactSchema),
+    async (c) => {
     const { projectId, clientId, contactType, existingContact, name, email, phone, designation } =
       c.req.valid("json");
 
@@ -106,6 +116,7 @@ const app = new Hono()
   })
   .post(
     "/remove-contact-from-project",
+    authMiddleware(PERMISSIONS["clients:update"]),
     zValidator("json", removeContactFromProjectSchema),
     async (c) => {
       const { projectId, contactId } = c.req.valid("json");
@@ -117,7 +128,11 @@ const app = new Hono()
       return c.json({ updatedProject });
     }
   )
-  .post("/update-contact", zValidator("json", updateContactSchema), async (c) => {
+  .post(
+    "/update-contact",
+    authMiddleware(PERMISSIONS["clients:update"]),
+    zValidator("json", updateContactSchema),
+    async (c) => {
     const { contactId, name, email, phone, designation } = c.req.valid("json");
 
     const updatedContact = await writeClient
@@ -129,6 +144,7 @@ const app = new Hono()
   // Contact persons might also not to be desociated from project after client is dissociated from project because contact persons are linked to a client.
   .post(
     "/remove-client-from-project",
+    authMiddleware(PERMISSIONS["clients:update"]),
     zValidator("json", removeClientFromProjectSchema),
     async (c) => {
       const { projectId, clientId } = c.req.valid("json");
@@ -140,7 +156,11 @@ const app = new Hono()
       return c.json({ updatedProject });
     }
   )
-  .post("/add-client-to-project", zValidator("json", addClientToProjectSchema), async (c) => {
+  .post(
+    "/add-client-to-project",
+    authMiddleware(PERMISSIONS["clients:update"]),
+    zValidator("json", addClientToProjectSchema),
+    async (c) => {
     const { projectId, clientType, existingClient, newClientName } = c.req.valid("json");
 
     if (clientType === "new") {

@@ -3276,14 +3276,29 @@ export async function createPersonnel(prevState: any, formData: FormData) {
         phone: sanitizePhoneNumber(phone as string),
         departmentRoles: departmentRolesArray,
         status: "active",
+        appAccessStatus: "none",
       },
       {
         autoGenerateArrayKeys: true,
       }
     );
+
+    const { invitePersonnelToApp } = await import("@/lib/auth/personnel-invite");
+    const { getSession } = await import("@/lib/auth/session");
+    const session = await getSession();
+    const invitedBy = session.isAuthenticated ? session : undefined;
+
+    await invitePersonnelToApp({
+      personnelId: result._id,
+      email: email as string,
+      fullName: fullName as string,
+      invitedBy,
+    });
+
     revalidateTag("personnel");
     return { result, status: "ok" };
   } catch (error) {
+    console.error("createPersonnel error:", error);
     return { error, status: "error" };
   }
 }

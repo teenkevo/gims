@@ -24,6 +24,8 @@ import { department } from "./department";
 import { sampleReceipt } from "./sample-receipt";
 import { sampleReviewTemplate } from "./sample-review-template";
 import { sampleAdequacyTemplate } from "./sample-adequacy-template";
+import { auditLog } from "./audit-log";
+import { appUser } from "./app-user";
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -51,5 +53,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     sampleReceipt,
     sampleReviewTemplate,
     sampleAdequacyTemplate,
+    auditLog,
+    appUser,
   ],
 };

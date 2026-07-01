@@ -9,6 +9,7 @@ export const getAllPersonnel = async () => {
           fullName,
           email,
           phone,
+          appAccessStatus,
           departmentRoles[] {
             department->{
               _id,

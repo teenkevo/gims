@@ -84,6 +84,16 @@ export const structure: StructureResolver = (S) =>
                 ),
             ])
         ),
+      S.listItem()
+        .title("Security")
+        .child(
+          S.list()
+            .title("Security")
+            .items([
+              S.documentTypeListItem("appUser").title("App Users"),
+              S.documentTypeListItem("auditLog").title("Audit Logs"),
+            ])
+        ),
       // S.documentTypeListItem("sampleReviewTemplate").title(
       //   "Sample Review Templates"
       // ),

@@ -98,6 +98,26 @@ export const personnel = defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: "clerkUserId",
+      type: "string",
+      title: "Clerk User ID",
+      readOnly: true,
+    }),
+    defineField({
+      name: "appAccessStatus",
+      type: "string",
+      title: "App Access Status",
+      options: {
+        list: [
+          { title: "None", value: "none" },
+          { title: "Invited", value: "invited" },
+          { title: "Active", value: "active" },
+          { title: "Revoked", value: "revoked" },
+        ],
+      },
+      initialValue: "none",
+    }),
   ],
   preview: {
     // Pick which bits you need
