@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../../sanity.types";
 import { useState } from "react";
-import { CreatePersonnelDialog } from "../create-personnel-dialog";
+import { EditPersonnelDialog } from "../edit-personnel-dialog";
 import { DeletePersonnel } from "./delete-personnel";
 import { Delete, Pencil } from "lucide-react";
 
@@ -71,13 +71,14 @@ export function DataTableRowActions<TData>({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreatePersonnelDialog
-        departmentRoles={departmentRoles}
-        isEdit={true}
-        personnel={personnel}
-        open={openDialog === "dialog1"}
-        onClose={handleCloseDialog}
-      />
+      {personnel && (
+        <EditPersonnelDialog
+          departmentRoles={departmentRoles}
+          personnel={personnel}
+          open={openDialog === "dialog1"}
+          onClose={handleCloseDialog}
+        />
+      )}
       <DeletePersonnel
         id={personnel?._id || ""}
         open={openDialog === "dialog3"}

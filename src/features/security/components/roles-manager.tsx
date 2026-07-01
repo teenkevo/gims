@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import type { AppRoleRecord } from "@/sanity/lib/auth/getAllAppRoles";
 import { permissionsToMatrixSummary } from "@/lib/auth/permission-resources";
 import { RoleEditorDialog } from "./role-editor-dialog";
 import { RolesTableRowActions } from "./roles-table-row-actions";
+import { DeleteMultipleRoles } from "./delete-multiple-roles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -36,7 +38,18 @@ export function RolesManager({
   onRolesChange,
 }: RolesManagerProps) {
   const [editorOpen, setEditorOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<AppRoleRecord | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const selectedRoles = useMemo(
+    () => roles.filter((role) => selectedIds.has(role._id)),
+    [roles, selectedIds]
+  );
+
+  const allSelected = roles.length > 0 && selectedIds.size === roles.length;
+  const someSelected =
+    selectedIds.size > 0 && selectedIds.size < roles.length;
 
   const openCreate = () => {
     setEditingRole(null);
@@ -48,6 +61,31 @@ export function RolesManager({
     setEditorOpen(true);
   };
 
+  const toggleAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(roles.map((role) => role._id)));
+      return;
+    }
+    setSelectedIds(new Set());
+  };
+
+  const toggleOne = (roleId: string, checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(roleId);
+      } else {
+        next.delete(roleId);
+      }
+      return next;
+    });
+  };
+
+  const handleDeleted = () => {
+    setSelectedIds(new Set());
+    onRolesChange?.();
+  };
+
   return (
     <>
       <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
@@ -56,10 +94,23 @@ export function RolesManager({
             <CardTitle>All roles</CardTitle>
           </div>
           {canManage && (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create role
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {selectedIds.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete {selectedIds.size} role
+                  {selectedIds.size === 1 ? "" : "s"}
+                </Button>
+              )}
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create role
+              </Button>
+            </div>
           )}
         </CardHeader>
 
@@ -68,6 +119,21 @@ export function RolesManager({
             <Table>
               <TableHeader>
                 <TableRow>
+                  {canManage && (
+                    <TableHead className="w-[48px]">
+                      <Checkbox
+                        checked={
+                          allSelected
+                            ? true
+                            : someSelected
+                              ? "indeterminate"
+                              : false
+                        }
+                        onCheckedChange={(value) => toggleAll(value === true)}
+                        aria-label="Select all roles"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Role name</TableHead>
                   <TableHead>Created by</TableHead>
                   <TableHead>Created on</TableHead>
@@ -82,7 +148,7 @@ export function RolesManager({
                 {roles.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={canManage ? 6 : 5}
+                      colSpan={canManage ? 7 : 5}
                       className="h-24 text-center text-muted-foreground"
                     >
                       No roles yet. Create one to define a permission profile.
@@ -93,8 +159,22 @@ export function RolesManager({
                     <TableRow
                       key={role._id}
                       className="cursor-pointer hover:bg-muted/50"
+                      data-state={
+                        selectedIds.has(role._id) ? "selected" : undefined
+                      }
                       onClick={() => openEdit(role)}
                     >
+                      {canManage && (
+                        <TableCell onClick={(event) => event.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.has(role._id)}
+                            onCheckedChange={(value) =>
+                              toggleOne(role._id, value === true)
+                            }
+                            aria-label={`Select ${role.name}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           {role.name}
@@ -138,6 +218,13 @@ export function RolesManager({
         role={editingRole}
         canManage={canManage}
         onSuccess={onRolesChange}
+      />
+
+      <DeleteMultipleRoles
+        roles={selectedRoles}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={handleDeleted}
       />
     </>
   );

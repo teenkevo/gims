@@ -171,6 +171,62 @@ export async function archiveAppRole(id: string) {
   revalidatePath("/security");
 }
 
+export async function deleteAppRoles(ids: string[]) {
+  const session = await requirePermission(PERMISSIONS["security:manage"]);
+
+  if (ids.length === 0) {
+    return { deletedCount: 0, blocked: [] as string[] };
+  }
+
+  const roles = await writeClient.fetch<
+    Array<{
+      _id: string;
+      name?: string;
+      isSystem?: boolean;
+      archived?: boolean;
+      inUse: boolean;
+    }>
+  >(
+    `*[_type == "appRole" && _id in $ids]{
+      _id,
+      name,
+      isSystem,
+      archived,
+      "inUse": count(*[_type == "department" && references(^._id)]) > 0
+    }`,
+    { ids }
+  );
+
+  const blocked = roles
+    .filter(
+      (role) => role.isSystem || role.archived || role.inUse
+    )
+    .map((role) => role.name ?? role._id);
+
+  const deletableRoles = roles.filter(
+    (role) => !role.isSystem && !role.archived && !role.inUse
+  );
+
+  await Promise.all(
+    deletableRoles.map(async (role) => {
+      await writeClient.delete(role._id);
+      await createAuditLog(session, {
+        action: "delete",
+        resource: "appRole",
+        resourceId: role._id,
+        metadata: { name: role.name },
+      });
+    })
+  );
+
+  revalidatePath("/security");
+
+  return {
+    deletedCount: deletableRoles.length,
+    blocked,
+  };
+}
+
 export async function refreshSecurityPage() {
   revalidatePath("/security");
 }

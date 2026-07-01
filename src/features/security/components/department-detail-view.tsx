@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import type { SecurityDepartmentRecord } from "@/sanity/lib/departments/getSecurityDepartments";
 import type { DepartmentDetail } from "@/sanity/lib/departments/getDepartmentDetail";
 import { fetchDepartmentDetail } from "@/lib/auth/security-tab-actions";
-import { CreatePersonnelDialog } from "@/features/internal/personnel/components/create-personnel-dialog";
+import { CreateDepartmentPersonnelDialog } from "./create-department-personnel-dialog";
 import { SecurityTabLoading } from "./security-tab-loading";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,18 +52,13 @@ export function DepartmentDetailView({
     loadDetail(department._id);
   }, [department._id]);
 
-  const departmentRolesMap = useMemo(() => {
-    if (!detail) return {};
-
-    return {
-      [detail.department]: {
-        departmentId: detail._id,
-        roles: detail.roles
-          .map((entry) => entry.roleName)
-          .filter((name): name is string => Boolean(name)),
-      },
-    };
-  }, [detail]);
+  const departmentRoles = useMemo(
+    () =>
+      detail?.roles
+        .map((entry) => entry.roleName)
+        .filter((name): name is string => Boolean(name)) ?? [],
+    [detail]
+  );
 
   const handlePersonnelChange = () => {
     loadDetail(department._id);
@@ -85,12 +80,12 @@ export function DepartmentDetailView({
           </Button>
         </div>
 
-        <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pt-2">
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pt-2">
           <CardTitle>{department.department}</CardTitle>
           {canManage && !isLoading && detail && (
             <Button size="sm" onClick={() => setCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Create personnel
+              Add personnel
             </Button>
           )}
         </CardHeader>
@@ -147,15 +142,15 @@ export function DepartmentDetailView({
       </div>
 
       {detail && (
-        <CreatePersonnelDialog
+        <CreateDepartmentPersonnelDialog
           open={createOpen}
           onClose={() => {
             setCreateOpen(false);
             handlePersonnelChange();
           }}
-          departmentRoles={departmentRolesMap}
-          rolePickerLabel={`${department.department} Roles`}
-          rolesOnly
+          departmentName={department.department}
+          departmentId={detail._id}
+          roles={departmentRoles}
         />
       )}
     </>

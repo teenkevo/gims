@@ -1,4 +1,4 @@
-import { Search, Filter, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -7,9 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreatePersonnelDialog } from "./create-personnel-dialog";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 interface PersonnelSearchProps {
   searchTerm: string;
@@ -33,12 +30,6 @@ export function PersonnelSearch({
   onDepartmentFilterChange,
   departmentRoles,
 }: PersonnelSearchProps) {
-  const [open, setOpen] = useState<boolean>(false);
-
-  const handleCloseDialog = () => {
-    setOpen(false);
-  };
-
   return (
     <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
       <div className="flex items-center gap-4 flex-1">
@@ -75,7 +66,6 @@ export function PersonnelSearch({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
-            {/* Based on the departmentRoles, we need to show all the roles for the department */}
             {Object.entries(departmentRoles).map(([key, { roles }]) => {
               if (departmentFilter === key) {
                 return roles.map((role) => {
@@ -89,21 +79,6 @@ export function PersonnelSearch({
             })}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <Button
-          onClick={() => setOpen(true)}
-          className="text-sm flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Personnel
-        </Button>
-        <CreatePersonnelDialog
-          departmentRoles={departmentRoles}
-          open={open}
-          onClose={handleCloseDialog}
-        />
       </div>
     </div>
   );

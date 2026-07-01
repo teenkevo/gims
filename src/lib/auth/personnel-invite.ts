@@ -21,10 +21,8 @@ export async function invitePersonnelToApp(params: {
   const { personnelId, email, fullName, invitedBy } = params;
   const clerk = getClerkClient();
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-  const signUpPath =
-    process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ?? "/sign-up";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const signUpPath = process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ?? "/sign-up";
 
   try {
     await clerk.invitations.createInvitation({
@@ -34,6 +32,7 @@ export async function invitePersonnelToApp(params: {
       publicMetadata: {
         userType: USER_TYPES.INTERNAL,
       },
+      ignoreExisting: true,
     });
   } catch (error: unknown) {
     const message =
