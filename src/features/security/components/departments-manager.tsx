@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Plus, Trash2 } from "lucide-react";
 import type { SecurityDepartmentRecord } from "@/sanity/lib/departments/getSecurityDepartments";
-import { DepartmentDetailView } from "./department-detail-view";
+import { DepartmentRolesView } from "./department-roles-view";
+import { DepartmentRolePersonnelView } from "./department-role-personnel-view";
 import { DepartmentEditorSheet } from "./department-editor-sheet";
 import { DeleteMultipleDepartments } from "./delete-multiple-departments";
 import { DepartmentsTableRowActions } from "./departments-table-row-actions";
@@ -38,6 +39,7 @@ export function DepartmentsManager({
 }: DepartmentsManagerProps) {
   const [viewingDepartment, setViewingDepartment] =
     useState<SecurityDepartmentRecord | null>(null);
+  const [viewingRole, setViewingRole] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingDepartmentId, setEditingDepartmentId] = useState<string | null>(
@@ -57,6 +59,7 @@ export function DepartmentsManager({
 
   const openDetail = (department: SecurityDepartmentRecord) => {
     setViewingDepartment(department);
+    setViewingRole(null);
   };
 
   const openCreate = () => {
@@ -79,6 +82,7 @@ export function DepartmentsManager({
       !departments.some((department) => department._id === viewingDepartment._id)
     ) {
       setViewingDepartment(null);
+      setViewingRole(null);
     }
   }, [departments, viewingDepartment]);
 
@@ -113,13 +117,36 @@ export function DepartmentsManager({
         (department) => department._id === viewingDepartment._id
       ) ?? viewingDepartment;
 
+    if (viewingRole) {
+      return (
+        <>
+          <DepartmentRolePersonnelView
+            department={currentDepartment}
+            selectedRole={viewingRole}
+            onBack={() => setViewingRole(null)}
+            canManage={canManage}
+            onPersonnelChange={handleDepartmentsChange}
+          />
+
+          <DepartmentEditorSheet
+            open={editorOpen}
+            onOpenChange={setEditorOpen}
+            departmentId={editingDepartmentId}
+            canManage={canManage}
+            onSuccess={handleDepartmentsChange}
+          />
+        </>
+      );
+    }
+
     return (
       <>
-        <DepartmentDetailView
+        <DepartmentRolesView
           department={currentDepartment}
           onBack={() => setViewingDepartment(null)}
+          onSelectRole={setViewingRole}
           canManage={canManage}
-          onPersonnelChange={handleDepartmentsChange}
+          onRolesChange={handleDepartmentsChange}
         />
 
         <DepartmentEditorSheet

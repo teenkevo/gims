@@ -53,7 +53,7 @@ export async function updateAppRole(input: {
   );
 
   if (!existing) {
-    throw new Error("Role not found");
+    throw new Error("Permission set not found");
   }
 
   const slug = input.name
@@ -91,11 +91,11 @@ export async function deleteAppRole(id: string) {
   } | null>(`*[_type == "appRole" && _id == $id][0]{ name, isSystem }`, { id });
 
   if (!existing) {
-    throw new Error("Role not found");
+    throw new Error("Permission set not found");
   }
 
   if (existing.isSystem) {
-    throw new Error("System roles cannot be deleted");
+    throw new Error("System permission sets cannot be deleted");
   }
 
   const inUse = await writeClient.fetch<number>(
@@ -104,7 +104,9 @@ export async function deleteAppRole(id: string) {
   );
 
   if (inUse > 0) {
-    throw new Error("Role is in use and cannot be deleted. Archive it instead.");
+    throw new Error(
+      "Permission set is in use and cannot be deleted. Archive it instead."
+    );
   }
 
   await writeClient.delete(id);
@@ -133,15 +135,15 @@ export async function archiveAppRole(id: string) {
   );
 
   if (!existing) {
-    throw new Error("Role not found");
+    throw new Error("Permission set not found");
   }
 
   if (existing.isSystem) {
-    throw new Error("System roles cannot be archived");
+    throw new Error("System permission sets cannot be archived");
   }
 
   if (existing.archived) {
-    throw new Error("Role is already archived");
+    throw new Error("Permission set is already archived");
   }
 
   const inUse = await writeClient.fetch<number>(
@@ -150,7 +152,9 @@ export async function archiveAppRole(id: string) {
   );
 
   if (inUse === 0) {
-    throw new Error("Only roles in use can be archived. Delete unused roles instead.");
+    throw new Error(
+      "Only permission sets in use can be archived. Delete unused permission sets instead."
+    );
   }
 
   await writeClient

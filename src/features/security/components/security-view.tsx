@@ -26,7 +26,7 @@ export function SecurityView({ canManageRoles }: SecurityViewProps) {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Security</h1>
         <p className="text-muted-foreground">
-          Manage application roles, departments, user access, and audit activity.
+          Manage permission sets, departments, user access, and audit activity.
         </p>
       </div>
 
@@ -36,7 +36,7 @@ export function SecurityView({ canManageRoles }: SecurityViewProps) {
         className="space-y-6"
       >
         <TabsList>
-          <TabsTrigger value="roles">Roles</TabsTrigger>
+          <TabsTrigger value="roles">Permission sets</TabsTrigger>
           <TabsTrigger value="departments">Departments</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="audit-log">Audit log</TabsTrigger>

@@ -58,6 +58,7 @@ interface CreateDepartmentPersonnelDialogProps {
   departmentName: string;
   departmentId: string;
   roles: string[];
+  defaultRole?: string;
 }
 
 export function CreateDepartmentPersonnelDialog({
@@ -66,6 +67,7 @@ export function CreateDepartmentPersonnelDialog({
   departmentName,
   departmentId,
   roles,
+  defaultRole,
 }: CreateDepartmentPersonnelDialogProps) {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [roleOpen, setRoleOpen] = useState(false);
@@ -111,7 +113,11 @@ export function CreateDepartmentPersonnelDialog({
 
     const randomNumber = Math.floor(10000 + Math.random() * 90000);
     form.setValue("internalId", `EMP-${randomNumber}`);
-  }, [open, form]);
+
+    if (defaultRole && roles.includes(defaultRole)) {
+      form.setValue("role", defaultRole, { shouldValidate: true });
+    }
+  }, [open, form, defaultRole, roles]);
 
   useEffect(() => {
     if (state?.status === "ok") {

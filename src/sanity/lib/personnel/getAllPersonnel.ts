@@ -21,6 +21,11 @@ export const getAllPersonnel = async () => {
                   _id,
                   name,
                   permissions
+                },
+                appRoles[]->{
+                  _id,
+                  name,
+                  permissions
                 }
               }
             }

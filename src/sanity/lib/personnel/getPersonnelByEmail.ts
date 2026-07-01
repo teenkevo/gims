@@ -45,6 +45,11 @@ const PERSONNEL_BY_EMAIL_QUERY = defineQuery(`
             _id,
             name,
             permissions
+          },
+          appRoles[]->{
+            _id,
+            name,
+            permissions
           }
         }
       }

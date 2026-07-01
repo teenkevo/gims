@@ -78,7 +78,7 @@ export function DepartmentEditorSheet({
 
     fetchSecurityRoles()
       .then(setAppRoles)
-      .catch(() => toast.error("Failed to load application roles"));
+      .catch(() => toast.error("Failed to load permission sets"));
 
     if (!departmentId) {
       setName("");
@@ -100,7 +100,8 @@ export function DepartmentEditorSheet({
             ? data.roles.map((role) => ({
                 key: crypto.randomUUID(),
                 roleName: role.roleName ?? "",
-                appRoleId: role.appRole?._id ?? "",
+                appRoleId:
+                  role.appRoles?.[0]?._id ?? role.appRole?._id ?? "",
               }))
             : [createEmptyRoleRow()]
         );
@@ -178,8 +179,8 @@ export function DepartmentEditorSheet({
                 : "Create department"}
             </SheetTitle>
             <SheetDescription>
-              Define the department name and the job titles linked to application
-              roles.
+              Define the department name and the job titles linked to permission
+              sets.
             </SheetDescription>
           </SheetHeader>
         </div>
@@ -247,7 +248,7 @@ export function DepartmentEditorSheet({
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Application role</Label>
+                        <Label>Permission set</Label>
                         <Select
                           value={row.appRoleId}
                           onValueChange={(value) =>
@@ -256,7 +257,7 @@ export function DepartmentEditorSheet({
                           disabled={!canManage || isPending}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select application role" />
+                            <SelectValue placeholder="Select permission set" />
                           </SelectTrigger>
                           <SelectContent>
                             {appRoles.map((appRole) => (

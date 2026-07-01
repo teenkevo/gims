@@ -49,10 +49,10 @@ export function RolesTableRowActions({
       try {
         if (confirmAction === "delete") {
           await deleteAppRole(role._id);
-          toast.success("Role deleted");
+          toast.success("Permission set deleted");
         } else {
           await archiveAppRole(role._id);
-          toast.success("Role archived");
+          toast.success("Permission set archived");
         }
         setConfirmAction(null);
         onRolesChange?.();
@@ -112,9 +112,9 @@ export function RolesTableRowActions({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete role?</AlertDialogTitle>
+            <AlertDialogTitle>Delete permission set?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the role -{" "}
+              This will permanently delete the permission set{" "}
               <strong>{role.name}</strong>. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -147,11 +147,11 @@ export function RolesTableRowActions({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archive role?</AlertDialogTitle>
+            <AlertDialogTitle>Archive permission set?</AlertDialogTitle>
             <AlertDialogDescription>
               &quot;{role.name}&quot; is linked to departmental job titles.
-              Archiving keeps existing assignments but hides this role from new
-              use.
+              Archiving keeps existing assignments but hides this permission set
+              from new use.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -19,6 +19,7 @@ export type DepartmentDetail = {
   roles: Array<{
     roleName?: string;
     appRole?: { _id: string; name: string } | null;
+    appRoles?: Array<{ _id: string; name: string }> | null;
   }>;
   personnel: DepartmentPersonnelRow[];
 };
@@ -33,6 +34,10 @@ const DEPARTMENT_DETAIL_QUERY = defineQuery(`
     roles[] {
       roleName,
       appRole->{
+        _id,
+        name
+      },
+      appRoles[]->{
         _id,
         name
       }
@@ -82,6 +87,7 @@ export type DepartmentEditorData = {
   roles: Array<{
     roleName?: string;
     appRole?: { _id: string; name: string } | null;
+    appRoles?: Array<{ _id: string; name: string }> | null;
   }>;
 };
 

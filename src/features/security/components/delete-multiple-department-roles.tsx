@@ -4,8 +4,7 @@ import { useTransition } from "react";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import type { AppRoleRecord } from "@/sanity/lib/auth/getAllAppRoles";
-import { deleteAppRoles } from "@/lib/auth/role-actions";
+import { removeDepartmentRoles } from "@/lib/auth/department-actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,49 +16,58 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface DeleteMultipleRolesProps {
-  roles: AppRoleRecord[];
+export type DepartmentRoleRow = {
+  roleName: string;
+  permissionSet: string;
+  personnelCount: number;
+  appRoleId?: string;
+  appRoleIds?: string[];
+};
+
+interface DeleteMultipleDepartmentRolesProps {
+  departmentId: string;
+  roles: DepartmentRoleRow[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted: () => void;
 }
 
-function isDeletable(role: AppRoleRecord) {
-  return !role.isSystem && !role.archived && !role.inUse;
-}
-
-export function DeleteMultipleRoles({
+export function DeleteMultipleDepartmentRoles({
+  departmentId,
   roles,
   open,
   onOpenChange,
   onDeleted,
-}: DeleteMultipleRolesProps) {
+}: DeleteMultipleDepartmentRolesProps) {
   const [isPending, startTransition] = useTransition();
 
-  const blocked = roles.filter((role) => !isDeletable(role));
-  const deletable = roles.filter(isDeletable);
+  const blocked = roles.filter((role) => role.personnelCount > 0);
+  const deletable = roles.filter((role) => role.personnelCount === 0);
 
   const handleDelete = () => {
     startTransition(async () => {
       try {
-        const result = await deleteAppRoles(roles.map((role) => role._id));
+        const result = await removeDepartmentRoles(
+          departmentId,
+          roles.map((role) => role.roleName)
+        );
 
-        if (result.deletedCount === 0) {
+        if (result.removedCount === 0) {
           toast.error(
-            "No permission sets could be deleted. System, archived, and in-use permission sets cannot be deleted."
+            "No roles could be removed. Reassign or remove assigned personnel first."
           );
           return;
         }
 
         if (result.blocked.length > 0) {
           toast.warning(
-            `Deleted ${result.deletedCount} permission set${result.deletedCount === 1 ? "" : "s"}. ${result.blocked.length} could not be deleted.`
+            `Removed ${result.removedCount} role${result.removedCount === 1 ? "" : "s"}. ${result.blocked.length} could not be removed because they have assigned personnel.`
           );
         } else {
           toast.success(
-            result.deletedCount > 1
-              ? `${result.deletedCount} permission sets deleted`
-              : "Permission set deleted"
+            result.removedCount > 1
+              ? `${result.removedCount} roles removed`
+              : "Role removed"
           );
         }
 
@@ -67,9 +75,7 @@ export function DeleteMultipleRoles({
         onDeleted();
       } catch (error) {
         toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to delete permission sets"
+          error instanceof Error ? error.message : "Failed to remove roles"
         );
       }
     });
@@ -83,18 +89,18 @@ export function DeleteMultipleRoles({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete permission sets?</AlertDialogTitle>
+          <AlertDialogTitle>Remove roles?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm text-muted-foreground">
               {blocked.length > 0 && (
                 <div className="flex items-start gap-2 rounded bg-orange-500/10 p-3 text-orange-600">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>
-                    {blocked.length} permission set
-                    {blocked.length > 1 ? "s cannot" : " cannot"} be deleted
-                    (system, archived, or in use):{" "}
+                    {blocked.length} role
+                    {blocked.length > 1 ? "s have" : " has"} assigned personnel
+                    and cannot be removed:{" "}
                     <span className="font-medium text-foreground">
-                      {blocked.map((role) => role.name).join(", ")}
+                      {blocked.map((role) => role.roleName).join(", ")}
                     </span>
                   </span>
                 </div>
@@ -104,17 +110,17 @@ export function DeleteMultipleRoles({
                 <>
                   <p>
                     {deletable.length > 1
-                      ? "These permission sets will be permanently deleted:"
-                      : "This permission set will be permanently deleted:"}
+                      ? "These roles will be removed from the department:"
+                      : "This role will be removed from the department:"}
                   </p>
                   <ul className="list-inside list-disc text-foreground">
                     {deletable.map((role) => (
-                      <li key={role._id}>{role.name}</li>
+                      <li key={role.roleName}>{role.roleName}</li>
                     ))}
                   </ul>
                 </>
               ) : (
-                <p>None of the selected permission sets can be deleted.</p>
+                <p>None of the selected roles can be removed.</p>
               )}
             </div>
           </AlertDialogDescription>
@@ -133,10 +139,10 @@ export function DeleteMultipleRoles({
               {isPending ? (
                 <>
                   <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
+                  Removing...
                 </>
               ) : (
-                `Delete ${deletable.length} permission set${deletable.length === 1 ? "" : "s"}`
+                `Remove ${deletable.length} role${deletable.length === 1 ? "" : "s"}`
               )}
             </AlertDialogAction>
           )}

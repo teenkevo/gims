@@ -21,7 +21,7 @@ export function RolesTab({ canManage }: RolesTabProps) {
       const data = await fetchSecurityRoles();
       setRoles(data);
     } catch {
-      toast.error("Failed to load roles");
+      toast.error("Failed to load permission sets");
       setRoles([]);
     } finally {
       setIsLoading(false);

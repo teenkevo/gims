@@ -48,7 +48,7 @@ export function RoleEditorDialog({
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      toast.error("Role name is required");
+      toast.error("Permission set name is required");
       return;
     }
 
@@ -65,15 +65,19 @@ export function RoleEditorDialog({
             name,
             permissions,
           });
-          toast.success("Role updated");
+          toast.success("Permission set updated");
         } else {
           await createAppRole({ name, permissions });
-          toast.success("Role created");
+          toast.success("Permission set created");
         }
         onOpenChange(false);
         onSuccess?.();
       } catch {
-        toast.error(isEdit ? "Failed to update role" : "Failed to create role");
+        toast.error(
+          isEdit
+            ? "Failed to update permission set"
+            : "Failed to create permission set"
+        );
       }
     });
   };
@@ -89,13 +93,13 @@ export function RoleEditorDialog({
             <SheetTitle>
               {isEdit
                 ? canManage
-                  ? "Edit role"
-                  : "Role details"
-                : "Create role"}
+                  ? "Edit permission set"
+                  : "Permission set details"
+                : "Create permission set"}
             </SheetTitle>
             <SheetDescription>
-              Assign fine-grained permissions for each module. This role can
-              later be linked to departmental job titles in HR.
+              Assign fine-grained permissions for each module. This permission
+              set can later be linked to departmental job titles.
             </SheetDescription>
           </SheetHeader>
         </div>
@@ -104,13 +108,13 @@ export function RoleEditorDialog({
           <div className="mx-auto w-full max-w-5xl space-y-6">
             <div className="space-y-2">
               <Label htmlFor="role-name" required>
-                Role name
+                Permission set name
               </Label>
               <Input
                 id="role-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Lab Technician"
+                placeholder="e.g. Lab Operations"
                 disabled={!canManage || isPending}
                 autoFocus
               />
@@ -141,7 +145,7 @@ export function RoleEditorDialog({
                 ? "Saving..."
                 : isEdit
                   ? "Save changes"
-                  : "Create role"}
+                  : "Create permission set"}
             </Button>
           </SheetFooter>
         )}

@@ -61,12 +61,20 @@ export const department = defineType({
               },
             },
             {
-              name: "appRole",
-              type: "reference",
-              title: "Application role",
+              name: "appRoles",
+              type: "array",
+              title: "Permission sets",
               description:
                 "Permissions granted to personnel with this departmental job title.",
+              of: [{ type: "reference", to: [{ type: "appRole" }] }],
+            },
+            {
+              name: "appRole",
+              type: "reference",
+              title: "Permission set (legacy)",
+              description: "Deprecated. Use Permission sets instead.",
               to: [{ type: "appRole" }],
+              hidden: true,
             },
           ],
         },

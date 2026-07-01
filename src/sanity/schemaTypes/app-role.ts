@@ -3,12 +3,12 @@ import { defineField, defineType } from "sanity";
 export const appRole = defineType({
   name: "appRole",
   type: "document",
-  title: "Application Role",
+  title: "Permission Set",
   fields: [
     defineField({
       name: "name",
       type: "string",
-      title: "Role name",
+      title: "Permission set name",
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -41,8 +41,8 @@ export const appRole = defineType({
     defineField({
       name: "isSystem",
       type: "boolean",
-      title: "System role",
-      description: "System roles cannot be deleted from the app.",
+      title: "System permission set",
+      description: "System permission sets cannot be deleted from the app.",
       initialValue: false,
       readOnly: true,
     }),
@@ -50,7 +50,7 @@ export const appRole = defineType({
       name: "archived",
       type: "boolean",
       title: "Archived",
-      description: "Archived roles remain linked but are hidden from new assignments.",
+      description: "Archived permission sets remain linked but are hidden from new assignments.",
       initialValue: false,
       readOnly: true,
     }),

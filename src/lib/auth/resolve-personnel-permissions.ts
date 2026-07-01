@@ -1,17 +1,16 @@
 import type { Permission } from "./permissions";
 import {
+  getPermissionSetsForDepartmentRole,
+  type DepartmentRolePermissionSetsSource,
+} from "@/lib/auth/department-role-permission-sets";
+import {
   getPermissionsForDepartmentRole,
   unionPermissions,
   type DepartmentRoleAssignment,
 } from "./department-role-permissions";
 
-type DepartmentRoleDef = {
+type DepartmentRoleDef = DepartmentRolePermissionSetsSource & {
   roleName?: string;
-  appRole?: {
-    _id: string;
-    name: string;
-    permissions?: string[];
-  } | null;
 };
 
 type PersonnelDepartmentRole = {
@@ -45,15 +44,16 @@ export function resolvePermissionsFromPersonnel(
       (r) => r.roleName?.toLowerCase() === entry.role.toLowerCase()
     );
 
-    if (
-      deptRoleDef?.appRole?.permissions &&
-      deptRoleDef.appRole.permissions.length > 0
-    ) {
-      for (const permission of deptRoleDef.appRole.permissions) {
-        permissions.add(permission as Permission);
-      }
-      if (deptRoleDef.appRole.name) {
-        usedAppRoles.push(deptRoleDef.appRole.name);
+    const permissionSets = getPermissionSetsForDepartmentRole(deptRoleDef);
+
+    if (permissionSets.length > 0) {
+      for (const appRole of permissionSets) {
+        for (const permission of appRole.permissions ?? []) {
+          permissions.add(permission as Permission);
+        }
+        if (appRole.name) {
+          usedAppRoles.push(appRole.name);
+        }
       }
       continue;
     }

@@ -91,7 +91,7 @@ export function RolesManager({
       <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg">
         <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
           <div>
-            <CardTitle>All roles</CardTitle>
+            <CardTitle>All permission sets</CardTitle>
           </div>
           {canManage && (
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -102,13 +102,13 @@ export function RolesManager({
                   onClick={() => setDeleteOpen(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete {selectedIds.size} role
+                  Delete {selectedIds.size} permission set
                   {selectedIds.size === 1 ? "" : "s"}
                 </Button>
               )}
               <Button size="sm" onClick={openCreate}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create role
+                Create permission set
               </Button>
             </div>
           )}
@@ -130,11 +130,11 @@ export function RolesManager({
                               : false
                         }
                         onCheckedChange={(value) => toggleAll(value === true)}
-                        aria-label="Select all roles"
+                        aria-label="Select all permission sets"
                       />
                     </TableHead>
                   )}
-                  <TableHead>Role name</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Created by</TableHead>
                   <TableHead>Created on</TableHead>
                   <TableHead>Modified by</TableHead>
@@ -151,7 +151,7 @@ export function RolesManager({
                       colSpan={canManage ? 7 : 5}
                       className="h-24 text-center text-muted-foreground"
                     >
-                      No roles yet. Create one to define a permission profile.
+                      No permission sets yet. Create one to define module access.
                     </TableCell>
                   </TableRow>
                 ) : (
