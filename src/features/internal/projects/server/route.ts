@@ -121,11 +121,11 @@ const app = new Hono()
 
     const result = await deleteProjectById(projectId);
 
-    if (result.status === "error") {
-      return c.json({ error: result.error }, 500);
+    if (result.status === "ok") {
+      return c.json({ deletedProject: result.result });
     }
 
-    return c.json({ deletedProject: result.result });
+    return c.json({ error: result.error }, 500);
   });
 
 export default app;

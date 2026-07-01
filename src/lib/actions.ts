@@ -1415,89 +1415,98 @@ export async function createSampleReceipt(
 
     // Create the sample receipt document
     const currentYear = new Date().getFullYear();
-    const sampleReceipt = await writeClient.create(
-      {
-        _type: "sampleReceipt",
-        project: {
-          _type: "reference",
-          _ref: projectId,
-        },
-        // Numbers required by schema
-        sampleReceiptNumber:
-          sampleReceiptNumber && sampleReceiptNumber.trim() !== ""
-            ? sampleReceiptNumber
-            : `SR${currentYear}-${Date.now().toString().slice(-6)}`,
-        revisionNumber: `R${currentYear}-00`,
-        status: "draft",
-        reviewTemplate: reviewTemplate
-          ? {
-              _type: "reference",
-              _ref: reviewTemplate,
-            }
-          : undefined,
-        reviewItems: reviewItems.map((item: any) => ({
-          templateItemId: item.id,
-          label: item.label,
-          status: item.status,
-          comments: item.comments || "",
-        })),
-        adequacyTemplate: adequacyTemplate
-          ? {
-              _type: "reference",
-              _ref: adequacyTemplate,
-            }
-          : undefined,
-        adequacyChecks: adequacyChecks.map((item: any) => ({
-          templateItemId: item.id,
-          label: item.label,
-          status: item.status,
-          comments: item.comments || "",
-        })),
-        overallStatus,
-        overallComments: overallComments || "",
-        clientAcknowledgement: clientAcknowledgement
-          ? {
-              acknowledgementText:
-                clientAcknowledgement.acknowledgementText || "",
-              clientSignature: clientAcknowledgement.clientSignature || "",
-              clientRepresentative:
-                clientAcknowledgement.clientRepresentative || "",
-            }
-          : undefined,
-        getlabAcknowledgement: getlabAcknowledgement
-          ? {
-              // expectedDeliveryDate can be set at approval phase; optional here
-              sampleRetentionDuration:
-                getlabAcknowledgement.sampleRetentionDuration || "",
-              acknowledgementText:
-                getlabAcknowledgement.acknowledgementText || "",
-            }
-          : undefined,
-        sampleReceiptPersonnel: {
-          role: sampleReceiptPersonnel.role,
-          name: sampleReceiptPersonnel.name,
-          personnel: sampleReceiptPersonnel.personnel
-            ? {
-                _type: "reference",
-                _ref: sampleReceiptPersonnel.personnel,
-              }
-            : undefined,
-        },
-        file: {
-          _type: "file",
-          asset: {
+    const sampleReceiptId = `sampleReceipt-${Date.now()}`;
+    const tx = writeClient.transaction();
+
+    tx.create({
+      _id: sampleReceiptId,
+      _type: "sampleReceipt",
+      project: {
+        _type: "reference",
+        _ref: projectId,
+      },
+      // Numbers required by schema
+      sampleReceiptNumber:
+        sampleReceiptNumber && sampleReceiptNumber.trim() !== ""
+          ? sampleReceiptNumber
+          : `SR${currentYear}-${Date.now().toString().slice(-6)}`,
+      revisionNumber: `R${currentYear}-00`,
+      status: "draft",
+      reviewTemplate: reviewTemplate
+        ? {
             _type: "reference",
-            _ref: fileId,
-          },
+            _ref: reviewTemplate,
+          }
+        : undefined,
+      reviewItems: reviewItems.map((item: any) => ({
+        templateItemId: item.id,
+        label: item.label,
+        status: item.status,
+        comments: item.comments || "",
+      })),
+      adequacyTemplate: adequacyTemplate
+        ? {
+            _type: "reference",
+            _ref: adequacyTemplate,
+          }
+        : undefined,
+      adequacyChecks: adequacyChecks.map((item: any) => ({
+        templateItemId: item.id,
+        label: item.label,
+        status: item.status,
+        comments: item.comments || "",
+      })),
+      overallStatus,
+      overallComments: overallComments || "",
+      clientAcknowledgement: clientAcknowledgement
+        ? {
+            acknowledgementText:
+              clientAcknowledgement.acknowledgementText || "",
+            clientSignature: clientAcknowledgement.clientSignature || "",
+            clientRepresentative:
+              clientAcknowledgement.clientRepresentative || "",
+          }
+        : undefined,
+      getlabAcknowledgement: getlabAcknowledgement
+        ? {
+            // expectedDeliveryDate can be set at approval phase; optional here
+            sampleRetentionDuration:
+              getlabAcknowledgement.sampleRetentionDuration || "",
+            acknowledgementText:
+              getlabAcknowledgement.acknowledgementText || "",
+          }
+        : undefined,
+      sampleReceiptPersonnel: {
+        role: sampleReceiptPersonnel.role,
+        name: sampleReceiptPersonnel.name,
+        personnel: sampleReceiptPersonnel.personnel
+          ? {
+              _type: "reference",
+              _ref: sampleReceiptPersonnel.personnel,
+            }
+          : undefined,
+      },
+      file: {
+        _type: "file",
+        asset: {
+          _type: "reference",
+          _ref: fileId,
         },
       },
-      {
-        autoGenerateArrayKeys: true,
-      }
+    });
+
+    tx.patch(projectId, (p) =>
+      p.set({
+        sampleReceipt: { _type: "reference", _ref: sampleReceiptId },
+      })
     );
 
+    await tx.commit({
+      autoGenerateArrayKeys: true,
+    });
+
     revalidateTag(`project-${projectId}`);
-    return { result: sampleReceipt, status: "ok" };
+    return { result: { _id: sampleReceiptId }, status: "ok" };
   } catch (error) {
     console.error("Error creating sample receipt:", error);
     return { error: "Failed to create sample receipt", status: "error" };
@@ -2357,7 +2366,7 @@ const collectPaymentUnsetPaths = (
 };
 
 // Schema types that hold a direct reference to a project document.
-// rfi.project, sampleReceipt.project, lab.projects[], personnel.projects
+// rfi.project, sampleReceipt.project, project.sampleReceipt, lab.projects[], personnel.projects
 const PROJECT_REFERENCER_DETACH_TYPES = new Set(["lab", "personnel"]);
 const PROJECT_REFERENCER_DELETE_TYPES = new Set(["rfi", "sampleReceipt"]);
 
@@ -2385,7 +2394,7 @@ type SampleReceiptDeleteDoc = {
 type SampleReceiptReferencer = {
   _id: string;
   _type: string;
-  projectRef?: string | null;
+  sampleReceiptRef?: string | null;
   revisionRefs?: string[];
 };
 
@@ -2488,16 +2497,15 @@ const collectProjectQuotationIds = async (
         changed = true;
       }
     }
+  }
 
-    for (const referencer of await fetchQuotationReferencers(currentIds)) {
-      if (
-        referencer._type === "quotation" &&
-        !isDraftDocumentId(referencer._id) &&
-        !ids.has(referencer._id)
-      ) {
-        ids.add(referencer._id);
-        changed = true;
-      }
+  for (const referencer of await fetchQuotationReferencers([...ids])) {
+    if (
+      referencer._type === "quotation" &&
+      !isDraftDocumentId(referencer._id) &&
+      !ids.has(referencer._id)
+    ) {
+      ids.add(referencer._id);
     }
   }
 
@@ -2536,21 +2544,18 @@ const fetchQuotationReferencers = async (
     { quotationIds }
   );
 
-  const byReferences = (
-    await Promise.all(
-      quotationIds.map((quotationId) =>
-        writeClient.fetch<QuotationReferencer[]>(
-          `*[references($quotationId) && !(_id in $quotationIds)] {
+  const byReferences =
+    quotationIds.length === 0
+      ? []
+      : await writeClient.fetch<QuotationReferencer[]>(
+          `*[references($quotationIds) && !(_id in $quotationIds)] {
             _id,
             _type,
             "quotationRef": quotation._ref,
             "revisionRefs": revisions[]._ref[@ in $quotationIds]
           }`,
-          { quotationId, quotationIds }
-        )
-      )
-    )
-  ).flat();
+          { quotationIds }
+        );
 
   const merged = new Map<string, QuotationReferencer>();
   for (const referencer of [...byFields, ...byReferences]) {
@@ -2617,14 +2622,28 @@ const SAMPLE_RECEIPT_DELETE_PROJECTION = `
 const collectProjectSampleReceiptIds = async (
   projectId: string
 ): Promise<string[]> => {
-  const roots = await writeClient.fetch<string[]>(
-    `*[_type == "sampleReceipt" && references($projectId)]._id`,
+  const { roots, attachedRef } = await writeClient.fetch<{
+    roots: string[];
+    attachedRef: string | null;
+  }>(
+    `{
+      "roots": *[
+        _type == "sampleReceipt"
+        && (references($projectId) || project._ref == $projectId)
+      ]._id,
+      "attachedRef": *[_type == "project" && _id == $projectId][0].sampleReceipt._ref
+    }`,
     { projectId }
   );
 
-  if (roots.length === 0) return [];
+  const initialIds = [...roots];
+  if (attachedRef && !initialIds.includes(attachedRef)) {
+    initialIds.push(attachedRef);
+  }
 
-  const ids = new Set<string>(roots);
+  if (initialIds.length === 0) return [];
+
+  const ids = new Set<string>(initialIds);
   let changed = true;
 
   while (changed) {
@@ -2655,16 +2674,15 @@ const collectProjectSampleReceiptIds = async (
         changed = true;
       }
     }
+  }
 
-    for (const referencer of await fetchSampleReceiptReferencers(currentIds)) {
-      if (
-        referencer._type === "sampleReceipt" &&
-        !isDraftDocumentId(referencer._id) &&
-        !ids.has(referencer._id)
-      ) {
-        ids.add(referencer._id);
-        changed = true;
-      }
+  for (const referencer of await fetchSampleReceiptReferencers([...ids])) {
+    if (
+      referencer._type === "sampleReceipt" &&
+      !isDraftDocumentId(referencer._id) &&
+      !ids.has(referencer._id)
+    ) {
+      ids.add(referencer._id);
     }
   }
 
@@ -2690,31 +2708,31 @@ const fetchSampleReceiptReferencers = async (
   const byFields = await writeClient.fetch<SampleReceiptReferencer[]>(
     `*[
       !(_id in $sampleReceiptIds)
-      && count(revisions[]._ref[@ in $sampleReceiptIds]) > 0
+      && (
+        sampleReceipt._ref in $sampleReceiptIds
+        || count(revisions[]._ref[@ in $sampleReceiptIds]) > 0
+      )
     ] {
       _id,
       _type,
-      "projectRef": project._ref,
+      "sampleReceiptRef": sampleReceipt._ref,
       "revisionRefs": revisions[]._ref[@ in $sampleReceiptIds]
     }`,
     { sampleReceiptIds }
   );
 
-  const byReferences = (
-    await Promise.all(
-      sampleReceiptIds.map((sampleReceiptId) =>
-        writeClient.fetch<SampleReceiptReferencer[]>(
-          `*[references($sampleReceiptId) && !(_id in $sampleReceiptIds)] {
+  const byReferences =
+    sampleReceiptIds.length === 0
+      ? []
+      : await writeClient.fetch<SampleReceiptReferencer[]>(
+          `*[references($sampleReceiptIds) && !(_id in $sampleReceiptIds)] {
             _id,
             _type,
-            "projectRef": project._ref,
+            "sampleReceiptRef": sampleReceipt._ref,
             "revisionRefs": revisions[]._ref[@ in $sampleReceiptIds]
           }`,
-          { sampleReceiptId, sampleReceiptIds }
-        )
-      )
-    )
-  ).flat();
+          { sampleReceiptIds }
+        );
 
   const merged = new Map<string, SampleReceiptReferencer>();
   for (const referencer of [...byFields, ...byReferences]) {
@@ -2726,7 +2744,8 @@ const fetchSampleReceiptReferencers = async (
 
     merged.set(referencer._id, {
       ...existing,
-      projectRef: existing.projectRef ?? referencer.projectRef,
+      sampleReceiptRef:
+        existing.sampleReceiptRef ?? referencer.sampleReceiptRef,
       revisionRefs: [
         ...new Set([
           ...(existing.revisionRefs ?? []),
@@ -2770,18 +2789,30 @@ const orderSampleReceiptDocsForDeletion = (
 
 const detachSampleReceiptReferencers = (
   tx: ReturnType<typeof writeClient.transaction>,
+  sampleReceiptIds: string[],
   referencers: SampleReceiptReferencer[],
   draftIdsToDelete: Set<string>
 ) => {
+  const sampleReceiptIdSet = new Set(sampleReceiptIds);
+
   for (const referencer of referencers) {
     if (isDraftDocumentId(referencer._id)) {
       draftIdsToDelete.add(referencer._id);
       continue;
     }
 
-    const unsetPaths = (referencer.revisionRefs ?? []).map(
-      (revisionRef) => `revisions[_ref == "${revisionRef}"]`
-    );
+    const unsetPaths: string[] = [];
+
+    if (
+      referencer.sampleReceiptRef &&
+      sampleReceiptIdSet.has(referencer.sampleReceiptRef)
+    ) {
+      unsetPaths.push("sampleReceipt");
+    }
+
+    for (const revisionRef of referencer.revisionRefs ?? []) {
+      unsetPaths.push(`revisions[_ref == "${revisionRef}"]`);
+    }
 
     if (unsetPaths.length) {
       tx.patch(referencer._id, (p) => p.unset(unsetPaths));
@@ -2861,14 +2892,90 @@ export async function deleteProjectById(projectId: string) {
   return deleteProject(project);
 }
 
+const fetchSampleReceiptBlockingReferencers = async (
+  sampleReceiptIds: string[]
+): Promise<Array<{ _id: string; _type: string }>> => {
+  if (sampleReceiptIds.length === 0) return [];
+
+  return writeClient.fetch<Array<{ _id: string; _type: string }>>(
+    `*[references($sampleReceiptIds) && !(_id in $sampleReceiptIds)] {
+      _id,
+      _type
+    }`,
+    { sampleReceiptIds }
+  );
+};
+
+const applySampleReceiptReferencerDetaches = (
+  tx: ReturnType<typeof writeClient.transaction>,
+  sampleReceiptIds: string[],
+  referencers: Array<{ _id: string; _type: string }>,
+  excludedDocumentIds: Set<string>
+): string | null => {
+  const unknownTypes = new Set<string>();
+
+  for (const referencer of referencers) {
+    if (excludedDocumentIds.has(referencer._id)) continue;
+
+    if (referencer._type === "project") {
+      tx.patch(referencer._id, (p) => p.unset(["sampleReceipt"]));
+      continue;
+    }
+
+    if (referencer._type === "sampleReceipt") {
+      for (const sampleReceiptId of sampleReceiptIds) {
+        tx.patch(referencer._id, (p) =>
+          p.unset([`revisions[_ref == "${sampleReceiptId}"]`])
+        );
+      }
+      continue;
+    }
+
+    unknownTypes.add(referencer._type);
+  }
+
+  if (unknownTypes.size > 0) {
+    return `Cannot delete project: sample receipt still referenced by (${[...unknownTypes].join(", ")})`;
+  }
+
+  return null;
+};
+
+const fetchExistingDocumentIds = async (
+  documentIds: string[]
+): Promise<string[]> => {
+  if (documentIds.length === 0) return [];
+
+  return writeClient.fetch<string[]>(`*[_id in $documentIds]._id`, {
+    documentIds,
+  });
+};
+
+const formatDeleteProjectError = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+  return "Failed to delete project";
+};
+
 export async function deleteProject(
   project: PROJECT_BY_ID_QUERY_RESULT[number]
 ) {
   const projectId = project._id;
-  const tx = writeClient.transaction();
 
   try {
-    const dependencies = await fetchProjectDeleteDependencies(projectId);
+    const [dependencies, quotationIds, collectedSampleReceiptIds] =
+      await Promise.all([
+        fetchProjectDeleteDependencies(projectId),
+        collectProjectQuotationIds(projectId),
+        collectProjectSampleReceiptIds(projectId),
+      ]);
     const assetIdsToDelete: string[] = [];
 
     const unknownReferencers = dependencies.referencers.filter(
@@ -2887,39 +2994,75 @@ export async function deleteProject(
       };
     }
 
-    const quotationIds = await collectProjectQuotationIds(projectId);
-    const quotationDocs = orderQuotationDocsForDeletion(
-      await fetchQuotationDeleteDocs(quotationIds)
-    );
-    const quotationIdSet = new Set(quotationIds);
-    const quotationReferencers =
-      await fetchQuotationReferencers(quotationIds);
-    const quotationDraftIds = await fetchQuotationDraftIds(quotationIds);
-    const sampleReceiptIds = await collectProjectSampleReceiptIds(projectId);
-    const sampleReceiptDocs = orderSampleReceiptDocsForDeletion(
-      await fetchSampleReceiptDeleteDocs(sampleReceiptIds)
-    );
-    const sampleReceiptIdSet = new Set(sampleReceiptIds);
-    const sampleReceiptReferencers =
-      await fetchSampleReceiptReferencers(sampleReceiptIds);
-    const sampleReceiptDraftIds = await fetchSampleReceiptDraftIds(
-      sampleReceiptIds
-    );
+    const sampleReceiptIds = [
+      ...new Set([
+        ...collectedSampleReceiptIds,
+        ...dependencies.referencers
+          .filter((referencer) => referencer._type === "sampleReceipt")
+          .map((referencer) => referencer._id),
+      ]),
+    ];
 
-    // 1) Detach shared documents that reference the project
-    for (const referencer of dependencies.referencers) {
-      if (PROJECT_REFERENCER_DETACH_TYPES.has(referencer._type)) {
-        detachProjectReferencer(tx, projectId, referencer);
-      }
-    }
+    const [
+      quotationDocs,
+      quotationReferencers,
+      quotationDraftIds,
+      sampleReceiptDocs,
+      sampleReceiptReferencers,
+      sampleReceiptDraftIds,
+      sampleReceiptBlockingReferencers,
+    ] = await Promise.all([
+      fetchQuotationDeleteDocs(quotationIds).then(orderQuotationDocsForDeletion),
+      fetchQuotationReferencers(quotationIds),
+      fetchQuotationDraftIds(quotationIds),
+      fetchSampleReceiptDeleteDocs(sampleReceiptIds).then(
+        orderSampleReceiptDocsForDeletion
+      ),
+      fetchSampleReceiptReferencers(sampleReceiptIds),
+      fetchSampleReceiptDraftIds(sampleReceiptIds),
+      fetchSampleReceiptBlockingReferencers(sampleReceiptIds),
+    ]);
+
+    const quotationIdSet = new Set(quotationIds);
+    const sampleReceiptIdSet = new Set(sampleReceiptIds);
 
     const quotationDraftIdsToDelete = new Set(quotationDraftIds);
     const sampleReceiptDraftIdsToDelete = new Set(sampleReceiptDraftIds);
+    const draftProjectId = `drafts.${projectId}`;
+    const pendingDraftIds = [
+      ...quotationDraftIdsToDelete,
+      ...sampleReceiptDraftIdsToDelete,
+      draftProjectId,
+      ...sampleReceiptIds.map((sampleReceiptId) => `drafts.${sampleReceiptId}`),
+    ];
+    const existingDraftIds = await fetchExistingDocumentIds(pendingDraftIds);
+    const excludedSampleReceiptReferencerIds = new Set([
+      ...existingDraftIds,
+      ...sampleReceiptIds,
+    ]);
+
+    const detachTx = writeClient.transaction();
+
+    // 1) Detach shared documents that reference the project, and detach
+    // project-owned references before deleting dependent documents
+    for (const referencer of dependencies.referencers) {
+      if (PROJECT_REFERENCER_DETACH_TYPES.has(referencer._type)) {
+        detachProjectReferencer(detachTx, projectId, referencer);
+      }
+    }
+
+    detachTx.patch(projectId, (p) => p.unset(["quotation", "sampleReceipt"]));
+
+    if (existingDraftIds.includes(draftProjectId)) {
+      detachTx.patch(draftProjectId, (p) =>
+        p.unset(["quotation", "sampleReceipt"])
+      );
+    }
 
     // 2) Detach every document that references a quotation in this chain —
     // other projects, parent quotations, and drafts included
     detachQuotationReferencers(
-      tx,
+      detachTx,
       quotationIds,
       quotationReferencers,
       quotationDraftIdsToDelete
@@ -2949,19 +3092,21 @@ export async function deleteProject(
       }
 
       if (unsetPaths.length) {
-        tx.patch(quotationDoc._id, (p) => p.unset(unsetPaths));
+        detachTx.patch(quotationDoc._id, (p) => p.unset(unsetPaths));
       }
     }
 
-    // 4) Detach sample receipt revision links, project link, and PDF files
+    // 4) Detach sample receipt revision links and PDF files.
+    // Do not unset the required project reference — delete the documents instead.
     detachSampleReceiptReferencers(
-      tx,
+      detachTx,
+      sampleReceiptIds,
       sampleReceiptReferencers,
       sampleReceiptDraftIdsToDelete
     );
 
     for (const sampleReceipt of sampleReceiptDocs) {
-      const unsetPaths: string[] = ["project"];
+      const unsetPaths: string[] = [];
 
       if (sampleReceipt.file?.asset?._id) {
         unsetPaths.push("file");
@@ -2974,53 +3119,64 @@ export async function deleteProject(
         }
       }
 
-      tx.patch(sampleReceipt._id, (p) => p.unset(unsetPaths));
-    }
-
-    // 5) Delete draft copies of quotations, sample receipts, and this project
-    const existingDraftIds = await writeClient.fetch<string[]>(
-      `*[_id in $draftIds]._id`,
-      {
-        draftIds: [
-          ...quotationDraftIdsToDelete,
-          ...sampleReceiptDraftIdsToDelete,
-          `drafts.${projectId}`,
-        ],
+      if (unsetPaths.length) {
+        detachTx.patch(sampleReceipt._id, (p) => p.unset(unsetPaths));
       }
-    );
-    for (const draftId of existingDraftIds) {
-      tx.delete(draftId);
     }
 
-    // 6) Collect RFI attachment assets
+    for (const draftId of existingDraftIds) {
+      detachTx.delete(draftId);
+    }
+
+    const referencerError = applySampleReceiptReferencerDetaches(
+      detachTx,
+      sampleReceiptIds,
+      sampleReceiptBlockingReferencers,
+      excludedSampleReceiptReferencerIds
+    );
+
+    if (referencerError) {
+      return {
+        status: "error" as const,
+        error: referencerError,
+      };
+    }
+
+    await detachTx.commit({ returnDocuments: false });
+
     for (const rfi of dependencies.rfis) {
       collectRFIAssetIds(rfi, assetIdsToDelete);
     }
 
-    // 7) Delete assets, then dependent documents, then the project
-    for (const assetId of new Set(assetIdsToDelete)) {
-      tx.delete(assetId);
+    const existingAssetIds = new Set(
+      await fetchExistingDocumentIds([...new Set(assetIdsToDelete)])
+    );
+
+    const deleteTx = writeClient.transaction();
+
+    for (const assetId of existingAssetIds) {
+      deleteTx.delete(assetId);
     }
 
     for (const workflow of dependencies.labApprovalWorkflows) {
-      tx.delete(workflow._id);
+      deleteTx.delete(workflow._id);
     }
 
     for (const rfi of dependencies.rfis) {
-      tx.delete(rfi._id);
+      deleteTx.delete(rfi._id);
     }
 
     for (const sampleReceipt of sampleReceiptDocs) {
-      tx.delete(sampleReceipt._id);
+      deleteTx.delete(sampleReceipt._id);
     }
 
     for (const quotationDoc of quotationDocs) {
-      tx.delete(quotationDoc._id);
+      deleteTx.delete(quotationDoc._id);
     }
 
-    tx.delete(projectId);
+    deleteTx.delete(projectId);
 
-    const result = await tx.commit({ returnDocuments: false });
+    const result = await deleteTx.commit({ returnDocuments: false });
 
     revalidateTag("projects");
     revalidateTag("rfis");
@@ -3029,8 +3185,11 @@ export async function deleteProject(
     revalidatePath(`/projects/${projectId}`);
     return { result, status: "ok" };
   } catch (error) {
-    console.log(error);
-    return { error, status: "error" };
+    console.error("deleteProject failed:", error);
+    return {
+      status: "error" as const,
+      error: formatDeleteProjectError(error),
+    };
   }
 }
 

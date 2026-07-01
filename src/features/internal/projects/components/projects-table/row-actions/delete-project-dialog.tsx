@@ -48,7 +48,11 @@ export function DeleteProjectDialog({
       toast.success("Project has been deleted");
       onClose();
     } else {
-      toast.error("Something went wrong");
+      toast.error(
+        typeof result.error === "string"
+          ? result.error
+          : "Something went wrong"
+      );
     }
   };
 

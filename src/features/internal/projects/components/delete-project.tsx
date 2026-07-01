@@ -48,7 +48,11 @@ export function DeleteProject({
       toast.success("Project has been deleted");
       router.push("/projects");
     } else {
-      toast.error("Something went wrong");
+      toast.error(
+        typeof result.error === "string"
+          ? result.error
+          : "Something went wrong"
+      );
     }
   };
 

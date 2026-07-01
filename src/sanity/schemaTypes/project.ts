@@ -116,5 +116,13 @@ export const project = defineType({
       type: "reference",
       to: [{ type: "quotation" }],
     }),
+    defineField({
+      name: "sampleReceipt",
+      title: "Sample Receipt",
+      type: "reference",
+      to: [{ type: "sampleReceipt" }],
+      readOnly: true,
+      description: "Current sample receipt for this project",
+    }),
   ],
 });
