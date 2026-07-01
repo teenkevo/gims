@@ -25,8 +25,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
-import { Check, ChevronsUpDown, X, Plus } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawerClose } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -73,6 +72,8 @@ export function CreatePersonnelDialog({
   personnel,
   open,
   onClose,
+  rolePickerLabel,
+  rolesOnly = false,
 }: {
   departmentRoles: Record<
     string,
@@ -82,6 +83,8 @@ export function CreatePersonnelDialog({
   personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
   open?: boolean;
   onClose?: () => void;
+  rolePickerLabel?: string;
+  rolesOnly?: boolean;
 }) {
   const [dialogLoading, setDialogLoading] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -105,6 +108,8 @@ export function CreatePersonnelDialog({
             onClose={onClose}
             isEdit={isEdit}
             personnel={personnel}
+            rolePickerLabel={rolePickerLabel}
+            rolesOnly={rolesOnly}
           />
         </DialogContent>
       </Dialog>
@@ -120,11 +125,13 @@ export function CreatePersonnelDialog({
           </DrawerTitle>
         </DrawerHeader>
         <CreatePersonnelForm
-            onPendingChange={setDialogLoading}
-            departmentRoles={departmentRoles}
+          onPendingChange={setDialogLoading}
+          departmentRoles={departmentRoles}
           onClose={onClose}
           isEdit={isEdit}
           personnel={personnel}
+          rolePickerLabel={rolePickerLabel}
+          rolesOnly={rolesOnly}
         />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
@@ -142,6 +149,8 @@ function CreatePersonnelForm({
   isEdit = false,
   personnel,
   onPendingChange,
+  rolePickerLabel,
+  rolesOnly = false,
 }: {
   departmentRoles: Record<
     string,
@@ -151,6 +160,8 @@ function CreatePersonnelForm({
   isEdit?: boolean;
   personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
   onPendingChange?: (pending: boolean) => void;
+  rolePickerLabel?: string;
+  rolesOnly?: boolean;
 }) {
   const [roleOpen, setRoleOpen] = useState(false);
 
@@ -162,7 +173,6 @@ function CreatePersonnelForm({
   useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
-
 
   const existingDepartmentRoles = personnel?.departmentRoles?.map((role) => ({
     department: role.department?.department || "",
@@ -183,6 +193,10 @@ function CreatePersonnelForm({
   });
 
   const selectedDepartmentRoles = form.watch("departmentRoles");
+  const singleDepartmentEntry = rolesOnly
+    ? Object.entries(departmentRoles)[0]
+    : undefined;
+  const pickerLabel = rolePickerLabel ?? "Departments & Roles";
 
   // Generate employee ID on component mount
   useEffect(() => {
@@ -228,13 +242,6 @@ function CreatePersonnelForm({
     }
   }, [state, onClose, isEdit]);
 
-  const removeDepartmentRole = (departmentToRemove: string) => {
-    const updatedDepartmentRoles = selectedDepartmentRoles.filter(
-      (item) => item.department !== departmentToRemove
-    );
-    form.setValue("departmentRoles", updatedDepartmentRoles);
-  };
-
   const toggleDepartmentRole = (
     department: string,
     departmentId: string,
@@ -265,7 +272,7 @@ function CreatePersonnelForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 h-[460px] px-4 md:px-1 py-4 overflow-y-auto"
+        className="space-y-8 h-[400px] px-4 md:px-1 py-4 overflow-y-auto"
       >
         {/* Personal Information */}
         <div className="space-y-4">
@@ -367,11 +374,13 @@ function CreatePersonnelForm({
               control={form.control}
               name="departmentRoles"
               rules={{
-                required: "At least one department and role is required",
+                required: rolesOnly
+                  ? "A role is required"
+                  : "At least one department and role is required",
               }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Departments & Roles</FormLabel>
+                  <FormLabel>{pickerLabel}</FormLabel>
                   <Popover
                     modal={true}
                     open={roleOpen}
@@ -386,77 +395,130 @@ function CreatePersonnelForm({
                           aria-expanded={roleOpen}
                           className="w-full justify-between"
                         >
-                          {selectedDepartmentRoles.length > 0
-                            ? `${selectedDepartmentRoles.length} department${selectedDepartmentRoles.length > 1 ? "s" : ""} selected`
-                            : "Select departments and roles"}
+                          {rolesOnly
+                            ? selectedDepartmentRoles[0]?.role || "Select role"
+                            : selectedDepartmentRoles.length > 0
+                              ? `${selectedDepartmentRoles.length} department${selectedDepartmentRoles.length > 1 ? "s" : ""} selected`
+                              : "Select departments and roles"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="Search departments or roles..." />
+                        <CommandInput
+                          placeholder={
+                            rolesOnly
+                              ? "Search roles..."
+                              : "Search departments or roles..."
+                          }
+                        />
                         <CommandList>
-                          <ScrollArea className="h-72 overflow-y-auto">
+                          <ScrollArea className="overflow-y-auto">
                             <CommandEmpty>No results found.</CommandEmpty>
-                            {Object.entries(departmentRoles).map(
-                              ([department, { roles, departmentId }]) => (
-                                <div key={department}>
-                                  <CommandGroup heading={department}>
-                                    {roles.map((role) => {
-                                      const isSelected =
-                                        selectedDepartmentRoles.some(
-                                          (item) =>
-                                            item.department === department &&
-                                            item.role === role
-                                        );
-                                      const departmentHasRole =
-                                        selectedDepartmentRoles.some(
-                                          (item) =>
-                                            item.department === department
-                                        );
-                                      const isDisabled =
-                                        departmentHasRole && !isSelected;
-
-                                      return (
-                                        <CommandItem
-                                          key={`${department}-${role}`}
-                                          value={`${department}-${role}`}
-                                          disabled={isDisabled}
-                                          onSelect={() => {
-                                            toggleDepartmentRole(
-                                              department,
-                                              departmentId,
-                                              role || ""
-                                            );
-                                            setRoleOpen(false);
-                                          }}
-                                          className={cn(
-                                            isDisabled &&
-                                              "opacity-50 cursor-not-allowed",
-                                            isSelected && "bg-muted"
-                                          )}
-                                        >
-                                          <Check
-                                            className={cn(
-                                              "mr-2 h-4 w-4",
-                                              isSelected
-                                                ? "opacity-100"
-                                                : "opacity-0"
-                                            )}
-                                          />
-                                          {role}
-                                          {isDisabled && (
-                                            <span className="ml-auto text-xs text-gray-500">
-                                              (Already assigned)
-                                            </span>
-                                          )}
-                                        </CommandItem>
+                            {rolesOnly && singleDepartmentEntry ? (
+                              <CommandGroup>
+                                {singleDepartmentEntry[1].roles
+                                  .filter((role): role is string =>
+                                    Boolean(role)
+                                  )
+                                  .map((role) => {
+                                    const [department, { departmentId }] =
+                                      singleDepartmentEntry;
+                                    const isSelected =
+                                      selectedDepartmentRoles.some(
+                                        (item) =>
+                                          item.department === department &&
+                                          item.role === role
                                       );
-                                    })}
-                                  </CommandGroup>
-                                  <CommandSeparator />
-                                </div>
+
+                                    return (
+                                      <CommandItem
+                                        key={role}
+                                        value={role}
+                                        onSelect={() => {
+                                          toggleDepartmentRole(
+                                            department,
+                                            departmentId,
+                                            role
+                                          );
+                                          setRoleOpen(false);
+                                        }}
+                                        className={cn(isSelected && "bg-muted")}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            isSelected
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {role}
+                                      </CommandItem>
+                                    );
+                                  })}
+                              </CommandGroup>
+                            ) : (
+                              Object.entries(departmentRoles).map(
+                                ([department, { roles, departmentId }]) => (
+                                  <div key={department}>
+                                    <CommandGroup heading={department}>
+                                      {roles.map((role) => {
+                                        const isSelected =
+                                          selectedDepartmentRoles.some(
+                                            (item) =>
+                                              item.department === department &&
+                                              item.role === role
+                                          );
+                                        const departmentHasRole =
+                                          selectedDepartmentRoles.some(
+                                            (item) =>
+                                              item.department === department
+                                          );
+                                        const isDisabled =
+                                          departmentHasRole && !isSelected;
+
+                                        return (
+                                          <CommandItem
+                                            key={`${department}-${role}`}
+                                            value={`${department}-${role}`}
+                                            disabled={isDisabled}
+                                            onSelect={() => {
+                                              toggleDepartmentRole(
+                                                department,
+                                                departmentId,
+                                                role || ""
+                                              );
+                                              setRoleOpen(false);
+                                            }}
+                                            className={cn(
+                                              isDisabled &&
+                                                "opacity-50 cursor-not-allowed",
+                                              isSelected && "bg-muted"
+                                            )}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                isSelected
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                            {role}
+                                            {isDisabled && (
+                                              <span className="ml-auto text-xs text-gray-500">
+                                                (Already assigned)
+                                              </span>
+                                            )}
+                                          </CommandItem>
+                                        );
+                                      })}
+                                    </CommandGroup>
+                                    <CommandSeparator />
+                                  </div>
+                                )
                               )
                             )}
                           </ScrollArea>
@@ -464,36 +526,10 @@ function CreatePersonnelForm({
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  {selectedDepartmentRoles.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedDepartmentRoles.map((item) => (
-                        <Badge
-                          key={`${item.department}-${item.role}`}
-                          variant="secondary"
-                          className="text-xs"
-                        >
-                          <span className="font-semibold">
-                            <span className="text-primary">
-                              {item.department}
-                            </span>{" "}
-                            - <span className="text-xs">{item.role}</span>
-                          </span>
-
-                          <button
-                            type="button"
-                            className="ml-1 hover:bg-gray-300 rounded-full"
-                            onClick={() =>
-                              removeDepartmentRole(item.department)
-                            }
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
                   <FormDescription>
-                    Select departments and roles. One role per department.
+                    {rolesOnly
+                      ? "Select a role for this department."
+                      : "Select departments and roles. One role per department."}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 
@@ -45,17 +46,27 @@ export function NavGroup({
           return (
             <div key={item.title}>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={item.title}
-                  isActive={isItemActive}
-                  disabled={item.isDisabled}
-                >
-                  <a href={item.url}>
+                {item.isDisabled ? (
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={isItemActive}
+                    disabled
+                  >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                  </a>
-                </SidebarMenuButton>
+                  </SidebarMenuButton>
+                ) : (
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isItemActive}
+                  >
+                    <Link href={item.url} prefetch>
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                )}
               </SidebarMenuItem>
 
               {/* Render sub-items directly if they exist */}
@@ -67,9 +78,9 @@ export function NavGroup({
                     return (
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton asChild isActive={isSubItemActive}>
-                          <a href={subItem.url}>
+                          <Link href={subItem.url} prefetch>
                             <span>{subItem.title}</span>
-                          </a>
+                          </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     );

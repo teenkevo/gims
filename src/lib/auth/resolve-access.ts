@@ -6,9 +6,9 @@ import { ROLES, type Role } from "./roles";
 import { USER_TYPES, type UserType } from "./user-type";
 import {
   formatDepartmentRoleLabel,
-  unionPermissions,
   type DepartmentRoleAssignment,
 } from "./department-role-permissions";
+import { resolvePermissionsFromPersonnel } from "./resolve-personnel-permissions";
 import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
 import { getContactPersonByEmail } from "@/sanity/lib/clients/getContactPersonByEmail";
 import type { AuthUser } from "./types";
@@ -136,23 +136,19 @@ export async function resolveAccess(
       };
     }
 
-    const departmentRoles: DepartmentRoleAssignment[] =
-      personnel.departmentRoles
-        ?.filter((entry) => entry.department?.department && entry.role)
-        .map((entry) => ({
-          departmentName: entry.department!.department,
-          roleName: entry.role,
-        })) ?? [];
+    const { permissions, assignments: departmentRoles, usedAppRoles } =
+      resolvePermissionsFromPersonnel(personnel.departmentRoles);
 
-    const permissions = unionPermissions(departmentRoles);
     const accessLabel =
-      departmentRoles.length > 0
-        ? departmentRoles
-            .map((r) =>
-              formatDepartmentRoleLabel(r.departmentName, r.roleName)
-            )
-            .join(", ")
-        : "Personnel (no departmental role)";
+      usedAppRoles.length > 0
+        ? usedAppRoles.join(", ")
+        : departmentRoles.length > 0
+          ? departmentRoles
+              .map((r) =>
+                formatDepartmentRoleLabel(r.departmentName, r.roleName)
+              )
+              .join(", ")
+          : "Personnel (no departmental role)";
 
     return {
       userType: USER_TYPES.INTERNAL,

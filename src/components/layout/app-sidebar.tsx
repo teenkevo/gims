@@ -29,7 +29,10 @@ import { useRBAC } from "../rbac-context";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, can } = useRBAC();
+  const { user, can, isAccessLoading } = useRBAC();
+
+  const showSecurity =
+    isAccessLoading || can(PERMISSIONS["security:read"]);
 
   const navCore = [
     {
@@ -74,14 +77,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: false,
       isDisabled: !can(PERMISSIONS["equipment:read"]),
     },
-    ...(can(PERMISSIONS["security:read"])
+    ...(showSecurity
       ? [
           {
             title: "Security",
             url: "/security",
             icon: ShieldCheck,
             isActive: false,
-            isDisabled: false,
+            isDisabled:
+              isAccessLoading || !can(PERMISSIONS["security:read"]),
           },
         ]
       : []),

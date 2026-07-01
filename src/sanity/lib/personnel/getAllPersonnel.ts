@@ -11,11 +11,19 @@ export const getAllPersonnel = async () => {
           phone,
           appAccessStatus,
           departmentRoles[] {
+            role,
             department->{
               _id,
-              department
-            },
-            role
+              department,
+              roles[] {
+                roleName,
+                appRole->{
+                  _id,
+                  name,
+                  permissions
+                }
+              }
+            }
           },
           projects[]->{
             _id,

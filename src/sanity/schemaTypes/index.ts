@@ -26,6 +26,7 @@ import { sampleReviewTemplate } from "./sample-review-template";
 import { sampleAdequacyTemplate } from "./sample-adequacy-template";
 import { auditLog } from "./audit-log";
 import { appUser } from "./app-user";
+import { appRole } from "./app-role";
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -55,5 +56,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     sampleAdequacyTemplate,
     auditLog,
     appUser,
+    appRole,
   ],
 };

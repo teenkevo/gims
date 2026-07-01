@@ -20,6 +20,35 @@ type AccessState = {
   departmentRoles: DepartmentRoleAssignment[];
 };
 
+const ACCESS_CACHE_KEY = "gims-rbac-access";
+
+function readAccessCache(): AccessState | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(ACCESS_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as AccessState) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAccessCache(access: AccessState) {
+  try {
+    sessionStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify(access));
+  } catch {
+    // Ignore quota / private mode errors.
+  }
+}
+
+function clearAccessCache() {
+  try {
+    sessionStorage.removeItem(ACCESS_CACHE_KEY);
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 function clerkUserToAuthUser(
   user: NonNullable<ReturnType<typeof useUser>["user"]>
 ): AuthUser {
@@ -43,10 +72,22 @@ function clerkUserToAuthUser(
 export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser();
   const [access, setAccess] = useState<AccessState | null>(null);
+  const [cacheHydrated, setCacheHydrated] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded || !user) {
+    const cached = readAccessCache();
+    if (cached) {
+      setAccess((current) => current ?? cached);
+    }
+    setCacheHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!user) {
       setAccess(null);
+      clearAccessCache();
       return;
     }
 
@@ -56,7 +97,7 @@ export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
 
       if (resolved) {
-        setAccess({
+        const nextAccess: AccessState = {
           userId: resolved.userId,
           user: {
             ...resolved.user,
@@ -67,9 +108,11 @@ export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
           userType: resolved.userType,
           accessLabel: resolved.accessLabel,
           departmentRoles: resolved.departmentRoles,
-        });
+        };
+        writeAccessCache(nextAccess);
+        setAccess(nextAccess);
       } else {
-        setAccess({
+        const pendingAccess: AccessState = {
           userId: user.id,
           user: clerkUserToAuthUser(user),
           role: "viewer",
@@ -77,21 +120,30 @@ export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
           userType: "pending",
           accessLabel: "Pending HR approval",
           departmentRoles: [],
-        });
+        };
+        writeAccessCache(pendingAccess);
+        setAccess(pendingAccess);
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [isLoaded, user?.id]);
+  }, [isLoaded, user?.id, user?.imageUrl]);
+
+  const isAccessLoading =
+    isLoaded && Boolean(user) && cacheHydrated && access === null;
 
   if (!isLoaded || !user) {
-    return <RBACProvider>{children}</RBACProvider>;
+    return (
+      <RBACProvider isAccessLoading={!isLoaded}>{children}</RBACProvider>
+    );
   }
 
   if (!access) {
-    return <RBACProvider>{children}</RBACProvider>;
+    return (
+      <RBACProvider isAccessLoading={isAccessLoading}>{children}</RBACProvider>
+    );
   }
 
   return (
@@ -103,6 +155,7 @@ export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
       userType={access.userType}
       accessLabel={access.accessLabel}
       departmentRoles={access.departmentRoles}
+      isAccessLoading={false}
     >
       {children}
     </RBACProvider>

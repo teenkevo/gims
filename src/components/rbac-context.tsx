@@ -19,6 +19,7 @@ export interface RBACValue {
   accessLabel: string | null;
   departmentRoles: DepartmentRoleAssignment[];
   isAuthenticated: boolean;
+  isAccessLoading: boolean;
   setRole: (role: Role) => void;
   can: (permission: Permission) => boolean;
   hasRole: (role: Role) => boolean;
@@ -37,6 +38,7 @@ interface RBACProviderProps {
   userType?: UserType | null;
   accessLabel?: string | null;
   departmentRoles?: DepartmentRoleAssignment[];
+  isAccessLoading?: boolean;
 }
 
 export const RBACProvider = ({
@@ -48,6 +50,7 @@ export const RBACProvider = ({
   userType = null,
   accessLabel = null,
   departmentRoles = [],
+  isAccessLoading = false,
 }: RBACProviderProps) => {
   const isAuthenticated = Boolean(userId);
   const resolvedRole = role ?? DEFAULT_ROLE;
@@ -103,6 +106,7 @@ export const RBACProvider = ({
       accessLabel: session.isAuthenticated ? session.accessLabel : null,
       departmentRoles: session.isAuthenticated ? session.departmentRoles : [],
       isAuthenticated: session.isAuthenticated,
+      isAccessLoading,
       setRole: () => {},
       can: (permission) => can(session, permission),
       hasRole: (checkRole) => hasRole(session, checkRole),
@@ -112,7 +116,7 @@ export const RBACProvider = ({
       isClientUser:
         session.isAuthenticated && session.userType === USER_TYPES.CLIENT,
     }),
-    [session, resolvedRole]
+    [session, resolvedRole, isAccessLoading]
   );
 
   return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>;

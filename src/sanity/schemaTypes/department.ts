@@ -60,9 +60,29 @@ export const department = defineType({
                 accept: "application/pdf",
               },
             },
+            {
+              name: "appRole",
+              type: "reference",
+              title: "Application role",
+              description:
+                "Permissions granted to personnel with this departmental job title.",
+              to: [{ type: "appRole" }],
+            },
           ],
         },
       ],
+    }),
+    defineField({
+      name: "createdBy",
+      type: "string",
+      title: "Created by",
+      readOnly: true,
+    }),
+    defineField({
+      name: "modifiedBy",
+      type: "string",
+      title: "Modified by",
+      readOnly: true,
     }),
   ],
 });

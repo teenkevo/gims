@@ -90,6 +90,7 @@ export const structure: StructureResolver = (S) =>
           S.list()
             .title("Security")
             .items([
+              S.documentTypeListItem("appRole").title("Application Roles"),
               S.documentTypeListItem("appUser").title("App Users"),
               S.documentTypeListItem("auditLog").title("Audit Logs"),
             ])

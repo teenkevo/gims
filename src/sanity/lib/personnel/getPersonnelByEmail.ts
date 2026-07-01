@@ -14,6 +14,14 @@ export type PersonnelByEmail = {
     department: {
       _id: string;
       department: string;
+      roles?: {
+        roleName?: string;
+        appRole?: {
+          _id: string;
+          name: string;
+          permissions?: string[];
+        } | null;
+      }[];
     } | null;
   }[];
 };
@@ -30,7 +38,15 @@ const PERSONNEL_BY_EMAIL_QUERY = defineQuery(`
       role,
       department->{
         _id,
-        department
+        department,
+        roles[] {
+          roleName,
+          appRole->{
+            _id,
+            name,
+            permissions
+          }
+        }
       }
     }
   }
