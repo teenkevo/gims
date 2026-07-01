@@ -4,16 +4,36 @@ import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import {
+  DialogLoadingProvider,
+  useBlockingOpenChange,
+  useDialogLoading,
+} from "@/components/ui/dialog-loading-context"
+
+type DrawerProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
+  loading?: boolean
+}
 
 const Drawer = ({
   shouldScaleBackground = true,
+  loading = false,
+  onOpenChange,
+  dismissible,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
-)
+}: DrawerProps) => {
+  const handleOpenChange = useBlockingOpenChange(loading, onOpenChange)
+
+  return (
+    <DialogLoadingProvider value={loading}>
+      <DrawerPrimitive.Root
+        shouldScaleBackground={shouldScaleBackground}
+        dismissible={loading ? false : dismissible}
+        onOpenChange={handleOpenChange}
+        {...props}
+      />
+    </DialogLoadingProvider>
+  )
+}
 Drawer.displayName = "Drawer"
 
 const DrawerTrigger = DrawerPrimitive.Trigger
@@ -34,25 +54,38 @@ const DrawerOverlay = React.forwardRef<
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
+type DrawerContentProps = React.ComponentPropsWithoutRef<
+  typeof DrawerPrimitive.Content
+> & {
+  loading?: boolean
+}
+
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay />
-    <DrawerPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
-        className
-      )}
-      {...props}
-    >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-))
+  DrawerContentProps
+>(({ className, children, loading: loadingProp, ...props }, ref) => {
+  const loadingFromContext = useDialogLoading()
+  const loading = loadingProp ?? loadingFromContext
+
+  return (
+    <DrawerPortal>
+      <DrawerOverlay />
+      <DrawerPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+          className
+        )}
+        {...props}
+      >
+        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        <fieldset disabled={loading} className="contents">
+          {children}
+        </fieldset>
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  )
+})
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({

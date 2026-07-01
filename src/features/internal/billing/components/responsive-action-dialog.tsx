@@ -77,7 +77,7 @@ export function ResponsiveActionDialog({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer loading={isPending} open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           {trigger ?? <Button size="sm">{triggerButtonText}</Button>}
         </DrawerTrigger>
@@ -104,7 +104,7 @@ export function ResponsiveActionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog loading={isPending} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? <Button size="sm">{triggerButtonText}</Button>}
       </DialogTrigger>

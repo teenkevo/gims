@@ -121,7 +121,7 @@ export function DeleteLabDialog({
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={isPending} open={open} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader className="space-y-3">
             <DialogTitle>Delete Laboratory</DialogTitle>
@@ -157,7 +157,7 @@ export function DeleteLabDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={isPending} open={open} onOpenChange={onClose}>
       <DrawerContent>
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Delete Laboratory</DialogTitle>

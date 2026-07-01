@@ -483,7 +483,7 @@ export function MakePaymentDialog({
   );
 
   return isMobile ? (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
+    <Drawer loading={isPending || loading} open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         <Button size="sm" variant="default">
           <CreditCard className="h-5 w-5 mr-2 " />
@@ -514,7 +514,7 @@ export function MakePaymentDialog({
       </DrawerContent>
     </Drawer>
   ) : (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog loading={isPending || loading} open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" variant="default">
           <CreditCard className="h-5 w-5 mr-2" />

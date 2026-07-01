@@ -84,7 +84,7 @@ export function SendQuotationDialog({
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog loading={isPending} open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button disabled={quotation?.status !== "draft"} size="sm">
             Send to client
@@ -124,7 +124,7 @@ export function SendQuotationDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
+    <Drawer loading={isPending} open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button disabled={quotation?.status !== "draft"} size="sm">
           Send Quotation

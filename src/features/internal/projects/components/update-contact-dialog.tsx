@@ -198,7 +198,7 @@ export function UpdateContactDialog({
   if (isMobile) {
     if (isControlled) {
       return (
-        <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+        <Drawer loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
           <DrawerContent>
             <DrawerHeader className="gap-3 text-left">
               <DrawerTitle>Update Contact Person</DrawerTitle>
@@ -214,7 +214,7 @@ export function UpdateContactDialog({
       );
     }
     return (
-      <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+      <Drawer loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>
           <Button size="icon" variant="outline">
             <PencilIcon className="h-4 w-4" />
@@ -237,7 +237,7 @@ export function UpdateContactDialog({
 
   if (isControlled) {
     return (
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent aria-describedby={undefined}>
           <DialogHeader className="gap-3 text-left">
             <DialogTitle>Update Contact Person</DialogTitle>
@@ -249,7 +249,7 @@ export function UpdateContactDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="icon" variant="outline">
           <PencilIcon className="h-4 w-4" />

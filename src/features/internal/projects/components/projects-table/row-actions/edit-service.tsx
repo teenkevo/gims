@@ -49,11 +49,12 @@ export function EditServiceDialog({
   testMethods: ALL_TEST_METHODS_QUERY_RESULT;
   service: ALL_SERVICES_QUERY_RESULT[number];
 }) {
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
         <DialogContent
           onInteractOutside={(e) => {
             e.preventDefault();
@@ -64,14 +65,14 @@ export function EditServiceDialog({
           <DialogHeader>
             <DialogTitle>Edit Service</DialogTitle>
           </DialogHeader>
-          <ServiceForm onClose={onClose} testMethods={testMethods} sampleClasses={sampleClasses} service={service} />
+          <ServiceForm onPendingChange={setDialogLoading} onClose={onClose} testMethods={testMethods} sampleClasses={sampleClasses} service={service} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={onClose}>
       <DrawerContent
         onInteractOutside={(e) => {
           e.preventDefault();
@@ -81,7 +82,7 @@ export function EditServiceDialog({
           <DrawerTitle>Create Service</DrawerTitle>
         </DrawerHeader>
 
-        <ServiceForm onClose={onClose} testMethods={testMethods} sampleClasses={sampleClasses} service={service} />
+        <ServiceForm onPendingChange={setDialogLoading} onClose={onClose} testMethods={testMethods} sampleClasses={sampleClasses} service={service} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -97,16 +98,22 @@ function ServiceForm({
   testMethods,
   sampleClasses,
   service,
+  onPendingChange,
 }: {
   onClose: () => void;
   testMethods: ALL_TEST_METHODS_QUERY_RESULT;
   sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
   service?: ALL_SERVICES_QUERY_RESULT[number];
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(updateService, null);
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const form = useForm({
     mode: "onChange",

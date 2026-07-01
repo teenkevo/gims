@@ -5,8 +5,31 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import {
+  DialogLoadingProvider,
+  useBlockingOpenChange,
+  useDialogLoading,
+} from "@/components/ui/dialog-loading-context"
 
-const AlertDialog = AlertDialogPrimitive.Root
+type AlertDialogProps = React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Root
+> & {
+  loading?: boolean
+}
+
+const AlertDialog = ({
+  loading = false,
+  onOpenChange,
+  ...props
+}: AlertDialogProps) => {
+  const handleOpenChange = useBlockingOpenChange(loading, onOpenChange)
+
+  return (
+    <DialogLoadingProvider value={loading}>
+      <AlertDialogPrimitive.Root onOpenChange={handleOpenChange} {...props} />
+    </DialogLoadingProvider>
+  )
+}
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
@@ -27,22 +50,37 @@ const AlertDialogOverlay = React.forwardRef<
 ))
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
+type AlertDialogContentProps = React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Content
+> & {
+  loading?: boolean
+}
+
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-        className
-      )}
-      {...props}
-    />
-  </AlertDialogPortal>
-))
+  AlertDialogContentProps
+>(({ className, children, loading: loadingProp, ...props }, ref) => {
+  const loadingFromContext = useDialogLoading()
+  const loading = loadingProp ?? loadingFromContext
+
+  return (
+    <AlertDialogPortal>
+      <AlertDialogOverlay />
+      <AlertDialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+          className
+        )}
+        {...props}
+      >
+        <fieldset disabled={loading} className="contents">
+          {children}
+        </fieldset>
+      </AlertDialogPrimitive.Content>
+    </AlertDialogPortal>
+  )
+})
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({

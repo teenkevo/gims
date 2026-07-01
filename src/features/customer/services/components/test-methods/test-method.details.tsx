@@ -296,7 +296,7 @@ export default function TestMethodDetails({
                 </Button>
               )}
 
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog loading={isPending || loading} open={open} onOpenChange={setOpen}>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Add more files</DialogTitle>

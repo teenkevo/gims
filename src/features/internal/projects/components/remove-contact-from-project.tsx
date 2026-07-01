@@ -79,7 +79,7 @@ export function RemoveContactFromProject({
   if (isDesktop) {
     if (isControlled) {
       return (
-        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <Dialog loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
           <DialogContent aria-describedby={undefined} className="sm:max-w-3xl">
             <DialogHeader className="space-y-3">
               <DialogTitle>Remove Contact Person from Project</DialogTitle>
@@ -125,7 +125,7 @@ export function RemoveContactFromProject({
       );
     }
     return (
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button size="icon" variant="outline">
             <TrashIcon className="h-4 w-4" />
@@ -178,7 +178,7 @@ export function RemoveContactFromProject({
 
   if (isControlled) {
     return (
-      <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+      <Drawer loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerContent>
           <DrawerHeader className="gap-3 text-left">
             <DialogTitle>Remove Contact Person from Project</DialogTitle>
@@ -224,7 +224,7 @@ export function RemoveContactFromProject({
   }
 
   return (
-    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+    <Drawer loading={isPending} open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="icon" variant="outline">
           <TrashIcon className="h-4 w-4" />

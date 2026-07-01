@@ -244,7 +244,7 @@ export function RespondToQuotationDialog({
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={isPending} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button size="sm">
             <MessageSquareReply className="w-4 h-4 mr-2" />
@@ -274,7 +274,7 @@ export function RespondToQuotationDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={isPending} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm">
           <MessageSquareReply className="w-4 h-4 mr-2" />

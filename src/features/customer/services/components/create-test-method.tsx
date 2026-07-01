@@ -65,11 +65,12 @@ export function CreateTestMethodDialog({
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           {trigger ? (
             trigger
@@ -85,14 +86,14 @@ export function CreateTestMethodDialog({
             <DialogTitle>Create Test Method</DialogTitle>
           </DialogHeader>
 
-          <TestMethodForm setOpen={setOpen} standards={standards} />
+          <TestMethodForm onPendingChange={setDialogLoading} setOpen={setOpen} standards={standards} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ? (
           trigger
@@ -108,7 +109,7 @@ export function CreateTestMethodDialog({
           <DrawerTitle>Create Test Method</DrawerTitle>
         </DrawerHeader>
 
-        <TestMethodForm setOpen={setOpen} standards={standards} />
+        <TestMethodForm onPendingChange={setDialogLoading} setOpen={setOpen} standards={standards} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -122,9 +123,11 @@ export function CreateTestMethodDialog({
 function TestMethodForm({
   standards,
   setOpen,
+onPendingChange,
 }: {
   standards: ALL_STANDARDS_QUERY_RESULT;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const router = useRouter();
   const [popoverOpen, setPopoverOpen] = React.useState(false);
@@ -135,6 +138,10 @@ function TestMethodForm({
     addTestMethod,
     null
   );
+  React.useEffect(() => {
+    onPendingChange?.(isPending || loading);
+  }, [isPending, loading, onPendingChange]);
+
 
   const form = useForm({
     mode: "onChange",

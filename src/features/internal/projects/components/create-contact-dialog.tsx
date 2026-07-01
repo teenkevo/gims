@@ -531,8 +531,7 @@ export function CreateContactDialog({
   );
 
   return isMobile ? (
-    <Drawer
-      open={open}
+    <Drawer loading={isSubmitting} open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {
@@ -563,8 +562,7 @@ export function CreateContactDialog({
       </DrawerContent>
     </Drawer>
   ) : (
-    <Dialog
-      open={open}
+    <Dialog loading={isSubmitting} open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {

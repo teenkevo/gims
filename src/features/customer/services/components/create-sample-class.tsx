@@ -49,11 +49,12 @@ export function CreateSampleClassDialog({
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           {trigger ? (
             trigger
@@ -69,14 +70,14 @@ export function CreateSampleClassDialog({
             <DialogTitle>Create Sample Class</DialogTitle>
           </DialogHeader>
 
-          <StandardForm setOpen={setOpen} />
+          <StandardForm onPendingChange={setDialogLoading} setOpen={setOpen} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ? (
           trigger
@@ -92,7 +93,7 @@ export function CreateSampleClassDialog({
           <DrawerTitle>Create Sample Class</DrawerTitle>
         </DrawerHeader>
 
-        <StandardForm setOpen={setOpen} />
+        <StandardForm onPendingChange={setDialogLoading} setOpen={setOpen} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -105,8 +106,10 @@ export function CreateSampleClassDialog({
 
 function StandardForm({
   setOpen,
+onPendingChange,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const router = useRouter();
 
@@ -115,6 +118,10 @@ function StandardForm({
     addSampleClass,
     null
   );
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   // In the StandardForm function, update the useForm hook to include subclasses
   const form = useForm({

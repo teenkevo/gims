@@ -54,7 +54,7 @@ export function RemoveClientFromProject({
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={isPending} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
             variant="ghost"
@@ -96,7 +96,7 @@ export function RemoveClientFromProject({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={isPending} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"

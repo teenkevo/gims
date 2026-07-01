@@ -49,11 +49,12 @@ export function EditStandardDialog({
   onClose: () => void;
   standard: ALL_STANDARDS_QUERY_RESULT[number];
 }) {
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
         <DialogContent
           onInteractOutside={(e) => {
             e.preventDefault();
@@ -64,14 +65,14 @@ export function EditStandardDialog({
             <DialogTitle>Edit Standard</DialogTitle>
           </DialogHeader>
 
-          <StandardForm standard={standard} onClose={onClose} />
+          <StandardForm onPendingChange={setDialogLoading} standard={standard} onClose={onClose} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={onClose}>
       <DrawerContent
         onInteractOutside={(e) => {
           e.preventDefault();
@@ -81,7 +82,7 @@ export function EditStandardDialog({
           <DrawerTitle>Edit Standard</DrawerTitle>
         </DrawerHeader>
 
-        <StandardForm standard={standard} onClose={onClose} />
+        <StandardForm onPendingChange={setDialogLoading} standard={standard} onClose={onClose} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -95,15 +96,21 @@ export function EditStandardDialog({
 function StandardForm({
   onClose,
   standard,
+onPendingChange,
 }: {
   onClose: () => void;
   standard: ALL_STANDARDS_QUERY_RESULT[number];
+  onPendingChange?: (pending: boolean) => void;
 }) {
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(
     updateStandard,
     null
   );
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const form = useForm({
     mode: "onChange",

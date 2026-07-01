@@ -268,7 +268,7 @@ export function RemakePaymentDialog({
   );
 
   return isMobile ? (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
+    <Drawer loading={isPending || loading} open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         <Button variant="destructive" size="sm">
           <WarningOutlineIcon className="h-4 w-4 mr-2" />
@@ -297,7 +297,7 @@ export function RemakePaymentDialog({
       </DrawerContent>
     </Drawer>
   ) : (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog loading={isPending || loading} open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="destructive" size="sm">
           <WarningOutlineIcon className="h-4 w-4 mr-2" />

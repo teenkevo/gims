@@ -52,11 +52,12 @@ export function EditSampleClassDialog({
   onClose: () => void;
   sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
 }) {
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
         <DialogContent
           onInteractOutside={(e) => {
             e.preventDefault();
@@ -67,14 +68,14 @@ export function EditSampleClassDialog({
             <DialogTitle>Edit Sample Class</DialogTitle>
           </DialogHeader>
 
-          <SampleClassForm sampleClass={sampleClass} onClose={onClose} />
+          <SampleClassForm onPendingChange={setDialogLoading} sampleClass={sampleClass} onClose={onClose} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={onClose}>
       <DrawerContent
         onInteractOutside={(e) => {
           e.preventDefault();
@@ -84,7 +85,7 @@ export function EditSampleClassDialog({
           <DrawerTitle>Edit Sample Class</DrawerTitle>
         </DrawerHeader>
 
-        <SampleClassForm sampleClass={sampleClass} onClose={onClose} />
+        <SampleClassForm onPendingChange={setDialogLoading} sampleClass={sampleClass} onClose={onClose} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -98,15 +99,21 @@ export function EditSampleClassDialog({
 function SampleClassForm({
   onClose,
   sampleClass,
+onPendingChange,
 }: {
   onClose: () => void;
   sampleClass: ALL_SAMPLE_CLASSES_QUERY_RESULT[number];
+  onPendingChange?: (pending: boolean) => void;
 }) {
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(
     updateSampleClass,
     null
   );
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const form = useForm({
     mode: "onChange",

@@ -67,11 +67,12 @@ export function CreateServiceDialog({
   testMethods: ALL_TEST_METHODS_QUERY_RESULT;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button className="sm:w-auto mb-5" variant="default">
             <PlusCircleIcon className="h-5 w-5 md:mr-2" />
@@ -88,6 +89,7 @@ export function CreateServiceDialog({
             <DialogTitle>Create Service</DialogTitle>
           </DialogHeader>
           <ServiceForm
+            onPendingChange={setDialogLoading}
             setOpen={setOpen}
             testMethods={testMethods}
             sampleClasses={sampleClasses}
@@ -98,7 +100,7 @@ export function CreateServiceDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="sm:w-auto mb-5" variant="default">
           <PlusCircleIcon className="h-5 w-5 md:mr-2" />
@@ -115,7 +117,8 @@ export function CreateServiceDialog({
         </DrawerHeader>
 
         <ServiceForm
-          setOpen={setOpen}
+            onPendingChange={setDialogLoading}
+            setOpen={setOpen}
           testMethods={testMethods}
           sampleClasses={sampleClasses}
         />
@@ -133,15 +136,21 @@ function ServiceForm({
   setOpen,
   testMethods,
   sampleClasses,
+onPendingChange,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   testMethods: ALL_TEST_METHODS_QUERY_RESULT;
   sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [subClassPopoverOpen, setSubClassPopoverOpen] = React.useState(false);
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(addService, null);
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   // Add new state for the prefix
   const [prefix, setPrefix] = React.useState("");

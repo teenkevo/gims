@@ -83,11 +83,12 @@ export function CreatePersonnelDialog({
   open?: boolean;
   onClose?: () => void;
 }) {
+  const [dialogLoading, setDialogLoading] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
         <DialogContent
           aria-describedby={undefined}
           className="sm:max-w-[600px]"
@@ -99,6 +100,7 @@ export function CreatePersonnelDialog({
           </DialogHeader>
 
           <CreatePersonnelForm
+            onPendingChange={setDialogLoading}
             departmentRoles={departmentRoles}
             onClose={onClose}
             isEdit={isEdit}
@@ -110,7 +112,7 @@ export function CreatePersonnelDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={onClose}>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>
@@ -118,7 +120,8 @@ export function CreatePersonnelDialog({
           </DrawerTitle>
         </DrawerHeader>
         <CreatePersonnelForm
-          departmentRoles={departmentRoles}
+            onPendingChange={setDialogLoading}
+            departmentRoles={departmentRoles}
           onClose={onClose}
           isEdit={isEdit}
           personnel={personnel}
@@ -138,6 +141,7 @@ function CreatePersonnelForm({
   onClose,
   isEdit = false,
   personnel,
+  onPendingChange,
 }: {
   departmentRoles: Record<
     string,
@@ -146,6 +150,7 @@ function CreatePersonnelForm({
   onClose?: () => void;
   isEdit?: boolean;
   personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [roleOpen, setRoleOpen] = useState(false);
 
@@ -154,6 +159,10 @@ function CreatePersonnelForm({
     isEdit ? updatePersonnel : createPersonnel,
     null
   );
+  useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const existingDepartmentRoles = personnel?.departmentRoles?.map((role) => ({
     department: role.department?.department || "",

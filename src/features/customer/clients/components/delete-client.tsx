@@ -56,7 +56,7 @@ export function DeleteClient({
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={isPending} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="destructive">Delete</Button>
         </DialogTrigger>
@@ -139,7 +139,7 @@ export function DeleteClient({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={isPending} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="destructive">Delete</Button>
       </DialogTrigger>

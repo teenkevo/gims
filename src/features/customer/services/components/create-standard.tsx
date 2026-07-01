@@ -48,11 +48,12 @@ export function CreateStandardDialog({
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           {trigger ? (
             trigger
@@ -68,14 +69,14 @@ export function CreateStandardDialog({
             <DialogTitle>Create Standard</DialogTitle>
           </DialogHeader>
 
-          <StandardForm setOpen={setOpen} />
+          <StandardForm onPendingChange={setDialogLoading} setOpen={setOpen} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ? (
           trigger
@@ -91,7 +92,7 @@ export function CreateStandardDialog({
           <DrawerTitle>Create Standard</DrawerTitle>
         </DrawerHeader>
 
-        <StandardForm setOpen={setOpen} />
+        <StandardForm onPendingChange={setDialogLoading} setOpen={setOpen} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -104,11 +105,17 @@ export function CreateStandardDialog({
 
 function StandardForm({
   setOpen,
+onPendingChange,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   // Restored useActionState
   const [state, dispatch, isPending] = React.useActionState(addStandard, null);
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const router = useRouter();
 

@@ -249,8 +249,7 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
   );
 
   return isMobile ? (
-    <Drawer
-      open={open}
+    <Drawer loading={isPending} open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {
@@ -281,8 +280,7 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
       </DrawerContent>
     </Drawer>
   ) : (
-    <Dialog
-      open={open}
+    <Dialog loading={isPending} open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {

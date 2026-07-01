@@ -70,11 +70,12 @@ export function EditTestMethodDialog({
   standards: ALL_STANDARDS_QUERY_RESULT;
   testMethod: ALL_TEST_METHODS_QUERY_RESULT[number];
 }) {
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
         <DialogContent
           onInteractOutside={(e) => {
             e.preventDefault();
@@ -86,6 +87,7 @@ export function EditTestMethodDialog({
           </DialogHeader>
 
           <TestMethodForm
+            onPendingChange={setDialogLoading}
             testMethod={testMethod}
             standards={standards}
             onClose={onClose}
@@ -96,7 +98,7 @@ export function EditTestMethodDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={onClose}>
       <DrawerContent
         onInteractOutside={(e) => {
           e.preventDefault();
@@ -107,7 +109,8 @@ export function EditTestMethodDialog({
         </DrawerHeader>
 
         <TestMethodForm
-          testMethod={testMethod}
+            onPendingChange={setDialogLoading}
+            testMethod={testMethod}
           standards={standards}
           onClose={onClose}
         />
@@ -125,10 +128,12 @@ function TestMethodForm({
   standards,
   testMethod,
   onClose,
+onPendingChange,
 }: {
   standards: ALL_STANDARDS_QUERY_RESULT;
   testMethod: ALL_TEST_METHODS_QUERY_RESULT[number];
   onClose: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
 
@@ -137,6 +142,10 @@ function TestMethodForm({
     updateTestMethod,
     null
   );
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const form = useForm({
     mode: "onChange",

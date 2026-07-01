@@ -327,7 +327,7 @@ export function GetlabAcknowledgementDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={isSubmitting} open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="text-left flex-shrink-0 border-b border-border pb-5">

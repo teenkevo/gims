@@ -352,8 +352,7 @@ export function CreateClientDialog({
 
   if (isDesktop) {
     return (
-      <Dialog
-        open={open}
+      <Dialog loading={isSubmitting} open={open}
         onOpenChange={(isOpen) => {
           setOpen(isOpen);
           if (isOpen) {
@@ -376,8 +375,7 @@ export function CreateClientDialog({
   }
 
   return (
-    <Drawer
-      open={open}
+    <Drawer loading={isSubmitting} open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {

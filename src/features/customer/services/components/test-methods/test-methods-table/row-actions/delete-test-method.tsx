@@ -61,7 +61,7 @@ export function DeleteTestMethod({
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog loading={isPending} open={open} onOpenChange={onClose}>
         <DialogContent
           onInteractOutside={(e) => {
             e.preventDefault();
@@ -136,7 +136,7 @@ export function DeleteTestMethod({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onClose}>
+    <Drawer loading={isPending} open={open} onOpenChange={onClose}>
       <DrawerContent
         onInteractOutside={(e) => {
           e.preventDefault();

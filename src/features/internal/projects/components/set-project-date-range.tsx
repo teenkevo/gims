@@ -62,11 +62,12 @@ export function SetDateRangeDialog({
   role: string;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [dialogLoading, setDialogLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog loading={dialogLoading} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
             disabled={role !== "admin"}
@@ -87,14 +88,14 @@ export function SetDateRangeDialog({
             </DrawerDescription>
           </DialogHeader>
 
-          <DateRangeForm setOpen={setOpen} project={project} />
+          <DateRangeForm onPendingChange={setDialogLoading} setOpen={setOpen} project={project} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer loading={dialogLoading} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           disabled={role !== "admin"}
@@ -115,7 +116,7 @@ export function SetDateRangeDialog({
           </DrawerDescription>
         </DrawerHeader>
 
-        <DateRangeForm setOpen={setOpen} project={project} />
+        <DateRangeForm onPendingChange={setDialogLoading} setOpen={setOpen} project={project} />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -129,9 +130,11 @@ export function SetDateRangeDialog({
 function DateRangeForm({
   setOpen,
   project,
+  onPendingChange,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   project: ALL_PROJECTS_QUERY_RESULT[number];
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const { _id, startDate, endDate } = project;
 
@@ -150,6 +153,10 @@ function DateRangeForm({
     action,
     null
   );
+  React.useEffect(() => {
+    onPendingChange?.(isPending);
+  }, [isPending, onPendingChange]);
+
 
   const form = useForm({
     mode: "onChange",

@@ -569,8 +569,7 @@ export function CreateRFIDialog({
   );
 
   return isMobile ? (
-    <Drawer
-      open={open}
+    <Drawer loading={isPending} open={open}
       onOpenChange={(isOpen) => {
         onOpenChange(isOpen);
         if (isOpen) {
@@ -599,8 +598,7 @@ export function CreateRFIDialog({
       </DrawerContent>
     </Drawer>
   ) : (
-    <Dialog
-      open={open}
+    <Dialog loading={isPending} open={open}
       onOpenChange={(isOpen) => {
         onOpenChange(isOpen);
         if (isOpen) {

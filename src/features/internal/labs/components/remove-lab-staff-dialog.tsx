@@ -57,7 +57,7 @@ export function RemoveLabStaffDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <AlertDialog loading={isPending} open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>

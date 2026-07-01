@@ -902,7 +902,7 @@ export function RFIDetail({
       />
 
       {/* Delete RFI Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog loading={isDeleting} open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete RFI</DialogTitle>
