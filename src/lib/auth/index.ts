@@ -27,8 +27,22 @@ export type { DepartmentRoleAssignment } from "./department-role-permissions";
 export { resolveAccess } from "./resolve-access";
 export { getMyAccess } from "./get-my-access";
 export { createAuditLog, logPermissionDenied } from "./audit-log";
-export { withAuth, withAuthenticatedAction } from "./with-auth";
+export {
+  withAuth,
+  withAuthenticatedAction,
+  requirePermissionOrError,
+} from "./with-auth";
 export { authMiddleware, getApiAuth, requireApiPermission } from "./api";
+
+export {
+  FORBIDDEN_ACTION_CODE,
+  getPermissionActionLabel,
+  getActionErrorMessage,
+  isForbiddenActionResult,
+  unauthorizedActionMessage,
+  type ActionErrorResult,
+} from "./action-errors";
+export { toastActionError } from "./notify-action-error";
 
 export { AuthError, UnauthorizedError, ForbiddenError } from "./errors";
 

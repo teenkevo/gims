@@ -45,14 +45,18 @@ export function LabUpdateNameForm({
       actionResult={actionResult}
       isSubmitting={isPending}
       validation={z.string().trim().min(1, "Required")}
-      renderField={(form) => (
+      renderField={(form, { editable }) => (
         <FormField
           control={form.control as Control<FieldValues, unknown, FieldValues>}
           name="name"
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input disabled={isPending} {...field} autoComplete="off" />
+                <Input
+                  disabled={isPending || !editable}
+                  {...field}
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

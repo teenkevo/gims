@@ -11,34 +11,43 @@ import { ListEnd, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { ClientTableRowActions } from "./client-table-row-actions";
 
+const selectColumn: ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]> = {
+  id: "select",
+  header: ({ table }) => (
+    <Checkbox
+      checked={
+        table.getIsAllPageRowsSelected() ||
+        (table.getIsSomePageRowsSelected() && "indeterminate")
+      }
+      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      aria-label="Select all"
+      className="translate-y-[2px]"
+    />
+  ),
+  cell: ({ row }) => (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onCheckedChange={(value) => row.toggleSelected(!!value)}
+      aria-label="Select row"
+      className="translate-y-[2px]"
+    />
+  ),
+  enableSorting: false,
+  enableHiding: false,
+};
+
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  clients: ALL_CLIENTS_QUERY_RESULT
-): ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]>[] => [
+  clients: ALL_CLIENTS_QUERY_RESULT,
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+    canUpdate,
+    canDelete,
+  }: {
+    canUpdate: boolean;
+    canDelete: boolean;
+  }
+): ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]>[] => [
+  ...(canDelete ? [selectColumn] : []),
   {
     accessorKey: "internalId",
     header: ({ column }) => (
@@ -160,15 +169,19 @@ export const getColumns = (
     },
   },
 
-  {
-    id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => (
-      <div className="flex justify-end">
-        <ClientTableRowActions client={row.original} />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  ...(canUpdate || canDelete
+    ? [
+        {
+          id: "actions",
+          header: () => <span className="sr-only">Actions</span>,
+          cell: ({ row }) => (
+            <div className="flex justify-end">
+              <ClientTableRowActions client={row.original} />
+            </div>
+          ),
+          enableSorting: false,
+          enableHiding: false,
+        } satisfies ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]>,
+      ]
+    : []),
 ];

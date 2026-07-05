@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteProject } from "@/lib/actions";
 import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 export function DeleteProject({
   project,
@@ -48,11 +49,7 @@ export function DeleteProject({
       toast.success("Project has been deleted");
       router.push("/projects");
     } else {
-      toast.error(
-        typeof result.error === "string"
-          ? result.error
-          : "Something went wrong"
-      );
+      toastActionError(result);
     }
   };
 

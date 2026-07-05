@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ExternalLink } from "lucide-react";
 import { Form } from "./ui/form";
 import { toast } from "sonner";
+import { useRegisterUnsavedChanges } from "@/components/unsaved-changes/unsaved-changes-context";
 
 interface SingleFieldFormProps {
   title: string;
@@ -20,9 +21,13 @@ interface SingleFieldFormProps {
   onSubmit?: (value: any) => Promise<void>;
   isSubmitting: boolean;
   validation?: z.ZodType<any, any>;
-  renderField?: (form: ReturnType<typeof useForm>) => React.ReactNode; // <-- New renderField prop
+  renderField?: (
+    form: ReturnType<typeof useForm>,
+    context: { editable: boolean }
+  ) => React.ReactNode;
   action?: string | ((formData: FormData) => void | Promise<void>); // <-- Optional action prop
   actionResult?: any; // <-- Optional server action result to detect success
+  unsavedChangesId?: string;
 }
 
 export function SingleFieldForm({
@@ -38,6 +43,7 @@ export function SingleFieldForm({
   renderField, // <-- Accept renderField prop
   action, // <-- Accept action prop
   actionResult, // <-- Accept action result
+  unsavedChangesId,
 }: SingleFieldFormProps) {
   const schema = z.object({
     [fieldName]: validation,
@@ -55,6 +61,17 @@ export function SingleFieldForm({
   const { isDirty, errors } = useFormState({ control: form.control });
   const formIsEdited = isDirty;
   const formHasError = Object.keys(errors).length > 0;
+  const resetKey = useRegisterUnsavedChanges(
+    unsavedChangesId,
+    Boolean(unsavedChangesId) && savable && isDirty
+  );
+  const initialValueRef = React.useRef(initialValue);
+  initialValueRef.current = initialValue;
+
+  React.useEffect(() => {
+    if (!unsavedChangesId) return;
+    form.reset({ [fieldName]: initialValueRef.current });
+  }, [resetKey, unsavedChangesId, fieldName, form]);
 
   if (action) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -94,7 +111,12 @@ export function SingleFieldForm({
             className="space-y-6"
           >
             {/* Use the renderField prop */}
-            {renderField && renderField(form)}
+            <fieldset
+              disabled={!savable}
+              className="min-w-0 border-0 p-0 m-0 disabled:opacity-100"
+            >
+              {renderField && renderField(form, { editable: savable })}
+            </fieldset>
 
             <div className="mt-6 -mx-6 -mb-6 px-6 py-4 flex rounded-b-xl bg-muted/50 justify-between border-t items-center">
               <span className="text-sm flex gap-2 flex-wrap">

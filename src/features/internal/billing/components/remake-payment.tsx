@@ -47,6 +47,7 @@ import FileUpload from "@/components/file-upload";
 import { NumericFormat } from "react-number-format";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { makeResubmission } from "@/lib/actions";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { WarningOutlineIcon } from "@sanity/icons";
 
@@ -134,7 +135,7 @@ export function RemakePaymentDialog({
       form.reset();
       form.setValue("amount", rejectedPayment.amount?.toString() || "");
     } else if (state?.status === "error") {
-      toast.error("Something went wrong");
+      toastActionError(state);
     }
   }, [state, form, rejectedPayment]);
 

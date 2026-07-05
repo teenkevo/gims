@@ -24,6 +24,7 @@ import { ScrollToFieldError } from "@/components/scroll-to-field-error";
 import { createProjectForClient } from "@/lib/actions";
 import { useActionState } from "react";
 import { ProjectDetailsForm } from "@/features/internal/projects/components/project-details-form";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
@@ -68,7 +69,7 @@ export function CreateProjectForClientForm({ clientId }: { clientId: string }) {
       toast.success("Project created successfully");
       router.push(`/clients/${clientId}?tab=projects`);
     } else if (state?.status === "error") {
-      toast.error("Something went wrong");
+      toastActionError(state);
     }
   }, [state]);
 

@@ -49,6 +49,7 @@ export function ViewPaymentsDialog({
   existingPayments = [],
   project,
   quotation,
+  canManageBilling = false,
 }: {
   quotationId: string;
   currency: string;
@@ -56,6 +57,7 @@ export function ViewPaymentsDialog({
   existingPayments?: Payments;
   project: PROJECT_BY_ID_QUERY_RESULT[number];
   quotation: Quotation;
+  canManageBilling?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -176,7 +178,8 @@ export function ViewPaymentsDialog({
                   <div className="flex items-center gap-2">
                     {project &&
                       quotation &&
-                      payment.internalStatus === "pending" && (
+                      payment.internalStatus === "pending" &&
+                      canManageBilling && (
                         <ApproveRejectPaymentDialog
                           project={project}
                           quotation={quotation}
@@ -306,7 +309,8 @@ export function ViewPaymentsDialog({
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {resubmission.internalStatus ===
-                                    "pending" && (
+                                    "pending" &&
+                                    canManageBilling && (
                                     <ApproveRejectPaymentDialog
                                       project={
                                         project as PROJECT_BY_ID_QUERY_RESULT[number]

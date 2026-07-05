@@ -11,34 +11,40 @@ import type {
 } from "../../../../../../sanity.types";
 import Link from "next/link";
 
-// Convert columns to a function that accepts parameters
-export const getColumns = (): ColumnDef<
+const selectColumn: ColumnDef<
   CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
->[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+> = {
+  id: "select",
+  header: ({ table }) => (
+    <Checkbox
+      checked={
+        table.getIsAllPageRowsSelected() ||
+        (table.getIsSomePageRowsSelected() && "indeterminate")
+      }
+      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      aria-label="Select all"
+      className="translate-y-[2px]"
+    />
+  ),
+  cell: ({ row }) => (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onCheckedChange={(value) => row.toggleSelected(!!value)}
+      aria-label="Select row"
+      className="translate-y-[2px]"
+    />
+  ),
+  enableSorting: false,
+  enableHiding: false,
+};
+
+// Convert columns to a function that accepts parameters
+export const getColumns = ({
+  canUpdate,
+}: {
+  canUpdate: boolean;
+}): ColumnDef<CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]>[] => [
+  ...(canUpdate ? [selectColumn] : []),
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -110,8 +116,14 @@ export const getColumns = (): ColumnDef<
     },
   },
 
-  {
-    id: "actions",
-    cell: ({ row }) => <DataTableRowActions contact={row.original} />,
-  },
+  ...(canUpdate
+    ? [
+        {
+          id: "actions",
+          cell: ({ row }) => <DataTableRowActions contact={row.original} />,
+        } satisfies ColumnDef<
+          CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
+        >,
+      ]
+    : []),
 ];

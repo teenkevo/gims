@@ -1,8 +1,32 @@
 import "server-only";
 
+import { AuthError } from "./errors";
+import {
+  FORBIDDEN_ACTION_CODE,
+  unauthorizedActionMessage,
+  type ActionErrorResult,
+} from "./action-errors";
 import type { Permission } from "./permissions";
 import { requireAuth, requirePermission } from "./session";
 import type { AuthContext } from "./types";
+
+export async function requirePermissionOrError(
+  permission: Permission
+): Promise<ActionErrorResult | null> {
+  try {
+    await requirePermission(permission);
+    return null;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return {
+        status: "error",
+        error: unauthorizedActionMessage(permission),
+        code: FORBIDDEN_ACTION_CODE,
+      };
+    }
+    throw error;
+  }
+}
 
 type ServerAction<TArgs extends unknown[], TResult> = (
   ...args: TArgs

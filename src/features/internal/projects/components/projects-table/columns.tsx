@@ -16,35 +16,43 @@ import { SetDateRangeDialog } from "../set-project-date-range";
 import { quotationTotal } from "../../constants";
 import { ProjectTableRowActions } from "./project-table-row-actions";
 
+const selectColumn: ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]> = {
+  id: "select",
+  header: ({ table }) => (
+    <Checkbox
+      checked={
+        table.getIsAllPageRowsSelected() ||
+        (table.getIsSomePageRowsSelected() && "indeterminate")
+      }
+      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      aria-label="Select all"
+      className="translate-y-[2px]"
+    />
+  ),
+  cell: ({ row }) => (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onCheckedChange={(value) => row.toggleSelected(!!value)}
+      aria-label="Select row"
+      className="translate-y-[2px]"
+    />
+  ),
+  enableSorting: false,
+  enableHiding: false,
+};
+
 // Convert columns to a function that accepts parameters
 export const getColumns = (
   projects: ALL_PROJECTS_QUERY_RESULT,
-  role: string
-): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+    canUpdate,
+    canDelete,
+  }: {
+    canUpdate: boolean;
+    canDelete: boolean;
+  }
+): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => [
+  ...(canDelete ? [selectColumn] : []),
   {
     accessorKey: "internalId",
     header: ({ column }) => (
@@ -89,16 +97,16 @@ export const getColumns = (
     cell: ({ row }) =>
       row.original?.startDate ? (
         <SetDateRangeDialog
-          role={role}
+          canUpdate={canUpdate}
           icon={<ListStart className="text-primary w-4 h-4 mr-2" />}
           buttonText={format(new Date(row.original?.startDate), "dd/LL/yy")}
           project={row.original}
         />
       ) : (
         <SetDateRangeDialog
-          role={role}
+          canUpdate={canUpdate}
           icon={<TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />}
-          buttonText={role === "admin" ? "Set start date" : "Not yet set"}
+          buttonText={canUpdate ? "Set start date" : "Not yet set"}
           project={row.original}
         />
       ),
@@ -112,16 +120,16 @@ export const getColumns = (
     cell: ({ row }) =>
       row.original?.endDate ? (
         <SetDateRangeDialog
-          role={role}
+          canUpdate={canUpdate}
           icon={<ListEnd className="text-primary w-4 h-4 mr-2" />}
           buttonText={format(new Date(row.original?.endDate), "dd/LL/yy")}
           project={row.original}
         />
       ) : (
         <SetDateRangeDialog
-          role={role}
+          canUpdate={canUpdate}
           icon={<TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />}
-          buttonText={role === "admin" ? "Set end date" : "Not yet set"}
+          buttonText={canUpdate ? "Set end date" : "Not yet set"}
           project={row.original}
         />
       ),
@@ -269,15 +277,19 @@ export const getColumns = (
   //     return value.includes(row.getValue);
   //   },
   // },
-  {
-    id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => (
-      <div className="flex justify-end">
-        <ProjectTableRowActions project={row.original} />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  ...(canUpdate || canDelete
+    ? [
+        {
+          id: "actions",
+          header: () => <span className="sr-only">Actions</span>,
+          cell: ({ row }) => (
+            <div className="flex justify-end">
+              <ProjectTableRowActions project={row.original} />
+            </div>
+          ),
+          enableSorting: false,
+          enableHiding: false,
+        } satisfies ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>,
+      ]
+    : []),
 ];

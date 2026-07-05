@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useUpdateProjectDates } from "../api/use-update-project-dates";
 import { revalidateProject, updateProjectDates } from "@/lib/actions";
 import { Control, FieldValues } from "react-hook-form";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 interface ProjectUpdateDatesFormProps {
   title: string;
@@ -27,6 +28,7 @@ interface ProjectUpdateDatesFormProps {
   fieldName: string;
   initialValue: any;
   projectId: string;
+  unsavedChangesId?: string;
 }
 
 export default function ProjectUpdateDatesForm({
@@ -38,6 +40,7 @@ export default function ProjectUpdateDatesForm({
   fieldName,
   initialValue,
   projectId,
+  unsavedChangesId,
 }: ProjectUpdateDatesFormProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -52,12 +55,13 @@ export default function ProjectUpdateDatesForm({
       }
     )
     .superRefine((val, ctx) => {
-      // Either both are empty, or both are present
-      if (val.from && !val.to) {
+      const hasStart = Boolean(val.from);
+      const hasEnd = Boolean(val.to);
+
+      if (hasStart !== hasEnd) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ["to"],
-          message: "Select an end date too",
+          message: "Both start and end dates are required",
         });
       }
     });
@@ -67,7 +71,7 @@ export default function ProjectUpdateDatesForm({
     if (result.status === "ok") {
       toast.success("Project dates have been updated");
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
     return result;
   };
@@ -87,7 +91,8 @@ export default function ProjectUpdateDatesForm({
       actionResult={actionResult}
       isSubmitting={isPending}
       validation={dateRangeSchema}
-      renderField={(form) => (
+      unsavedChangesId={unsavedChangesId}
+      renderField={(form, { editable }) => (
         <FormField
           control={form.control as Control<FieldValues, any, FieldValues>}
           name={fieldName}
@@ -108,7 +113,7 @@ export default function ProjectUpdateDatesForm({
                 <PopoverTrigger asChild>
                   <Button
                     id="date"
-                    disabled={isPending}
+                    disabled={isPending || !editable}
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
@@ -134,11 +139,8 @@ export default function ProjectUpdateDatesForm({
                   <Calendar
                     initialFocus
                     mode="range"
-                    defaultMonth={field.value.from}
-                    selected={{
-                      from: field.value.from!,
-                      to: field.value.to,
-                    }}
+                    defaultMonth={field.value?.from}
+                    selected={field.value}
                     onSelect={field.onChange}
                     numberOfMonths={2}
                   />

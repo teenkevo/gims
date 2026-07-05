@@ -6,6 +6,7 @@ import React, { useActionState, useState } from "react";
 import { z } from "zod";
 import { Control, FieldValues } from "react-hook-form";
 import { updateClientName } from "@/lib/actions";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 interface ClientUpdateNameFormProps {
   title: string;
@@ -16,6 +17,7 @@ interface ClientUpdateNameFormProps {
   fieldName: string;
   initialValue: string;
   clientId: string;
+  unsavedChangesId?: string;
 }
 
 export default function ClientUpdateNameForm({
@@ -27,13 +29,14 @@ export default function ClientUpdateNameForm({
   fieldName,
   initialValue,
   clientId,
+  unsavedChangesId,
 }: ClientUpdateNameFormProps) {
   const action = async (_: void | null, formData: FormData) => {
     const result = await updateClientName(clientId, formData);
     if (result.status === "ok") {
       toast.success("Client name has been updated");
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
   };
 
@@ -51,14 +54,19 @@ export default function ClientUpdateNameForm({
       action={dispatch}
       isSubmitting={isPending}
       validation={z.string().trim().min(1, "Required")}
-      renderField={(form) => (
+      unsavedChangesId={unsavedChangesId}
+      renderField={(form, { editable }) => (
         <FormField
           control={form.control as Control<FieldValues, any, FieldValues>}
           name={fieldName}
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input disabled={isPending} {...field} autoComplete="off" />
+                <Input
+                  disabled={isPending || !editable}
+                  {...field}
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

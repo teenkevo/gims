@@ -32,6 +32,7 @@ import { useRBAC } from "@/components/rbac-context";
 import { Document, pdf, PDFViewer } from "@react-pdf/renderer";
 import { BillingDocument } from "./billingDocument";
 import { InvoiceDocument } from "./invoice-document";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 export function RespondToQuotationDialog({
   project,
@@ -86,8 +87,6 @@ export function RespondToQuotationDialog({
     </Document>
   );
 
-  console.log(quotation);
-
   const action = async (_: void | null) => {
     if (!quotation) {
       toast.error("Quotation not found");
@@ -107,7 +106,14 @@ export function RespondToQuotationDialog({
         body: formData,
       });
       const fileResult = await response.json();
-      await createInvoice(quotation._id, fileResult.files[0].fileId);
+      const invoiceResult = await createInvoice(
+        quotation._id,
+        fileResult.files[0].fileId
+      );
+      if (invoiceResult.status === "error") {
+        toastActionError(invoiceResult);
+        return;
+      }
     }
 
     // For rejection, we need to create a new revision
@@ -127,7 +133,7 @@ export function RespondToQuotationDialog({
       }
       setOpen(false);
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
   };
 

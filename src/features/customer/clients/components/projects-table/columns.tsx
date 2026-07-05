@@ -17,34 +17,37 @@ import { Badge } from "@/components/ui/badge";
 import { quotationTotal } from "@/features/internal/projects/constants";
 import { calculatePaymentStatus } from "@/features/internal/billing/components/billing-lifecycle";
 
+const selectColumn: ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]> = {
+  id: "select",
+  header: ({ table }) => (
+    <Checkbox
+      checked={
+        table.getIsAllPageRowsSelected() ||
+        (table.getIsSomePageRowsSelected() && "indeterminate")
+      }
+      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      aria-label="Select all"
+      className="translate-y-[2px]"
+    />
+  ),
+  cell: ({ row }) => (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onCheckedChange={(value) => row.toggleSelected(!!value)}
+      aria-label="Select row"
+      className="translate-y-[2px]"
+    />
+  ),
+  enableSorting: false,
+  enableHiding: false,
+};
+
 // Convert columns to a function that accepts parameters
 export const getColumns = (
-  client: CLIENT_BY_ID_QUERY_RESULT[number]
+  client: CLIENT_BY_ID_QUERY_RESULT[number],
+  { canDelete }: { canDelete: boolean }
 ): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  ...(canDelete ? [selectColumn] : []),
   {
     accessorKey: "internalId",
     header: ({ column }) => (

@@ -5,6 +5,10 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { deleteProjectById } from "@/lib/actions";
 import { authMiddleware } from "@/lib/auth/api";
 import { PERMISSIONS } from "@/lib/auth/permissions";
+import {
+  FORBIDDEN_ACTION_CODE,
+  unauthorizedActionMessage,
+} from "@/lib/auth/action-errors";
 
 // Schema for creating a project
 const createProjectSchema = z.object({
@@ -51,6 +55,20 @@ const app = new Hono()
     zValidator("json", createProjectSchema),
     async (c) => {
     const { projectName, dateRange, priority, clients } = c.req.valid("json");
+    const session = c.get("auth");
+
+    if (
+      clients.some((client) => client.clientType === "new") &&
+      !session.permissions.includes(PERMISSIONS["clients:create"])
+    ) {
+      return c.json(
+        {
+          error: unauthorizedActionMessage(PERMISSIONS["clients:create"]),
+          code: FORBIDDEN_ACTION_CODE,
+        },
+        403
+      );
+    }
 
     const clientIds = await Promise.all(
       clients.map(async (client) => {
@@ -137,7 +155,12 @@ const app = new Hono()
       return c.json({ deletedProject: result.result });
     }
 
-    return c.json({ error: result.error }, 500);
+    const message =
+      "error" in result && typeof result.error === "string"
+        ? result.error
+        : "Failed to delete project";
+
+    return c.json({ error: message }, 500);
   });
 
 export default app;

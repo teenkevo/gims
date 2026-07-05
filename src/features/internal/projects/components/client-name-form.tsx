@@ -8,15 +8,26 @@ import { toast } from "sonner";
 import React, { useActionState } from "react";
 import { updateClientName } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
+import { toastActionError } from "@/lib/auth/notify-action-error";
+import { useRegisterUnsavedChanges } from "@/components/unsaved-changes/unsaved-changes-context";
 
 interface ClientNameFormProps {
   title: string;
   initialValue: string;
   clientId: string;
   projectId: string;
+  editable?: boolean;
+  unsavedChangesId?: string;
 }
 
-export default function ClientNameForm({ title, initialValue, clientId, projectId }: ClientNameFormProps) {
+export default function ClientNameForm({
+  title,
+  initialValue,
+  clientId,
+  projectId,
+  editable = true,
+  unsavedChangesId,
+}: ClientNameFormProps) {
   const action = async (_: void | null, formData: FormData) => {
     const clientName = formData.get("clientName");
     const result = await updateClientName(clientId, formData, projectId);
@@ -24,7 +35,7 @@ export default function ClientNameForm({ title, initialValue, clientId, projectI
       form.reset({ clientName: clientName as string });
       toast.success("Client name has been updated");
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
   };
 
@@ -39,6 +50,17 @@ export default function ClientNameForm({ title, initialValue, clientId, projectI
   });
 
   const formIsEdited = form.formState.isDirty;
+  const resetKey = useRegisterUnsavedChanges(
+    unsavedChangesId,
+    Boolean(unsavedChangesId) && editable && formIsEdited
+  );
+  const initialValueRef = React.useRef(initialValue);
+  initialValueRef.current = initialValue;
+
+  React.useEffect(() => {
+    if (!unsavedChangesId) return;
+    form.reset({ clientName: initialValueRef.current });
+  }, [resetKey, unsavedChangesId, form]);
 
   return (
     <FormProvider {...form}>
@@ -52,14 +74,18 @@ export default function ClientNameForm({ title, initialValue, clientId, projectI
                 <FormItem>
                   <FormLabel>Client Name</FormLabel>
                   <FormControl>
-                    <Input disabled={isPending} {...field} autoComplete="off" />
+                    <Input
+                      disabled={isPending || !editable}
+                      {...field}
+                      autoComplete="off"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          {(formIsEdited || isPending) && (
+          {editable && (formIsEdited || isPending) && (
             <div className="flex-grow-0">
               <div className="ml-4">
                 <Button type="submit" disabled={isPending || !formIsEdited}>

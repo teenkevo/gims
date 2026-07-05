@@ -12,12 +12,16 @@ import { getAllPersonnel } from "@/sanity/lib/personnel/getAllPersonnel";
 import Loading from "./loading";
 import { getSampleReviewTemplates } from "@/sanity/lib/projects/getSampleReviewTemplates";
 import { getSampleAdequacyTemplates } from "@/sanity/lib/projects/getSampleAdequacyTemplates";
+import { requirePermission } from "@/lib/auth/session";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export default async function ProjectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requirePermission(PERMISSIONS["projects:read"]);
+
   const { id } = await params;
 
   // Fetch data in parallel

@@ -26,6 +26,9 @@ import { ALL_CLIENTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
 import { createProject } from "@/lib/actions";
 import { useActionState } from "react";
+import { toastActionError } from "@/lib/auth/notify-action-error";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
@@ -41,6 +44,8 @@ export function CreateProjectForm({
   labId?: string;
 }) {
   const router = useRouter();
+  const { can } = useRBAC();
+  const canCreateClient = can(PERMISSIONS["clients:create"]);
 
   // Restored useActionState
   const [state, dispatch, isPending] = useActionState(createProject, null);
@@ -54,7 +59,7 @@ export function CreateProjectForm({
       dateRange: { from: undefined, to: undefined },
       clients: [
         {
-          clientType: "new",
+          clientType: canCreateClient ? "new" : "existing",
           existingClient: "",
           newClientName: "",
           newClientInternalId: `C-${Math.floor(10000 + Math.random() * 90000).toString()}`,
@@ -109,7 +114,7 @@ export function CreateProjectForm({
         router.push("/projects");
       }
     } else if (state?.status === "error") {
-      toast.error("Something went wrong");
+      toastActionError(state);
     }
   }, [state, labId, router]);
 
@@ -135,7 +140,11 @@ export function CreateProjectForm({
               isSubmitting={isPending}
               formTitle="Create new project"
             />
-            <ClientProfileForm clients={clients} isSubmitting={isPending} />
+            <ClientProfileForm
+              clients={clients}
+              isSubmitting={isPending}
+              canCreateClient={canCreateClient}
+            />
           </motion.div>
           <FormSubmitButton text="Create Project" isSubmitting={isPending} />
         </form>

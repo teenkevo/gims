@@ -15,6 +15,8 @@ import { Delete, Pencil, Trash } from "lucide-react";
 import { UpdateContactDialog } from "./row-actions/update-contact-dialog";
 import { DeleteContactDialog } from "./row-actions/delete-contact-dialog";
 import { toast } from "sonner";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface DataTableRowActionsProps<TData> {
   contact: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number];
@@ -22,6 +24,12 @@ interface DataTableRowActionsProps<TData> {
 
 export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps<TData>) {
   const [openDialog, setOpenDialog] = useState<string | null>(null);
+  const { can } = useRBAC();
+  const canUpdateClient = can(PERMISSIONS["clients:update"]);
+
+  if (!canUpdateClient) {
+    return null;
+  }
 
   const handleOpenDialog = (dialogId: string) => {
     setOpenDialog(dialogId);

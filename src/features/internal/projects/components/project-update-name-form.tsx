@@ -12,6 +12,7 @@ import { z } from "zod";
 import { useUpdateProjectName } from "../api/use-update-project-name";
 import { revalidateProject, updateProjectName } from "@/lib/actions";
 import { Control, FieldValues } from "react-hook-form";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 interface ProjectUpdateNameFormProps {
   title: string;
@@ -22,6 +23,7 @@ interface ProjectUpdateNameFormProps {
   fieldName: string;
   initialValue: string;
   projectId: string;
+  unsavedChangesId?: string;
 }
 
 export default function ProjectUpdateNameForm({
@@ -33,13 +35,14 @@ export default function ProjectUpdateNameForm({
   fieldName,
   initialValue,
   projectId,
+  unsavedChangesId,
 }: ProjectUpdateNameFormProps) {
   const action = async (_: any, formData: FormData) => {
     const result = await updateProjectName(formData, projectId);
     if (result.status === "ok") {
       toast.success("Project name has been updated");
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
     return result;
   };
@@ -59,14 +62,19 @@ export default function ProjectUpdateNameForm({
       actionResult={actionResult}
       isSubmitting={isPending}
       validation={z.string().trim().min(1, "Required")}
-      renderField={(form) => (
+      unsavedChangesId={unsavedChangesId}
+      renderField={(form, { editable }) => (
         <FormField
           control={form.control as Control<FieldValues, any, FieldValues>}
           name={fieldName}
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input disabled={isPending} {...field} autoComplete="off" />
+                <Input
+                  disabled={isPending || !editable}
+                  {...field}
+                  autoComplete="off"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

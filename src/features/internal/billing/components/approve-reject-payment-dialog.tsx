@@ -13,6 +13,7 @@ import { ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Payments } from "./make-payment-dialog";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 interface ApproveRejectPaymentDialogProps {
   project: PROJECT_BY_ID_QUERY_RESULT[number];
@@ -59,14 +60,18 @@ export const ApproveRejectPaymentDialog = ({
         body: formData,
       });
       const fileResult = await response.json();
-      await approvePayment(
+      const result = await approvePayment(
         quotation._id,
         fileResult.files[0].fileId,
         payment._key,
         resubmissionKey,
         notes
       );
-      toast.success("Payment approved and receipt generated");
+      if (result.status === "ok") {
+        toast.success("Payment approved and receipt generated");
+      } else {
+        toastActionError(result);
+      }
     } catch (error) {
       toast.error("Failed to generate payment receipt");
     }
@@ -78,13 +83,17 @@ export const ApproveRejectPaymentDialog = ({
       return;
     }
     try {
-      await rejectPayment(
+      const result = await rejectPayment(
         quotation._id,
         payment._key,
         rejectNotes,
         resubmissionKey
       );
-      toast.success("Payments resubmission rejected");
+      if (result.status === "ok") {
+        toast.success("Payments resubmission rejected");
+      } else {
+        toastActionError(result);
+      }
     } catch (error) {
       toast.error("Failed to reject payment");
     }

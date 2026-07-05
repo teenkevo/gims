@@ -48,6 +48,7 @@ import { NumericFormat } from "react-number-format";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { makePayment } from "@/lib/actions";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
@@ -254,7 +255,7 @@ export function MakePaymentDialog({
       form.reset();
       setPaymentType(null);
     } else if (state?.status === "error") {
-      toast.error("Something went wrong");
+      toastActionError(state);
     }
   }, [state, form]);
 

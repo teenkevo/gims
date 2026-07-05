@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import * as motion from "framer-motion/client";
 import { DeleteProject } from "./delete-project";
 import {
@@ -51,9 +51,29 @@ import { BillingLifecycle } from "../../billing/components/billing-lifecycle";
 import QuotationFile from "../../billing/components/quotation-file";
 import { useQuotation } from "../../billing/components/useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { Badge } from "@/components/ui/badge";
+import { UnsavedChangesProvider } from "@/components/unsaved-changes/unsaved-changes-context";
+import { UnsavedChangesDialog } from "@/components/unsaved-changes/unsaved-changes-dialog";
+import { useGuardedTabChange } from "@/hooks/use-guarded-tab-change";
 
-export default function ProjectDetails({
+export default function ProjectDetails(props: {
+  project: PROJECT_BY_ID_QUERY_RESULT[number];
+  existingContacts: ALL_CONTACTS_QUERY_RESULT;
+  existingClients: ALL_CLIENTS_QUERY_RESULT;
+  allServices: ALL_SERVICES_QUERY_RESULT;
+  personnel: ALL_PERSONNEL_QUERY_RESULT;
+  sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT;
+  sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT;
+}) {
+  return (
+    <UnsavedChangesProvider>
+      <ProjectDetailsContent {...props} />
+    </UnsavedChangesProvider>
+  );
+}
+
+function ProjectDetailsContent({
   project,
   existingContacts,
   existingClients,
@@ -94,9 +114,21 @@ export default function ProjectDetails({
     fully_paid: 5,
   };
 
-  const { role } = useRBAC();
+  const { role, can } = useRBAC();
+  const canUpdate = can(PERMISSIONS["projects:update"]);
+  const canDelete = can(PERMISSIONS["projects:delete"]);
+  const canUpdateClient = can(PERMISSIONS["clients:update"]);
+  const canReadBilling = can(PERMISSIONS["billing:read"]);
 
   const { quotation } = useQuotation(project, role);
+
+  const projectDateRange = useMemo(
+    () => ({
+      from: startDate ? new Date(startDate) : undefined,
+      to: endDate ? new Date(endDate) : undefined,
+    }),
+    [startDate, endDate]
+  );
 
   const status = quotation?.status ?? "draft";
   const currentStage = statusStageMap[status] ?? 1;
@@ -115,7 +147,14 @@ export default function ProjectDetails({
   >([]);
 
   // State to manage the active tab
-  const [activeTab, setActiveTab] = useState("");
+  const [activeTab, setActiveTab] = useState("details");
+  const {
+    requestTabChange,
+    showUnsavedDialog,
+    handleDialogOpenChange,
+    confirmDiscard,
+    cancelDiscard,
+  } = useGuardedTabChange(activeTab, setActiveTab);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -144,60 +183,23 @@ export default function ProjectDetails({
       <Tabs
         defaultValue="details"
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={requestTabChange}
       >
         <TabsList>
-          <TabsTrigger
-            value="details"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "details");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            Project
-          </TabsTrigger>
-          <TabsTrigger
-            value="client"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "client");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            Client
-          </TabsTrigger>
-          <TabsTrigger
-            value="billing"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "billing");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            Billing
-          </TabsTrigger>
-          <TabsTrigger
-            value="sample-receipt"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "sample-receipt");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            Sample Receipt
-          </TabsTrigger>
-          <TabsTrigger
-            className="text-destructive data-[state=active]:text-destructive"
-            value="danger"
-            onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", "danger");
-              window.history.pushState({}, "", url);
-            }}
-          >
-            <Trash2 strokeWidth={1.5} className="w-5 h-5" />
-          </TabsTrigger>
+          <TabsTrigger value="details">Project</TabsTrigger>
+          <TabsTrigger value="client">Client</TabsTrigger>
+          {canReadBilling && (
+            <TabsTrigger value="billing">Billing</TabsTrigger>
+          )}
+          <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
+          {canDelete && (
+            <TabsTrigger
+              className="text-destructive data-[state=active]:text-destructive"
+              value="danger"
+            >
+              <Trash2 strokeWidth={1.5} className="w-5 h-5" />
+            </TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="details">
           <div className="space-y-8 my-10">
@@ -206,23 +208,22 @@ export default function ProjectDetails({
               description="Used to identify a project in the system"
               learnMoreLink="#"
               learnMoreText="Save"
-              savable={true}
+              savable={canUpdate}
               fieldName="name"
               initialValue={name || ""}
               projectId={_id}
+              unsavedChangesId="project-name"
             />
             <ProjectUpdateDatesForm
               title="Expected start and end date"
               description="Used to track the progression and milestones of a project"
               learnMoreLink="#"
               learnMoreText="Save"
-              savable={true}
+              savable={canUpdate}
               fieldName="dateRange"
-              initialValue={{
-                from: startDate ? new Date(startDate) : undefined,
-                to: endDate ? new Date(endDate) : undefined,
-              }}
+              initialValue={projectDateRange}
               projectId={_id}
+              unsavedChangesId="project-dates"
             />
           </div>
         </TabsContent>
@@ -277,6 +278,8 @@ export default function ProjectDetails({
                         initialValue={client?.name || ""}
                         clientId={client?._id || ""}
                         projectId={_id || ""}
+                        editable={canUpdateClient}
+                        unsavedChangesId={`client-name-${client?._id}`}
                       />
 
                       <ContactTable
@@ -298,25 +301,27 @@ export default function ProjectDetails({
             /> */}
           </div>
         </TabsContent>
-        <TabsContent value="billing">
-          <div className="space-y-8 my-10">
-            <BillingLifecycle
-              rejectionStage={rejectionStage}
-              currentStage={currentStage}
-              allServices={allServices}
-              project={project}
-              selectedLabTests={selectedLabTests}
-              setSelectedLabTests={setSelectedLabTests}
-              selectedFieldTests={selectedFieldTests}
-              setSelectedFieldTests={setSelectedFieldTests}
-              mobilizationActivities={mobilizationActivities}
-              setMobilizationActivities={setMobilizationActivities}
-              reportingActivities={reportingActivities}
-              setReportingActivities={setReportingActivities}
-            />
-            {quotation && <QuotationFile project={project} />}
-          </div>
-        </TabsContent>
+        {canReadBilling && (
+          <TabsContent value="billing">
+            <div className="space-y-8 my-10">
+              <BillingLifecycle
+                rejectionStage={rejectionStage}
+                currentStage={currentStage}
+                allServices={allServices}
+                project={project}
+                selectedLabTests={selectedLabTests}
+                setSelectedLabTests={setSelectedLabTests}
+                selectedFieldTests={selectedFieldTests}
+                setSelectedFieldTests={setSelectedFieldTests}
+                mobilizationActivities={mobilizationActivities}
+                setMobilizationActivities={setMobilizationActivities}
+                reportingActivities={reportingActivities}
+                setReportingActivities={setReportingActivities}
+              />
+              {quotation && <QuotationFile project={project} />}
+            </div>
+          </TabsContent>
+        )}
         <TabsContent value="sample-receipt">
           <div className="space-y-8 my-10">
             <SampleVerificationLifecycle
@@ -329,29 +334,37 @@ export default function ProjectDetails({
           </div>
         </TabsContent>
         <TabsContent value="danger">
-          <div className="space-y-8 my-10">
-            <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold mb-2">
-                  Delete Project
-                </CardTitle>
+          {canDelete && (
+            <div className="space-y-8 my-10">
+              <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold mb-2">
+                    Delete Project
+                  </CardTitle>
 
-                <CardDescription className="text-sm text-foregeound">
-                  This project will be deleted, along with all of its Data,
-                  Files, Invoices and Quotations. This action is irreversible
-                  and can not be undone.
-                </CardDescription>
-              </CardHeader>
+                  <CardDescription className="text-sm text-foregeound">
+                    This project will be deleted, along with all of its Data,
+                    Files, Invoices and Quotations. This action is irreversible
+                    and can not be undone.
+                  </CardDescription>
+                </CardHeader>
 
-              <CardContent>
-                <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
-                  <DeleteProject project={project} />
-                </div>
-              </CardContent>
+                <CardContent>
+                  <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
+                    <DeleteProject project={project} />
+                  </div>
+                </CardContent>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
       </Tabs>
+      <UnsavedChangesDialog
+        open={showUnsavedDialog}
+        onOpenChange={handleDialogOpenChange}
+        onDiscard={confirmDiscard}
+        onCancel={cancelDiscard}
+      />
     </>
   );
 }

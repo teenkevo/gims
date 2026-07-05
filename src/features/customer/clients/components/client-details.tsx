@@ -22,16 +22,44 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteClient } from "./delete-client";
 import { Button } from "@/components/ui/button";
 import NoProjectsForClientPlaceholder from "./no-projects-for-client-placeholder";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { Can } from "@/components/auth/can";
+import { UnsavedChangesProvider } from "@/components/unsaved-changes/unsaved-changes-context";
+import { UnsavedChangesDialog } from "@/components/unsaved-changes/unsaved-changes-dialog";
+import { useGuardedTabChange } from "@/hooks/use-guarded-tab-change";
 
 export default function ClientDetails({
   client,
 }: {
   client: CLIENT_BY_ID_QUERY_RESULT[number];
 }) {
+  return (
+    <UnsavedChangesProvider>
+      <ClientDetailsContent client={client} />
+    </UnsavedChangesProvider>
+  );
+}
+
+function ClientDetailsContent({
+  client,
+}: {
+  client: CLIENT_BY_ID_QUERY_RESULT[number];
+}) {
   const { _id, internalId, name, projects, contacts } = client;
+  const { can } = useRBAC();
+  const canUpdateClient = can(PERMISSIONS["clients:update"]);
+  const canDeleteClient = can(PERMISSIONS["clients:delete"]);
 
   // State to manage the active tab
   const [activeTab, setActiveTab] = useState("client_profile");
+  const {
+    requestTabChange,
+    showUnsavedDialog,
+    handleDialogOpenChange,
+    confirmDiscard,
+    cancelDiscard,
+  } = useGuardedTabChange(activeTab, setActiveTab);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -57,52 +85,33 @@ export default function ClientDetails({
         <h1 className="text-xl md:text-3xl font-extrabold mb-6">{name}</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={requestTabChange}>
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger
-              value="client_profile"
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set("tab", "client_profile");
-                window.history.pushState({}, "", url);
-              }}
-            >
-              Client Profile
-            </TabsTrigger>
-            <TabsTrigger
-              value="projects"
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set("tab", "projects");
-                window.history.pushState({}, "", url);
-              }}
-            >
-              Projects
-            </TabsTrigger>
+            <TabsTrigger value="client_profile">Client Profile</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
 
-            <TabsTrigger
-              className="text-destructive data-[state=active]:text-destructive"
-              value="danger"
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set("tab", "danger");
-                window.history.pushState({}, "", url);
-              }}
-            >
-              <Trash2 strokeWidth={1.5} className="w-5 h-5" />
-            </TabsTrigger>
+            {canDeleteClient && (
+              <TabsTrigger
+                className="text-destructive data-[state=active]:text-destructive"
+                value="danger"
+              >
+                <Trash2 strokeWidth={1.5} className="w-5 h-5" />
+              </TabsTrigger>
+            )}
           </TabsList>
           {projects.length > 0 && activeTab === "projects" && (
-            <Button asChild className="sm:w-auto" variant="default">
-              <Link
-                href={`/clients/${_id}/projects/create`}
-                className=" flex items-center"
-              >
-                <PlusCircleIcon className="h-5 w-5 md:mr-2" />
-                <span className="hidden sm:inline">Create New Project</span>
-              </Link>
-            </Button>
+            <Can permission={PERMISSIONS["projects:create"]}>
+              <Button asChild className="sm:w-auto" variant="default">
+                <Link
+                  href={`/clients/${_id}/projects/create`}
+                  className=" flex items-center"
+                >
+                  <PlusCircleIcon className="h-5 w-5 md:mr-2" />
+                  <span className="hidden sm:inline">Create New Project</span>
+                </Link>
+              </Button>
+            </Can>
           )}
         </div>
 
@@ -124,15 +133,18 @@ export default function ClientDetails({
                     description="Used to identify a client in the system"
                     learnMoreLink="#"
                     learnMoreText="Save"
-                    savable
+                    savable={canUpdateClient}
                     fieldName="clientName"
                     initialValue={name || ""}
                     clientId={_id}
+                    unsavedChangesId="client-name"
                   />
                   <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
                     <div className="flex mb-5 justify-between items-center">
                       <p className="text-xl font-bold">Contact Persons</p>
-                      <CreateContactDialog clientId={_id} />
+                      <Can permission={PERMISSIONS["clients:update"]}>
+                        <CreateContactDialog clientId={_id} />
+                      </Can>
                     </div>
                     <DataTable data={contacts} />
                   </div>
@@ -156,29 +168,37 @@ export default function ClientDetails({
         </TabsContent>
 
         <TabsContent value="danger">
-          <div className="space-y-8 my-10">
-            <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold mb-2">
-                  Delete Client
-                </CardTitle>
+          {canDeleteClient && (
+            <div className="space-y-8 my-10">
+              <div className="bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg border-[1px] border-destructive/50">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold mb-2">
+                    Delete Client
+                  </CardTitle>
 
-                <CardDescription className="text-sm text-foregeound">
-                  This client will be deleted, along with all of their Data,
-                  Files, Invoices and Quotations. This action is irreversible
-                  and can not be undone.
-                </CardDescription>
-              </CardHeader>
+                  <CardDescription className="text-sm text-foregeound">
+                    This client will be deleted, along with all of their Data,
+                    Files, Invoices and Quotations. This action is irreversible
+                    and can not be undone.
+                  </CardDescription>
+                </CardHeader>
 
-              <CardContent>
-                <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
-                  <DeleteClient client={client} />
-                </div>
-              </CardContent>
+                <CardContent>
+                  <div className="mt-6 -mx-6 -mb-6 px-6 py-3 flex rounded-b-lg bg-muted/50 justify-end border-t items-center">
+                    <DeleteClient client={client} />
+                  </div>
+                </CardContent>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
       </Tabs>
+      <UnsavedChangesDialog
+        open={showUnsavedDialog}
+        onOpenChange={handleDialogOpenChange}
+        onDiscard={confirmDiscard}
+        onCancel={cancelDiscard}
+      />
     </>
   );
 }

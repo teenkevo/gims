@@ -31,6 +31,8 @@ import { getColumns } from "./columns"; // Import the function instead of the co
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DeleteMultipleContacts } from "./delete-multiple-contacts";
 import { toast } from "sonner";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface DataTableProps<TData, TValue> {
   data: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"];
@@ -42,12 +44,17 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [openDialog, setOpenDialog] = React.useState<boolean>(false);
+  const { can } = useRBAC();
+  const canUpdate = can(PERMISSIONS["clients:update"]);
 
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns() as ColumnDef<CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]>[],
-    [data]
+    () =>
+      getColumns({ canUpdate }) as ColumnDef<
+        CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
+      >[],
+    [canUpdate]
   );
 
   const table = useReactTable({
@@ -59,7 +66,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
       rowSelection,
       columnFilters,
     },
-    enableRowSelection: true,
+    enableRowSelection: canUpdate,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -76,28 +83,32 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar
-        table={table}
-        openDialog={() => {
-          const contactsNotInProjects = selectedContacts.filter(
-            (contact) => contact.projects.length === 0
-          );
-          if (contactsNotInProjects.length > 0) {
-            setOpenDialog(true);
-          } else {
-            toast.warning(
-              selectedContacts.length > 1
-                ? "These contacts are used in 1 or more projects and cannot be deleted."
-                : "This contact is used in 1 or more projects and cannot be deleted."
+      {canUpdate && (
+        <DataTableToolbar
+          table={table}
+          openDialog={() => {
+            const contactsNotInProjects = selectedContacts.filter(
+              (contact) => contact.projects.length === 0
             );
-          }
-        }}
-      />
-      <DeleteMultipleContacts
-        contacts={selectedContacts}
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-      />
+            if (contactsNotInProjects.length > 0) {
+              setOpenDialog(true);
+            } else {
+              toast.warning(
+                selectedContacts.length > 1
+                  ? "These contacts are used in 1 or more projects and cannot be deleted."
+                  : "This contact is used in 1 or more projects and cannot be deleted."
+              );
+            }
+          }}
+        />
+      )}
+      {canUpdate && (
+        <DeleteMultipleContacts
+          contacts={selectedContacts}
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+        />
+      )}
       {/* <Button onClick={handleDelete}>Delete Selected</Button> */}
       <div className="rounded-md border">
         <Table>

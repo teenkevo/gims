@@ -41,6 +41,7 @@ import {
 import { setProjectDateRange, updateProjectDates } from "@/lib/actions";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { toast } from "sonner";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 import type { ALL_PROJECTS_QUERY_RESULT } from "../../../../../sanity.types";
 
 interface DateRangeType {
@@ -54,12 +55,12 @@ export function SetDateRangeDialog({
   buttonText,
   icon,
   project,
-  role,
+  canUpdate,
 }: {
   buttonText: string;
   icon: React.ReactNode;
   project: ALL_PROJECTS_QUERY_RESULT[number];
-  role: string;
+  canUpdate: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const [dialogLoading, setDialogLoading] = React.useState(false);
@@ -70,7 +71,7 @@ export function SetDateRangeDialog({
       <Dialog loading={dialogLoading} open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
-            disabled={role !== "admin"}
+            disabled={!canUpdate}
             size="sm"
             variant="outline"
             className="flex items-center"
@@ -88,7 +89,12 @@ export function SetDateRangeDialog({
             </DrawerDescription>
           </DialogHeader>
 
-          <DateRangeForm onPendingChange={setDialogLoading} setOpen={setOpen} project={project} />
+          <DateRangeForm
+            canUpdate={canUpdate}
+            onPendingChange={setDialogLoading}
+            setOpen={setOpen}
+            project={project}
+          />
         </DialogContent>
       </Dialog>
     );
@@ -98,7 +104,7 @@ export function SetDateRangeDialog({
     <Drawer loading={dialogLoading} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          disabled={role !== "admin"}
+          disabled={!canUpdate}
           size="sm"
           variant="outline"
           className="flex items-center"
@@ -116,7 +122,12 @@ export function SetDateRangeDialog({
           </DrawerDescription>
         </DrawerHeader>
 
-        <DateRangeForm onPendingChange={setDialogLoading} setOpen={setOpen} project={project} />
+        <DateRangeForm
+          canUpdate={canUpdate}
+          onPendingChange={setDialogLoading}
+          setOpen={setOpen}
+          project={project}
+        />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -131,10 +142,12 @@ function DateRangeForm({
   setOpen,
   project,
   onPendingChange,
+  canUpdate,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   project: ALL_PROJECTS_QUERY_RESULT[number];
   onPendingChange?: (pending: boolean) => void;
+  canUpdate: boolean;
 }) {
   const { _id, startDate, endDate } = project;
 
@@ -143,7 +156,7 @@ function DateRangeForm({
     if (result.status === "ok") {
       toast.success("Project dates have been updated");
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
     return result;
   };
@@ -187,14 +200,22 @@ function DateRangeForm({
         onSubmit={form.handleSubmit(onSubmit)}
         className={`space-y-8 h-40 px-4 md:px-0 py-4`}
       >
+        <fieldset
+          disabled={!canUpdate}
+          className="min-w-0 border-0 p-0 m-0 space-y-8 disabled:opacity-100"
+        >
         <FormField
           control={form.control}
           name="dateRange"
           rules={{
             validate: (value: DateRange | undefined) => {
-              if (value?.from && !value?.to)
-                return "End date is required if start date is selected";
-              if (!value?.from && !value?.to) return true; // Date range is not required
+              const hasStart = Boolean(value?.from);
+              const hasEnd = Boolean(value?.to);
+
+              if (hasStart !== hasEnd) {
+                return "Both start and end dates are required";
+              }
+
               return true;
             },
           }}
@@ -209,6 +230,7 @@ function DateRangeForm({
                     <PopoverTrigger asChild>
                       <Button
                         id="date"
+                        disabled={isPending || !canUpdate}
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
@@ -262,7 +284,8 @@ function DateRangeForm({
             </FormItem>
           )}
         />
-        <FormSubmitButton text="Save" isSubmitting={isPending} />
+        </fieldset>
+        {canUpdate && <FormSubmitButton text="Save" isSubmitting={isPending} />}
       </form>
     </Form>
   );

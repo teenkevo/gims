@@ -37,7 +37,7 @@ export default function NoProjectsPlaceholder({
           />
         )}
         <h3 className="text-lg md:text-xl font-bold tracking-tight">
-          You have no {helperText ?? "projects"}
+          There are no {helperText ?? "projects"}
         </h3>
         {needAction && (
           <>

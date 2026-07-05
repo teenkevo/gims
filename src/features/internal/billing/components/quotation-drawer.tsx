@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { useQuotation } from "./useQuotation";
 import { toast } from "sonner";
 
@@ -83,9 +84,21 @@ export function QuotationDrawer({
   const [open, setOpen] = React.useState(false);
   const [showWarning, setShowWarning] = React.useState(false);
 
-  const { role } = useRBAC();
+  const { role, can } = useRBAC();
 
   const { quotation, quotationNeedsRevision } = useQuotation(project, role);
+
+  const canCreateBilling = can(PERMISSIONS["billing:create"]);
+  const canUpdateBilling = can(PERMISSIONS["billing:update"]);
+  const canShowDrawer =
+    role !== "client" &&
+    ((!quotation && canCreateBilling) ||
+      (quotationNeedsRevision && canCreateBilling) ||
+      (quotation && !quotationNeedsRevision && canUpdateBilling));
+
+  if (!canShowDrawer) {
+    return null;
+  }
 
   const labTestsEdited = selectedLabTests.length > 0;
   const fieldTestsEdited = selectedFieldTests.length > 0;
@@ -166,6 +179,7 @@ export function QuotationDrawer({
                 setMobilizationActivities={setMobilizationActivities}
                 reportingActivities={reportingActivities}
                 setReportingActivities={setReportingActivities}
+                editable={canCreateBilling || canUpdateBilling}
               />
             </div>
           </SheetContent>
@@ -234,6 +248,7 @@ export function QuotationDrawer({
               setMobilizationActivities={setMobilizationActivities}
               reportingActivities={reportingActivities}
               setReportingActivities={setReportingActivities}
+              editable={canCreateBilling || canUpdateBilling}
             />
           </div>
           <DrawerFooter className="pt-2 flex-shrink-0">

@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { DeleteClientDialog } from "./row-actions/delete-client-dialog";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { useRBAC } from "@/components/rbac-context";
 
 export function ClientTableRowActions({
   client,
@@ -21,6 +23,13 @@ export function ClientTableRowActions({
   client: ALL_CLIENTS_QUERY_RESULT[number];
 }) {
   const [openDialog, setOpenDialog] = useState<"delete" | null>(null);
+  const { can } = useRBAC();
+  const canUpdate = can(PERMISSIONS["clients:update"]);
+  const canDelete = can(PERMISSIONS["clients:delete"]);
+
+  if (!canUpdate && !canDelete) {
+    return null;
+  }
 
   const editHref = `/clients/${client._id}?client=${client.name}`;
 
@@ -37,23 +46,27 @@ export function ClientTableRowActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem asChild>
-            <Link
-              href={editHref}
-              className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
+          {canUpdate && (
+            <DropdownMenuItem asChild>
+              <Link
+                href={editHref}
+                className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                <span>Edit Client</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {canUpdate && canDelete && <DropdownMenuSeparator />}
+          {canDelete && (
+            <DropdownMenuItem
+              className="cursor-pointer text-sm font-medium text-destructive focus:text-destructive"
+              onClick={() => setOpenDialog("delete")}
             >
-              <Pencil className="h-4 w-4 mr-2" />
-              <span>Edit Client</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="cursor-pointer text-sm font-medium text-destructive focus:text-destructive"
-            onClick={() => setOpenDialog("delete")}
-          >
-            <Delete className="h-4 w-4 mr-2" />
-            <span>Delete Client</span>
-          </DropdownMenuItem>
+              <Delete className="h-4 w-4 mr-2" />
+              <span>Delete Client</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <DeleteClientDialog

@@ -28,6 +28,8 @@ import { Button } from "@/components/ui/button";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { ContactTableRowActions } from "./contact-table-row-actions";
+import { Can } from "@/components/auth/can";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 // Extend the type to include actions
 type ExtendedContact = ALL_CONTACTS_QUERY_RESULT[number] & { actions?: string };
@@ -115,12 +117,14 @@ export function ContactTable({
     <div className="my-10 space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm font-bold">Contact Persons</p>
-        <CreateContactDialog
-          projectId={projectId}
-          clientId={clientId}
-          existingContacts={existingContacts}
-          projectContacts={projectContacts}
-        />
+        <Can permission={PERMISSIONS["clients:update"]}>
+          <CreateContactDialog
+            projectId={projectId}
+            clientId={clientId}
+            existingContacts={existingContacts}
+            projectContacts={projectContacts}
+          />
+        </Can>
       </div>
 
       {/* Filter Toolbar */}

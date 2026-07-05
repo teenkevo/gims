@@ -21,6 +21,7 @@ import { DestructiveButtonLoading } from "@/components/button-loading";
 import { toast } from "sonner";
 import { useActionState } from "react";
 import { deleteProjectById } from "@/lib/actions";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 export function DeleteProjectDialog({
   projectId,
@@ -48,11 +49,7 @@ export function DeleteProjectDialog({
       toast.success("Project has been deleted");
       onClose();
     } else {
-      toast.error(
-        typeof result.error === "string"
-          ? result.error
-          : "Something went wrong"
-      );
+      toastActionError(result);
     }
   };
 

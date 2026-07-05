@@ -36,6 +36,7 @@ import { DeleteMultipleServices } from "./delete-multiple-services";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface DataTableProps<TData, TValue> {
   data: ALL_PROJECTS_QUERY_RESULT;
@@ -49,13 +50,18 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-  const { role } = useRBAC();
+  const { can } = useRBAC();
+  const canUpdate = can(PERMISSIONS["projects:update"]);
+  const canDelete = can(PERMISSIONS["projects:delete"]);
 
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns(data, role) as ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[],
-    [data, role]
+    () =>
+      getColumns(data, { canUpdate, canDelete }) as ColumnDef<
+        ALL_PROJECTS_QUERY_RESULT[number]
+      >[],
+    [data, canUpdate, canDelete]
   );
 
   const table = useReactTable({
@@ -67,7 +73,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
       rowSelection,
       columnFilters,
     },
-    enableRowSelection: true,
+    enableRowSelection: canDelete,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -93,7 +99,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
       /> */}
       <DeleteMultipleServices
         ids={serviceIds}
-        open={openDialog}
+        open={openDialog && canDelete}
         onClose={() => setOpenDialog(false)}
       />
       {/* <Button onClick={handleDelete}>Delete Selected</Button> */}

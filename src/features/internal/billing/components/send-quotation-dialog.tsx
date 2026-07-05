@@ -25,6 +25,7 @@ import { useActionState } from "react";
 import { sendQuotation } from "@/lib/actions";
 import { Send } from "lucide-react";
 import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 export function SendQuotationDialog({
   project,
@@ -61,7 +62,7 @@ export function SendQuotationDialog({
       toast.success("Quotation has been sent");
       setOpen(false);
     } else {
-      toast.error("Something went wrong");
+      toastActionError(result);
     }
   };
 

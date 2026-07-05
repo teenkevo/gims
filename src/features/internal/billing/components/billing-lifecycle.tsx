@@ -28,6 +28,7 @@ import type {
 import { QuotationDrawer } from "./quotation-drawer";
 import { SendQuotationDialog } from "./send-quotation-dialog";
 import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { RespondToQuotationDialog } from "./respond-to-quotation";
@@ -263,8 +264,43 @@ export function calculatePaymentStatus(
 function getPaymentStageInfo(
   paymentStatus: ReturnType<typeof calculatePaymentStatus>,
   quotation: any,
-  currentStage: number
+  currentStage: number,
+  options: {
+    isClient: boolean;
+    canManageBilling: boolean;
+    stageId: number;
+  }
 ) {
+  const { isClient, canManageBilling, stageId } = options;
+  const isFuture = stageId > currentStage;
+  const isPast = stageId < currentStage;
+
+  if (isFuture) {
+    if (isClient) {
+      return {
+        title: "Payment",
+        description: "Submit payment against the issued invoice",
+      };
+    }
+    if (canManageBilling) {
+      return {
+        title: "Payment Processing",
+        description: "Review and approve client payments against the invoice",
+      };
+    }
+    return {
+      title: "Payment",
+      description: "Client payments will be recorded against the invoice",
+    };
+  }
+
+  if (isPast) {
+    return {
+      title: "Payments Complete",
+      description: "All payments for this invoice have been processed",
+    };
+  }
+
   const {
     requiresAdvance,
     noAdvancePaymentsYet,
@@ -278,47 +314,290 @@ function getPaymentStageInfo(
   } = paymentStatus;
 
   // Determine title based on payment state
-  let title = "Awaiting Payment";
+  let title = isClient ? "Make Payment" : "Awaiting Payment";
   if (requiresAdvance && noAdvancePaymentsYet) {
-    title = "Awaiting Advance";
+    title = isClient ? "Pay Advance" : "Awaiting Advance";
   } else if (
     (allPaymentsRejected || allResubmissionsRejected) &&
     !advanceRejected
   ) {
     title = "All Payments Rejected";
   } else if (advanceRejected) {
-    title = "Advance Rejected";
+    title = isClient ? "Resubmit Advance" : "Advance Rejected";
   } else if (somePaymentsRejected && !allPaymentsRejected) {
     title = "Some Payments Rejected";
   } else if (allClear) {
     title = "All Payments Approved";
   } else if (allClearWaitingApproval) {
-    title = "All Payments Sent";
+    title = canManageBilling ? "Review Payments" : "Payments Pending Review";
   } else if (quotation?.status === "partially_paid" && balanceDue > 0) {
-    title = "Partial Payment Received";
+    title = isClient ? "Make Payment" : "Partial Payment Received";
   }
 
   // Determine description based on payment state
-  let description = "Awaiting payments for the issued invoice";
+  let description = isClient
+    ? "Submit payment for the issued invoice"
+    : "Awaiting client payments for the issued invoice";
   if (requiresAdvance && noAdvancePaymentsYet && currentStage >= 5) {
-    description = `${quotation?.advance}% advance payment is required for the issued invoice`;
+    description = isClient
+      ? `Pay the ${quotation?.advance}% advance required for this invoice`
+      : `Waiting for the client to pay the ${quotation?.advance}% advance`;
   } else if (allPaymentsRejected && !advanceRejected) {
-    description =
-      "All payments have been rejected. Please review and resubmit.";
+    description = isClient
+      ? "All payments were rejected. Please review and resubmit."
+      : "All submitted payments were rejected.";
   } else if (advanceRejected) {
-    description =
-      "Advance payment has been rejected. Please review and resubmit.";
+    description = isClient
+      ? "Your advance payment was rejected. Please review and resubmit."
+      : "The advance payment was rejected and awaits resubmission.";
   } else if (somePaymentsRejected && !allPaymentsRejected) {
-    description =
-      "Some payments have been rejected. Please review and resubmit.";
+    description = isClient
+      ? "Some payments were rejected. Please review and resubmit."
+      : "Some submitted payments were rejected.";
   } else if (allClear) {
     description =
       "All payments have been approved and the invoice is fully paid.";
   } else if (allClearWaitingApproval) {
-    description = "All payments have been sent and are pending approval.";
+    description = canManageBilling
+      ? "Review and approve or reject payments submitted by the client."
+      : "Client payments have been submitted and are awaiting approval.";
+  } else if (
+    isClient &&
+    quotation?.status === "partially_paid" &&
+    balanceDue > 0
+  ) {
+    description = "Submit the remaining balance for this invoice.";
   }
 
   return { title, description };
+}
+
+type ProjectQuotation = NonNullable<
+  PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
+>;
+type ActiveQuotation =
+  | ProjectQuotation
+  | NonNullable<ProjectQuotation["revisions"]>[number]
+  | null;
+
+type BillingStageContext = {
+  stageId: number;
+  currentStage: number;
+  rejectionStage: number | undefined;
+  quotation: ActiveQuotation;
+  quotationNeedsRevision: boolean;
+  isClient: boolean;
+  canCreateBilling: boolean;
+  canUpdateBilling: boolean;
+  canManageBilling: boolean;
+  paymentStageInfo: { title: string; description: string };
+};
+
+function getBillingStageContent({
+  stageId,
+  currentStage,
+  rejectionStage,
+  quotation,
+  quotationNeedsRevision,
+  isClient,
+  canCreateBilling,
+  canUpdateBilling,
+  paymentStageInfo,
+}: BillingStageContext): { title: string; description: string } {
+  const isPast = stageId < currentStage;
+  const isCurrent = stageId === currentStage;
+  const quotationStatus = quotation?.status;
+
+  if (stageId === 5) {
+    return paymentStageInfo;
+  }
+
+  // --- Stage 1: Quotation preparation ---
+  if (stageId === 1) {
+    if (isPast) {
+      return {
+        title: "Quotation Prepared",
+        description: "The quotation has been prepared by GETLAB",
+      };
+    }
+
+    if (!quotation) {
+      if (isClient) {
+        return {
+          title: "Awaiting Quotation",
+          description: "GETLAB is preparing your quotation",
+        };
+      }
+      if (canCreateBilling) {
+        return {
+          title: "Prepare Quotation",
+          description: "Prepare a quotation for the client's work",
+        };
+      }
+      return {
+        title: "Awaiting Quotation",
+        description: "A quotation will be prepared by GETLAB",
+      };
+    }
+
+    if (quotationStatus === "draft") {
+      if (isClient) {
+        return {
+          title: "Quotation in Progress",
+          description: "GETLAB is finalizing your quotation before sending",
+        };
+      }
+      if (canUpdateBilling) {
+        return {
+          title: "Review Quotation",
+          description: "Review the draft and send it to the client when ready",
+        };
+      }
+      return {
+        title: "Quotation Draft in Review",
+        description: "A draft quotation has been created & is in review",
+      };
+    }
+
+    return {
+      title: "Quotation Prepared",
+      description: "The quotation has been prepared by GETLAB",
+    };
+  }
+
+  // --- Stage 2: Quotation sent ---
+  if (stageId === 2) {
+    if (isPast || quotationStatus === "sent" || isCurrent) {
+      if (quotationStatus === "sent" && isCurrent) {
+        return {
+          title: "Quotation Sent",
+          description: "Delivered to the client for review",
+        };
+      }
+      if (isPast) {
+        return {
+          title: "Quotation Sent",
+          description: "The quotation was delivered to the client",
+        };
+      }
+    }
+
+    if (isClient) {
+      return {
+        title: "Quotation Delivery",
+        description: "You will receive the quotation for review",
+      };
+    }
+    if (canUpdateBilling) {
+      return {
+        title: "Send Quotation",
+        description: "Send the quotation to the client for review",
+      };
+    }
+    return {
+      title: "Quotation Delivery",
+      description: "The quotation will be sent to the client for review",
+    };
+  }
+
+  // --- Stage 3: Client feedback ---
+  if (stageId === 3) {
+    if (isPast && quotationStatus !== "rejected") {
+      return {
+        title: "Client Accepted",
+        description: "The client accepted the quotation",
+      };
+    }
+
+    if (rejectionStage === 3 && !quotationNeedsRevision) {
+      return {
+        title: "Quotation Declined",
+        description: isClient
+          ? "You declined this quotation"
+          : "The client declined the quotation",
+      };
+    }
+
+    if (quotationNeedsRevision) {
+      if (isClient) {
+        return {
+          title: "Awaiting Revision",
+          description: "GETLAB is preparing a revised quotation",
+        };
+      }
+      if (canCreateBilling) {
+        return {
+          title: "Revise Quotation",
+          description: "Prepare a revised quotation based on client feedback",
+        };
+      }
+      return {
+        title: "Revisions Requested",
+        description:
+          "The client requested changes; a revised quotation will follow",
+      };
+    }
+
+    if (quotationStatus === "sent" && !isClient) {
+      return {
+        title: "Awaiting Client Response",
+        description: "Client has received the quotation & is reviewing it",
+      };
+    }
+
+    if (isCurrent && quotationStatus === "sent") {
+      if (isClient) {
+        return {
+          title: "Respond to Quotation",
+          description: "Accept, reject, or request revisions to the quotation",
+        };
+      }
+      return {
+        title: "Awaiting Client Response",
+        description: "Client has received the quotation & is reviewing it",
+      };
+    }
+
+    if (isClient) {
+      return {
+        title: "Client Response",
+        description: "Review the quotation and submit your response",
+      };
+    }
+    return {
+      title: "Client Response",
+      description: "The client reviews and responds to the quotation",
+    };
+  }
+
+  // --- Stage 4: Invoice ---
+  if (stageId === 4) {
+    if (
+      isPast ||
+      quotationStatus === "invoiced" ||
+      quotationStatus === "partially_paid" ||
+      quotationStatus === "fully_paid"
+    ) {
+      return {
+        title: "Invoice Generated",
+        description: "Invoice issued based on the accepted quotation",
+      };
+    }
+
+    if (isClient) {
+      return {
+        title: "Invoice",
+        description: "An invoice will be issued once you accept the quotation",
+      };
+    }
+    return {
+      title: "Invoice Generation",
+      description:
+        "An invoice will be generated when the client accepts the quotation",
+    };
+  }
+
+  return { title: "Billing", description: "" };
 }
 
 function getStageCardClassName(
@@ -469,6 +748,9 @@ function StageCard({
   reportingActivities,
   setReportingActivities,
   paymentStatus,
+  canCreateBilling,
+  canUpdateBilling,
+  canManageBilling,
 }: {
   stage: Stage;
   currentStage: number;
@@ -505,6 +787,9 @@ function StageCard({
     >
   >;
   paymentStatus: ReturnType<typeof calculatePaymentStatus>;
+  canCreateBilling: boolean;
+  canUpdateBilling: boolean;
+  canManageBilling: boolean;
 }) {
   const {
     allClear,
@@ -518,6 +803,12 @@ function StageCard({
     quotation?.grandTotal -
     (totalApprovedPayments ?? 0) -
     (totalUnapprovedPayments ?? 0);
+
+  const canShowQuotationDrawer =
+    role !== "client" &&
+    ((!quotation && canCreateBilling) ||
+      (quotationNeedsRevision && canCreateBilling) ||
+      (quotation && !quotationNeedsRevision && canUpdateBilling));
 
   return (
     <div
@@ -546,7 +837,13 @@ function StageCard({
       {!quotation && stage.id === 1 && (
         <div className="mt-4 flex items-center text-orange-600 text-xs">
           <CircleDashed className="h-3 w-3 mr-1" />
-          <span>Pending</span>
+          <span>
+            {role === "client"
+              ? "GETLAB is preparing your quotation"
+              : canCreateBilling
+                ? "Not started yet"
+                : "Waiting for quotation"}
+          </span>
         </div>
       )}
       {quotation && stage.id === 1 && quotation.status === "draft" && (
@@ -554,12 +851,14 @@ function StageCard({
           <ReceiptText className="h-3 w-3 mr-1" />
           <span>
             {role === "client"
-              ? "Waiting for GETLAB to send"
-              : "Draft created but not sent"}
+              ? "GETLAB is finalizing before sending"
+              : canUpdateBilling
+                ? "Draft ready"
+                : "Pending dispatch to client"}
           </span>
         </div>
       )}
-      {stage.id === 1 && currentStage === 1 && role !== "client" && (
+      {stage.id === 1 && currentStage === 1 && canShowQuotationDrawer && (
         <div className="mt-5 flex flex-wrap gap-2 items-center">
           <QuotationDrawer
             allServices={allServices}
@@ -573,7 +872,9 @@ function StageCard({
             reportingActivities={reportingActivities}
             setReportingActivities={setReportingActivities}
           />
-          {quotation && <SendQuotationDialog project={project} />}
+          {quotation && canUpdateBilling && (
+            <SendQuotationDialog project={project} />
+          )}
         </div>
       )}
 
@@ -601,7 +902,11 @@ function StageCard({
       {quotation && stage.id === 3 && quotation.status === "sent" && (
         <div className="mt-4 flex items-center text-orange-500 text-xs">
           <CircleDashed className="animate-spin h-3 w-3 mr-1" />
-          <span>Awaiting client response</span>
+          <span>
+            {role === "client"
+              ? "Your response is needed"
+              : "Awaiting client response"}
+          </span>
         </div>
       )}
       {quotation &&
@@ -621,7 +926,13 @@ function StageCard({
       {quotation && stage.id === 3 && quotationNeedsRevision && (
         <div className="mt-4 flex items-center text-orange-500 text-xs">
           <GitPullRequest className="h-3 w-3 mr-1" />
-          <span>Revisions requested</span>
+          <span>
+            {role === "client"
+              ? "GETLAB is preparing a revision"
+              : canCreateBilling
+                ? "Client requested changes — revision needed"
+                : "Client requested changes to the quotation"}
+          </span>
         </div>
       )}
       {quotation &&
@@ -636,7 +947,8 @@ function StageCard({
       {quotation &&
         stage.id === 3 &&
         quotationNeedsRevision &&
-        role !== "client" && (
+        role !== "client" &&
+        canCreateBilling && (
           <div className="mt-4 flex gap-2 items-center text-orange-500 text-xs">
             <RevisionNotesDialog
               revisionText={quotation?.rejectionNotes || ""}
@@ -694,12 +1006,18 @@ function StageCard({
                 {allClear
                   ? "Fully paid"
                   : allClearWaitingApproval
-                    ? "Payments pending approval"
-                    : "Awaiting client payments"}
+                    ? canManageBilling
+                      ? "Payments ready for your review"
+                      : role === "client"
+                        ? "Payments submitted — awaiting approval"
+                        : "Payments pending approval"
+                    : role === "client"
+                      ? "Payment required"
+                      : "Awaiting client payments"}
               </span>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
-              {advanceRejected ? (
+              {role === "client" && advanceRejected ? (
                 <RemakePaymentDialog
                   quotationId={quotation?._id}
                   currency={quotation?.currency as string}
@@ -707,7 +1025,10 @@ function StageCard({
                     (payment: any) => payment.paymentType === "advance"
                   )}
                 />
-              ) : !allClear && !advanceRejected && remainingAmount > 0 ? (
+              ) : role === "client" &&
+                !allClear &&
+                !advanceRejected &&
+                remainingAmount > 0 ? (
                 <MakePaymentDialog
                   quotationId={quotation?._id}
                   total={quotation?.grandTotal as number}
@@ -727,6 +1048,7 @@ function StageCard({
                     PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
                   >
                 }
+                canManageBilling={canManageBilling}
               />
             </div>
           </>
@@ -753,82 +1075,70 @@ export function BillingLifecycle({
   const [animationComplete, setAnimationComplete] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const { role } = useRBAC();
+  const { role, can } = useRBAC();
+  const canCreateBilling = can(PERMISSIONS["billing:create"]);
+  const canUpdateBilling = can(PERMISSIONS["billing:update"]);
+  const canManageBilling = can(PERMISSIONS["billing:manage"]);
 
-  const {
-    isClientWaitingForParentQuotation,
-    isAdminWaitingToCreateQuotation,
-    isParentQuotationCreated,
-    quotation,
-    quotationNeedsRevision,
-  } = useQuotation(project, role);
+  const { isParentQuotationCreated, quotation, quotationNeedsRevision } =
+    useQuotation(project, role);
+
+  const isClient = role === "client";
 
   const paymentStatus = calculatePaymentStatus(
     quotation as NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>
   );
-  const paymentStageInfo = getPaymentStageInfo(
-    paymentStatus,
-    quotation,
-    currentStage
-  );
 
-  // Define stage configurations
-  const stages: Stage[] = [
-    {
-      id: 1,
-      title: isClientWaitingForParentQuotation
-        ? "Awaiting Quotation"
-        : isAdminWaitingToCreateQuotation
-          ? "Quotation Drafting"
-          : "Quotation Prepared",
-      icon: isParentQuotationCreated ? (
-        <FileText className="h-3 w-3" />
+  const buildPaymentStageInfo = (stageId: number) =>
+    getPaymentStageInfo(paymentStatus, quotation, currentStage, {
+      isClient,
+      canManageBilling,
+      stageId,
+    });
+
+  const stageIcons: Record<number, React.ReactNode> = {
+    1: isParentQuotationCreated ? (
+      <FileText className="h-3 w-3" />
+    ) : (
+      <Plus className="h-3 w-3" />
+    ),
+    2: <Send className="h-3 w-3" />,
+    3:
+      rejectionStage === 3 ? (
+        <XCircle className="h-3 w-3" />
       ) : (
-        <Plus className="h-3 w-3" />
+        <CheckCircle className="h-3 w-3" />
       ),
-      description: isClientWaitingForParentQuotation
-        ? "Pending quotation creation by GETLAB"
-        : isAdminWaitingToCreateQuotation
-          ? "A quotation must be drafted to proceed with billing"
-          : "Quotation has been prepared by GETLAB",
-    },
-    {
-      id: 2,
-      title: "Quotation Sent",
-      icon: <Send className="h-3 w-3" />,
-      description: "Quotation has been delivered to the client for review",
-    },
-    {
-      id: 3,
-      title: "Client Feedback",
-      icon:
-        rejectionStage === 3 ? (
-          <XCircle className="h-3 w-3" />
-        ) : (
-          <CheckCircle className="h-3 w-3" />
-        ),
-      description:
-        rejectionStage === 3 && !quotationNeedsRevision
-          ? "Client declined the quotation"
-          : rejectionStage === 3 && quotationNeedsRevision
-            ? "Client requested revisions to the quotation"
-            : quotation?.status === "invoiced"
-              ? "Client accepted the quotation"
-              : "Revisions may be submitted at this stage if needed",
-    },
-    {
-      id: 4,
-      title: "Invoice Generated",
-      icon: <FileIcon className="h-3 w-3" />,
-      description: "Invoice issued based on client-approved quotation",
-    },
-    {
-      id: 5,
-      title: paymentStageInfo.title,
-      icon: <DollarSign className="h-3 w-3" />,
-      description: paymentStageInfo.description,
-    },
-  ];
+    4: <FileIcon className="h-3 w-3" />,
+    5: <DollarSign className="h-3 w-3" />,
+  };
+
+  const stages: Stage[] = [1, 2, 3, 4, 5].map((stageId) => {
+    const paymentStageInfo =
+      stageId === 5
+        ? buildPaymentStageInfo(stageId)
+        : { title: "", description: "" };
+
+    const { title, description } = getBillingStageContent({
+      stageId,
+      currentStage,
+      rejectionStage,
+      quotation: quotation ?? null,
+      quotationNeedsRevision,
+      isClient,
+      canCreateBilling,
+      canUpdateBilling,
+      canManageBilling,
+      paymentStageInfo,
+    });
+
+    return {
+      id: stageId,
+      title,
+      description,
+      icon: stageIcons[stageId],
+    };
+  });
 
   // Progress bar & focus logic
   useEffect(() => {
@@ -915,6 +1225,9 @@ export function BillingLifecycle({
               reportingActivities={reportingActivities}
               setReportingActivities={setReportingActivities}
               paymentStatus={paymentStatus}
+              canCreateBilling={canCreateBilling}
+              canUpdateBilling={canUpdateBilling}
+              canManageBilling={canManageBilling}
             />
           ))}
         </div>
@@ -969,6 +1282,9 @@ export function BillingLifecycle({
                   reportingActivities={reportingActivities}
                   setReportingActivities={setReportingActivities}
                   paymentStatus={paymentStatus}
+                  canCreateBilling={canCreateBilling}
+                  canUpdateBilling={canUpdateBilling}
+                  canManageBilling={canManageBilling}
                 />
               </div>
             ))}

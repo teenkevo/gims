@@ -15,13 +15,17 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusCircleIcon } from "lucide-react";
 import { DataTable } from "./projects-table/data-table";
+import { Can } from "@/components/auth/can";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { useRBAC } from "@/components/rbac-context";
+
 export function ProjectsView({
   projects,
 }: {
   projects: ALL_PROJECTS_QUERY_RESULT;
 }) {
-  const { role } = useRBAC();
+  const { can } = useRBAC();
+  const canCreate = can(PERMISSIONS["projects:create"]);
 
   const quotedProjects = projects.filter((project) => project.quotation);
   // TODO: get completed projects
@@ -37,12 +41,14 @@ export function ProjectsView({
             <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
           {projects.length > 0 && (
-            <Button asChild className="sm:w-auto" variant="default">
-              <Link href="/projects/create" className="my-2 flex items-center">
-                <PlusCircleIcon className="h-5 w-5 md:mr-2" />
-                <span className="hidden sm:inline">Create New Project</span>
-              </Link>
-            </Button>
+            <Can permission={PERMISSIONS["projects:create"]}>
+              <Button asChild className="sm:w-auto" variant="default">
+                <Link href="/projects/create" className="my-2 flex items-center">
+                  <PlusCircleIcon className="h-5 w-5 md:mr-2" />
+                  <span className="hidden sm:inline">Create New Project</span>
+                </Link>
+              </Button>
+            </Can>
           )}
         </div>
         <TabsContent value="in-progress">
@@ -51,7 +57,10 @@ export function ProjectsView({
               <DataTable data={projects} />
             </div>
           ) : (
-            <NoProjectsPlaceholder helperText="running projects" needAction />
+            <NoProjectsPlaceholder
+              helperText="running projects"
+              needAction={canCreate}
+            />
           )}
         </TabsContent>
         <TabsContent value="quoted">

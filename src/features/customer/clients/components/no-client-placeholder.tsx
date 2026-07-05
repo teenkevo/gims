@@ -21,9 +21,9 @@ export default function NoClientPlaceholder() {
           height="0"
           priority
           alt="Success Icon"
-          className="w-full h-auto md:mb-4"
+          className="mx-auto mb-2 h-auto w-48 max-w-[200px] md:mb-4 md:max-w-[300px]"
         />
-        <h3 className="text-2xl font-bold tracking-tight">Client Not Found</h3>
+        <h3 className="text-lg md:text-xl font-bold tracking-tight">Client Not Found</h3>
         <p className="text-sm text-muted-foreground">
           The client you are looking for has been deleted or does not exist.
         </p>

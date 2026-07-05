@@ -16,9 +16,9 @@ export function useQuotation(
     const parentQuotationHasRevisions =
       (parentQuotation?.revisions?.length ?? 0) > 0;
     const isClient = role === "client";
-    const isAdmin = role === "admin";
+    const isInternal = !isClient;
     const isClientWaitingForParentQuotation = !parentQuotation && isClient;
-    const isAdminWaitingToCreateQuotation = !parentQuotation && isAdmin;
+    const isInternalWaitingToCreateQuotation = !parentQuotation && isInternal;
     const isParentQuotationCreated = Boolean(parentQuotation);
     const quotation = parentQuotationHasRevisions
       ? parentQuotation?.revisions?.[0]
@@ -36,7 +36,9 @@ export function useQuotation(
       parentQuotation,
       parentQuotationHasRevisions,
       isClientWaitingForParentQuotation,
-      isAdminWaitingToCreateQuotation,
+      isInternalWaitingToCreateQuotation,
+      /** @deprecated Use isInternalWaitingToCreateQuotation */
+      isAdminWaitingToCreateQuotation: isInternalWaitingToCreateQuotation,
       isParentQuotationCreated,
       quotation,
       quotationNeedsRevision,

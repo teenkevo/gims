@@ -31,7 +31,7 @@ export default function NoClientsPlaceholder({
           />
         )}
         <h3 className="text-2xl font-bold tracking-tight">
-          You have no {helperText}
+          There are no {helperText}
         </h3>
         {needAction && (
           <>

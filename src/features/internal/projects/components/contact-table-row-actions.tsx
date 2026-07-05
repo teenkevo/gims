@@ -15,6 +15,8 @@ import { useState } from "react";
 import { Pencil, Trash } from "lucide-react";
 import { UpdateContactDialog } from "./update-contact-dialog";
 import { RemoveContactFromProject } from "./remove-contact-from-project";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface ContactTableRowActionsProps {
   contact: ALL_CONTACTS_QUERY_RESULT[number];
@@ -27,6 +29,12 @@ export function ContactTableRowActions({
 }: ContactTableRowActionsProps) {
   const [openUpdate, setOpenUpdate] = useState(false);
   const [openRemove, setOpenRemove] = useState(false);
+  const { can } = useRBAC();
+  const canUpdateClient = can(PERMISSIONS["clients:update"]);
+
+  if (!canUpdateClient) {
+    return null;
+  }
 
   return (
     <div>

@@ -29,6 +29,8 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import type { ALL_CLIENTS_QUERY_RESULT } from "../../../../../../sanity.types";
 import { getColumns } from "./columns"; // Import the function instead of the constant
 import { useState } from "react";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface DataTableProps<TData, TValue> {
   data: ALL_CLIENTS_QUERY_RESULT;
@@ -41,12 +43,18 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const { can } = useRBAC();
+  const canUpdate = can(PERMISSIONS["clients:update"]);
+  const canDelete = can(PERMISSIONS["clients:delete"]);
 
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
-    () => getColumns(data) as ColumnDef<ALL_CLIENTS_QUERY_RESULT[number]>[],
-    [data]
+    () =>
+      getColumns(data, { canUpdate, canDelete }) as ColumnDef<
+        ALL_CLIENTS_QUERY_RESULT[number]
+      >[],
+    [data, canUpdate, canDelete]
   );
 
   const table = useReactTable({
@@ -58,7 +66,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
       rowSelection,
       columnFilters,
     },
-    enableRowSelection: true,
+    enableRowSelection: canDelete,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

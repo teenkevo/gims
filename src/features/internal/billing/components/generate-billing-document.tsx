@@ -29,7 +29,9 @@ import { toast } from "sonner";
 import { ButtonLoading } from "@/components/button-loading";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 import { computeBillingTotals } from "../constants";
+import { toastActionError } from "@/lib/auth/notify-action-error";
 
 interface GenerateBillingDocumentProps {
   currency: string;
@@ -90,7 +92,9 @@ export const GenerateBillingDocument = ({
     .toString()
     .padStart(3, "0")}`;
 
-  const { role } = useRBAC();
+  const { role, can } = useRBAC();
+  const canCreateBilling = can(PERMISSIONS["billing:create"]);
+  const canUpdateBilling = can(PERMISSIONS["billing:update"]);
 
   const { quotation, quotationNeedsRevision, number_parent_revisions } =
     useQuotation(project, role);
@@ -186,7 +190,7 @@ export const GenerateBillingDocument = ({
         setDrawerOpen(false);
       } else {
         setIsLoading(false);
-        toast.error("Something went wrong");
+        toastActionError(result);
       }
     } catch (error) {
       setIsLoading(false);
@@ -218,7 +222,7 @@ export const GenerateBillingDocument = ({
         setDrawerOpen(false);
       } else {
         setIsLoading(false);
-        toast.error("Something went wrong");
+        toastActionError(result);
       }
     } catch (error) {
       setIsLoading(false);
@@ -250,7 +254,7 @@ export const GenerateBillingDocument = ({
         setDrawerOpen(false);
       } else {
         setIsLoading(false);
-        toast.error("Something went wrong");
+        toastActionError(result);
       }
     } catch (error) {
       setIsLoading(false);
@@ -258,10 +262,33 @@ export const GenerateBillingDocument = ({
     }
   };
 
+  const submitAction =
+    quotation && !quotationNeedsRevision
+      ? handleUpdateQuotation
+      : quotation && quotationNeedsRevision
+        ? handleCreateRevision
+        : handleCreateQuotation;
+
+  const canSubmit =
+    quotation && !quotationNeedsRevision
+      ? canUpdateBilling
+      : canCreateBilling;
+
+  const submitLabel =
+    quotation && !quotationNeedsRevision
+      ? "Update Quotation"
+      : quotation && quotationNeedsRevision
+        ? "Send Revised Quotation"
+        : "Create Quotation";
+
   const PDFViewer = dynamic(() => import("@/components/pdf-viewer"), {
     loading: () => <Loading />,
     ssr: false,
   });
+
+  if (!canSubmit) {
+    return null;
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -289,23 +316,9 @@ export const GenerateBillingDocument = ({
             {isLoading ? (
               <ButtonLoading />
             ) : (
-              <Button
-                type="button"
-                size="sm"
-                onClick={
-                  quotation && !quotationNeedsRevision
-                    ? handleUpdateQuotation
-                    : quotation && quotationNeedsRevision
-                      ? handleCreateRevision
-                      : handleCreateQuotation
-                }
-              >
+              <Button type="button" size="sm" onClick={submitAction}>
                 <RocketIcon className="mr-2 h-4 w-4" />
-                {quotation && !quotationNeedsRevision
-                  ? "Update Quotation"
-                  : quotation && quotationNeedsRevision
-                    ? "Send Revised Quotation"
-                    : "Create Quotation"}
+                {submitLabel}
               </Button>
             )}
           </div>

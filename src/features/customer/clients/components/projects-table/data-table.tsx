@@ -33,6 +33,7 @@ import { getColumns } from "./columns";
 import { DeleteMultipleServices } from "./delete-multiple-services";
 import { useState } from "react";
 import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface DataTableProps<TData, TValue> {
   data: CLIENT_BY_ID_QUERY_RESULT[number]["projects"];
@@ -53,16 +54,17 @@ export function DataTable<TData, TValue>({
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-  const { role } = useRBAC();
+  const { can } = useRBAC();
+  const canDelete = can(PERMISSIONS["projects:delete"]);
 
   // Generate columns with the provided props
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
     () =>
-      getColumns(client) as ColumnDef<
+      getColumns(client, { canDelete }) as ColumnDef<
         CLIENT_BY_ID_QUERY_RESULT[number]["projects"][number]
       >[],
-    [data, role]
+    [client, canDelete]
   );
 
   const table = useReactTable({
@@ -74,7 +76,7 @@ export function DataTable<TData, TValue>({
       rowSelection,
       columnFilters,
     },
-    enableRowSelection: true,
+    enableRowSelection: canDelete,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -93,11 +95,13 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <DeleteMultipleServices
-        ids={serviceIds}
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-      />
+      {canDelete && (
+        <DeleteMultipleServices
+          ids={serviceIds}
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+        />
+      )}
       {/* <Button onClick={handleDelete}>Delete Selected</Button> */}
       <div className="rounded-md border">
         <Table>

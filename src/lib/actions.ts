@@ -12,6 +12,8 @@ import {
 } from "../../sanity.types";
 import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { requirePermissionOrError } from "@/lib/auth/with-auth";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
@@ -51,6 +53,9 @@ interface QuotationProps {
 
 // CREATE INVOICE
 export async function createInvoice(quotationId: string, fileId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  if (denied) return denied;
+
   try {
     const quotation = await writeClient
       .patch(quotationId)
@@ -79,6 +84,9 @@ export async function createQuotation(
   fileId: string,
   creatingRevision?: boolean
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:create"]);
+  if (denied) return denied;
+
   try {
     const {
       labTests,
@@ -223,6 +231,9 @@ export async function updateQuotation(
   billingInfo: QuotationProps,
   fileId: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:update"]);
+  if (denied) return denied;
+
   try {
     const {
       labTests,
@@ -353,6 +364,9 @@ export async function updateQuotation(
 
 // SEND QUOTATION TO CLIENT
 export async function sendQuotation(quotationId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:update"]);
+  if (denied) return denied;
+
   // TODO: Send email to client
   try {
     await writeClient
@@ -375,6 +389,9 @@ export async function respondToQuotation(
   status: "accepted" | "rejected" | "revisions_requested",
   rejectionNotes?: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  if (denied) return denied;
+
   try {
     await writeClient
       .patch(quotationId as string)
@@ -401,12 +418,22 @@ export async function createRevision(
   billingInfo: QuotationProps,
   fileId: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:create"]);
+  if (denied) return denied;
+
   try {
     const { project } = billingInfo;
     const originalQuotationId = project.quotation?._id || "";
 
     // create revised quotation
     const revision = await createQuotation(billingInfo, fileId, true);
+    if (revision.status !== "ok" || !revision.result) {
+      return revision.status === "error"
+        ? revision
+        : { status: "error", error: "Failed to create revision" };
+    }
+
+    const revisionId = revision.result;
 
     // Append reference + mark revision "sent" in ONE transaction
     const tx = writeClient.transaction();
@@ -414,10 +441,10 @@ export async function createRevision(
     tx.patch(originalQuotationId, (p) =>
       p
         .setIfMissing({ revisions: [] })
-        .append("revisions", [{ _type: "reference", _ref: revision?.result }])
+        .append("revisions", [{ _type: "reference", _ref: revisionId }])
     );
 
-    tx.patch(revision?.result || "", (p) => p.set({ status: "sent" }));
+    tx.patch(revisionId, (p) => p.set({ status: "sent" }));
 
     await tx.commit({
       autoGenerateArrayKeys: true,
@@ -425,7 +452,7 @@ export async function createRevision(
     });
 
     revalidateTag("quotation");
-    return { result: revision?.result, status: "ok" };
+    return { result: revisionId, status: "ok" };
   } catch (error) {
     console.error("Error creating revision:", error);
     return { error, status: "error" };
@@ -434,6 +461,9 @@ export async function createRevision(
 
 // MAKE PAYMENT
 export async function makePayment(prevState: any, formData: FormData) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  if (denied) return denied;
+
   const quotationId = formData.get("quotationId");
   const amountRaw = formData.get("amount");
   const currency = formData.get("currency");
@@ -497,6 +527,9 @@ export async function makePayment(prevState: any, formData: FormData) {
 
 // MAKE RESUBMISSION
 export async function makeResubmission(prevState: any, formData: FormData) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  if (denied) return denied;
+
   const quotationId = formData.get("quotationId");
   const amountRaw = formData.get("amount");
   const paymentMode = formData.get("paymentMode");
@@ -557,6 +590,9 @@ export async function approvePayment(
   resubmissionKey?: string,
   internalNotes?: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:manage"]);
+  if (denied) return denied;
+
   const paymentPath = resubmissionKey
     ? `payments[_key=="${paymentKey}"].resubmissions[_key=="${resubmissionKey}"]`
     : `payments[_key=="${paymentKey}"]`;
@@ -651,6 +687,9 @@ export async function rejectPayment(
   internalNotes: string,
   resubmissionKey?: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:manage"]);
+  if (denied) return denied;
+
   const paymentPath = resubmissionKey
     ? `payments[_key=="${paymentKey}"].resubmissions[_key=="${resubmissionKey}"]`
     : `payments[_key=="${paymentKey}"]`;
@@ -677,6 +716,9 @@ export async function rejectPayment(
 
 // CREATE CLIENT
 export async function createClient(prevState: any, formData: FormData) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:create"]);
+  if (denied) return denied;
+
   try {
     const clientName = formData.get("clientName");
     const internalId = formData.get("internalId");
@@ -1954,6 +1996,9 @@ export async function createSampleReceiptRevision(
 }
 
 export async function setProjectDateRange(prevState: any, formData: FormData) {
+  const denied = await requirePermissionOrError(PERMISSIONS["projects:update"]);
+  if (denied) return denied;
+
   try {
     const dateFrom = formData.get("dateFrom");
     const dateTo = formData.get("dateTo");
@@ -1975,6 +2020,9 @@ export async function setProjectDateRange(prevState: any, formData: FormData) {
 }
 
 export async function createProject(prevState: any, formData: FormData) {
+  const denied = await requirePermissionOrError(PERMISSIONS["projects:create"]);
+  if (denied) return denied;
+
   try {
     const internalId = formData.get("internalId");
     const projectName = formData.get("projectName");
@@ -1984,6 +2032,13 @@ export async function createProject(prevState: any, formData: FormData) {
     const clients = formData
       .getAll("clients")
       .map((client) => JSON.parse(client as string));
+
+    if (clients.some((client) => client.clientType === "new")) {
+      const clientDenied = await requirePermissionOrError(
+        PERMISSIONS["clients:create"]
+      );
+      if (clientDenied) return clientDenied;
+    }
 
     const clientIds = await Promise.all(
       clients.map(async (client) => {
@@ -2057,6 +2112,9 @@ export async function createProjectForClient(
   prevState: any,
   formData: FormData
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["projects:create"]);
+  if (denied) return denied;
+
   try {
     const internalId = formData.get("internalId");
     const projectName = formData.get("projectName");
@@ -2098,6 +2156,9 @@ export async function updateProjectName(
   formData: FormData,
   projectId?: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["projects:update"]);
+  if (denied) return denied;
+
   try {
     const name = formData.get("name");
     const result = await writeClient
@@ -2117,6 +2178,9 @@ export async function updateProjectDates(
   formData: FormData,
   projectId?: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["projects:update"]);
+  if (denied) return denied;
+
   try {
     const dateFrom = formData.get("dateFrom");
     const dateTo = formData.get("dateTo");
@@ -2139,6 +2203,9 @@ export async function updateClientName(
   formData: FormData,
   projectId?: string
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
   try {
     const clientName = formData.get("clientName");
     console.log(clientName);
@@ -2160,6 +2227,9 @@ export async function updateContactPerson(
   contactId: string,
   formData: FormData
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
   try {
     const name = formData.get("name");
     const email = formData.get("email");
@@ -2183,6 +2253,9 @@ export async function updateContactPerson(
 
 // CREATE CONTACT PERSON
 export async function createContactPerson(prevState: any, formData: FormData) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
   try {
     const name = formData.get("name");
     const email = formData.get("email");
@@ -2223,6 +2296,9 @@ export async function createContactPerson(prevState: any, formData: FormData) {
 
 // DELETE CONTACT PERSON
 export async function deleteContactPerson(contactId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
   try {
     const result = await writeClient.delete(contactId);
     revalidateTag("contactPerson");
@@ -2234,6 +2310,9 @@ export async function deleteContactPerson(contactId: string) {
 
 // DELETE MULTIPLE CONTACT PERSONS
 export async function deleteMultipleContacts(contactIds: string[]) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
   try {
     const results = await Promise.all(
       contactIds.map(async (contactId) => await writeClient.delete(contactId))
@@ -2281,6 +2360,9 @@ export async function removeClientFromProject(
 
 // DELETE CLIENT
 export async function deleteClient(clientId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:delete"]);
+  if (denied) return denied;
+
   try {
     // delete all contact persons for the client
     const contactPersons = await writeClient.fetch(
@@ -2968,6 +3050,9 @@ const formatDeleteProjectError = (error: unknown) => {
 export async function deleteProject(
   project: PROJECT_BY_ID_QUERY_RESULT[number]
 ) {
+  const denied = await requirePermissionOrError(PERMISSIONS["projects:delete"]);
+  if (denied) return denied;
+
   const projectId = project._id;
 
   try {

@@ -49,11 +49,13 @@ import { CardSelector } from "../../../internal/projects/components/card-selecto
 interface ClientProfileFormProps {
   isSubmitting: boolean;
   clients: ALL_CLIENTS_QUERY_RESULT;
+  canCreateClient: boolean;
 }
 
 export function ClientProfileForm({
   isSubmitting,
   clients,
+  canCreateClient,
 }: ClientProfileFormProps) {
   const {
     control,
@@ -91,6 +93,23 @@ export function ClientProfileForm({
   };
 
   const prefix = `C-`;
+
+  const clientTypeOptions = [
+    ...(canCreateClient
+      ? [
+          {
+            value: "new",
+            label: "Create New Client",
+            icon: <UserPlus className="h-8 w-8" />,
+          },
+        ]
+      : []),
+    {
+      value: "existing",
+      label: "Choose Existing",
+      icon: <BriefcaseBusiness className="h-8 w-8" />,
+    },
+  ];
 
   return (
     <FormSpacerWrapper>
@@ -134,18 +153,7 @@ export function ClientProfileForm({
                         }
                       }}
                       disabled={isSubmitting}
-                      options={[
-                        {
-                          value: "new",
-                          label: "Create New Client",
-                          icon: <UserPlus className="h-8 w-8" />,
-                        },
-                        {
-                          value: "existing",
-                          label: "Choose Existing",
-                          icon: <BriefcaseBusiness className="h-8 w-8" />,
-                        },
-                      ]}
+                      options={clientTypeOptions}
                     />
                     <FormMessage />
                   </FormItem>

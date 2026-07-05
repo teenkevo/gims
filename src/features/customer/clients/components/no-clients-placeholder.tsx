@@ -29,7 +29,7 @@ export default function NoClientsPlaceholder({
           className="w-full h-auto md:mb-4"
         />
         <h3 className="text-2xl font-bold tracking-tight">
-          You have no {helperText}
+          There are no {helperText}
         </h3>
         {needAction && (
           <>

@@ -359,6 +359,7 @@ interface QuotationOptionsProps {
     >
   >;
   setDrawerOpen: Dispatch<SetStateAction<boolean>>;
+  editable?: boolean;
 }
 
 export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
@@ -369,6 +370,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
     mobilizationActivities,
     reportingActivities,
     setDrawerOpen,
+    editable = true,
   } = quotationOptionsProps;
 
   const { role } = useRBAC();
@@ -469,7 +471,7 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
   //   JSX
   // ---------------------------------------------------------------------------
   return (
-    <div className="space-y-8">
+    <fieldset disabled={!editable} className="space-y-8 border-0 p-0 m-0 min-w-0">
       <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
         <CurrencyToggle value={currency} onChange={setCurrency} />
       </div>
@@ -583,6 +585,6 @@ export function QuotationOptions(quotationOptionsProps: QuotationOptionsProps) {
           />
         </div>
       </div>
-    </div>
+    </fieldset>
   );
 }

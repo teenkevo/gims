@@ -3,6 +3,10 @@ import "server-only";
 import { createMiddleware } from "hono/factory";
 import { requireAuth, requirePermission } from "./session";
 import { ForbiddenError, UnauthorizedError } from "./errors";
+import {
+  FORBIDDEN_ACTION_CODE,
+  unauthorizedActionMessage,
+} from "./action-errors";
 import type { Permission } from "./permissions";
 import type { AuthContext } from "./types";
 
@@ -37,7 +41,15 @@ export function authMiddleware(permission?: Permission) {
         return c.json({ error: "Unauthorized" }, 401);
       }
       if (error instanceof ForbiddenError) {
-        return c.json({ error: "Forbidden" }, 403);
+        return c.json(
+          {
+            error: permission
+              ? unauthorizedActionMessage(permission)
+              : error.message,
+            code: FORBIDDEN_ACTION_CODE,
+          },
+          403
+        );
       }
       throw error;
     }
