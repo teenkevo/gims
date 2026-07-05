@@ -3,35 +3,39 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { PersonnelAccessRow } from "@/lib/auth/security-data";
-import { fetchSecurityUsers } from "@/lib/auth/security-tab-actions";
+import {
+  fetchSecurityUserFilterOptions,
+  fetchSecurityUsers,
+  type SecurityUserFilterOption,
+} from "@/lib/auth/security-tab-actions";
 import { SecurityTabLoading } from "./security-tab-loading";
+import { UsersDataTable } from "./users-table/data-table";
 import {
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 
 export function UsersTab() {
   const [users, setUsers] = useState<PersonnelAccessRow[] | null>(null);
+  const [filterOptions, setFilterOptions] = useState<
+    SecurityUserFilterOption[] | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await fetchSecurityUsers();
+      const [data, filters] = await Promise.all([
+        fetchSecurityUsers(),
+        fetchSecurityUserFilterOptions(),
+      ]);
       setUsers(data);
+      setFilterOptions(filters);
     } catch {
       toast.error("Failed to load users");
       setUsers([]);
+      setFilterOptions([]);
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +45,7 @@ export function UsersTab() {
     loadUsers();
   }, [loadUsers]);
 
-  if (isLoading || users === null) {
+  if (isLoading || users === null || filterOptions === null) {
     return <SecurityTabLoading />;
   }
 
@@ -55,49 +59,7 @@ export function UsersTab() {
         </CardDescription>
       </CardHeader>
       <div className="px-6 pb-6">
-        <div className="rounded-md border bg-background">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Departmental role(s)</TableHead>
-                <TableHead>App access</TableHead>
-                <TableHead>Permissions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No personnel records yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((person) => (
-                  <TableRow key={person._id}>
-                    <TableCell className="font-medium">
-                      {person.fullName}
-                    </TableCell>
-                    <TableCell>{person.email}</TableCell>
-                    <TableCell className="max-w-xs text-sm">
-                      {person.accessLabel}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {person.appAccessStatus ?? "none"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{person.permissionCount} granted</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <UsersDataTable data={users} filterOptions={filterOptions} />
       </div>
     </div>
   );

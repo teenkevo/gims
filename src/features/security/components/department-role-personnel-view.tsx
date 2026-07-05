@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { SecurityDepartmentRecord } from "@/sanity/lib/departments/getSecurityDepartments";
@@ -32,6 +32,13 @@ interface DepartmentRolePersonnelViewProps {
   onPersonnelChange?: () => void;
 }
 
+const ROLE_TABS = ["personnel", "permission-sets"] as const;
+type RoleTab = (typeof ROLE_TABS)[number];
+
+function isRoleTab(value: string | null): value is RoleTab {
+  return ROLE_TABS.includes(value as RoleTab);
+}
+
 const underlineTabsListClassName =
   "h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent p-0";
 
@@ -51,23 +58,60 @@ export function DepartmentRolePersonnelView({
   const [detail, setDetail] = useState<DepartmentDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<RoleTab>("personnel");
 
-  const loadDetail = async (departmentId: string) => {
-    setIsLoading(true);
+  const loadDetail = useCallback(async (departmentId: string, silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     try {
       const data = await fetchDepartmentDetail(departmentId);
       setDetail(data);
     } catch {
       toast.error("Failed to load department");
-      setDetail(null);
+      if (!silent) {
+        setDetail(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roleTab = params.get("roleTab");
+    if (isRoleTab(roleTab)) {
+      setActiveTab(roleTab);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has("roleTab")) {
+        return;
+      }
+      url.searchParams.delete("roleTab");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    };
+  }, []);
 
   useEffect(() => {
     loadDetail(department._id);
-  }, [department._id]);
+  }, [department._id, loadDetail]);
+
+  const handleTabChange = (value: string) => {
+    if (!isRoleTab(value)) {
+      return;
+    }
+
+    setActiveTab(value);
+    const url = new URL(window.location.href);
+    url.searchParams.set("roleTab", value);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  };
 
   const departmentRoles = useMemo(
     () =>
@@ -93,10 +137,14 @@ export function DepartmentRolePersonnelView({
     [roleEntry]
   );
 
-  const handlePersonnelChange = () => {
-    loadDetail(department._id);
+  const handlePersonnelChange = useCallback(() => {
+    loadDetail(department._id, true);
     onPersonnelChange?.();
-  };
+  }, [department._id, loadDetail, onPersonnelChange]);
+
+  const handleCreateClose = useCallback(() => {
+    setCreateOpen(false);
+  }, []);
 
   return (
     <>
@@ -124,7 +172,7 @@ export function DepartmentRolePersonnelView({
           {isLoading || !detail ? (
             <SecurityTabLoading />
           ) : (
-            <Tabs defaultValue="personnel">
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className={underlineTabsListClassName}>
                 <TabsTrigger
                   value="personnel"
@@ -209,10 +257,8 @@ export function DepartmentRolePersonnelView({
       {detail && (
         <CreateDepartmentPersonnelDialog
           open={createOpen}
-          onClose={() => {
-            setCreateOpen(false);
-            handlePersonnelChange();
-          }}
+          onClose={handleCreateClose}
+          onSuccess={handlePersonnelChange}
           departmentName={department.department}
           departmentId={detail._id}
           roles={departmentRoles}

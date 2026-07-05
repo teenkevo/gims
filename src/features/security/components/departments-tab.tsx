@@ -17,21 +17,31 @@ export function DepartmentsTab({ canManage }: DepartmentsTabProps) {
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadDepartments = useCallback(async () => {
-    setIsLoading(true);
+  const loadDepartments = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     try {
       const data = await fetchSecurityDepartments();
       setDepartments(data);
     } catch {
       toast.error("Failed to load departments");
-      setDepartments([]);
+      if (!silent) {
+        setDepartments([]);
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     loadDepartments();
+  }, [loadDepartments]);
+
+  const refreshDepartments = useCallback(() => {
+    loadDepartments(true);
   }, [loadDepartments]);
 
   if (isLoading || departments === null) {
@@ -42,7 +52,7 @@ export function DepartmentsTab({ canManage }: DepartmentsTabProps) {
     <DepartmentsManager
       departments={departments}
       canManage={canManage}
-      onDepartmentsChange={loadDepartments}
+      onDepartmentsChange={refreshDepartments}
     />
   );
 }

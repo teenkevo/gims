@@ -112,7 +112,7 @@ export function DepartmentRolesView({
   const openEdit = (role: DepartmentRoleRow) => {
     setEditingRole({
       roleName: role.roleName,
-      appRoleId: role.appRoleIds?.[0] ?? role.appRoleId,
+      appRoleIds: role.appRoleIds ?? (role.appRoleId ? [role.appRoleId] : []),
     });
     setEditorOpen(true);
   };

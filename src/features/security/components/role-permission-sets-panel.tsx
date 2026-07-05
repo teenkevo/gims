@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 import type { AppRoleRecord } from "@/sanity/lib/auth/getAllAppRoles";
 import { updateDepartmentRolePermissionSets } from "@/lib/auth/department-actions";
@@ -9,6 +10,16 @@ import { fetchSecurityRoles } from "@/lib/auth/security-tab-actions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +54,7 @@ export function RolePermissionSetsPanel({
   const [appRoles, setAppRoles] = useState<AppRoleRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<AppRoleRecord | null>(null);
   const [dialogSelectedIds, setDialogSelectedIds] = useState<Set<string>>(
     new Set()
   );
@@ -75,6 +87,34 @@ export function RolePermissionSetsPanel({
         next.delete(appRoleId);
       }
       return next;
+    });
+  };
+
+  const handleRemove = () => {
+    if (!removeTarget) {
+      return;
+    }
+
+    const appRoleId = removeTarget._id;
+    const nextIds = selectedAppRoleIds.filter((id) => id !== appRoleId);
+
+    startTransition(async () => {
+      try {
+        await updateDepartmentRolePermissionSets(
+          departmentId,
+          roleName,
+          nextIds
+        );
+        toast.success("Permission set removed");
+        setRemoveTarget(null);
+        onSuccess?.();
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to remove permission set"
+        );
+      }
     });
   };
 
@@ -128,12 +168,18 @@ export function RolePermissionSetsPanel({
           <TableHeader>
             <TableRow>
               <TableHead>Permission set</TableHead>
+              {canManage && (
+                <TableHead className="w-[72px] text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {assignedPermissionSets.length === 0 ? (
               <TableRow>
-                <TableCell className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={canManage ? 2 : 1}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No permission sets assigned to this role yet.
                 </TableCell>
               </TableRow>
@@ -141,12 +187,62 @@ export function RolePermissionSetsPanel({
               assignedPermissionSets.map((role) => (
                 <TableRow key={role._id}>
                   <TableCell className="font-medium">{role.name}</TableCell>
+                  {canManage && (
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => setRemoveTarget(role)}
+                        disabled={isPending}
+                        aria-label={`Remove ${role.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        loading={isPending}
+        open={Boolean(removeTarget)}
+        onOpenChange={(open) => !isPending && !open && setRemoveTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove permission set?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove <strong>{removeTarget?.name}</strong> from the{" "}
+              <strong>{roleName}</strong> role.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleRemove();
+              }}
+              disabled={isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isPending ? (
+                <>
+                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                "Remove"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-md">

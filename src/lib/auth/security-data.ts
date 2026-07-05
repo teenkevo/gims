@@ -3,6 +3,11 @@ import "server-only";
 import { resolvePermissionsFromPersonnel } from "./resolve-personnel-permissions";
 import { getAllPersonnel } from "@/sanity/lib/personnel/getAllPersonnel";
 
+export type PersonnelDepartmentRoleAssignment = {
+  departmentName: string;
+  roleName: string;
+};
+
 export type PersonnelAccessRow = {
   _id: string;
   fullName: string;
@@ -10,6 +15,9 @@ export type PersonnelAccessRow = {
   status: string;
   appAccessStatus?: string;
   accessLabel: string;
+  departments: string[];
+  roles: string[];
+  assignments: PersonnelDepartmentRoleAssignment[];
   permissionCount: number;
 };
 
@@ -35,6 +43,11 @@ export async function getPersonnelAccessOverview(): Promise<PersonnelAccessRow[]
               .join(", ")
           : "No departmental role";
 
+    const departments = [
+      ...new Set(assignments.map((assignment) => assignment.departmentName)),
+    ];
+    const roles = [...new Set(assignments.map((assignment) => assignment.roleName))];
+
     return {
       _id: person._id,
       fullName: person.fullName,
@@ -42,6 +55,9 @@ export async function getPersonnelAccessOverview(): Promise<PersonnelAccessRow[]
       status: person.status,
       appAccessStatus: person.appAccessStatus,
       accessLabel,
+      departments,
+      roles,
+      assignments,
       permissionCount: permissions.length,
     };
   });

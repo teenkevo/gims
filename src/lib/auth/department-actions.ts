@@ -511,10 +511,6 @@ export async function updateDepartmentRolePermissionSets(
   const session = await requirePermission(PERMISSIONS["security:manage"]);
   const actor = session.user.fullName || session.user.email;
 
-  if (appRoleIds.length === 0) {
-    throw new Error("Select at least one permission set");
-  }
-
   const department = await fetchDepartmentRoleEntries(departmentId);
   if (!department) {
     throw new Error("Department not found");

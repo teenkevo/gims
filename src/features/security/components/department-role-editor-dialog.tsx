@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth/department-actions";
 import { fetchSecurityRoles } from "@/lib/auth/security-tab-actions";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,17 +19,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export type DepartmentRoleEditTarget = {
   roleName: string;
-  appRoleId?: string;
+  appRoleIds?: string[];
 };
 
 interface DepartmentRoleEditorDialogProps {
@@ -50,7 +44,9 @@ export function DepartmentRoleEditorDialog({
 }: DepartmentRoleEditorDialogProps) {
   const isEdit = Boolean(role);
   const [roleName, setRoleName] = useState("");
-  const [appRoleId, setAppRoleId] = useState("");
+  const [selectedAppRoleIds, setSelectedAppRoleIds] = useState<Set<string>>(
+    new Set()
+  );
   const [appRoles, setAppRoles] = useState<AppRoleRecord[]>([]);
   const [isPending, startTransition] = useTransition();
 
@@ -64,8 +60,20 @@ export function DepartmentRoleEditorDialog({
       .catch(() => toast.error("Failed to load permission sets"));
 
     setRoleName(role?.roleName ?? "");
-    setAppRoleId(role?.appRoleId ?? "");
+    setSelectedAppRoleIds(new Set(role?.appRoleIds ?? []));
   }, [open, role]);
+
+  const togglePermissionSet = (appRoleId: string, checked: boolean) => {
+    setSelectedAppRoleIds((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(appRoleId);
+      } else {
+        next.delete(appRoleId);
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = () => {
     if (!roleName.trim()) {
@@ -77,7 +85,7 @@ export function DepartmentRoleEditorDialog({
       try {
         const payload = {
           roleName: roleName.trim(),
-          appRoleId: appRoleId || undefined,
+          appRoleIds: Array.from(selectedAppRoleIds),
         };
 
         if (isEdit && role) {
@@ -125,23 +133,33 @@ export function DepartmentRoleEditorDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Permission set</Label>
-            <Select
-              value={appRoleId}
-              onValueChange={setAppRoleId}
-              disabled={!canManage || isPending}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select permission set" />
-              </SelectTrigger>
-              <SelectContent>
-                {appRoles.map((appRole) => (
-                  <SelectItem key={appRole._id} value={appRole._id}>
-                    {appRole.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Permission sets</Label>
+            <div className="max-h-48 space-y-3 overflow-y-auto rounded-md border p-3">
+              {appRoles.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No permission sets available.
+                </p>
+              ) : (
+                appRoles.map((appRole) => (
+                  <div key={appRole._id} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`department-role-permission-set-${appRole._id}`}
+                      checked={selectedAppRoleIds.has(appRole._id)}
+                      onCheckedChange={(value) =>
+                        togglePermissionSet(appRole._id, value === true)
+                      }
+                      disabled={!canManage || isPending}
+                    />
+                    <Label
+                      htmlFor={`department-role-permission-set-${appRole._id}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {appRole.name}
+                    </Label>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 

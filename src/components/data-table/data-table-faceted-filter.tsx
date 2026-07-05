@@ -24,9 +24,11 @@ import { Separator } from "@/components/ui/separator";
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>;
   title?: string;
+  contentClassName?: string;
   options: {
     label: string;
     value: string;
+    count?: number;
     icon?: React.ComponentType<{ className?: string }>;
   }[];
 }
@@ -34,6 +36,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
 export function DataTableFacetedFilter<TData, TValue>({
   column,
   title,
+  contentClassName,
   options,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues();
@@ -81,7 +84,10 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent
+        className={cn("w-[200px] p-0", contentClassName)}
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
@@ -89,9 +95,11 @@ export function DataTableFacetedFilter<TData, TValue>({
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
+                const count = option.count ?? facets?.get(option.value);
                 return (
                   <CommandItem
                     key={option.value}
+                    className="flex w-full items-center"
                     onSelect={() => {
                       if (isSelected) {
                         selectedValues.delete(option.value);
@@ -118,9 +126,9 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                     )}
                     <span>{option.label}</span>
-                    {facets?.get(option.value) && (
-                      <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
-                        {facets.get(option.value)}
+                    {typeof count === "number" && count > 0 && (
+                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center font-mono text-xs">
+                        {count}
                       </span>
                     )}
                   </CommandItem>

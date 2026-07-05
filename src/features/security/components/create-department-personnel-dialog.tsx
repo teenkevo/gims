@@ -1,8 +1,10 @@
 import {
   startTransition,
   useActionState,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
@@ -10,6 +12,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { createPersonnel } from "@/lib/actions";
+import { checkPersonnelEmailExists } from "@/lib/auth/security-tab-actions";
 import { cn } from "@/lib/utils";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -55,6 +58,7 @@ type FormData = {
 interface CreateDepartmentPersonnelDialogProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   departmentName: string;
   departmentId: string;
   roles: string[];
@@ -64,6 +68,7 @@ interface CreateDepartmentPersonnelDialogProps {
 export function CreateDepartmentPersonnelDialog({
   open,
   onClose,
+  onSuccess,
   departmentName,
   departmentId,
   roles,
@@ -71,7 +76,11 @@ export function CreateDepartmentPersonnelDialog({
 }: CreateDepartmentPersonnelDialogProps) {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [roleOpen, setRoleOpen] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isEmailAvailable, setIsEmailAvailable] = useState(false);
   const [state, dispatch, isPending] = useActionState(createPersonnel, null);
+  const handledStateRef = useRef<string | null>(null);
 
   const form = useForm<FormData>({
     mode: "onChange",
@@ -97,9 +106,71 @@ export function CreateDepartmentPersonnelDialog({
       fullName.trim().length > 0 &&
       /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email.trim()) &&
       isValidPhoneNumber(phone || "") &&
-      selectedRole.length > 0,
-    [fullName, email, phone, selectedRole]
+      selectedRole.length > 0 &&
+      isEmailAvailable &&
+      !isCheckingEmail &&
+      !emailError,
+    [
+      fullName,
+      email,
+      phone,
+      selectedRole,
+      isEmailAvailable,
+      isCheckingEmail,
+      emailError,
+    ]
   );
+
+  const checkEmailExists = useCallback(async (value: string) => {
+    const trimmedEmail = value.trim();
+
+    if (
+      !trimmedEmail ||
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(trimmedEmail)
+    ) {
+      setEmailError(null);
+      setIsEmailAvailable(false);
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    setIsEmailAvailable(false);
+
+    try {
+      const existingPersonnel = await checkPersonnelEmailExists(trimmedEmail);
+
+      if (existingPersonnel) {
+        setEmailError("A personnel record with this email already exists");
+        setIsEmailAvailable(false);
+      } else {
+        setEmailError(null);
+        setIsEmailAvailable(true);
+      }
+    } catch {
+      setEmailError(null);
+      setIsEmailAvailable(false);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      if (email) {
+        checkEmailExists(email);
+      } else {
+        setEmailError(null);
+        setIsEmailAvailable(false);
+        setIsCheckingEmail(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [open, email, checkEmailExists]);
 
   useEffect(() => {
     setDialogLoading(isPending);
@@ -108,6 +179,10 @@ export function CreateDepartmentPersonnelDialog({
   useEffect(() => {
     if (!open) {
       form.reset();
+      setEmailError(null);
+      setIsCheckingEmail(false);
+      setIsEmailAvailable(false);
+      handledStateRef.current = null;
       return;
     }
 
@@ -120,13 +195,29 @@ export function CreateDepartmentPersonnelDialog({
   }, [open, form, defaultRole, roles]);
 
   useEffect(() => {
-    if (state?.status === "ok") {
-      toast.success("Personnel has been created");
-      onClose();
-    } else if (state?.status === "error") {
-      toast.error("Something went wrong");
+    if (!state?.status || state.status === handledStateRef.current) {
+      return;
     }
-  }, [state, onClose]);
+
+    handledStateRef.current = state.status;
+
+    if (state.status === "ok") {
+      toast.success("Personnel has been created");
+      onSuccess?.();
+      onClose();
+      return;
+    }
+
+    toast.error(
+      typeof state.error === "string" ? state.error : "Something went wrong"
+    );
+  }, [state, onClose, onSuccess]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      onClose();
+    }
+  };
 
   const onSubmit = (data: FormData) => {
     const formData = new FormData();
@@ -149,7 +240,7 @@ export function CreateDepartmentPersonnelDialog({
   };
 
   return (
-    <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
+    <Dialog loading={dialogLoading} open={open} onOpenChange={handleOpenChange}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
@@ -212,14 +303,25 @@ export function CreateDepartmentPersonnelDialog({
                   <FormItem>
                     <FormLabel required>Email Address</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="john.doe@company.com"
-                        {...field}
-                        disabled={isPending}
-                      />
+                      <div className="relative">
+                        <Input
+                          type="email"
+                          placeholder="john.doe@company.com"
+                          className={isCheckingEmail ? "pr-10" : undefined}
+                          {...field}
+                          disabled={isPending}
+                        />
+                        {isCheckingEmail && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-primary" />
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
+                    {emailError && (
+                      <p className="text-[13px] text-destructive">{emailError}</p>
+                    )}
                   </FormItem>
                 )}
               />

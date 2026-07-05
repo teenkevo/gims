@@ -11,6 +11,7 @@ import {
   ALL_RFIS_QUERY_RESULT,
 } from "../../sanity.types";
 import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
+import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
@@ -3258,6 +3259,14 @@ export async function createPersonnel(prevState: any, formData: FormData) {
     const phone = formData.get("phone");
     const rawDepartmentRoles = formData.get("departmentRoles");
     const departmentRoles = JSON.parse(rawDepartmentRoles as string);
+
+    const existingPersonnel = await getPersonnelByEmail((email as string).trim());
+    if (existingPersonnel) {
+      return {
+        error: "A personnel record with this email already exists",
+        status: "error",
+      };
+    }
 
     const departmentRolesArray = departmentRoles.map(
       (role: { department: string; departmentId: string; role: string }) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Plus, Trash2 } from "lucide-react";
 import type { SecurityDepartmentRecord } from "@/sanity/lib/departments/getSecurityDepartments";
@@ -72,14 +72,16 @@ export function DepartmentsManager({
     setEditorOpen(true);
   };
 
-  const handleDepartmentsChange = () => {
+  const handleDepartmentsChange = useCallback(() => {
     onDepartmentsChange?.();
-  };
+  }, [onDepartmentsChange]);
 
   useEffect(() => {
     if (
       viewingDepartment &&
-      !departments.some((department) => department._id === viewingDepartment._id)
+      !departments.some(
+        (department) => department._id === viewingDepartment._id
+      )
     ) {
       setViewingDepartment(null);
       setViewingRole(null);
@@ -214,7 +216,9 @@ export function DepartmentsManager({
                   <TableHead>Roles</TableHead>
                   <TableHead>Modified by</TableHead>
                   {canManage && (
-                    <TableHead className="w-[72px] text-right">Actions</TableHead>
+                    <TableHead className="w-[72px] text-right">
+                      Actions
+                    </TableHead>
                   )}
                 </TableRow>
               </TableHeader>
@@ -239,9 +243,7 @@ export function DepartmentsManager({
                       onClick={() => openDetail(department)}
                     >
                       {canManage && (
-                        <TableCell
-                          onClick={(event) => event.stopPropagation()}
-                        >
+                        <TableCell onClick={(event) => event.stopPropagation()}>
                           <Checkbox
                             checked={selectedIds.has(department._id)}
                             onCheckedChange={(value) =>
