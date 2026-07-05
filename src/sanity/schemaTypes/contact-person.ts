@@ -35,6 +35,33 @@ export const contactPerson = defineType({
       type: "reference",
       to: [{ type: "client" }],
     }),
+    defineField({
+      name: "appAccessStatus",
+      title: "Portal Access Status",
+      type: "string",
+      options: {
+        list: [
+          { title: "None", value: "none" },
+          { title: "Invited", value: "invited" },
+          { title: "Active", value: "active" },
+          { title: "Revoked", value: "revoked" },
+        ],
+      },
+      initialValue: "none",
+    }),
+    defineField({
+      name: "clerkUserId",
+      title: "Clerk User ID",
+      type: "string",
+    }),
+    defineField({
+      name: "portalPermissions",
+      title: "Portal Permissions",
+      type: "array",
+      of: [{ type: "string" }],
+      description:
+        "Optional permission overrides for this contact's portal account.",
+    }),
   ],
   preview: {
     select: {

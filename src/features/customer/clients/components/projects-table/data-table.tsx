@@ -38,11 +38,13 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 interface DataTableProps<TData, TValue> {
   data: CLIENT_BY_ID_QUERY_RESULT[number]["projects"];
   client: CLIENT_BY_ID_QUERY_RESULT[number];
+  linkMode?: "internal" | "portal";
 }
 
 export function DataTable<TData, TValue>({
   data,
   client,
+  linkMode = "internal",
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -61,10 +63,10 @@ export function DataTable<TData, TValue>({
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
     () =>
-      getColumns(client, { canDelete }) as ColumnDef<
+      getColumns(client, { canDelete, linkMode }) as ColumnDef<
         CLIENT_BY_ID_QUERY_RESULT[number]["projects"][number]
       >[],
-    [client, canDelete]
+    [client, canDelete, linkMode]
   );
 
   const table = useReactTable({

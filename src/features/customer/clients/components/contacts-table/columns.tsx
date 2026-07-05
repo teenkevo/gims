@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
+import { ContactPortalAccessCell } from "./contact-portal-access-cell";
 import type {
   ALL_CLIENTS_QUERY_RESULT,
   CLIENT_BY_ID_QUERY_RESULT,
@@ -115,6 +116,22 @@ export const getColumns = ({
       );
     },
   },
+
+  ...(canUpdate
+    ? [
+        {
+          id: "portalAccess",
+          header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Portal Access" />
+          ),
+          cell: ({ row }) => (
+            <ContactPortalAccessCell contact={row.original} />
+          ),
+        } satisfies ColumnDef<
+          CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
+        >,
+      ]
+    : []),
 
   ...(canUpdate
     ? [

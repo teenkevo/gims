@@ -55,7 +55,11 @@ export const PERMISSION_RESOURCES: PermissionResource[] = [
     key: "billing",
     label: "Billing",
     actions: ["create", "read", "update", "delete"],
-    extraActions: [{ action: "manage", label: "Manage" }],
+    extraActions: [
+      { action: "manage", label: "Manage" },
+      { action: "respond", label: "Respond to" },
+      { action: "pay", label: "Pay" },
+    ],
   },
   {
     key: "security",

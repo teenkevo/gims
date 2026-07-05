@@ -42,7 +42,21 @@ export {
   unauthorizedActionMessage,
   type ActionErrorResult,
 } from "./action-errors";
-export { toastActionError } from "./notify-action-error";
+export { DEFAULT_CLIENT_PORTAL_PERMISSIONS, resolveClientPortalPermissions } from "./client-permissions";
+export {
+  inviteContactToPortal,
+  lockContactPortalAccess,
+  unlockContactPortalAccess,
+  revokeContactPortalAccess,
+  linkClerkUserToContact,
+} from "./contact-invite";
+export {
+  isClientSession,
+  contactHasProjectAccess,
+  requireProjectAccessOrError,
+  requireQuotationProjectAccessOrError,
+} from "./project-scope";
+export { getProjectsForSession } from "./get-projects-for-session";
 
 export { AuthError, UnauthorizedError, ForbiddenError } from "./errors";
 

@@ -9,10 +9,12 @@ export default function NoProjectsForClientPlaceholder({
   helperText,
   needAction,
   clientId,
+  clientName,
 }: {
   helperText?: string;
   needAction?: boolean;
   clientId: string;
+  clientName: string;
 }) {
   return (
     <motion.div
@@ -44,7 +46,7 @@ export default function NoProjectsForClientPlaceholder({
             <div className="mx-4 my-2">
               <Button asChild className="sm:w-auto" variant="default">
                 <Link
-                  href={`/clients/${clientId}/projects/create`}
+                  href={`/clients/${clientId}/projects/create?client=${encodeURIComponent(clientName)}`}
                   className="my-2"
                 >
                   <PlusCircleIcon className="h-5 w-5 mr-2" />

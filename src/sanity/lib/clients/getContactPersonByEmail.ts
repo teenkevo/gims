@@ -7,6 +7,9 @@ export type ContactPersonByEmail = {
   name: string;
   email: string;
   designation: string;
+  appAccessStatus?: string;
+  clerkUserId?: string;
+  portalPermissions?: string[];
   client: {
     _id: string;
     name: string;
@@ -19,6 +22,9 @@ const CONTACT_BY_EMAIL_QUERY = defineQuery(`
     name,
     email,
     designation,
+    appAccessStatus,
+    clerkUserId,
+    portalPermissions,
     client->{
       _id,
       name

@@ -114,7 +114,7 @@ function ProjectDetailsContent({
     fully_paid: 5,
   };
 
-  const { role, can } = useRBAC();
+  const { role, can, isClientUser } = useRBAC();
   const canUpdate = can(PERMISSIONS["projects:update"]);
   const canDelete = can(PERMISSIONS["projects:delete"]);
   const canUpdateClient = can(PERMISSIONS["clients:update"]);
@@ -187,11 +187,13 @@ function ProjectDetailsContent({
       >
         <TabsList>
           <TabsTrigger value="details">Project</TabsTrigger>
-          <TabsTrigger value="client">Client</TabsTrigger>
+          {!isClientUser && <TabsTrigger value="client">Client</TabsTrigger>}
           {canReadBilling && (
             <TabsTrigger value="billing">Billing</TabsTrigger>
           )}
-          <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
+          {!isClientUser && (
+            <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
+          )}
           {canDelete && (
             <TabsTrigger
               className="text-destructive data-[state=active]:text-destructive"
@@ -227,7 +229,8 @@ function ProjectDetailsContent({
             />
           </div>
         </TabsContent>
-        <TabsContent value="client">
+        {!isClientUser && (
+          <TabsContent value="client">
           <div className="space-y-8 my-10">
             <AnimatePresence mode="popLayout">
               {/* Map through clients and filter contacts by client id */}
@@ -301,6 +304,7 @@ function ProjectDetailsContent({
             /> */}
           </div>
         </TabsContent>
+        )}
         {canReadBilling && (
           <TabsContent value="billing">
             <div className="space-y-8 my-10">
@@ -322,6 +326,7 @@ function ProjectDetailsContent({
             </div>
           </TabsContent>
         )}
+        {!isClientUser && (
         <TabsContent value="sample-receipt">
           <div className="space-y-8 my-10">
             <SampleVerificationLifecycle
@@ -333,6 +338,7 @@ function ProjectDetailsContent({
             />
           </div>
         </TabsContent>
+        )}
         <TabsContent value="danger">
           {canDelete && (
             <div className="space-y-8 my-10">

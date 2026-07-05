@@ -243,9 +243,7 @@ export function CreateDepartmentPersonnelDialog({
     <Dialog loading={dialogLoading} open={open} onOpenChange={handleOpenChange}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            Add personnel to the {departmentName} Department
-          </DialogTitle>
+          <DialogTitle>Add personnel</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -320,7 +318,9 @@ export function CreateDepartmentPersonnelDialog({
                     </FormControl>
                     <FormMessage />
                     {emailError && (
-                      <p className="text-[13px] text-destructive">{emailError}</p>
+                      <p className="text-[13px] text-destructive">
+                        {emailError}
+                      </p>
                     )}
                   </FormItem>
                 )}
@@ -355,61 +355,67 @@ export function CreateDepartmentPersonnelDialog({
               control={form.control}
               name="role"
               rules={{ required: "A role is required" }}
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel required>Select a role for the new user</FormLabel>
 
-                  <Popover modal open={roleOpen} onOpenChange={setRoleOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          disabled={isPending}
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={roleOpen}
-                          className="w-full justify-between"
-                        >
-                          {selectedRole || "Select role"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search roles..." />
-                        <CommandList>
-                          <CommandEmpty>No results found.</CommandEmpty>
-                          <CommandGroup>
-                            {roles.map((roleName) => (
-                              <CommandItem
-                                key={roleName}
-                                value={roleName}
-                                onSelect={() => {
-                                  form.setValue("role", roleName, {
-                                    shouldValidate: true,
-                                  });
-                                  setRoleOpen(false);
-                                }}
-                                className={cn(
-                                  selectedRole === roleName && "bg-muted"
-                                )}
-                              >
-                                <Check
+                  {defaultRole ? (
+                    <FormControl>
+                      <Input {...field} value={defaultRole} disabled />
+                    </FormControl>
+                  ) : (
+                    <Popover modal open={roleOpen} onOpenChange={setRoleOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            disabled={isPending}
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={roleOpen}
+                            className="w-full justify-between"
+                          >
+                            {selectedRole || "Select role"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search roles..." />
+                          <CommandList>
+                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandGroup>
+                              {roles.map((roleName) => (
+                                <CommandItem
+                                  key={roleName}
+                                  value={roleName}
+                                  onSelect={() => {
+                                    form.setValue("role", roleName, {
+                                      shouldValidate: true,
+                                    });
+                                    setRoleOpen(false);
+                                  }}
                                   className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedRole === roleName
-                                      ? "opacity-100"
-                                      : "opacity-0"
+                                    selectedRole === roleName && "bg-muted"
                                   )}
-                                />
-                                {roleName}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedRole === roleName
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {roleName}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  )}
 
                   <FormMessage />
                 </FormItem>

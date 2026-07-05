@@ -14,6 +14,8 @@ import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail"
 import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePermissionOrError } from "@/lib/auth/with-auth";
+import { getSession } from "@/lib/auth/session";
+import { requireQuotationProjectAccessOrError } from "@/lib/auth/project-scope";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
@@ -53,8 +55,17 @@ interface QuotationProps {
 
 // CREATE INVOICE
 export async function createInvoice(quotationId: string, fileId: string) {
-  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:respond"]);
   if (denied) return denied;
+
+  const session = await getSession();
+  if (session.isAuthenticated) {
+    const scopeDenied = await requireQuotationProjectAccessOrError(
+      session,
+      quotationId
+    );
+    if (scopeDenied) return scopeDenied;
+  }
 
   try {
     const quotation = await writeClient
@@ -389,8 +400,17 @@ export async function respondToQuotation(
   status: "accepted" | "rejected" | "revisions_requested",
   rejectionNotes?: string
 ) {
-  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:respond"]);
   if (denied) return denied;
+
+  const session = await getSession();
+  if (session.isAuthenticated) {
+    const scopeDenied = await requireQuotationProjectAccessOrError(
+      session,
+      quotationId
+    );
+    if (scopeDenied) return scopeDenied;
+  }
 
   try {
     await writeClient
@@ -461,7 +481,7 @@ export async function createRevision(
 
 // MAKE PAYMENT
 export async function makePayment(prevState: any, formData: FormData) {
-  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:pay"]);
   if (denied) return denied;
 
   const quotationId = formData.get("quotationId");
@@ -474,6 +494,15 @@ export async function makePayment(prevState: any, formData: FormData) {
 
   // Validate & coerce
   if (!quotationId) return { status: "error", error: "Missing quotationId" };
+
+  const session = await getSession();
+  if (session.isAuthenticated) {
+    const scopeDenied = await requireQuotationProjectAccessOrError(
+      session,
+      quotationId as string
+    );
+    if (scopeDenied) return scopeDenied;
+  }
 
   const amount =
     typeof amountRaw === "string"
@@ -527,7 +556,7 @@ export async function makePayment(prevState: any, formData: FormData) {
 
 // MAKE RESUBMISSION
 export async function makeResubmission(prevState: any, formData: FormData) {
-  const denied = await requirePermissionOrError(PERMISSIONS["billing:read"]);
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:pay"]);
   if (denied) return denied;
 
   const quotationId = formData.get("quotationId");
@@ -538,6 +567,15 @@ export async function makeResubmission(prevState: any, formData: FormData) {
 
   // Validate & coerce
   if (!quotationId) return { status: "error", error: "Missing quotationId" };
+
+  const resubmissionSession = await getSession();
+  if (resubmissionSession.isAuthenticated) {
+    const scopeDenied = await requireQuotationProjectAccessOrError(
+      resubmissionSession,
+      quotationId as string
+    );
+    if (scopeDenied) return scopeDenied;
+  }
 
   const amount =
     typeof amountRaw === "string"
@@ -2282,15 +2320,178 @@ export async function createContactPerson(prevState: any, formData: FormData) {
       email,
       phone: sanitizePhoneNumber(phone as string),
       designation,
+      appAccessStatus: "none",
       client: {
         _type: "reference",
         _ref: clientId,
       },
     });
+
+    const session = await getSession();
+    const invitedBy = session.isAuthenticated ? session : undefined;
+
+    const { inviteContactToPortal } = await import("@/lib/auth/contact-invite");
+    await inviteContactToPortal({
+      contactPersonId: result._id,
+      email: email as string,
+      fullName: name as string,
+      clientId: clientId as string,
+      invitedBy,
+    });
+
     revalidateTag("contactPerson");
+    revalidateTag(`client-${clientId}`);
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
+  }
+}
+
+export async function inviteContactToPortalAction(contactPersonId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
+  try {
+    const contact = await writeClient.fetch<{
+      _id: string;
+      name: string;
+      email: string;
+      appAccessStatus?: string;
+      clerkUserId?: string;
+      portalPermissions?: string[];
+      client?: { _id: string } | null;
+    } | null>(
+      `*[_type == "contactPerson" && _id == $contactPersonId][0]{
+        _id,
+        name,
+        email,
+        appAccessStatus,
+        clerkUserId,
+        portalPermissions,
+        client->{ _id }
+      }`,
+      { contactPersonId }
+    );
+
+    if (!contact?.email) {
+      return { status: "error", error: "Contact not found" };
+    }
+
+    const session = await getSession();
+    const invitedBy = session.isAuthenticated ? session : undefined;
+
+    const { inviteContactToPortal } = await import("@/lib/auth/contact-invite");
+    await inviteContactToPortal({
+      contactPersonId: contact._id,
+      email: contact.email,
+      fullName: contact.name,
+      clientId: contact.client?._id,
+      portalPermissions: contact.portalPermissions,
+      clerkUserId: contact.clerkUserId,
+      invitedBy,
+    });
+
+    revalidateTag("contactPerson");
+    revalidateTag(`client-${contact.client?._id}`);
+    return { status: "ok" };
+  } catch (error) {
+    console.error("Error inviting contact to portal:", error);
+    return { status: "error", error: "Failed to send portal invitation" };
+  }
+}
+
+export async function lockContactPortalAccessAction(contactPersonId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
+  try {
+    const contact = await writeClient.fetch<{
+      _id: string;
+      email: string;
+      clerkUserId?: string;
+      client?: { _id: string } | null;
+    } | null>(
+      `*[_type == "contactPerson" && _id == $contactPersonId][0]{
+        _id,
+        email,
+        clerkUserId,
+        client->{ _id }
+      }`,
+      { contactPersonId }
+    );
+
+    if (!contact?.email) {
+      return { status: "error", error: "Contact not found" };
+    }
+
+    const session = await getSession();
+    const lockedBy = session.isAuthenticated ? session : undefined;
+
+    const { lockContactPortalAccess } = await import(
+      "@/lib/auth/contact-invite"
+    );
+    await lockContactPortalAccess({
+      contactPersonId: contact._id,
+      email: contact.email,
+      clerkUserId: contact.clerkUserId,
+      lockedBy,
+    });
+
+    revalidateTag("contactPerson");
+    revalidateTag(`client-${contact.client?._id}`);
+    return { status: "ok" };
+  } catch (error) {
+    console.error("Error locking contact portal access:", error);
+    return { status: "error", error: "Failed to lock portal access" };
+  }
+}
+
+/** @deprecated Use lockContactPortalAccessAction */
+export const revokeContactPortalAccessAction = lockContactPortalAccessAction;
+
+export async function unlockContactPortalAccessAction(contactPersonId: string) {
+  const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
+  if (denied) return denied;
+
+  try {
+    const contact = await writeClient.fetch<{
+      _id: string;
+      email: string;
+      clerkUserId?: string;
+      client?: { _id: string } | null;
+    } | null>(
+      `*[_type == "contactPerson" && _id == $contactPersonId][0]{
+        _id,
+        email,
+        clerkUserId,
+        client->{ _id }
+      }`,
+      { contactPersonId }
+    );
+
+    if (!contact?.email) {
+      return { status: "error", error: "Contact not found" };
+    }
+
+    const session = await getSession();
+    const unlockedBy = session.isAuthenticated ? session : undefined;
+
+    const { unlockContactPortalAccess } = await import(
+      "@/lib/auth/contact-invite"
+    );
+    await unlockContactPortalAccess({
+      contactPersonId: contact._id,
+      email: contact.email,
+      clerkUserId: contact.clerkUserId,
+      unlockedBy,
+    });
+
+    revalidateTag("contactPerson");
+    revalidateTag(`client-${contact.client?._id}`);
+    return { status: "ok" };
+  } catch (error) {
+    console.error("Error unlocking contact portal access:", error);
+    return { status: "error", error: "Failed to unlock portal access" };
   }
 }
 

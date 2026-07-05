@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import NoProjectPlaceholder from "@/features/internal/projects/components/no-project-placeholder";
 import ProjectDetails from "@/features/internal/projects/components/project-details";
 
@@ -12,8 +10,10 @@ import { getAllPersonnel } from "@/sanity/lib/personnel/getAllPersonnel";
 import Loading from "./loading";
 import { getSampleReviewTemplates } from "@/sanity/lib/projects/getSampleReviewTemplates";
 import { getSampleAdequacyTemplates } from "@/sanity/lib/projects/getSampleAdequacyTemplates";
-import { requirePermission } from "@/lib/auth/session";
+import { requirePermission, getSession } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
+import { requireProjectAccessOrError } from "@/lib/auth/project-scope";
+import { redirect } from "next/navigation";
 
 export default async function ProjectPage({
   params,
@@ -21,10 +21,17 @@ export default async function ProjectPage({
   params: Promise<{ id: string }>;
 }) {
   await requirePermission(PERMISSIONS["projects:read"]);
+  const session = await getSession();
 
   const { id } = await params;
 
-  // Fetch data in parallel
+  if (session.isAuthenticated) {
+    const denied = await requireProjectAccessOrError(session, id);
+    if (denied) {
+      redirect("/projects");
+    }
+  }
+
   const [
     projectData,
     existingContactsData,
@@ -43,7 +50,6 @@ export default async function ProjectPage({
     getSampleAdequacyTemplates(),
   ]);
 
-  // If project is not found, show 404 placeholder
   if (!projectData || projectData.length === 0) {
     return <NoProjectPlaceholder />;
   }

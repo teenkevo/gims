@@ -125,7 +125,7 @@ export function CreateContactDialog({ clientId }: { clientId: string }) {
 
   useEffect(() => {
     if (state?.status === "ok") {
-      toast.success("Contact has been created");
+      toast.success("Contact created and portal invitation sent");
       setOpen(false);
     } else if (state?.status === "error") {
       toast.error((state.error as string) || "Something went wrong");

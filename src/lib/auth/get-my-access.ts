@@ -38,6 +38,7 @@ export async function getMyAccess(clientEmail?: string) {
     personnelId: access.personnelId,
     contactPersonId: access.contactPersonId,
     clientId: access.clientId,
+    clientName: access.clientName,
     departmentRoles: access.departmentRoles,
   };
 }

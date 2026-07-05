@@ -17,6 +17,9 @@ export interface RBACValue {
   permissions: Permission[];
   userType: UserType | null;
   accessLabel: string | null;
+  contactPersonId?: string;
+  clientId?: string;
+  clientName?: string;
   departmentRoles: DepartmentRoleAssignment[];
   isAuthenticated: boolean;
   isAccessLoading: boolean;
@@ -37,6 +40,9 @@ interface RBACProviderProps {
   permissions?: Permission[];
   userType?: UserType | null;
   accessLabel?: string | null;
+  contactPersonId?: string;
+  clientId?: string;
+  clientName?: string;
   departmentRoles?: DepartmentRoleAssignment[];
   isAccessLoading?: boolean;
 }
@@ -49,6 +55,9 @@ export const RBACProvider = ({
   permissions = [],
   userType = null,
   accessLabel = null,
+  contactPersonId,
+  clientId,
+  clientName,
   departmentRoles = [],
   isAccessLoading = false,
 }: RBACProviderProps) => {
@@ -66,8 +75,9 @@ export const RBACProvider = ({
             userType: userType ?? USER_TYPES.PENDING,
             accessLabel: accessLabel ?? "",
             personnelId: undefined,
-            contactPersonId: undefined,
-            clientId: undefined,
+            contactPersonId,
+            clientId,
+            clientName,
             departmentRoles,
             isAuthenticated: true,
           }
@@ -81,6 +91,7 @@ export const RBACProvider = ({
             personnelId: undefined,
             contactPersonId: undefined,
             clientId: undefined,
+            clientName: undefined,
             departmentRoles: [],
             isAuthenticated: false,
           },
@@ -92,6 +103,9 @@ export const RBACProvider = ({
       permissions,
       userType,
       accessLabel,
+      contactPersonId,
+      clientId,
+      clientName,
       departmentRoles,
     ]
   );
@@ -104,6 +118,9 @@ export const RBACProvider = ({
       permissions: session.isAuthenticated ? session.permissions : [],
       userType: session.isAuthenticated ? session.userType : null,
       accessLabel: session.isAuthenticated ? session.accessLabel : null,
+      contactPersonId: session.isAuthenticated ? contactPersonId : undefined,
+      clientId: session.isAuthenticated ? clientId : undefined,
+      clientName: session.isAuthenticated ? clientName : undefined,
       departmentRoles: session.isAuthenticated ? session.departmentRoles : [],
       isAuthenticated: session.isAuthenticated,
       isAccessLoading,
@@ -116,7 +133,7 @@ export const RBACProvider = ({
       isClientUser:
         session.isAuthenticated && session.userType === USER_TYPES.CLIENT,
     }),
-    [session, resolvedRole, isAccessLoading]
+    [session, resolvedRole, isAccessLoading, contactPersonId, clientId, clientName]
   );
 
   return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>;

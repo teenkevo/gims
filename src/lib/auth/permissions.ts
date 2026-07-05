@@ -49,6 +49,8 @@ export const PERMISSIONS = {
   "billing:update": "billing:update",
   "billing:delete": "billing:delete",
   "billing:manage": "billing:manage",
+  "billing:respond": "billing:respond",
+  "billing:pay": "billing:pay",
 
   // Security & audit
   "security:read": "security:read",
@@ -104,9 +106,11 @@ const INTERNAL_DELETE_PERMISSIONS: Permission[] = [
   PERMISSIONS["billing:delete"],
 ];
 
-const CLIENT_PERMISSIONS: Permission[] = [
+export const CLIENT_PERMISSIONS: Permission[] = [
   PERMISSIONS["projects:read"],
   PERMISSIONS["billing:read"],
+  PERMISSIONS["billing:respond"],
+  PERMISSIONS["billing:pay"],
   PERMISSIONS["rfi:read"],
   PERMISSIONS["rfi:create"],
   PERMISSIONS["rfi:update"],

@@ -49,6 +49,12 @@ type DepartmentRole = {
   role: string;
 };
 
+type LockedDepartmentRole = {
+  departmentName: string;
+  departmentId: string;
+  role: string;
+};
+
 type FormData = {
   fullName: string;
   internalId: string;
@@ -60,22 +66,27 @@ type FormData = {
 interface EditPersonnelDialogProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   personnel: ALL_PERSONNEL_QUERY_RESULT[number];
   departmentRoles: Record<
     string,
     { roles: (string | undefined)[]; departmentId: string }
   >;
+  lockedDepartmentRole?: LockedDepartmentRole;
 }
 
 export function EditPersonnelDialog({
   open,
   onClose,
+  onSuccess,
   personnel,
   departmentRoles,
+  lockedDepartmentRole,
 }: EditPersonnelDialogProps) {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [roleOpen, setRoleOpen] = useState(false);
   const [state, dispatch, isPending] = useActionState(updatePersonnel, null);
+  const isRestrictedEdit = Boolean(lockedDepartmentRole);
 
   const existingDepartmentRoles = useMemo(
     () =>
@@ -87,6 +98,25 @@ export function EditPersonnelDialog({
     [personnel]
   );
 
+  const departmentRolesForForm = useMemo(() => {
+    if (!lockedDepartmentRole) {
+      return existingDepartmentRoles;
+    }
+
+    const otherRoles = existingDepartmentRoles.filter(
+      (entry) => entry.departmentId !== lockedDepartmentRole.departmentId
+    );
+
+    return [
+      ...otherRoles,
+      {
+        department: lockedDepartmentRole.departmentName,
+        departmentId: lockedDepartmentRole.departmentId,
+        role: lockedDepartmentRole.role,
+      },
+    ];
+  }, [existingDepartmentRoles, lockedDepartmentRole]);
+
   const form = useForm<FormData>({
     mode: "onChange",
     reValidateMode: "onChange",
@@ -95,7 +125,7 @@ export function EditPersonnelDialog({
       internalId: personnel.internalId || "",
       email: personnel.email || "",
       phone: personnel.phone || "",
-      departmentRoles: existingDepartmentRoles,
+      departmentRoles: departmentRolesForForm,
     },
   });
 
@@ -113,18 +143,19 @@ export function EditPersonnelDialog({
       internalId: personnel.internalId || "",
       email: personnel.email || "",
       phone: personnel.phone || "",
-      departmentRoles: existingDepartmentRoles,
+      departmentRoles: departmentRolesForForm,
     });
-  }, [open, personnel, form, existingDepartmentRoles]);
+  }, [open, personnel, form, departmentRolesForForm]);
 
   useEffect(() => {
     if (state?.status === "ok") {
       toast.success("Personnel has been updated");
+      onSuccess?.();
       onClose();
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }
-  }, [state, onClose]);
+  }, [state, onClose, onSuccess]);
 
   const toggleDepartmentRole = (
     department: string,
@@ -152,10 +183,21 @@ export function EditPersonnelDialog({
   const onSubmit = (data: FormData) => {
     const formData = new FormData();
     formData.append("fullName", data.fullName);
-    formData.append("internalId", data.internalId);
-    formData.append("email", data.email);
+    formData.append(
+      "internalId",
+      isRestrictedEdit ? personnel.internalId || "" : data.internalId
+    );
+    formData.append(
+      "email",
+      isRestrictedEdit ? personnel.email || "" : data.email
+    );
     formData.append("phone", data.phone);
-    formData.append("departmentRoles", JSON.stringify(data.departmentRoles));
+    formData.append(
+      "departmentRoles",
+      JSON.stringify(
+        isRestrictedEdit ? departmentRolesForForm : data.departmentRoles
+      )
+    );
     formData.append("isEdit", "true");
     formData.append("personnelId", personnel._id);
     startTransition(() => dispatch(formData));
@@ -165,13 +207,15 @@ export function EditPersonnelDialog({
     <Dialog loading={dialogLoading} open={open} onOpenChange={onClose}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Edit Personnel</DialogTitle>
+          <DialogTitle>
+            {isRestrictedEdit ? "Edit User" : "Edit Personnel"}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-8 max-h-[460px] overflow-y-auto px-1 py-4"
+            className="space-y-8 max-h-[460px] overflow-y-auto px-1 py-4 pb-24"
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
@@ -227,7 +271,7 @@ export function EditPersonnelDialog({
                         type="email"
                         placeholder="john.doe@company.com"
                         {...field}
-                        disabled={isPending}
+                        disabled={isPending || isRestrictedEdit}
                       />
                     </FormControl>
                     <FormMessage />
@@ -268,98 +312,110 @@ export function EditPersonnelDialog({
               }}
               render={() => (
                 <FormItem>
-                  <FormLabel>Departments & Roles</FormLabel>
-                  <Popover modal open={roleOpen} onOpenChange={setRoleOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          disabled={isPending}
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={roleOpen}
-                          className="w-full justify-between"
-                        >
-                          {selectedDepartmentRoles.length > 0
-                            ? `${selectedDepartmentRoles.length} department${selectedDepartmentRoles.length > 1 ? "s" : ""} selected`
-                            : "Select departments and roles"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search departments or roles..." />
-                        <CommandList>
-                          <ScrollArea className="h-72 overflow-y-auto">
-                            <CommandEmpty>No results found.</CommandEmpty>
-                            {Object.entries(departmentRoles).map(
-                              ([department, { roles, departmentId }]) => (
-                                <div key={department}>
-                                  <CommandGroup heading={department}>
-                                    {roles.map((role) => {
-                                      const isSelected =
-                                        selectedDepartmentRoles.some(
-                                          (item) =>
-                                            item.department === department &&
-                                            item.role === role
-                                        );
-                                      const departmentHasRole =
-                                        selectedDepartmentRoles.some(
-                                          (item) =>
-                                            item.department === department
-                                        );
-                                      const isDisabled =
-                                        departmentHasRole && !isSelected;
+                  <FormLabel required>
+                    {isRestrictedEdit ? "Role" : "Departments & Roles"}
+                  </FormLabel>
 
-                                      return (
-                                        <CommandItem
-                                          key={`${department}-${role}`}
-                                          value={`${department}-${role}`}
-                                          disabled={isDisabled}
-                                          onSelect={() => {
-                                            toggleDepartmentRole(
-                                              department,
-                                              departmentId,
-                                              role || ""
+                  {isRestrictedEdit && lockedDepartmentRole ? (
+                    <FormControl>
+                      <Input value={lockedDepartmentRole.role} disabled />
+                    </FormControl>
+                  ) : (
+                    <>
+                      <Popover modal open={roleOpen} onOpenChange={setRoleOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              disabled={isPending}
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={roleOpen}
+                              className="w-full justify-between"
+                            >
+                              {selectedDepartmentRoles.length > 0
+                                ? `${selectedDepartmentRoles.length} department${selectedDepartmentRoles.length > 1 ? "s" : ""} selected`
+                                : "Select departments and roles"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search departments or roles..." />
+                            <CommandList>
+                              <ScrollArea className="h-72 overflow-y-auto">
+                                <CommandEmpty>No results found.</CommandEmpty>
+                                {Object.entries(departmentRoles).map(
+                                  ([department, { roles, departmentId }]) => (
+                                    <div key={department}>
+                                      <CommandGroup heading={department}>
+                                        {roles.map((role) => {
+                                          const isSelected =
+                                            selectedDepartmentRoles.some(
+                                              (item) =>
+                                                item.department === department &&
+                                                item.role === role
                                             );
-                                            setRoleOpen(false);
-                                          }}
-                                          className={cn(
-                                            isDisabled &&
-                                              "opacity-50 cursor-not-allowed",
-                                            isSelected && "bg-muted"
-                                          )}
-                                        >
-                                          <Check
-                                            className={cn(
-                                              "mr-2 h-4 w-4",
-                                              isSelected
-                                                ? "opacity-100"
-                                                : "opacity-0"
-                                            )}
-                                          />
-                                          {role}
-                                          {isDisabled && (
-                                            <span className="ml-auto text-xs text-gray-500">
-                                              (Already assigned)
-                                            </span>
-                                          )}
-                                        </CommandItem>
-                                      );
-                                    })}
-                                  </CommandGroup>
-                                  <CommandSeparator />
-                                </div>
-                              )
-                            )}
-                          </ScrollArea>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormDescription>
-                    Select departments and roles. One role per department.
-                  </FormDescription>
+                                          const departmentHasRole =
+                                            selectedDepartmentRoles.some(
+                                              (item) =>
+                                                item.department === department
+                                            );
+                                          const isDisabled =
+                                            departmentHasRole && !isSelected;
+
+                                          return (
+                                            <CommandItem
+                                              key={`${department}-${role}`}
+                                              value={`${department}-${role}`}
+                                              disabled={isDisabled}
+                                              onSelect={() => {
+                                                toggleDepartmentRole(
+                                                  department,
+                                                  departmentId,
+                                                  role || ""
+                                                );
+                                                setRoleOpen(false);
+                                              }}
+                                              className={cn(
+                                                isDisabled &&
+                                                  "opacity-50 cursor-not-allowed",
+                                                isSelected && "bg-muted"
+                                              )}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  isSelected
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                )}
+                                              />
+                                              {role}
+                                              {isDisabled && (
+                                                <span className="ml-auto text-xs text-gray-500">
+                                                  (Already assigned)
+                                                </span>
+                                              )}
+                                            </CommandItem>
+                                          );
+                                        })}
+                                      </CommandGroup>
+                                      <CommandSeparator />
+                                    </div>
+                                  )
+                                )}
+                              </ScrollArea>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select departments and roles. One role per department.
+                      </FormDescription>
+                    </>
+                  )}
+
                   <FormMessage />
                 </FormItem>
               )}

@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 import { useState } from "react";
-import { Delete, Pencil, Trash } from "lucide-react";
+import { Lock, Pencil, Trash, Unlock } from "lucide-react";
 import { UpdateContactDialog } from "./row-actions/update-contact-dialog";
 import { DeleteContactDialog } from "./row-actions/delete-contact-dialog";
+import { LockContactPortalDialog } from "./row-actions/lock-contact-portal-dialog";
+import { UnlockContactPortalDialog } from "./row-actions/unlock-contact-portal-dialog";
 import { toast } from "sonner";
 import { useRBAC } from "@/components/rbac-context";
 import { PERMISSIONS } from "@/lib/auth/permissions";
@@ -23,21 +25,32 @@ interface DataTableRowActionsProps<TData> {
 }
 
 export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps<TData>) {
-  const [openDialog, setOpenDialog] = useState<string | null>(null);
+  const [openDialog, setOpenDialog] = useState<
+    "edit" | "delete" | "lock" | "unlock" | null
+  >(null);
   const { can } = useRBAC();
   const canUpdateClient = can(PERMISSIONS["clients:update"]);
+  const portalStatus = (
+    contact as CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number] & {
+      appAccessStatus?: string;
+    }
+  ).appAccessStatus;
+  const canLockPortalAccess =
+    portalStatus === "active" || portalStatus === "invited";
+  const canUnlockPortalAccess = portalStatus === "revoked";
 
   if (!canUpdateClient) {
     return null;
   }
 
-  const handleOpenDialog = (dialogId: string) => {
+  const handleOpenDialog = (dialogId: "edit" | "delete" | "lock" | "unlock") => {
     setOpenDialog(dialogId);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(null);
   };
+
   return (
     <div>
       <DropdownMenu>
@@ -47,14 +60,38 @@ export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuContent align="end" className="w-[180px]">
           <DropdownMenuItem
             className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
-            onClick={() => handleOpenDialog("dialog1")}
+            onClick={() => handleOpenDialog("edit")}
           >
             <Pencil className="h-4 w-4 mr-2" />
             <span>Edit Contact</span>
           </DropdownMenuItem>
+          {canLockPortalAccess && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-sm font-medium text-destructive focus:text-destructive"
+                onClick={() => handleOpenDialog("lock")}
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                <span>Lock</span>
+              </DropdownMenuItem>
+            </>
+          )}
+          {canUnlockPortalAccess && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
+                onClick={() => handleOpenDialog("unlock")}
+              >
+                <Unlock className="h-4 w-4 mr-2" />
+                <span>Unlock</span>
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
@@ -63,7 +100,7 @@ export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps
               if (contactsInProjects) {
                 toast.warning("This contact is used in 1 or more projects and cannot be deleted.");
               } else {
-                handleOpenDialog("dialog2");
+                handleOpenDialog("delete");
               }
             }}
           >
@@ -74,12 +111,22 @@ export function DataTableRowActions<TData>({ contact }: DataTableRowActionsProps
       </DropdownMenu>
       <UpdateContactDialog
         contact={contact}
-        open={openDialog === "dialog1"}
+        open={openDialog === "edit"}
         onClose={handleCloseDialog}
       />
       <DeleteContactDialog
         contact={contact}
-        open={openDialog === "dialog2"}
+        open={openDialog === "delete"}
+        onClose={handleCloseDialog}
+      />
+      <LockContactPortalDialog
+        contact={contact}
+        open={openDialog === "lock"}
+        onClose={handleCloseDialog}
+      />
+      <UnlockContactPortalDialog
+        contact={contact}
+        open={openDialog === "unlock"}
         onClose={handleCloseDialog}
       />
     </div>

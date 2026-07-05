@@ -25,10 +25,12 @@ export function DeletePersonnel({
   id,
   open,
   onClose,
+  onSuccess,
 }: {
   id: string;
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -37,6 +39,7 @@ export function DeletePersonnel({
     const result = await deletePersonnel(id);
     if (result.status === "ok") {
       toast.success("Personnel has been deleted");
+      onSuccess?.();
       onClose();
     } else {
       toast.error("Something went wrong");

@@ -49,6 +49,13 @@ export const appUser = defineType({
       to: [{ type: "client" }],
     }),
     defineField({
+      name: "permissions",
+      type: "array",
+      title: "Portal Permissions",
+      of: [{ type: "string" }],
+      description: "Effective portal permissions for this app user.",
+    }),
+    defineField({
       name: "isActive",
       type: "boolean",
       title: "Active",

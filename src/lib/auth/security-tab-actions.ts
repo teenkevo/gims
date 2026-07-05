@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { getPersonnelAccessOverview } from "@/lib/auth/security-data";
 import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
+import { getPersonnelById } from "@/sanity/lib/personnel/getPersonnelById";
 import { getSecurityDepartments } from "@/sanity/lib/departments/getSecurityDepartments";
 import { getAllDepartments } from "@/sanity/lib/departments/getAllDepartments";
 import {
@@ -84,4 +85,31 @@ export async function checkPersonnelEmailExists(email: string) {
 export async function fetchAdministrationDepartmentRoles() {
   await requirePermission(PERMISSIONS["security:read"]);
   return getAdministrationDepartmentRoles();
+}
+
+export type SecurityDepartmentRolesMap = Record<
+  string,
+  { roles: (string | undefined)[]; departmentId: string }
+>;
+
+export async function fetchSecurityDepartmentRolesMap(): Promise<SecurityDepartmentRolesMap> {
+  await requirePermission(PERMISSIONS["security:read"]);
+  const departments = await getAllDepartments();
+  const departmentRoles: SecurityDepartmentRolesMap = {};
+
+  departments.forEach((department) => {
+    if (!department.department) return;
+
+    departmentRoles[department.department] = {
+      roles: department.roles?.map((role) => role?.roleName) ?? [],
+      departmentId: department._id,
+    };
+  });
+
+  return departmentRoles;
+}
+
+export async function fetchPersonnelById(personnelId: string) {
+  await requirePermission(PERMISSIONS["security:read"]);
+  return getPersonnelById(personnelId);
 }

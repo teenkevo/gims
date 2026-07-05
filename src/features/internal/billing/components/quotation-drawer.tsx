@@ -84,14 +84,14 @@ export function QuotationDrawer({
   const [open, setOpen] = React.useState(false);
   const [showWarning, setShowWarning] = React.useState(false);
 
-  const { role, can } = useRBAC();
+  const { role, can, isClientUser } = useRBAC();
 
   const { quotation, quotationNeedsRevision } = useQuotation(project, role);
 
   const canCreateBilling = can(PERMISSIONS["billing:create"]);
   const canUpdateBilling = can(PERMISSIONS["billing:update"]);
   const canShowDrawer =
-    role !== "client" &&
+    !isClientUser &&
     ((!quotation && canCreateBilling) ||
       (quotationNeedsRevision && canCreateBilling) ||
       (quotation && !quotationNeedsRevision && canUpdateBilling));

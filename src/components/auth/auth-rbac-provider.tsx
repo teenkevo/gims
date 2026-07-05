@@ -17,6 +17,9 @@ type AccessState = {
   permissions: Permission[];
   userType: UserType;
   accessLabel: string;
+  contactPersonId?: string;
+  clientId?: string;
+  clientName?: string;
   departmentRoles: DepartmentRoleAssignment[];
 };
 
@@ -107,6 +110,9 @@ export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
           permissions: resolved.permissions,
           userType: resolved.userType,
           accessLabel: resolved.accessLabel,
+          contactPersonId: resolved.contactPersonId,
+          clientId: resolved.clientId,
+          clientName: resolved.clientName,
           departmentRoles: resolved.departmentRoles,
         };
         writeAccessCache(nextAccess);
@@ -154,6 +160,9 @@ export function AuthRBACProvider({ children }: { children: React.ReactNode }) {
       permissions={access.permissions}
       userType={access.userType}
       accessLabel={access.accessLabel}
+      contactPersonId={access.contactPersonId}
+      clientId={access.clientId}
+      clientName={access.clientName}
       departmentRoles={access.departmentRoles}
       isAccessLoading={false}
     >

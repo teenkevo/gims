@@ -15,6 +15,7 @@ import {
 
 import { NavGroup } from "./nav-group";
 import { NavUser } from "./nav-user";
+import { ClientProfileSidebarLink } from "./client-profile-sidebar-link";
 
 import {
   Sidebar,
@@ -24,15 +25,31 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Logo } from "./logo";
-import { ToggleLightDark } from "./toggle-light-dark";
 import { useRBAC } from "../rbac-context";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, can, isAccessLoading } = useRBAC();
+  const { user, can, isAccessLoading, isClientUser } = useRBAC();
 
   const showSecurity =
     isAccessLoading || can(PERMISSIONS["security:read"]);
+
+  const clientPortalNav = [
+    {
+      title: "Projects",
+      url: "/projects",
+      icon: FileStack,
+      isActive: false,
+      isDisabled: !can(PERMISSIONS["projects:read"]),
+    },
+    {
+      title: "Requests for Information",
+      url: "/requests-for-information",
+      icon: FileText,
+      isActive: false,
+      isDisabled: !can(PERMISSIONS["rfi:read"]),
+    },
+  ];
 
   const navCore = [
     {
@@ -107,11 +124,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Logo icon={Rocket} name="GIMS by GETLAB" />
       </SidebarHeader>
       <SidebarContent aria-describedby={undefined}>
-        <NavGroup label="Internal Modules" items={navCore} />
-        <NavGroup label="Customer Modules" items={navCustomer} />
+        {isClientUser ? (
+          <>
+            <ClientProfileSidebarLink />
+            <NavGroup label="Client Portal" items={clientPortalNav} />
+          </>
+        ) : (
+          <>
+            <NavGroup label="Internal Modules" items={navCore} />
+            <NavGroup label="Customer Modules" items={navCustomer} />
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
-        <ToggleLightDark />
         {user && <NavUser user={user} />}
       </SidebarFooter>
       <SidebarRail />

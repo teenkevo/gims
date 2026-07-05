@@ -751,6 +751,9 @@ function StageCard({
   canCreateBilling,
   canUpdateBilling,
   canManageBilling,
+  isClientUser,
+  canRespondBilling,
+  canPayBilling,
 }: {
   stage: Stage;
   currentStage: number;
@@ -790,6 +793,9 @@ function StageCard({
   canCreateBilling: boolean;
   canUpdateBilling: boolean;
   canManageBilling: boolean;
+  isClientUser: boolean;
+  canRespondBilling: boolean;
+  canPayBilling: boolean;
 }) {
   const {
     allClear,
@@ -805,7 +811,7 @@ function StageCard({
     (totalUnapprovedPayments ?? 0);
 
   const canShowQuotationDrawer =
-    role !== "client" &&
+    !isClientUser &&
     ((!quotation && canCreateBilling) ||
       (quotationNeedsRevision && canCreateBilling) ||
       (quotation && !quotationNeedsRevision && canUpdateBilling));
@@ -838,7 +844,7 @@ function StageCard({
         <div className="mt-4 flex items-center text-orange-600 text-xs">
           <CircleDashed className="h-3 w-3 mr-1" />
           <span>
-            {role === "client"
+            {isClientUser
               ? "GETLAB is preparing your quotation"
               : canCreateBilling
                 ? "Not started yet"
@@ -850,7 +856,7 @@ function StageCard({
         <div className="mt-4 flex items-center text-orange-600 text-xs">
           <ReceiptText className="h-3 w-3 mr-1" />
           <span>
-            {role === "client"
+            {isClientUser
               ? "GETLAB is finalizing before sending"
               : canUpdateBilling
                 ? "Draft ready"
@@ -903,7 +909,7 @@ function StageCard({
         <div className="mt-4 flex items-center text-orange-500 text-xs">
           <CircleDashed className="animate-spin h-3 w-3 mr-1" />
           <span>
-            {role === "client"
+            {isClientUser
               ? "Your response is needed"
               : "Awaiting client response"}
           </span>
@@ -912,7 +918,8 @@ function StageCard({
       {quotation &&
         stage.id === 3 &&
         quotation.status === "sent" &&
-        role === "client" && (
+        isClientUser &&
+        canRespondBilling && (
           <div className="mt-4 flex items-center text-orange-500 text-xs">
             <RespondToQuotationDialog project={project} />
           </div>
@@ -927,7 +934,7 @@ function StageCard({
         <div className="mt-4 flex items-center text-orange-500 text-xs">
           <GitPullRequest className="h-3 w-3 mr-1" />
           <span>
-            {role === "client"
+            {isClientUser
               ? "GETLAB is preparing a revision"
               : canCreateBilling
                 ? "Client requested changes — revision needed"
@@ -938,7 +945,7 @@ function StageCard({
       {quotation &&
         stage.id === 3 &&
         quotationNeedsRevision &&
-        role === "client" && (
+        isClientUser && (
           <div className="mt-2 flex items-center text-orange-500 text-xs">
             <CircleDashed className="animate-spin h-3 w-3 mr-1" />
             <span>Awaiting GETLAB's response</span>
@@ -947,7 +954,7 @@ function StageCard({
       {quotation &&
         stage.id === 3 &&
         quotationNeedsRevision &&
-        role !== "client" &&
+        !isClientUser &&
         canCreateBilling && (
           <div className="mt-4 flex gap-2 items-center text-orange-500 text-xs">
             <RevisionNotesDialog
@@ -1008,16 +1015,16 @@ function StageCard({
                   : allClearWaitingApproval
                     ? canManageBilling
                       ? "Payments ready for your review"
-                      : role === "client"
+                      : isClientUser
                         ? "Payments submitted — awaiting approval"
                         : "Payments pending approval"
-                    : role === "client"
+                    : isClientUser
                       ? "Payment required"
                       : "Awaiting client payments"}
               </span>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
-              {role === "client" && advanceRejected ? (
+              {isClientUser && canPayBilling && advanceRejected ? (
                 <RemakePaymentDialog
                   quotationId={quotation?._id}
                   currency={quotation?.currency as string}
@@ -1025,7 +1032,8 @@ function StageCard({
                     (payment: any) => payment.paymentType === "advance"
                   )}
                 />
-              ) : role === "client" &&
+              ) : isClientUser &&
+                canPayBilling &&
                 !allClear &&
                 !advanceRejected &&
                 remainingAmount > 0 ? (
@@ -1075,15 +1083,17 @@ export function BillingLifecycle({
   const [animationComplete, setAnimationComplete] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const { role, can } = useRBAC();
+  const { role, can, isClientUser } = useRBAC();
   const canCreateBilling = can(PERMISSIONS["billing:create"]);
   const canUpdateBilling = can(PERMISSIONS["billing:update"]);
   const canManageBilling = can(PERMISSIONS["billing:manage"]);
+  const canRespondBilling = can(PERMISSIONS["billing:respond"]);
+  const canPayBilling = can(PERMISSIONS["billing:pay"]);
 
   const { isParentQuotationCreated, quotation, quotationNeedsRevision } =
     useQuotation(project, role);
 
-  const isClient = role === "client";
+  const isClient = isClientUser;
 
   const paymentStatus = calculatePaymentStatus(
     quotation as NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>
@@ -1228,6 +1238,9 @@ export function BillingLifecycle({
               canCreateBilling={canCreateBilling}
               canUpdateBilling={canUpdateBilling}
               canManageBilling={canManageBilling}
+              isClientUser={isClientUser}
+              canRespondBilling={canRespondBilling}
+              canPayBilling={canPayBilling}
             />
           ))}
         </div>
@@ -1285,6 +1298,9 @@ export function BillingLifecycle({
                   canCreateBilling={canCreateBilling}
                   canUpdateBilling={canUpdateBilling}
                   canManageBilling={canManageBilling}
+                  isClientUser={isClientUser}
+                  canRespondBilling={canRespondBilling}
+                  canPayBilling={canPayBilling}
                 />
               </div>
             ))}

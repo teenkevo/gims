@@ -60,6 +60,8 @@ export const getClientById = async (clientId: string) => {
                 email,
                 designation,
                 phone,
+                appAccessStatus,
+                portalPermissions,
                 "projects": *[_type == "project" && references(^._id)] {
                     _id,
                     name,

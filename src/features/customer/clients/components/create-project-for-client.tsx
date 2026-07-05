@@ -1,7 +1,7 @@
 "use client";
 
 // Core
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
@@ -32,8 +32,18 @@ const formVariants = {
   exit: { opacity: 0, x: 50, transition: { ease: "easeOut" } },
 };
 
-export function CreateProjectForClientForm({ clientId }: { clientId: string }) {
+export function CreateProjectForClientForm({
+  clientId,
+  clientName,
+}: {
+  clientId: string;
+  clientName: string;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const clientQuery = searchParams.get("client") ?? clientName;
+  const clientProjectsHref = `/clients/${clientId}?tab=projects&client=${encodeURIComponent(clientQuery)}`;
 
   // Restored useActionState
   const [state, dispatch, isPending] = useActionState(
@@ -65,19 +75,27 @@ export function CreateProjectForClientForm({ clientId }: { clientId: string }) {
   };
 
   useEffect(() => {
+    if (!searchParams.get("client") && clientName) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("client", clientName);
+      router.replace(`${pathname}?${params.toString()}`);
+    }
+  }, [clientName, pathname, router, searchParams]);
+
+  useEffect(() => {
     if (state?.status === "ok") {
       toast.success("Project created successfully");
-      router.push(`/clients/${clientId}?tab=projects`);
+      router.push(clientProjectsHref);
     } else if (state?.status === "error") {
       toastActionError(state);
     }
-  }, [state]);
+  }, [state, clientProjectsHref, router]);
 
   return (
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href={`/clients/${clientId}?tab=projects`}
+        href={clientProjectsHref}
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back

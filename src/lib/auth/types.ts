@@ -22,6 +22,7 @@ export interface AuthContext {
   personnelId?: string;
   contactPersonId?: string;
   clientId?: string;
+  clientName?: string;
   departmentRoles: DepartmentRoleAssignment[];
   isAuthenticated: true;
 }
@@ -36,6 +37,7 @@ export interface UnauthenticatedContext {
   personnelId: undefined;
   contactPersonId: undefined;
   clientId: undefined;
+  clientName: undefined;
   departmentRoles: [];
   isAuthenticated: false;
 }
@@ -52,7 +54,8 @@ export type AuditAction =
   | "permission_denied"
   | "role_assigned"
   | "role_revoked"
-  | "personnel_invited";
+  | "personnel_invited"
+  | "contact_invited";
 
 export interface AuditLogInput {
   action: AuditAction;

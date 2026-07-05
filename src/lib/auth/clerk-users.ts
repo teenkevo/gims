@@ -37,3 +37,36 @@ async function fetchClerkUsersFromApi(): Promise<ClerkUserSummary[]> {
 
 /** Always fetches the latest user list from Clerk. Deduped within a single request only. */
 export const getClerkUsersList = cache(fetchClerkUsersFromApi);
+
+export async function findClerkUserIdByEmail(
+  email: string
+): Promise<string | null> {
+  const client = getClerkBackendClient();
+  const { data } = await client.users.getUserList({
+    emailAddress: [email],
+    limit: 1,
+  });
+
+  return data[0]?.id ?? null;
+}
+
+export async function resolveClerkUserId(
+  email: string,
+  storedClerkUserId?: string | null
+): Promise<string | null> {
+  if (storedClerkUserId) {
+    return storedClerkUserId;
+  }
+
+  return findClerkUserIdByEmail(email);
+}
+
+export async function lockClerkUser(clerkUserId: string) {
+  const client = getClerkBackendClient();
+  await client.users.lockUser(clerkUserId);
+}
+
+export async function unlockClerkUser(clerkUserId: string) {
+  const client = getClerkBackendClient();
+  await client.users.unlockUser(clerkUserId);
+}

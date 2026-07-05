@@ -5,9 +5,14 @@ import { ArrowLeft, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { SecurityDepartmentRecord } from "@/sanity/lib/departments/getSecurityDepartments";
 import type { DepartmentDetail } from "@/sanity/lib/departments/getDepartmentDetail";
-import { fetchDepartmentDetail } from "@/lib/auth/security-tab-actions";
+import {
+  fetchDepartmentDetail,
+  fetchSecurityDepartmentRolesMap,
+  type SecurityDepartmentRolesMap,
+} from "@/lib/auth/security-tab-actions";
 import { getPermissionSetIdsForDepartmentRole } from "@/lib/auth/department-role-permission-sets";
 import { CreateDepartmentPersonnelDialog } from "./create-department-personnel-dialog";
+import { DepartmentPersonnelRowActions } from "./department-personnel-row-actions";
 import { RolePermissionSetsPanel } from "./role-permission-sets-panel";
 import { SecurityTabLoading } from "./security-tab-loading";
 import { Button } from "@/components/ui/button";
@@ -59,6 +64,8 @@ export function DepartmentRolePersonnelView({
   const [isLoading, setIsLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<RoleTab>("personnel");
+  const [departmentRolesMap, setDepartmentRolesMap] =
+    useState<SecurityDepartmentRolesMap | null>(null);
 
   const loadDetail = useCallback(async (departmentId: string, silent = false) => {
     if (!silent) {
@@ -101,6 +108,31 @@ export function DepartmentRolePersonnelView({
   useEffect(() => {
     loadDetail(department._id);
   }, [department._id, loadDetail]);
+
+  useEffect(() => {
+    if (!canManage) {
+      setDepartmentRolesMap(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    fetchSecurityDepartmentRolesMap()
+      .then((data) => {
+        if (!cancelled) {
+          setDepartmentRolesMap(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast.error("Failed to load department roles");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canManage]);
 
   const handleTabChange = (value: string) => {
     if (!isRoleTab(value)) {
@@ -205,13 +237,18 @@ export function DepartmentRolePersonnelView({
                         <TableHead>Email</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>App access</TableHead>
+                        {canManage && departmentRolesMap && (
+                          <TableHead className="w-[70px]">
+                            <span className="sr-only">Actions</span>
+                          </TableHead>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {personnel.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={4}
+                            colSpan={canManage && departmentRolesMap ? 5 : 4}
                             className="h-24 text-center text-muted-foreground"
                           >
                             No personnel assigned to this role yet.
@@ -232,6 +269,18 @@ export function DepartmentRolePersonnelView({
                                 {person.appAccessStatus ?? "none"}
                               </Badge>
                             </TableCell>
+                            {canManage && departmentRolesMap && (
+                              <TableCell>
+                                <DepartmentPersonnelRowActions
+                                  person={person}
+                                  departmentRoles={departmentRolesMap}
+                                  departmentName={department.department}
+                                  departmentId={detail._id}
+                                  lockedRole={selectedRole}
+                                  onPersonnelChange={handlePersonnelChange}
+                                />
+                              </TableCell>
+                            )}
                           </TableRow>
                         ))
                       )}

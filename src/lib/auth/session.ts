@@ -7,6 +7,12 @@ import { resolveAccess } from "./resolve-access";
 import type { Permission } from "./permissions";
 import type { AuthContext, SessionContext } from "./types";
 import { ForbiddenError, UnauthorizedError } from "./errors";
+import { USER_TYPES } from "./user-type";
+
+export type ClientSession = AuthContext & {
+  clientId: string;
+  contactPersonId: string;
+};
 
 const UNAUTHENTICATED: SessionContext = {
   userId: null,
@@ -18,6 +24,7 @@ const UNAUTHENTICATED: SessionContext = {
   personnelId: undefined,
   contactPersonId: undefined,
   clientId: undefined,
+  clientName: undefined,
   departmentRoles: [],
   isAuthenticated: false,
 };
@@ -75,6 +82,7 @@ export const getSession = cache(async (): Promise<SessionContext> => {
       personnelId: access.personnelId,
       contactPersonId: access.contactPersonId,
       clientId: access.clientId,
+      clientName: access.clientName,
       departmentRoles: access.departmentRoles,
       isAuthenticated: true,
     };
@@ -90,6 +98,7 @@ export const getSession = cache(async (): Promise<SessionContext> => {
     personnelId: access.personnelId,
     contactPersonId: access.contactPersonId,
     clientId: access.clientId,
+    clientName: access.clientName,
     departmentRoles: access.departmentRoles,
     isAuthenticated: true,
   };
@@ -132,6 +141,24 @@ export async function requirePermission(
   }
 
   return session;
+}
+
+export async function requireClientSession(): Promise<ClientSession> {
+  const session = await requireAuth();
+
+  if (
+    session.userType !== USER_TYPES.CLIENT ||
+    !session.clientId ||
+    !session.contactPersonId
+  ) {
+    throw new ForbiddenError();
+  }
+
+  return {
+    ...session,
+    clientId: session.clientId,
+    contactPersonId: session.contactPersonId,
+  };
 }
 
 export async function requireAnyPermission(

@@ -1,5 +1,8 @@
 import "server-only";
 
+import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
+import { getContactPersonByEmail } from "@/sanity/lib/clients/getContactPersonByEmail";
+import { getAppUserByEmail } from "@/sanity/lib/clients/getAppUserByEmail";
 import type { Permission } from "./permissions";
 import { PERMISSIONS, getPermissionsForRole } from "./permissions";
 import { ROLES, type Role } from "./roles";
@@ -9,8 +12,8 @@ import {
   type DepartmentRoleAssignment,
 } from "./department-role-permissions";
 import { resolvePermissionsFromPersonnel } from "./resolve-personnel-permissions";
-import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail";
-import { getContactPersonByEmail } from "@/sanity/lib/clients/getContactPersonByEmail";
+import { resolveClientPortalPermissions } from "./client-permissions";
+import { linkClerkUserToContact } from "./contact-invite";
 import type { AuthUser } from "./types";
 
 export type ResolvedAccess = {
@@ -21,6 +24,7 @@ export type ResolvedAccess = {
   personnelId?: string;
   contactPersonId?: string;
   clientId?: string;
+  clientName?: string;
   departmentRoles: DepartmentRoleAssignment[];
 };
 
@@ -76,7 +80,10 @@ function buildUserFromPersonnel(
 
 function buildUserFromContact(
   clerkUserId: string,
-  contact: NonNullable<Awaited<ReturnType<typeof getContactPersonByEmail>>>
+  contact: {
+    name: string;
+    email: string;
+  }
 ): AuthUser {
   const nameParts = contact.name.trim().split(/\s+/);
   const firstName = nameParts[0] ?? null;
@@ -90,6 +97,133 @@ function buildUserFromContact(
     fullName: contact.name,
     imageUrl: null,
   };
+}
+
+async function resolveClientAccess(
+  clerkUserId: string,
+  email: string
+): Promise<(ResolvedAccess & { user: AuthUser }) | null> {
+  const appUser = await getAppUserByEmail(email);
+
+  if (appUser?.userType === USER_TYPES.CLIENT) {
+    const contact = appUser.contactPerson;
+
+    if (!appUser.isActive || contact?.appAccessStatus === "revoked") {
+      return {
+        userType: USER_TYPES.PENDING,
+        role: ROLES.VIEWER,
+        permissions: [],
+        accessLabel: "Portal access revoked",
+        contactPersonId: contact?._id,
+        clientId: contact?.client?._id ?? appUser.client?._id,
+        clientName: contact?.client?.name ?? appUser.client?.name,
+        departmentRoles: [],
+        user: contact
+          ? buildUserFromContact(clerkUserId, contact)
+          : {
+              id: clerkUserId,
+              email,
+              firstName: null,
+              lastName: null,
+              fullName: email,
+              imageUrl: null,
+            },
+      };
+    }
+
+    if (contact?._id && !contact.clerkUserId) {
+      await linkClerkUserToContact(contact._id, clerkUserId, email);
+    } else if (appUser.clerkUserId !== clerkUserId) {
+      const { writeClient } = await import("@/sanity/lib/write-client");
+      await writeClient.patch(appUser._id).set({ clerkUserId }).commit();
+    }
+
+    const permissions = resolveClientPortalPermissions(
+      appUser.permissions,
+      contact?.portalPermissions
+    );
+
+    return {
+      userType: USER_TYPES.CLIENT,
+      role: ROLES.CLIENT,
+      permissions,
+      accessLabel: contact?.client?.name
+        ? `Client · ${contact.client.name}`
+        : "Client contact",
+      contactPersonId: contact?._id,
+      clientId: contact?.client?._id ?? appUser.client?._id,
+      clientName: contact?.client?.name ?? appUser.client?.name,
+      departmentRoles: [],
+      user: contact
+        ? buildUserFromContact(clerkUserId, contact)
+        : {
+            id: clerkUserId,
+            email,
+            firstName: null,
+            lastName: null,
+            fullName: email,
+            imageUrl: null,
+          },
+    };
+  }
+
+  const contact = await getContactPersonByEmail(email);
+
+  if (contact) {
+    if (contact.appAccessStatus === "revoked") {
+      return {
+        userType: USER_TYPES.PENDING,
+        role: ROLES.VIEWER,
+        permissions: [],
+        accessLabel: "Portal access revoked",
+        contactPersonId: contact._id,
+        clientId: contact.client?._id,
+        clientName: contact.client?.name,
+        departmentRoles: [],
+        user: buildUserFromContact(clerkUserId, contact),
+      };
+    }
+
+    if (!contact.clerkUserId && ["invited", "active"].includes(contact.appAccessStatus ?? "")) {
+      await linkClerkUserToContact(contact._id, clerkUserId, email);
+    }
+
+    if (!["invited", "active"].includes(contact.appAccessStatus ?? "")) {
+      return {
+        userType: USER_TYPES.PENDING,
+        role: ROLES.VIEWER,
+        permissions: [],
+        accessLabel: "Portal access not granted",
+        contactPersonId: contact._id,
+        clientId: contact.client?._id,
+        clientName: contact.client?.name,
+        departmentRoles: [],
+        user: buildUserFromContact(clerkUserId, contact),
+      };
+    }
+
+    const appUserRecord = await getAppUserByEmail(email);
+    const permissions = resolveClientPortalPermissions(
+      appUserRecord?.permissions,
+      contact.portalPermissions
+    );
+
+    return {
+      userType: USER_TYPES.CLIENT,
+      role: ROLES.CLIENT,
+      permissions,
+      accessLabel: contact.client?.name
+        ? `Client · ${contact.client.name}`
+        : "Client contact",
+      contactPersonId: contact._id,
+      clientId: contact.client?._id,
+      clientName: contact.client?.name,
+      departmentRoles: [],
+      user: buildUserFromContact(clerkUserId, contact),
+    };
+  }
+
+  return null;
 }
 
 export async function resolveAccess(
@@ -161,29 +295,16 @@ export async function resolveAccess(
     };
   }
 
-  const contact = await getContactPersonByEmail(email);
-
-  if (contact) {
-    const permissions = getPermissionsForRole(ROLES.CLIENT);
-    return {
-      userType: USER_TYPES.CLIENT,
-      role: ROLES.CLIENT,
-      permissions,
-      accessLabel: contact.client?.name
-        ? `Client · ${contact.client.name}`
-        : "Client contact",
-      contactPersonId: contact._id,
-      clientId: contact.client?._id,
-      departmentRoles: [],
-      user: buildUserFromContact(clerkUserId, contact),
-    };
+  const clientAccess = await resolveClientAccess(clerkUserId, email);
+  if (clientAccess) {
+    return clientAccess;
   }
 
   return {
     userType: USER_TYPES.PENDING,
     role: ROLES.VIEWER,
     permissions: [],
-    accessLabel: "Pending HR approval",
+    accessLabel: "Pending approval",
     departmentRoles: [],
     user: {
       id: clerkUserId,

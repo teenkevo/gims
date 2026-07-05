@@ -104,7 +104,7 @@ function ClientDetailsContent({
             <Can permission={PERMISSIONS["projects:create"]}>
               <Button asChild className="sm:w-auto" variant="default">
                 <Link
-                  href={`/clients/${_id}/projects/create`}
+                  href={`/clients/${_id}/projects/create?client=${encodeURIComponent(name ?? "")}`}
                   className=" flex items-center"
                 >
                   <PlusCircleIcon className="h-5 w-5 md:mr-2" />
@@ -163,6 +163,7 @@ function ClientDetailsContent({
               helperText="projects"
               needAction
               clientId={client._id}
+              clientName={name ?? ""}
             />
           )}
         </TabsContent>

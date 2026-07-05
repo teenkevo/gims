@@ -172,7 +172,7 @@ export async function getPersonnelPickerOptions(
           fullName: string;
           email: string;
           departmentRoles?: Array<{ departmentId?: string }>;
-        }) => ({
+        }): PersonnelPickerOption => ({
           _id: person._id,
           fullName: person.fullName,
           email: person.email,
@@ -183,7 +183,7 @@ export async function getPersonnelPickerOptions(
         })
       )
       .filter(
-        (person) =>
+        (person: PersonnelPickerOption) =>
           !excludeDepartmentId || !person.departmentIds.includes(excludeDepartmentId)
       );
   } catch (error) {
@@ -200,7 +200,7 @@ export async function getAdministrationDepartmentRoles(): Promise<string[]> {
     });
 
     return (roles ?? []).filter(
-      (roleName): roleName is string => Boolean(roleName)
+      (roleName: string | null | undefined): roleName is string => Boolean(roleName)
     );
   } catch (error) {
     console.error("Error fetching administration department roles", error);
