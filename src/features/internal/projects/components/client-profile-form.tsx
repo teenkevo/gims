@@ -219,14 +219,9 @@ export function ClientProfileForm({
                                       value={client.name || ""}
                                       key={client._id}
                                       onSelect={() => {
-                                        setValue(
-                                          `clients.${index}.existingClient`,
-                                          client._id
-                                        );
+                                        field.onChange(client._id);
                                         togglePopover(index);
-                                        clearErrors(
-                                          `clients.${index}.existingClient`
-                                        );
+                                        void trigger("clients");
                                       }}
                                     >
                                       <Check

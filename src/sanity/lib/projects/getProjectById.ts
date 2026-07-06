@@ -16,6 +16,7 @@ export const getProjectById = async (projectId: string) => {
             email,
             phone,
             designation,
+            appAccessStatus,
             client->{
               _id,
             },
@@ -507,7 +508,7 @@ export const getProjectById = async (projectId: string) => {
     const project = await sanityFetch({
       query: PROJECT_BY_ID_QUERY,
       params: { projectId },
-      tags: [`project-${projectId}`, "quotation"],
+      tags: [`project-${projectId}`, "quotation", "contactPerson"],
     });
 
     // return data or empty array if no data is found

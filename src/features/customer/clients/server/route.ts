@@ -1,9 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import { revalidateTag } from "next/cache";
 import { writeClient } from "@/sanity/lib/write-client";
 import { authMiddleware } from "@/lib/auth/api";
 import { PERMISSIONS } from "@/lib/auth/permissions";
+import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
+import { inviteContactToPortal } from "@/lib/auth/contact-invite";
+import { sanitizePhoneNumber } from "@/lib/utils";
 
 // Schema for updating client name
 const updateClientNameSchema = z.object({
@@ -66,17 +70,31 @@ const app = new Hono()
     authMiddleware(PERMISSIONS["clients:update"]),
     zValidator("json", createContactSchema),
     async (c) => {
+    const auth = c.get("auth");
     const { projectId, clientId, contactType, existingContact, name, email, phone, designation } =
       c.req.valid("json");
 
     if (contactType === "new") {
+      if (!name || !email || !phone || !designation) {
+        return c.json({ error: "Missing required contact fields" }, 400);
+      }
+
+      const duplicateContact = await checkContactEmailExists(email, clientId);
+      if (duplicateContact) {
+        return c.json(
+          { error: `A contact with email ${email} already exists for this client` },
+          400
+        );
+      }
+
       const newContactPerson = await writeClient.create(
         {
           _type: "contactPerson",
           name,
           email,
-          phone,
+          phone: sanitizePhoneNumber(phone),
           designation,
+          appAccessStatus: "none",
           client: {
             _type: "reference",
             _ref: clientId,
@@ -86,6 +104,14 @@ const app = new Hono()
           autoGenerateArrayKeys: true,
         }
       );
+
+      await inviteContactToPortal({
+        contactPersonId: newContactPerson._id,
+        email,
+        fullName: name,
+        clientId,
+        invitedBy: auth,
+      });
 
       const updatedProject = await writeClient
         .patch(projectId)
@@ -98,9 +124,18 @@ const app = new Hono()
         ])
         .commit({ autoGenerateArrayKeys: true });
 
+      revalidateTag("contactPerson");
+      revalidateTag(`client-${clientId}`);
+      revalidateTag(`project-${projectId}`);
+
       return c.json({ updatedProject });
-    } else {
-      const updatedProject = await writeClient
+    }
+
+    if (!existingContact) {
+      return c.json({ error: "Please select an existing contact" }, 400);
+    }
+
+    const updatedProject = await writeClient
         .patch(projectId)
         .setIfMissing({ contactPersons: [] })
         .append("contactPersons", [
@@ -111,9 +146,11 @@ const app = new Hono()
         ])
         .commit({ autoGenerateArrayKeys: true });
 
+      revalidateTag(`project-${projectId}`);
+
       return c.json({ updatedProject });
     }
-  })
+  )
   .post(
     "/remove-contact-from-project",
     authMiddleware(PERMISSIONS["clients:update"]),

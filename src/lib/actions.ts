@@ -2393,6 +2393,15 @@ export async function inviteContactToPortalAction(contactPersonId: string) {
 
     revalidateTag("contactPerson");
     revalidateTag(`client-${contact.client?._id}`);
+
+    const projectIds = await writeClient.fetch<string[]>(
+      `*[_type == "project" && references($contactPersonId)]._id`,
+      { contactPersonId: contact._id }
+    );
+    for (const projectId of projectIds) {
+      revalidateTag(`project-${projectId}`);
+    }
+
     return { status: "ok" };
   } catch (error) {
     console.error("Error inviting contact to portal:", error);
@@ -2439,6 +2448,15 @@ export async function lockContactPortalAccessAction(contactPersonId: string) {
 
     revalidateTag("contactPerson");
     revalidateTag(`client-${contact.client?._id}`);
+
+    const projectIds = await writeClient.fetch<string[]>(
+      `*[_type == "project" && references($contactPersonId)]._id`,
+      { contactPersonId: contact._id }
+    );
+    for (const projectId of projectIds) {
+      revalidateTag(`project-${projectId}`);
+    }
+
     return { status: "ok" };
   } catch (error) {
     console.error("Error locking contact portal access:", error);
@@ -2488,6 +2506,15 @@ export async function unlockContactPortalAccessAction(contactPersonId: string) {
 
     revalidateTag("contactPerson");
     revalidateTag(`client-${contact.client?._id}`);
+
+    const projectIds = await writeClient.fetch<string[]>(
+      `*[_type == "project" && references($contactPersonId)]._id`,
+      { contactPersonId: contact._id }
+    );
+    for (const projectId of projectIds) {
+      revalidateTag(`project-${projectId}`);
+    }
+
     return { status: "ok" };
   } catch (error) {
     console.error("Error unlocking contact portal access:", error);

@@ -262,11 +262,23 @@ export function CreateContactDialog({
 
     const result = await mutation.mutateAsync({ json: formattedData });
 
+    if (result && "error" in result && result.error) {
+      toast.error(
+        typeof result.error === "string" ? result.error : "Something went wrong"
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     if (result) {
       revalidateProject(projectId).then(() => {
         form.reset();
         setOpen(false);
-        toast.success("Contact has been added to the project");
+        toast.success(
+          values.contactType === "new"
+            ? "Contact created and portal invitation sent"
+            : "Contact has been added to the project"
+        );
         setIsSubmitting(false);
       });
     } else {
@@ -291,247 +303,256 @@ export function CreateContactDialog({
     isAdded: addedContactIds.has(contact._id),
   }));
 
+  const submitButton = (
+    <div className="relative w-full after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 after:transition focus-within:after:shadow-[#77f6aa]">
+      {isSubmitting ? (
+        <ButtonLoading />
+      ) : (
+        <Button
+          type="submit"
+          variant="default"
+          className="w-full"
+          disabled={!!emailError || isCheckingEmail}
+        >
+          Add contact to project
+          <ArrowRightCircle className="ml-2" />
+        </Button>
+      )}
+    </div>
+  );
+
   const content = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="contactType"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormControl>
-                <RadioGroup
-                  disabled={isSubmitting}
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex items-center justify-evenly space-x-4 my-5"
-                >
-                  <FormItem className="w-1/2">
-                    <FormControl>
-                      <RadioGroupItem
-                        value="new"
-                        className="sr-only peer"
-                        id="new-contact"
-                      />
-                    </FormControl>
-                    <FormLabel
-                      htmlFor="new-contact"
-                      className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      <PlusCircleIcon className="h-8 w-8 mb-2" />
-                      <span className="text-sm text-center font-medium">
-                        Create New
-                      </span>
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="w-1/2">
-                    <FormControl>
-                      <RadioGroupItem
-                        value="existing"
-                        className="sr-only peer"
-                        id="existing-contact"
-                      />
-                    </FormControl>
-                    <FormLabel
-                      htmlFor="existing-contact"
-                      className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                    >
-                      <Users className="h-8 w-8 mb-2" />
-                      <span className="text-sm font-medium">
-                        Choose Existing
-                      </span>
-                    </FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {form.watch("contactType") === "existing" ? (
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-0.5 pb-0.5 mb-2">
           <FormField
             control={form.control}
-            name="existingContact"
+            name="contactType"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="py-2">Existing contacts</FormLabel>
-                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        disabled={isSubmitting}
-                        variant="outline"
-                        role="combobox"
-                        className={cn(
-                          "w-full justify-between",
-                          !field.value && "text-muted-foreground"
-                        )}
+              <FormItem className="space-y-3">
+                <FormControl>
+                  <RadioGroup
+                    disabled={isSubmitting}
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex items-center justify-evenly space-x-4 my-5"
+                  >
+                    <FormItem className="w-1/2">
+                      <FormControl>
+                        <RadioGroupItem
+                          value="new"
+                          className="sr-only peer"
+                          id="new-contact"
+                        />
+                      </FormControl>
+                      <FormLabel
+                        htmlFor="new-contact"
+                        className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                       >
-                        <AnimatePresence mode="wait">
-                          <motion.div
-                            key="contactSelection"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                            className="flex items-center justify-between w-full"
-                          >
-                            <span className="truncate">
-                              {field.value !== undefined
-                                ? existingContacts?.find(
-                                    (contact) => contact._id === field.value
-                                  )?.name
-                                : "Select an existing contact"}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </motion.div>
-                        </AnimatePresence>
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandList>
-                        <CommandInput placeholder="Search contact..." />
-                        <CommandEmpty>No contact found.</CommandEmpty>
-                        <CommandGroup>
-                          {selectableContacts.map((contact) => (
-                            <CommandItem
-                              disabled={isSubmitting || contact.isAdded}
-                              value={contact.name || ""}
-                              key={contact._id}
-                              className="flex items-center justify-between"
-                              onSelect={() => {
-                                form.setValue("existingContact", contact._id);
-                                setPopoverOpen(false);
-                              }}
-                            >
-                              <span className="truncate">{contact.name}</span>
-                              {contact.isAdded && (
-                                <Badge variant="secondary">Added</Badge>
-                              )}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                        <PlusCircleIcon className="h-8 w-8 mb-2" />
+                        <span className="text-sm text-center font-medium">
+                          Create New
+                        </span>
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="w-1/2">
+                      <FormControl>
+                        <RadioGroupItem
+                          value="existing"
+                          className="sr-only peer"
+                          id="existing-contact"
+                        />
+                      </FormControl>
+                      <FormLabel
+                        htmlFor="existing-contact"
+                        className="flex flex-col items-center justify-center flex-1 h-25 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        <Users className="h-8 w-8 mb-2" />
+                        <span className="text-sm font-medium">
+                          Choose Existing
+                        </span>
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        ) : (
-          <>
+
+          {form.watch("contactType") === "existing" ? (
             <FormField
               control={form.control}
-              name="name"
+              name="existingContact"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="John Doe"
-                      {...field}
-                    />
-                  </FormControl>
+                <FormItem className="flex flex-col">
+                  <FormLabel className="py-2">Existing contacts</FormLabel>
+                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          disabled={isSubmitting}
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          <AnimatePresence mode="wait">
+                            <motion.div
+                              key="contactSelection"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              transition={{ duration: 0.3 }}
+                              className="flex items-center justify-between w-full"
+                            >
+                              <span className="truncate">
+                                {field.value !== undefined
+                                  ? existingContacts?.find(
+                                      (contact) => contact._id === field.value
+                                    )?.name
+                                  : "Select an existing contact"}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </motion.div>
+                          </AnimatePresence>
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandList>
+                          <CommandInput placeholder="Search contact..." />
+                          <CommandEmpty>No contact found.</CommandEmpty>
+                          <CommandGroup>
+                            {selectableContacts.map((contact) => (
+                              <CommandItem
+                                disabled={isSubmitting || contact.isAdded}
+                                value={contact.name || ""}
+                                key={contact._id}
+                                className="flex items-center justify-between"
+                                onSelect={() => {
+                                  form.setValue("existingContact", contact._id);
+                                  setPopoverOpen(false);
+                                }}
+                              >
+                                <span className="truncate">{contact.name}</span>
+                                {contact.isAdded && (
+                                  <Badge variant="secondary">Added</Badge>
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+          ) : (
+            <>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
                       <Input
                         disabled={isSubmitting}
-                        placeholder="contact@email.com"
+                        placeholder="John Doe"
                         {...field}
                       />
-                      {isCheckingEmail && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                  {emailError && (
-                    <p className="text-[13px] text-destructive">{emailError}</p>
-                  )}
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone number</FormLabel>
-                  <FormControl>
-                    <PhoneInput
-                      defaultCountry="UG"
-                      disabled={isSubmitting}
-                      placeholder="Enter a phone number e.g. +256 792 445002"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="designation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Designation</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="Technical Engineer"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
-
-        <div className="py-2">
-          <div className="flex items-center">
-            <div className="relative after:pointer-events-none after:absolute after:inset-px after:rounded-[11px] after:shadow-highlight after:shadow-white/10 focus-within:after:shadow-[#77f6aa] after:transition w-full">
-              {isSubmitting ? (
-                <ButtonLoading />
-              ) : (
-                <Button
-                  type="submit"
-                  variant="default"
-                  className="w-full"
-                  disabled={!!emailError || isCheckingEmail}
-                >
-                  Add contact to project
-                  <ArrowRightCircle className="ml-2" />
-                </Button>
-              )}
-            </div>
-          </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          disabled={isSubmitting}
+                          placeholder="contact@email.com"
+                          {...field}
+                        />
+                        {isCheckingEmail && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                    {emailError && (
+                      <p className="text-[13px] text-destructive">
+                        {emailError}
+                      </p>
+                    )}
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone number</FormLabel>
+                    <FormControl>
+                      <PhoneInput
+                        defaultCountry="UG"
+                        disabled={isSubmitting}
+                        placeholder="Enter a phone number e.g. +256 792 445002"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="designation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Designation</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isSubmitting}
+                        placeholder="Technical Engineer"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
         </div>
+
+        <div className="shrink-0 border-t pt-4">{submitButton}</div>
       </form>
     </Form>
   );
 
   return isMobile ? (
-    <Drawer loading={isSubmitting} open={open}
+    <Drawer
+      loading={isSubmitting}
+      open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {
@@ -546,15 +567,17 @@ export function CreateContactDialog({
           Add Contact
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="text-left">
+      <DrawerContent className="flex max-h-[90vh] flex-col">
+        <DrawerHeader className="shrink-0 text-left">
           <DrawerTitle>Add Contact Person</DrawerTitle>
           <DrawerDescription>
             Associate a new / existing contact person with this project
           </DrawerDescription>
         </DrawerHeader>
-        <div className="p-4 pb-0">{content}</div>
-        <DrawerFooter className="pt-2">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4">
+          {content}
+        </div>
+        <DrawerFooter className="shrink-0 pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
           </DrawerClose>
@@ -562,7 +585,9 @@ export function CreateContactDialog({
       </DrawerContent>
     </Drawer>
   ) : (
-    <Dialog loading={isSubmitting} open={open}
+    <Dialog
+      loading={isSubmitting}
+      open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {
@@ -578,14 +603,19 @@ export function CreateContactDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent aria-describedby={undefined}>
-        <DialogHeader>
+      <DialogContent
+        aria-describedby={undefined}
+        className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
+      >
+        <DialogHeader className="shrink-0 px-6 pt-6">
           <DialogTitle>Add Contact Person</DialogTitle>
           <DialogDescription>
             Associate a new / existing contact person with this project
           </DialogDescription>
         </DialogHeader>
-        {content}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
+          {content}
+        </div>
       </DialogContent>
     </Dialog>
   );

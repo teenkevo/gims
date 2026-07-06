@@ -1,5 +1,6 @@
 import "server-only";
 
+import { revalidateTag } from "next/cache";
 import { createClerkClient } from "@clerk/backend";
 import { writeClient } from "@/sanity/lib/write-client";
 import {
@@ -122,6 +123,29 @@ export async function linkClerkUserToContact(
       appAccessStatus: "active",
     })
     .commit();
+
+  const contact = await writeClient.fetch<{
+    client?: { _id: string } | null;
+  } | null>(
+    `*[_type == "contactPerson" && _id == $contactPersonId][0]{
+      client->{ _id }
+    }`,
+    { contactPersonId }
+  );
+
+  revalidateTag("contactPerson");
+
+  if (contact?.client?._id) {
+    revalidateTag(`client-${contact.client._id}`);
+  }
+
+  const projectIds = await writeClient.fetch<string[]>(
+    `*[_type == "project" && references($contactPersonId)]._id`,
+    { contactPersonId }
+  );
+  for (const projectId of projectIds) {
+    revalidateTag(`project-${projectId}`);
+  }
 
   const existing = await writeClient.fetch<{ _id: string } | null>(
     `*[_type == "appUser" && lower(email) == lower($email)][0]{ _id }`,

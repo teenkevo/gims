@@ -173,7 +173,8 @@ function ProjectDetailsContent({
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back
       </Link>
-      <div className="mb-6">
+
+      <div>
         <Badge variant="outline" className="text-xs text-muted-foreground mb-2">
           {project.internalId}
         </Badge>
@@ -188,9 +189,7 @@ function ProjectDetailsContent({
         <TabsList>
           <TabsTrigger value="details">Project</TabsTrigger>
           {!isClientUser && <TabsTrigger value="client">Client</TabsTrigger>}
-          {canReadBilling && (
-            <TabsTrigger value="billing">Billing</TabsTrigger>
-          )}
+          {canReadBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
           {!isClientUser && (
             <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
           )}
@@ -231,79 +230,81 @@ function ProjectDetailsContent({
         </TabsContent>
         {!isClientUser && (
           <TabsContent value="client">
-          <div className="space-y-8 my-10">
-            <AnimatePresence mode="popLayout">
-              {/* Map through clients and filter contacts by client id */}
-              {clients?.map((client, key) => {
-                const clientContacts = contactPersons?.filter(
-                  (contact) => contact.client?._id === client?._id
-                );
-                return (
-                  <motion.div
-                    key={client._id}
-                    layout="position"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
-                      <div className="flex justify-between py-2">
-                        <div className="md:flex items-center mb-6">
-                          <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-2 md:mb-0 mr-4">
-                            {key + 1}
+            <div className="space-y-8 my-10">
+              <AnimatePresence mode="popLayout">
+                {/* Map through clients and filter contacts by client id */}
+                {clients?.map((client, key) => {
+                  const clientContacts = contactPersons?.filter(
+                    (contact) => contact.client?._id === client?._id
+                  );
+                  return (
+                    <motion.div
+                      key={client._id}
+                      layout="position"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <div className="border bg-gradient-to-b from-muted/20 to-muted/40 rounded-lg p-4 md:p-6">
+                        <div className="flex justify-between py-2">
+                          <div className="md:flex items-center mb-6">
+                            <div className="flex items-center justify-center w-[40px] h-[25px] bg-foreground text-primary-foreground mb-2 md:mb-0 mr-4">
+                              {key + 1}
+                            </div>
+                            <p className="font-bold text-xl md:text-xl tracking-tight">
+                              <span>{client.name}</span>
+                            </p>
                           </div>
-                          <p className="font-bold text-xl md:text-xl tracking-tight">
-                            <span>{client.name}</span>
-                          </p>
+                          {clients.length > 1 && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                  <span className="sr-only">
+                                    Client actions
+                                  </span>
+                                  <EllipsisVerticalIcon className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <RemoveClientFromProject
+                                  email={client?.name || ""}
+                                  projectId={_id || ""}
+                                  clientId={client?._id || ""}
+                                  clientName={client.name || ""}
+                                />
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
-                        {clients.length > 1 && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="icon">
-                                <span className="sr-only">Client actions</span>
-                                <EllipsisVerticalIcon className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <RemoveClientFromProject
-                                email={client?.name || ""}
-                                projectId={_id || ""}
-                                clientId={client?._id || ""}
-                                clientName={client.name || ""}
-                              />
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+
+                        <ClientNameForm
+                          title="Client Name"
+                          initialValue={client?.name || ""}
+                          clientId={client?._id || ""}
+                          projectId={_id || ""}
+                          editable={canUpdateClient}
+                          unsavedChangesId={`client-name-${client?._id}`}
+                        />
+
+                        <ContactTable
+                          projectId={_id || ""}
+                          clientId={client?._id || ""}
+                          projectContacts={clientContacts || []}
+                          existingContacts={existingContacts}
+                        />
                       </div>
-
-                      <ClientNameForm
-                        title="Client Name"
-                        initialValue={client?.name || ""}
-                        clientId={client?._id || ""}
-                        projectId={_id || ""}
-                        editable={canUpdateClient}
-                        unsavedChangesId={`client-name-${client?._id}`}
-                      />
-
-                      <ContactTable
-                        projectId={_id || ""}
-                        clientId={client?._id || ""}
-                        projectContacts={clientContacts || []}
-                        existingContacts={existingContacts}
-                      />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-            {/* TODO: Add back logic to add multiple clients to a project */}
-            {/* <CreateClientDialog
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {/* TODO: Add back logic to add multiple clients to a project */}
+              {/* <CreateClientDialog
               projectId={_id || ""}
               existingClients={existingClients}
               projectClients={project.clients || []}
             /> */}
-          </div>
-        </TabsContent>
+            </div>
+          </TabsContent>
         )}
         {canReadBilling && (
           <TabsContent value="billing">
@@ -327,17 +328,17 @@ function ProjectDetailsContent({
           </TabsContent>
         )}
         {!isClientUser && (
-        <TabsContent value="sample-receipt">
-          <div className="space-y-8 my-10">
-            <SampleVerificationLifecycle
-              project={project}
-              personnel={personnel}
-              sampleReviewTemplate={sampleReviewTemplates[0]}
-              sampleAdequacyTemplate={sampleAdequacyTemplates[0]}
-              existingSampleReceipt={project.sampleReceipt}
-            />
-          </div>
-        </TabsContent>
+          <TabsContent value="sample-receipt">
+            <div className="space-y-8 my-10">
+              <SampleVerificationLifecycle
+                project={project}
+                personnel={personnel}
+                sampleReviewTemplate={sampleReviewTemplates[0]}
+                sampleAdequacyTemplate={sampleAdequacyTemplates[0]}
+                existingSampleReceipt={project.sampleReceipt}
+              />
+            </div>
+          </TabsContent>
         )}
         <TabsContent value="danger">
           {canDelete && (

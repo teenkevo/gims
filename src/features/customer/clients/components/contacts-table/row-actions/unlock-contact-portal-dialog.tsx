@@ -3,7 +3,6 @@
 import { useTransition } from "react";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { toast } from "sonner";
-import type { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../../sanity.types";
 import { unlockContactPortalAccessAction } from "@/lib/actions";
 import { toastActionError } from "@/lib/auth/notify-action-error";
 import {
@@ -21,10 +20,12 @@ export function UnlockContactPortalDialog({
   contact,
   open,
   onClose,
+  onSuccess,
 }: {
-  contact: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number];
+  contact: { _id: string };
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -33,6 +34,7 @@ export function UnlockContactPortalDialog({
       const result = await unlockContactPortalAccessAction(contact._id);
       if (result.status === "ok") {
         toast.success("Portal access unlocked");
+        onSuccess?.();
         onClose();
       } else {
         toastActionError(result);

@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { inviteContactToPortalAction } from "@/lib/actions";
 import { toastActionError } from "@/lib/auth/notify-action-error";
-import type { CLIENT_BY_ID_QUERY_RESULT } from "../../../../../../sanity.types";
 
-type Contact = CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number];
+type ContactPortalAccess = {
+  _id: string;
+  appAccessStatus?: string | null;
+};
 
 function portalStatusLabel(status?: string | null) {
   switch (status) {
@@ -36,16 +38,22 @@ function portalStatusVariant(status?: string | null) {
   }
 }
 
-export function ContactPortalAccessCell({ contact }: { contact: Contact }) {
+export function ContactPortalAccessCell({
+  contact,
+  onPortalAccessChange,
+}: {
+  contact: ContactPortalAccess;
+  onPortalAccessChange?: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
-  const status = (contact as Contact & { appAccessStatus?: string })
-    .appAccessStatus;
+  const status = contact.appAccessStatus;
 
   const handleInvite = () => {
     startTransition(async () => {
       const result = await inviteContactToPortalAction(contact._id);
       if (result.status === "ok") {
         toast.success("Portal invitation sent");
+        onPortalAccessChange?.();
       } else {
         toastActionError(result);
       }

@@ -27,12 +27,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { ContactPortalAccessCell } from "@/features/customer/clients/components/contacts-table/contact-portal-access-cell";
 import { ContactTableRowActions } from "./contact-table-row-actions";
+import { revalidateProject } from "@/lib/actions";
 import { Can } from "@/components/auth/can";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 
 // Extend the type to include actions
-type ExtendedContact = ALL_CONTACTS_QUERY_RESULT[number] & { actions?: string };
+type ExtendedContact = ALL_CONTACTS_QUERY_RESULT[number] & {
+  actions?: string;
+  appAccessStatus?: string;
+};
 
 export function ContactTable({
   projectId,
@@ -88,6 +93,16 @@ export function ContactTable({
         </div>
       ),
       header: () => <span>Designation</span>,
+    }),
+    columnHelper.display({
+      id: "portalAccess",
+      header: () => <span>Portal Access</span>,
+      cell: (info) => (
+        <ContactPortalAccessCell
+          contact={info.row.original}
+          onPortalAccessChange={() => revalidateProject(projectId)}
+        />
+      ),
     }),
     columnHelper.accessor("actions", {
       cell: (info) => (
