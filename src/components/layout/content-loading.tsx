@@ -11,8 +11,8 @@ export default function ContentLoading({
   text = "Loading...",
 }: ContentLoadingProps) {
   return (
-    <div className="flex min-h-[50vh] w-full items-center justify-center gap-2">
-      <MoonLoader color="#16a34a" size={28} />
+    <div className="flex min-h-[80vh] w-full items-center justify-center gap-2">
+      <MoonLoader color="#16a34a" size={36} />
       <p className="text-muted-foreground text-sm">{text}</p>
     </div>
   );

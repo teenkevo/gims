@@ -68,10 +68,8 @@ export function DeleteProject({
           <DialogHeader className="space-y-3">
             <DialogTitle>Delete Project</DialogTitle>
             <DialogDescription>
-              This project will be deleted along with its quotations (including
-              all revisions), invoices, payments, sample receipts, RFIs, lab
-              approval workflows, and uploaded files. Lab and personnel
-              assignments will be detached first.
+              This project will be deleted along with all of its associated
+              data.
             </DialogDescription>
             <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
               <span className="font-bold">Warning</span>: This action is not
@@ -122,10 +120,7 @@ export function DeleteProject({
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Delete Project</DialogTitle>
           <DialogDescription>
-            This project will be deleted along with its quotations (including
-            all revisions), invoices, payments, sample receipts, RFIs, lab
-            approval workflows, and uploaded files. Lab and personnel
-            assignments will be detached first.
+            This project will be deleted along with all of its associated data.
           </DialogDescription>
           <div className="bg-destructive/10 text-destructive p-3 rounded text-sm">
             <span className="font-bold">Warning</span>: This action is not

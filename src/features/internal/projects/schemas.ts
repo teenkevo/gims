@@ -25,9 +25,24 @@ export const clientDetailsSchema = z.object({
     required_error: "Required",
   }),
   existingClient: z.string().optional(),
-  newClientName: z.string().min(1, "Required").optional().or(z.literal("")),
-  newClientInternalId: z.string(),
+  newClientName: z.string().optional(),
+  newClientInternalId: z.string().optional(),
 });
+
+export const createProjectClientSchema = z.discriminatedUnion("clientType", [
+  z.object({
+    clientType: z.literal("existing"),
+    existingClient: z.string().min(1, "Please select an existing client"),
+    newClientName: z.string().optional(),
+    newClientInternalId: z.string().optional(),
+  }),
+  z.object({
+    clientType: z.literal("new"),
+    existingClient: z.string().optional(),
+    newClientName: z.string().trim().min(1, "Client name is required"),
+    newClientInternalId: z.string().trim().min(1, "Client internal ID is required"),
+  }),
+]);
 
 export const billingFormSchema = z.object({
   billingType: z.enum(["quotation", "invoice"], {
@@ -160,3 +175,33 @@ export const createProjectSchema = projectDetailsSchema
       path: ["clients"],
     }
   );
+
+export const createProjectFormSchema = z
+  .object({
+    internalId: z.string().trim().min(1, "Required"),
+    projectName: z.string().trim().min(1, "Required"),
+    dateRange: z
+      .object({
+        from: z.date().optional(),
+        to: z.date().optional(),
+      })
+      .superRefine((data, ctx) => {
+        if (data.from && !data.to) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "End date is required if start date is selected",
+            path: ["to"],
+          });
+        }
+        if (data.from && data.to && data.from >= data.to) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "From date must be before to date",
+            path: ["to"],
+          });
+        }
+      }),
+    clients: z
+      .array(createProjectClientSchema)
+      .min(1, "At least one client is required"),
+  });

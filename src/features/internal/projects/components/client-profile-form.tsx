@@ -63,18 +63,13 @@ export function ClientProfileForm({
     setValue,
     formState: { errors },
     clearErrors,
+    trigger,
   } = useFormContext();
 
   // Initialize with one default client
   const { fields, append, remove } = useFieldArray({
     control,
     name: "clients",
-    rules: {
-      required: {
-        value: true,
-        message: "At least one client profile is required",
-      },
-    },
   });
 
   const clientsArrayError = errors.clients?.root?.message as string;
@@ -140,6 +135,7 @@ export function ClientProfileForm({
                       onChange={(val) => {
                         field.onChange(val);
                         if (val === "new") {
+                          clearErrors(`clients.${index}.existingClient`);
                           const currentId = watch(
                             `clients.${index}.newClientInternalId`
                           );
@@ -150,7 +146,11 @@ export function ClientProfileForm({
                               generated
                             );
                           }
+                        } else {
+                          clearErrors(`clients.${index}.newClientName`);
+                          clearErrors(`clients.${index}.newClientInternalId`);
                         }
+                        void trigger("clients");
                       }}
                       disabled={isSubmitting}
                       options={clientTypeOptions}
@@ -166,7 +166,6 @@ export function ClientProfileForm({
                   <FormField
                     control={control}
                     name={`clients.${index}.existingClient`}
-                    rules={{ required: "Please select an existing client" }}
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel className="py-1">
@@ -270,7 +269,6 @@ export function ClientProfileForm({
                   <FormField
                     control={control}
                     name={`clients.${index}.newClientInternalId`}
-                    rules={{ required: "Client internal ID is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel required>Client Internal ID</FormLabel>
@@ -311,7 +309,6 @@ export function ClientProfileForm({
                   <FormField
                     control={control}
                     name={`clients.${index}.newClientName`}
-                    rules={{ required: "Client name is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel required>Client Name</FormLabel>

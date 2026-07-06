@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { startTransition, useEffect } from "react";
@@ -20,7 +21,7 @@ import { ClientProfileForm } from "./client-profile-form";
 import { FormSubmitButton } from "@/components/form-submit-button";
 
 // Form schema
-import { createProjectSchema } from "@/features/internal/projects/schemas";
+import { createProjectFormSchema } from "@/features/internal/projects/schemas";
 
 import { ALL_CLIENTS_QUERY_RESULT } from "../../../../../sanity.types";
 import { ScrollToFieldError } from "@/components/scroll-to-field-error";
@@ -50,7 +51,8 @@ export function CreateProjectForm({
   // Restored useActionState
   const [state, dispatch, isPending] = useActionState(createProject, null);
 
-  const form = useForm<z.infer<typeof createProjectSchema>>({
+  const form = useForm<z.infer<typeof createProjectFormSchema>>({
+    resolver: zodResolver(createProjectFormSchema),
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
@@ -68,8 +70,11 @@ export function CreateProjectForm({
     },
   });
 
-  const onSubmit = (data: z.infer<typeof createProjectSchema>) => {
-    console.log(data);
+  const {
+    formState: { isValid },
+  } = form;
+
+  const onSubmit = (data: z.infer<typeof createProjectFormSchema>) => {
     const formData = new FormData();
     formData.append("projectName", data.projectName);
     formData.append("internalId", data.internalId);
@@ -146,7 +151,11 @@ export function CreateProjectForm({
               canCreateClient={canCreateClient}
             />
           </motion.div>
-          <FormSubmitButton text="Create Project" isSubmitting={isPending} />
+          <FormSubmitButton
+            text="Create Project"
+            isSubmitting={isPending}
+            disabled={!isValid}
+          />
         </form>
       </FormProvider>
     </>

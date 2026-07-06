@@ -26,7 +26,7 @@ export default function Layout({ children }: LayoutProps) {
     <AuthRBACProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="overflow-auto">
+        <SidebarInset className="flex min-h-svh flex-col overflow-auto">
           <header className="flex h-16 shrink-0 border-b border-muted items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />
@@ -46,9 +46,11 @@ export default function Layout({ children }: LayoutProps) {
               <ToggleLightDark />
             </div>
           </header>
-          <main className="p-4 md:pl-10 md:pr-10 md:pt-4">
+          <main className="flex min-h-0 flex-1 flex-col p-4 md:pl-10 md:pr-10 md:pt-4">
             <AccessPendingBanner />
-            <Suspense fallback={<ContentLoading />}>{children}</Suspense>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <Suspense fallback={<ContentLoading />}>{children}</Suspense>
+            </div>
           </main>
         </SidebarInset>
       </SidebarProvider>
