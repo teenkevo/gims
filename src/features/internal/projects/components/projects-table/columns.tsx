@@ -226,7 +226,7 @@ export const getColumns = (
           {badgeVariant}
           {quotation
             ? `${currency?.toUpperCase()} ${total.toLocaleString()}`
-            : "Generate quotation"}
+            : "Go to Billing"}
         </Link>
       );
     },

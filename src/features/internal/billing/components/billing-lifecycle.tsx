@@ -845,9 +845,9 @@ function StageCard({
           <CircleDashed className="h-3 w-3 mr-1" />
           <span>
             {isClientUser
-              ? "GETLAB is preparing your quotation"
+              ? "Waiting for quotation"
               : canCreateBilling
-                ? "Not started yet"
+                ? "Pending"
                 : "Waiting for quotation"}
           </span>
         </div>

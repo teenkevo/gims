@@ -56,180 +56,182 @@ export const getColumns = (
       : `/clients/${client._id}/projects/${projectId}?client=${client.name}&project=${projectName}`;
 
   return [
-  ...(canDelete ? [selectColumn] : []),
-  {
-    accessorKey: "internalId",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Project ID" />
-    ),
-    cell: ({ row }) => (
-      <Link
-        className="hover:underline"
-        href={projectHref(row.original?._id, row.original?.name ?? "")}
-      >
-        <div className="w-[100px] font-bold">{row.original?.internalId}</div>
-      </Link>
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Project Name" />
-    ),
-    cell: ({ row }) => {
-      return (
+    ...(canDelete ? [selectColumn] : []),
+    {
+      accessorKey: "internalId",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Project ID" />
+      ),
+      cell: ({ row }) => (
         <Link
           className="hover:underline"
           href={projectHref(row.original?._id, row.original?.name ?? "")}
         >
-          <div className="flex space-x-2">
-            <span className="max-w-[350px] truncate font-normal">
-              {row.original?.name}
+          <div className="w-[100px] font-bold">{row.original?.internalId}</div>
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Project Name" />
+      ),
+      cell: ({ row }) => {
+        return (
+          <Link
+            className="hover:underline"
+            href={projectHref(row.original?._id, row.original?.name ?? "")}
+          >
+            <div className="flex space-x-2">
+              <span className="max-w-[350px] truncate font-normal">
+                {row.original?.name}
+              </span>
+            </div>
+          </Link>
+        );
+      },
+    },
+    {
+      accessorKey: "startDate",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Start Date" />
+      ),
+      cell: ({ row }) =>
+        row.original?.startDate ? (
+          <div className="flex items-center">
+            <ListStart className="text-primary w-4 h-4 mr-2" />
+            <span className="text-sm">
+              {format(new Date(row.original?.startDate), "dd/LL/yy")}
             </span>
           </div>
-        </Link>
-      );
-    },
-  },
-  {
-    accessorKey: "startDate",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Start Date" />
-    ),
-    cell: ({ row }) =>
-      row.original?.startDate ? (
-        <div className="flex items-center">
-          <ListStart className="text-primary w-4 h-4 mr-2" />
-          <span className="text-sm">
-            {format(new Date(row.original?.startDate), "dd/LL/yy")}
-          </span>
-        </div>
-      ) : (
-        <div className="flex items-center">
-          <span className="text-sm">Not yet set</span>
-        </div>
-      ),
-  },
-
-  {
-    accessorKey: "endDate",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="End Date" />
-    ),
-    cell: ({ row }) =>
-      row.original?.endDate ? (
-        <div className="flex items-center">
-          <ListEnd className="text-primary w-4 h-4 mr-2" />
-          <span className="text-sm">
-            {format(new Date(row.original?.endDate), "dd/LL/yy")}
-          </span>
-        </div>
-      ) : (
-        <div className="flex items-center">
-          <span className="text-sm">Not yet set</span>
-        </div>
-      ),
-  },
-  {
-    accessorKey: "projectBilling",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Project Billing" />
-    ),
-    cell: ({ row }) => {
-      const parentQuotation = row.original?.quotation;
-      const parentQuotationHasRevisions =
-        (parentQuotation?.revisions?.length ?? 0) > 0;
-      const quotation = parentQuotationHasRevisions
-        ? parentQuotation?.revisions?.[0]
-        : parentQuotation;
-
-      const total = quotationTotal(quotation as Quotation);
-      const currency = quotation?.currency;
-
-      const paymentStatus = calculatePaymentStatus(
-        quotation as NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>
-      );
-
-      const { allClear, advanceRejected } = paymentStatus;
-
-      const status =
-        quotation?.status === "draft"
-          ? "Quotation created"
-          : quotation?.status === "sent"
-            ? "Quotation received"
-            : quotation?.status === "accepted"
-              ? "Quotation accepted"
-              : quotation?.status === "rejected"
-                ? "Quotation rejected"
-                : quotation?.status === "invoiced"
-                  ? "Invoice issued"
-                  : quotation?.status === "partially_paid"
-                    ? "Partially paid"
-                    : quotation?.status === "fully_paid"
-                      ? "Fully paid"
-                      : "Not Billed";
-
-      const badgeVariant =
-        quotation?.status === "draft" ? (
-          <Badge variant="outline" className="mr-2 bg-primary/10 ">
-            {status}
-          </Badge>
-        ) : quotation?.status === "sent" ? (
-          <Badge
-            variant="outline"
-            className="mr-2 bg-primary/10 border-dashed border-primary"
-          >
-            {status}
-          </Badge>
-        ) : quotation?.status === "accepted" ? (
-          <Badge
-            variant="outline"
-            className="mr-2 bg-primary/10 border-dashed border-primary"
-          >
-            {status}
-          </Badge>
-        ) : quotation?.status === "rejected" ? (
-          <Badge
-            variant="outline"
-            className="mr-2 bg-destructive/10 border-dashed border-destructive"
-          >
-            {status}
-          </Badge>
-        ) : quotation?.status === "invoiced" ? (
-          <Badge
-            variant="outline"
-            className="mr-2 bg-primary/10 border-dashed border-primary"
-          >
-            {status}
-          </Badge>
-        ) : quotation?.status === "fully_paid" ? (
-          <Badge
-            variant="outline"
-            className="mr-2 bg-primary/10 border-dashed border-primary"
-          >
-            {status}
-          </Badge>
         ) : (
-          <Badge
-            variant="outline"
-            className="mr-2 bg-primary/10 border-dashed border-orange-500"
-          >
-            {status}
-          </Badge>
-        );
-      return (
-        <Link
-          href={projectHref(row.original?._id, row.original?.name ?? "")}
-          className="text-xs flex items-center p-1 border rounded-md hover:bg-muted w-[300px]"
-        >
-          {/* {icon} */}
-          {badgeVariant}
-          {quotation
-            ? `${currency?.toUpperCase()} ${total.toLocaleString()}`
-            : "Generate quotation"}
-        </Link>
-      );
+          <div className="flex items-center">
+            <span className="text-sm">Not yet set</span>
+          </div>
+        ),
     },
-  },
-];
+
+    {
+      accessorKey: "endDate",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="End Date" />
+      ),
+      cell: ({ row }) =>
+        row.original?.endDate ? (
+          <div className="flex items-center">
+            <ListEnd className="text-primary w-4 h-4 mr-2" />
+            <span className="text-sm">
+              {format(new Date(row.original?.endDate), "dd/LL/yy")}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <span className="text-sm">Not yet set</span>
+          </div>
+        ),
+    },
+    {
+      accessorKey: "projectBilling",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Project Billing" />
+      ),
+      cell: ({ row }) => {
+        const parentQuotation = row.original?.quotation;
+        const parentQuotationHasRevisions =
+          (parentQuotation?.revisions?.length ?? 0) > 0;
+        const quotation = parentQuotationHasRevisions
+          ? parentQuotation?.revisions?.[0]
+          : parentQuotation;
+
+        const total = quotationTotal(quotation as Quotation);
+        const currency = quotation?.currency;
+
+        const paymentStatus = calculatePaymentStatus(
+          quotation as NonNullable<
+            PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
+          >
+        );
+
+        const { allClear, advanceRejected } = paymentStatus;
+
+        const status =
+          quotation?.status === "draft"
+            ? "Quotation created"
+            : quotation?.status === "sent"
+              ? "Quotation received"
+              : quotation?.status === "accepted"
+                ? "Quotation accepted"
+                : quotation?.status === "rejected"
+                  ? "Quotation rejected"
+                  : quotation?.status === "invoiced"
+                    ? "Invoice issued"
+                    : quotation?.status === "partially_paid"
+                      ? "Partially paid"
+                      : quotation?.status === "fully_paid"
+                        ? "Fully paid"
+                        : "Not Billed";
+
+        const badgeVariant =
+          quotation?.status === "draft" ? (
+            <Badge variant="outline" className="mr-2 bg-primary/10 ">
+              {status}
+            </Badge>
+          ) : quotation?.status === "sent" ? (
+            <Badge
+              variant="outline"
+              className="mr-2 bg-primary/10 border-dashed border-primary"
+            >
+              {status}
+            </Badge>
+          ) : quotation?.status === "accepted" ? (
+            <Badge
+              variant="outline"
+              className="mr-2 bg-primary/10 border-dashed border-primary"
+            >
+              {status}
+            </Badge>
+          ) : quotation?.status === "rejected" ? (
+            <Badge
+              variant="outline"
+              className="mr-2 bg-destructive/10 border-dashed border-destructive"
+            >
+              {status}
+            </Badge>
+          ) : quotation?.status === "invoiced" ? (
+            <Badge
+              variant="outline"
+              className="mr-2 bg-primary/10 border-dashed border-primary"
+            >
+              {status}
+            </Badge>
+          ) : quotation?.status === "fully_paid" ? (
+            <Badge
+              variant="outline"
+              className="mr-2 bg-primary/10 border-dashed border-primary"
+            >
+              {status}
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="mr-2 bg-primary/10 border-dashed border-orange-500"
+            >
+              {status}
+            </Badge>
+          );
+        return (
+          <Link
+            href={projectHref(row.original?._id, row.original?.name ?? "")}
+            className="text-xs flex items-center p-1 border rounded-md hover:bg-muted w-[300px]"
+          >
+            {/* {icon} */}
+            {badgeVariant}
+            {quotation
+              ? `${currency?.toUpperCase()} ${total.toLocaleString()}`
+              : "Go to Billing"}
+          </Link>
+        );
+      },
+    },
+  ];
 };
