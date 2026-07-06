@@ -3,7 +3,9 @@
 import * as React from "react";
 import {
   Briefcase,
+  Building2,
   Cable,
+  FileCheck2,
   FileStack,
   FileText,
   FlaskConical,
@@ -31,9 +33,6 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, can, isAccessLoading, isClientUser } = useRBAC();
 
-  const showSecurity =
-    isAccessLoading || can(PERMISSIONS["security:read"]);
-
   const clientPortalNav = [
     {
       title: "Projects",
@@ -51,70 +50,77 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
-  const navCore = [
+  const organizationNav = [
+    {
+      title: "Departments",
+      url: "/departments",
+      icon: Building2,
+      isDisabled:
+        isAccessLoading || !can(PERMISSIONS["security:read"]),
+    },
+    {
+      title: "Personnel",
+      url: "/personnel",
+      icon: Users,
+      isDisabled: !can(PERMISSIONS["personnel:read"]),
+    },
+    {
+      title: "Workflows",
+      url: "/workflows",
+      icon: FileCheck2,
+      isDisabled: !can(PERMISSIONS["labs:read"]),
+    },
+  ];
+
+  const projectsDeliveryNav = [
     {
       title: "Projects",
       url: "/projects",
       icon: FileStack,
-      isActive: false,
       isDisabled: !can(PERMISSIONS["projects:read"]),
     },
     {
       title: "Clients",
       url: "/clients",
       icon: Briefcase,
-      isActive: false,
       isDisabled: !can(PERMISSIONS["clients:read"]),
     },
     {
       title: "Requests for Information",
       url: "/requests-for-information",
       icon: FileText,
-      isActive: false,
       isDisabled: !can(PERMISSIONS["rfi:read"]),
     },
-    {
-      title: "Personnel",
-      url: "/personnel",
-      icon: Users,
-      isActive: false,
-      isDisabled: !can(PERMISSIONS["personnel:read"]),
-    },
+  ];
+
+  const laboratoryOperationsNav = [
     {
       title: "Laboratories",
       url: "/labs",
       icon: FlaskConical,
-      isActive: false,
       isDisabled: !can(PERMISSIONS["labs:read"]),
+    },
+    {
+      title: "Services",
+      url: "/services",
+      icon: LayoutList,
+      isDisabled: !can(PERMISSIONS["services:read"]),
     },
     {
       title: "Equipment",
       url: "/equipment",
       icon: Cable,
-      isActive: false,
       isDisabled: !can(PERMISSIONS["equipment:read"]),
     },
-    ...(showSecurity
-      ? [
-          {
-            title: "Security",
-            url: "/security",
-            icon: ShieldCheck,
-            isActive: false,
-            isDisabled:
-              isAccessLoading || !can(PERMISSIONS["security:read"]),
-          },
-        ]
-      : []),
   ];
 
-  const navCustomer = [
+  const systemNav = [
     {
-      title: "Services",
-      url: "/services",
-      icon: LayoutList,
-      items: [],
-      isDisabled: !can(PERMISSIONS["services:read"]),
+      title: "Permission Sets",
+      url: "/security?tab=roles",
+      icon: ShieldCheck,
+      isDisabled:
+        isAccessLoading || !can(PERMISSIONS["security:read"]),
     },
   ];
 
@@ -131,8 +137,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </>
         ) : (
           <>
-            <NavGroup label="Internal Modules" items={navCore} />
-            <NavGroup label="Customer Modules" items={navCustomer} />
+            <NavGroup label="Projects & delivery" items={projectsDeliveryNav} />
+            <NavGroup label="Organization" items={organizationNav} />
+            <NavGroup
+              label="Laboratory operations"
+              items={laboratoryOperationsNav}
+            />
+            <NavGroup label="System" items={systemNav} />
           </>
         )}
       </SidebarContent>

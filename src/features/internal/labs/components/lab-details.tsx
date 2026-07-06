@@ -30,8 +30,34 @@ import { LabUpdateStaffingForm } from "./lab-update-staffing-form";
 import { LabUpdateResourcesForm } from "./lab-update-resources-form";
 import { LabUpdateAccreditationForm } from "./lab-update-accreditation-form";
 import { LabUpdateProjectsForm } from "./lab-update-projects-form";
+import { UnsavedChangesProvider } from "@/components/unsaved-changes/unsaved-changes-context";
+import { UnsavedChangesDialog } from "@/components/unsaved-changes/unsaved-changes-dialog";
+import { useGuardedTabChange } from "@/hooks/use-guarded-tab-change";
 
 export default function LabDetails({
+  lab,
+  personnel,
+  equipment,
+  services,
+}: {
+  lab: LAB_BY_ID_QUERY_RESULT[number];
+  personnel: ALL_PERSONNEL_QUERY_RESULT;
+  equipment: ALL_EQUIPMENT_QUERY_RESULT;
+  services: ALL_SERVICES_QUERY_RESULT;
+}) {
+  return (
+    <UnsavedChangesProvider>
+      <LabDetailsContent
+        lab={lab}
+        personnel={personnel}
+        equipment={equipment}
+        services={services}
+      />
+    </UnsavedChangesProvider>
+  );
+}
+
+function LabDetailsContent({
   lab,
   personnel,
   equipment,
@@ -45,6 +71,13 @@ export default function LabDetails({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("laboratory");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const {
+    requestTabChange,
+    showUnsavedDialog,
+    handleDialogOpenChange,
+    confirmDiscard,
+    cancelDiscard,
+  } = useGuardedTabChange(activeTab, setActiveTab);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -60,13 +93,6 @@ export default function LabDetails({
       router.replace(url.pathname + url.search);
     }
   }, [router]);
-
-  const setTab = (tab: string) => {
-    setActiveTab(tab);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", tab);
-    window.history.pushState({}, "", url);
-  };
 
   return (
     <>
@@ -92,7 +118,7 @@ export default function LabDetails({
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setTab}>
+      <Tabs value={activeTab} onValueChange={requestTabChange}>
         <TabsList className="h-auto w-full flex-wrap justify-start">
           <TabsTrigger value="laboratory">Laboratory</TabsTrigger>
           <TabsTrigger value="staffing">Staffing</TabsTrigger>
@@ -247,6 +273,12 @@ export default function LabDetails({
         }}
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
+      />
+      <UnsavedChangesDialog
+        open={showUnsavedDialog}
+        onOpenChange={handleDialogOpenChange}
+        onDiscard={confirmDiscard}
+        onCancel={cancelDiscard}
       />
     </>
   );

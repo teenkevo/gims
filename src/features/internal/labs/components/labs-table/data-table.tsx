@@ -129,12 +129,20 @@ export function DataTable({ data }: DataTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => router.push(`/labs/${row.original._id}`)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
                       className={
                         cell.column.id === "actions" ? "text-right" : undefined
+                      }
+                      onClick={
+                        cell.column.id === "select" ||
+                        cell.column.id === "actions"
+                          ? (event) => event.stopPropagation()
+                          : undefined
                       }
                     >
                       {flexRender(

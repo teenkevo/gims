@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Space_Grotesk, Spline_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
+
+const splineSans = Spline_Sans({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -35,7 +37,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
     >
-      <body className={`${spaceGrotesk.className} antialiased`}>
+      <body className={`${splineSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

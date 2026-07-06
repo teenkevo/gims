@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -41,9 +40,7 @@ export const getColumns = (): ColumnDef<ALL_LABS_QUERY_RESULT[number]>[] => [
       <DataTableColumnHeader column={column} title="Lab ID" />
     ),
     cell: ({ row }) => (
-      <Link className="hover:underline" href={`/labs/${row.original._id}`}>
-        <div className="w-[100px] font-bold">{row.original.internalId}</div>
-      </Link>
+      <div className="w-[100px] font-bold">{row.original.internalId}</div>
     ),
   },
   {
@@ -52,11 +49,9 @@ export const getColumns = (): ColumnDef<ALL_LABS_QUERY_RESULT[number]>[] => [
       <DataTableColumnHeader column={column} title="Laboratory" />
     ),
     cell: ({ row }) => (
-      <Link className="hover:underline" href={`/labs/${row.original._id}`}>
-        <span className="max-w-[300px] truncate font-normal">
-          {row.original.name}
-        </span>
-      </Link>
+      <span className="max-w-[300px] truncate font-normal">
+        {row.original.name}
+      </span>
     ),
     filterFn: (row, _id, value) => {
       const search = String(value).toLowerCase();
@@ -112,12 +107,7 @@ export const getColumns = (): ColumnDef<ALL_LABS_QUERY_RESULT[number]>[] => [
       <DataTableColumnHeader column={column} title="Projects" />
     ),
     cell: ({ row }) => (
-      <Link
-        className="hover:underline"
-        href={`/labs/${row.original._id}?tab=projects`}
-      >
-        <span className="font-normal">{row.original.projects?.length ?? 0}</span>
-      </Link>
+      <span className="font-normal">{row.original.projects?.length ?? 0}</span>
     ),
   },
   {

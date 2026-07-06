@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 
 import {
@@ -14,6 +14,32 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+
+function isNavItemActive(
+  pathname: string,
+  searchParams: URLSearchParams,
+  url: string
+) {
+  const [path, queryString] = url.split("?");
+  const pathMatches =
+    pathname === path || pathname.startsWith(`${path}/`);
+
+  if (!pathMatches) return false;
+
+  if (!queryString) {
+    if (path === "/security" && searchParams.get("tab")) {
+      return false;
+    }
+    return true;
+  }
+
+  const expected = new URLSearchParams(queryString);
+  for (const [key, value] of expected.entries()) {
+    if (searchParams.get(key) !== value) return false;
+  }
+
+  return true;
+}
 
 export function NavGroup({
   items,
@@ -33,15 +59,15 @@ export function NavGroup({
   label: string;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-          // Check if this item is active
           const isItemActive =
-            item.isActive || pathname === item.url || pathname.startsWith(item.url + "/");
+            item.isActive || isNavItemActive(pathname, searchParams, item.url);
 
           return (
             <div key={item.title}>

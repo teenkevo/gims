@@ -7,14 +7,14 @@ import { fetchSecurityDepartments } from "@/lib/auth/security-tab-actions";
 import { DepartmentsManager } from "./departments-manager";
 import { SecurityTabLoading } from "./security-tab-loading";
 
-interface DepartmentsTabProps {
+interface DepartmentsViewProps {
   canManage: boolean;
 }
 
-export function DepartmentsTab({ canManage }: DepartmentsTabProps) {
-  const [departments, setDepartments] = useState<SecurityDepartmentRecord[] | null>(
-    null
-  );
+export function DepartmentsView({ canManage }: DepartmentsViewProps) {
+  const [departments, setDepartments] = useState<
+    SecurityDepartmentRecord[] | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDepartments = useCallback(async (silent = false) => {
@@ -44,15 +44,21 @@ export function DepartmentsTab({ canManage }: DepartmentsTabProps) {
     loadDepartments(true);
   }, [loadDepartments]);
 
-  if (isLoading || departments === null) {
-    return <SecurityTabLoading />;
-  }
-
   return (
-    <DepartmentsManager
-      departments={departments}
-      canManage={canManage}
-      onDepartmentsChange={refreshDepartments}
-    />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Departments</h1>
+      </div>
+
+      {isLoading || departments === null ? (
+        <SecurityTabLoading />
+      ) : (
+        <DepartmentsManager
+          departments={departments}
+          canManage={canManage}
+          onDepartmentsChange={refreshDepartments}
+        />
+      )}
+    </div>
   );
 }

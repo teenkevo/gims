@@ -32,7 +32,7 @@ export default function NoProjectsPlaceholder({
           height="0"
           priority
           alt="No projects illustration"
-          className="mx-auto mb-2 h-auto w-48 max-w-[200px] md:mb-4 md:max-w-[300px]"
+          className="mx-auto mb-2 h-auto w-72 max-w-[300px] md:mb-4 md:max-w-[400px]"
         />
         <h3 className="text-lg md:text-xl font-bold tracking-tight">
           There are no {helperText ?? "projects"}
