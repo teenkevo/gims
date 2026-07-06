@@ -42,6 +42,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isDisabled: !can(PERMISSIONS["projects:read"]),
     },
     {
+      title: "Contact Persons",
+      url: "/contact-persons",
+      icon: Users,
+      isActive: false,
+      isDisabled: false,
+    },
+    {
       title: "Requests for Information",
       url: "/requests-for-information",
       icon: FileText,

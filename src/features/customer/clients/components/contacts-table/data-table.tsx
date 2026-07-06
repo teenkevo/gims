@@ -36,9 +36,13 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface DataTableProps<TData, TValue> {
   data: CLIENT_BY_ID_QUERY_RESULT[number]["contacts"];
+  showProjectsColumn?: boolean;
 }
 
-export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+  data,
+  showProjectsColumn = true,
+}: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -51,10 +55,10 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
     () =>
-      getColumns({ canUpdate }) as ColumnDef<
+      getColumns({ canUpdate, showProjectsColumn }) as ColumnDef<
         CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
       >[],
-    [canUpdate]
+    [canUpdate, showProjectsColumn]
   );
 
   const table = useReactTable({

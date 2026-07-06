@@ -37,6 +37,7 @@ import {
 } from "../../../../../sanity.types";
 import ClientNameForm from "./client-name-form";
 import { ContactTable } from "./contact-table";
+import { DataTable as ContactsDataTable } from "@/features/customer/clients/components/contacts-table/data-table";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -114,7 +115,7 @@ function ProjectDetailsContent({
     fully_paid: 5,
   };
 
-  const { role, can, isClientUser } = useRBAC();
+  const { role, can, isClientUser, clientId } = useRBAC();
   const canUpdate = can(PERMISSIONS["projects:update"]);
   const canDelete = can(PERMISSIONS["projects:delete"]);
   const canUpdateClient = can(PERMISSIONS["clients:update"]);
@@ -128,6 +129,17 @@ function ProjectDetailsContent({
       to: endDate ? new Date(endDate) : undefined,
     }),
     [startDate, endDate]
+  );
+
+  const clientProjectContacts = useMemo(
+    () =>
+      (contactPersons ?? [])
+        .filter((contact) => contact.client?._id === clientId)
+        .map((contact) => ({
+          ...contact,
+          projects: [],
+        })),
+    [contactPersons, clientId]
   );
 
   const status = quotation?.status ?? "draft";
@@ -188,6 +200,9 @@ function ProjectDetailsContent({
       >
         <TabsList>
           <TabsTrigger value="details">Project</TabsTrigger>
+          {isClientUser && (
+            <TabsTrigger value="contact-persons">Contact Persons</TabsTrigger>
+          )}
           {!isClientUser && <TabsTrigger value="client">Client</TabsTrigger>}
           {canReadBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
           {!isClientUser && (
@@ -228,6 +243,19 @@ function ProjectDetailsContent({
             />
           </div>
         </TabsContent>
+        {isClientUser && (
+          <TabsContent value="contact-persons">
+            <div className="space-y-8 my-10">
+              <div className="rounded-lg border bg-gradient-to-b from-muted/20 to-muted/40 p-4 md:p-6">
+                <p className="mb-5 text-xl font-bold">Contact Persons</p>
+                <ContactsDataTable
+                  data={clientProjectContacts}
+                  showProjectsColumn={false}
+                />
+              </div>
+            </div>
+          </TabsContent>
+        )}
         {!isClientUser && (
           <TabsContent value="client">
             <div className="space-y-8 my-10">

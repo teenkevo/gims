@@ -41,9 +41,11 @@ function portalStatusVariant(status?: string | null) {
 export function ContactPortalAccessCell({
   contact,
   onPortalAccessChange,
+  readOnly = false,
 }: {
   contact: ContactPortalAccess;
   onPortalAccessChange?: () => void;
+  readOnly?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const status = contact.appAccessStatus;
@@ -68,7 +70,7 @@ export function ContactPortalAccessCell({
       <Badge variant={portalStatusVariant(status)}>
         {portalStatusLabel(status)}
       </Badge>
-      {canInvite && (
+      {canInvite && !readOnly && (
         <Button
           size="sm"
           variant="outline"

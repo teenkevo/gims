@@ -42,8 +42,10 @@ const selectColumn: ColumnDef<
 // Convert columns to a function that accepts parameters
 export const getColumns = ({
   canUpdate,
+  showProjectsColumn = true,
 }: {
   canUpdate: boolean;
+  showProjectsColumn?: boolean;
 }): ColumnDef<CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]>[] => [
   ...(canUpdate ? [selectColumn] : []),
   {
@@ -103,35 +105,37 @@ export const getColumns = ({
     },
   },
   // Allow going to linked projects
-  {
-    accessorKey: "projects",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Projects" />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex space-x-2">
-          <span className="font-normal">{row.original?.projects.length}</span>
-        </div>
-      );
-    },
-  },
-
-  ...(canUpdate
+  ...(showProjectsColumn
     ? [
         {
-          id: "portalAccess",
+          accessorKey: "projects",
           header: ({ column }) => (
-            <DataTableColumnHeader column={column} title="Portal Access" />
+            <DataTableColumnHeader column={column} title="Projects" />
           ),
-          cell: ({ row }) => (
-            <ContactPortalAccessCell contact={row.original} />
-          ),
+          cell: ({ row }) => {
+            return (
+              <div className="flex space-x-2">
+                <span className="font-normal">
+                  {row.original?.projects?.length ?? 0}
+                </span>
+              </div>
+            );
+          },
         } satisfies ColumnDef<
           CLIENT_BY_ID_QUERY_RESULT[number]["contacts"][number]
         >,
       ]
     : []),
+
+  {
+    id: "portalAccess",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Portal Access" />
+    ),
+    cell: ({ row }) => (
+      <ContactPortalAccessCell contact={row.original} readOnly={!canUpdate} />
+    ),
+  },
 
   ...(canUpdate
     ? [
