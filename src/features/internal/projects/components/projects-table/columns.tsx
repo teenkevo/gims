@@ -13,7 +13,11 @@ import { ListEnd, ListStart, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { SetDateRangeDialog } from "../set-project-date-range";
-import { quotationTotal } from "../../constants";
+import {
+  quotationTotal,
+  isQuotationAmountVisible,
+  getProjectBillingStatusLabel,
+} from "../../constants";
 import { ProjectTableRowActions } from "./project-table-row-actions";
 
 const selectColumn: ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]> = {
@@ -47,9 +51,11 @@ export const getColumns = (
   {
     canUpdate,
     canDelete,
+    isClientUser = false,
   }: {
     canUpdate: boolean;
     canDelete: boolean;
+    isClientUser?: boolean;
   }
 ): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => [
   ...(canDelete ? [selectColumn] : []),
@@ -151,23 +157,13 @@ export const getColumns = (
 
       const total = quotationTotal(quotation as Quotation);
       const currency = quotation?.currency;
+      const showQuotationAmount = isQuotationAmountVisible(quotation, {
+        isClientUser,
+      });
 
-      const status =
-        quotation?.status === "draft"
-          ? "Quotation created"
-          : quotation?.status === "sent"
-            ? "Quotation received"
-            : quotation?.status === "accepted"
-              ? "Quotation accepted"
-              : quotation?.status === "rejected"
-                ? "Quotation rejected"
-                : quotation?.status === "invoiced"
-                  ? "Invoice issued"
-                  : quotation?.status === "partially_paid"
-                    ? "Partially paid"
-                    : quotation?.status === "fully_paid"
-                      ? "Fully paid"
-                      : "Not Billed";
+      const status = getProjectBillingStatusLabel(quotation?.status, {
+        isClientUser,
+      });
 
       const badgeVariant =
         quotation?.status === "draft" ? (
@@ -224,7 +220,7 @@ export const getColumns = (
         >
           {/* {icon} */}
           {badgeVariant}
-          {quotation
+          {showQuotationAmount
             ? `${currency?.toUpperCase()} ${total.toLocaleString()}`
             : "Go to Billing"}
         </Link>

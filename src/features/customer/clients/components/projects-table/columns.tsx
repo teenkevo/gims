@@ -14,7 +14,11 @@ import Link from "next/link";
 import { ListEnd, ListStart } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { quotationTotal } from "@/features/internal/projects/constants";
+import {
+  quotationTotal,
+  isQuotationAmountVisible,
+  getProjectBillingStatusLabel,
+} from "@/features/internal/projects/constants";
 import { calculatePaymentStatus } from "@/features/internal/billing/components/billing-lifecycle";
 
 const selectColumn: ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]> = {
@@ -48,7 +52,12 @@ export const getColumns = (
   {
     canDelete,
     linkMode = "internal",
-  }: { canDelete: boolean; linkMode?: "internal" | "portal" }
+    isClientUser = false,
+  }: {
+    canDelete: boolean;
+    linkMode?: "internal" | "portal";
+    isClientUser?: boolean;
+  }
 ): ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]>[] => {
   const projectHref = (projectId: string, projectName: string) =>
     linkMode === "portal"
@@ -145,6 +154,9 @@ export const getColumns = (
 
         const total = quotationTotal(quotation as Quotation);
         const currency = quotation?.currency;
+        const showQuotationAmount = isQuotationAmountVisible(quotation, {
+          isClientUser,
+        });
 
         const paymentStatus = calculatePaymentStatus(
           quotation as NonNullable<
@@ -154,22 +166,9 @@ export const getColumns = (
 
         const { allClear, advanceRejected } = paymentStatus;
 
-        const status =
-          quotation?.status === "draft"
-            ? "Quotation created"
-            : quotation?.status === "sent"
-              ? "Quotation received"
-              : quotation?.status === "accepted"
-                ? "Quotation accepted"
-                : quotation?.status === "rejected"
-                  ? "Quotation rejected"
-                  : quotation?.status === "invoiced"
-                    ? "Invoice issued"
-                    : quotation?.status === "partially_paid"
-                      ? "Partially paid"
-                      : quotation?.status === "fully_paid"
-                        ? "Fully paid"
-                        : "Not Billed";
+        const status = getProjectBillingStatusLabel(quotation?.status, {
+          isClientUser,
+        });
 
         const badgeVariant =
           quotation?.status === "draft" ? (
@@ -226,7 +225,7 @@ export const getColumns = (
           >
             {/* {icon} */}
             {badgeVariant}
-            {quotation
+            {showQuotationAmount
               ? `${currency?.toUpperCase()} ${total.toLocaleString()}`
               : "Go to Billing"}
           </Link>

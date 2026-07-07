@@ -148,3 +148,36 @@ export function quotationTotal(quotation: Quotation): number {
 
   return total + totalVat;
 }
+
+export function isQuotationAmountVisible(
+  quotation: { status?: Quotation["status"] | null } | null | undefined,
+  { isClientUser = false }: { isClientUser?: boolean } = {}
+): boolean {
+  if (!quotation) return false;
+  if (isClientUser && quotation.status === "draft") return false;
+  return true;
+}
+
+export function getProjectBillingStatusLabel(
+  status: Quotation["status"] | null | undefined,
+  { isClientUser = false }: { isClientUser?: boolean } = {}
+): string {
+  switch (status) {
+    case "draft":
+      return isClientUser ? "Waiting for Quotation" : "Quotation created";
+    case "sent":
+      return "Quotation received";
+    case "accepted":
+      return "Quotation accepted";
+    case "rejected":
+      return "Quotation rejected";
+    case "invoiced":
+      return "Invoice issued";
+    case "partially_paid":
+      return "Partially paid";
+    case "fully_paid":
+      return "Fully paid";
+    default:
+      return "Not Billed";
+  }
+}

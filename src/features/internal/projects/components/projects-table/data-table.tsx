@@ -50,7 +50,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
-  const { can } = useRBAC();
+  const { can, isClientUser } = useRBAC();
   const canUpdate = can(PERMISSIONS["projects:update"]);
   const canDelete = can(PERMISSIONS["projects:delete"]);
 
@@ -58,10 +58,10 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
   // Use propColumns if provided, otherwise generate columns with the function
   const columns = React.useMemo(
     () =>
-      getColumns(data, { canUpdate, canDelete }) as ColumnDef<
+      getColumns(data, { canUpdate, canDelete, isClientUser }) as ColumnDef<
         ALL_PROJECTS_QUERY_RESULT[number]
       >[],
-    [data, canUpdate, canDelete]
+    [data, canUpdate, canDelete, isClientUser]
   );
 
   const table = useReactTable({
