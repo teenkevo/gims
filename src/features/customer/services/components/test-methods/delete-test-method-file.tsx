@@ -94,7 +94,7 @@ export function DeleteFile({
                   {referencingDocsOtherThanCurrentTestMethod.map((doc) => (
                     <Link
                       className="flex items-center gap-2 hover:underline underline-offset-2"
-                      href={`/services/test-methods/${doc._id}`}
+                      href={`/master-data/test-methods/${doc._id}`}
                       key={doc._id}
                     >
                       <File className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -169,7 +169,7 @@ export function DeleteFile({
                 {referencingDocsOtherThanCurrentTestMethod.map((doc) => (
                   <Link
                     className="flex items-center gap-2 hover:underline underline-offset-2"
-                    href={`/services/test-methods/${doc._id}`}
+                    href={`/master-data/test-methods/${doc._id}`}
                     key={doc._id}
                   >
                     <File className="h-4 w-4 mr-2 text-muted-foreground" />

@@ -5,6 +5,7 @@ import {
   Briefcase,
   Building2,
   Cable,
+  Database,
   FileCheck2,
   FileStack,
   FileText,
@@ -122,6 +123,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   const systemNav = [
+    {
+      title: "Master Data",
+      url: "/master-data",
+      icon: Database,
+      isDisabled: !can(PERMISSIONS["services:read"]),
+    },
     {
       title: "Permission Sets",
       url: "/security?tab=roles",

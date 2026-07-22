@@ -29,7 +29,7 @@ export default function StandardDetails({
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/services/standards"
+        href="/master-data/standards"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back to standards

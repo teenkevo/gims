@@ -21,10 +21,10 @@ export async function SampleClasses() {
     <main className="gap-4">
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/services"
+        href="/master-data"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
-        Go back to services
+        Go back to master data
       </Link>
       <div className="mb-10">
         <SummaryCard

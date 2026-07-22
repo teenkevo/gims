@@ -124,5 +124,14 @@ export const project = defineType({
       readOnly: true,
       description: "Current sample receipt for this project",
     }),
+    defineField({
+      name: "report",
+      title: "Report",
+      type: "reference",
+      to: [{ type: "report" }],
+      readOnly: true,
+      description: "Current test report for this project",
+    }),
   ],
 });
+

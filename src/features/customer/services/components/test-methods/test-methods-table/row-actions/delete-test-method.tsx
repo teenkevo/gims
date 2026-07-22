@@ -47,7 +47,7 @@ export function DeleteTestMethod({
     if (result.status === "ok") {
       toast.success("Test method has been deleted");
       onClose();
-      if (redirect) router.push("/services/test-methods");
+      if (redirect) router.push("/master-data/test-methods");
     } else {
       toast.warning(
         "The test method cannot be deleted. It might have services referencing it"

@@ -58,8 +58,8 @@ export function CreateStandardDialog({
           {trigger ? (
             trigger
           ) : (
-            <Button variant="outline" className="text-sm flex items-center">
-              <Plus className="h-4 w-4 mr-2 text-primary" />
+            <Button className="text-sm flex items-center">
+              <Plus className="h-4 w-4 mr-2" />
               Add new
             </Button>
           )}
@@ -105,7 +105,7 @@ export function CreateStandardDialog({
 
 function StandardForm({
   setOpen,
-onPendingChange,
+  onPendingChange,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onPendingChange?: (pending: boolean) => void;
@@ -115,7 +115,6 @@ onPendingChange,
   React.useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
-
 
   const router = useRouter();
 
@@ -141,7 +140,7 @@ onPendingChange,
     if (state?.status === "ok") {
       toast.success("Standard has been added");
       setOpen(false);
-      router.push("/services/standards");
+      router.push("/master-data/standards");
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }

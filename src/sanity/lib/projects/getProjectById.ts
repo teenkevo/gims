@@ -500,6 +500,118 @@ export const getProjectById = async (projectId: string) => {
                 },
               },
             },
+          },
+          "report": *[
+            _type == "report"
+            && references(^._id)
+          ] | order(revisionNumber desc) [0] {
+            _id,
+            reportNumber,
+            revisionNumber,
+            title,
+            summary,
+            status,
+            submittedAt,
+            sentToClientAt,
+            qaReview {
+              decision,
+              notes,
+              reviewedAt,
+              reviewedBy {
+                name,
+                email,
+                role,
+                personnel->{
+                  _id,
+                },
+              },
+            },
+            preparedBy {
+              name,
+              role,
+              personnel->{
+                _id,
+                fullName,
+                email,
+              },
+            },
+            file {
+              asset->{
+                _id,
+                url,
+                originalFilename,
+                size,
+                mimeType,
+              },
+            },
+            queries[] {
+              _key,
+              subject,
+              status,
+              createdAt,
+              createdBy {
+                name,
+                email,
+                contactPerson->{
+                  _id,
+                },
+              },
+              messages[] {
+                _key,
+                message,
+                sentByClient,
+                senderName,
+                senderEmail,
+                timestamp,
+                contactPerson->{
+                  _id,
+                },
+                personnel->{
+                  _id,
+                },
+              },
+            },
+            revisions[]->|order(revisionNumber desc){
+              _id,
+              reportNumber,
+              revisionNumber,
+              title,
+              summary,
+              status,
+              submittedAt,
+              sentToClientAt,
+              qaReview {
+                decision,
+                notes,
+                reviewedAt,
+                reviewedBy {
+                  name,
+                  email,
+                  role,
+                  personnel->{
+                    _id,
+                  },
+                },
+              },
+              preparedBy {
+                name,
+                role,
+                personnel->{
+                  _id,
+                  fullName,
+                  email,
+                },
+              },
+              file {
+                asset->{
+                  _id,
+                  url,
+                  originalFilename,
+                  size,
+                  mimeType,
+                },
+              },
+            },
           }
         }
   `);

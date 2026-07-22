@@ -85,7 +85,7 @@ const getColumns = (
     cell: ({ row }) => (
       <Link
         className="hover:underline"
-        href={`/services/test-methods/${row.original?._id}`}
+        href={`/master-data/test-methods/${row.original?._id}`}
       >
         <div className="w-[250px] ml-5 font-bold">{row.getValue("code")}</div>
       </Link>
@@ -98,7 +98,7 @@ const getColumns = (
     cell: ({ row }) => (
       <Link
         className="hover:underline"
-        href={`/services/test-methods/${row.original?._id}`}
+        href={`/master-data/test-methods/${row.original?._id}`}
       >
         <div
           className="max-w-[450px] truncate"

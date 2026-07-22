@@ -1,7 +1,52 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/services/standards",
+        destination: "/master-data/standards",
+        permanent: true,
+      },
+      {
+        source: "/services/standards/:id",
+        destination: "/master-data/standards/:id",
+        permanent: true,
+      },
+      {
+        source: "/services/test-methods",
+        destination: "/master-data/test-methods",
+        permanent: true,
+      },
+      {
+        source: "/services/test-methods/:id",
+        destination: "/master-data/test-methods/:id",
+        permanent: true,
+      },
+      {
+        source: "/services/sample-classes",
+        destination: "/master-data/sample-classes",
+        permanent: true,
+      },
+      {
+        source: "/services/sample-classes/:id",
+        destination: "/master-data/sample-classes/:id",
+        permanent: true,
+      },
+      {
+        source: "/master",
+        destination: "/master-data",
+        permanent: true,
+      },
+      {
+        source: "/master/:path*",
+        destination: "/master-data/:path*",
+        permanent: true,
+      },
+    ];
+  },
+};
 
 export default withSentryConfig(nextConfig, {
   // For all available options, see:

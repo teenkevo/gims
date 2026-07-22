@@ -8,6 +8,7 @@ import { BillingLifecycle } from "@/features/internal/billing/components/billing
 import QuotationFile from "@/features/internal/billing/components/quotation-file";
 import { SampleVerificationLifecycle } from "@/features/internal/projects/components/sample-verification-lifecycle";
 import SampleReceiptFile from "@/features/internal/projects/components/sample-receipt-file";
+import { ReportLifecycle } from "@/features/internal/projects/components/report-lifecycle";
 import {
   ALL_SERVICES_QUERY_RESULT,
   PROJECT_BY_ID_QUERY_RESULT,
@@ -119,29 +120,35 @@ export default function ClientProjectView({
         (project.sampleReceipt.status === "sent_to_client" ||
           project.sampleReceipt.status === "approved" ||
           project.sampleReceipt.status === "client_acknowledged") && (
-        <div className="space-y-8 my-10">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Sample Receipt
-          </h2>
-          <SampleVerificationLifecycle
-            project={project}
-            sampleReviewTemplate={
-              sampleReviewTemplates.find(
-                (template) =>
-                  template._id === project.sampleReceipt?.reviewTemplate?._id
-              ) ?? sampleReviewTemplates[0]
-            }
-            sampleAdequacyTemplate={
-              sampleAdequacyTemplates.find(
-                (template) =>
-                  template._id === project.sampleReceipt?.adequacyTemplate?._id
-              ) ?? sampleAdequacyTemplates[0]
-            }
-            existingSampleReceipt={project.sampleReceipt}
-          />
-          <SampleReceiptFile project={project} />
-        </div>
+          <div className="space-y-8 my-10">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Sample Receipt
+            </h2>
+            <SampleVerificationLifecycle
+              project={project}
+              sampleReviewTemplate={
+                sampleReviewTemplates.find(
+                  (template) =>
+                    template._id === project.sampleReceipt?.reviewTemplate?._id
+                ) ?? sampleReviewTemplates[0]
+              }
+              sampleAdequacyTemplate={
+                sampleAdequacyTemplates.find(
+                  (template) =>
+                    template._id ===
+                    project.sampleReceipt?.adequacyTemplate?._id
+                ) ?? sampleAdequacyTemplates[0]
+              }
+              existingSampleReceipt={project.sampleReceipt}
+            />
+            <SampleReceiptFile project={project} />
+          </div>
         )}
+
+      <div className="space-y-8 my-10">
+        <h2 className="text-xl font-semibold tracking-tight">Report</h2>
+        <ReportLifecycle project={project} />
+      </div>
     </>
   );
 }

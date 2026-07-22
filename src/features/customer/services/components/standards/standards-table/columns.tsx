@@ -52,7 +52,7 @@ export const getColumns = (
     cell: ({ row }) => (
       <Link
         className="hover:underline"
-        href={`/services/standards/${row.original?._id}`}
+        href={`/master-data/standards/${row.original?._id}`}
       >
         <div className="w-[30px]">{row.getValue("acronym")}</div>
       </Link>
@@ -68,7 +68,7 @@ export const getColumns = (
     cell: ({ row }) => (
       <Link
         className="hover:underline"
-        href={`/services/standards/${row.original?._id}`}
+        href={`/master-data/standards/${row.original?._id}`}
       >
         <div className="max-w-[300px] truncate font-bold">
           {row.getValue("name")}
@@ -87,7 +87,7 @@ export const getColumns = (
       return (
         <Link
           className="hover:underline"
-          href={`/services/standards/${row.original?._id}`}
+          href={`/master-data/standards/${row.original?._id}`}
         >
           <div className="flex space-x-2">
             <span className="max-w-[500px] truncate font-normal">
@@ -109,7 +109,7 @@ export const getColumns = (
       );
       return (
         <div className="flex space-x-2">
-          <Link href={`/services/standards/${row.original?._id}`}>
+          <Link href={`/master-data/standards/${row.original?._id}`}>
             <Button
               className="w-16 hover:border-primary border-2 text-primary"
               variant="secondary"

@@ -52,8 +52,8 @@ export default function SummaryCards({
         </CardHeader>
 
         <CardFooter className="p-4 pt-4 border-t flex justify-between">
-          <Button variant="ghost" className="text-sm flex items-center">
-            <Link className="flex items-center" href="/services/standards">
+          <Button variant="outline" className="text-sm flex items-center">
+            <Link className="flex items-center" href="/master-data/standards">
               <FileText className="h-4 w-4 mr-2" />
               View all
             </Link>
@@ -81,8 +81,8 @@ export default function SummaryCards({
           </div>
         </CardHeader>
         <CardFooter className="p-4 pt-4 border-t flex justify-between">
-          <Button variant="ghost" className="text-sm flex items-center">
-            <Link className="flex items-center" href="/services/test-methods">
+          <Button variant="outline" className="text-sm flex items-center">
+            <Link className="flex items-center" href="/master-data/test-methods">
               <FileText className="h-4 w-4 mr-2" />
               View all
             </Link>
@@ -110,8 +110,8 @@ export default function SummaryCards({
           </div>
         </CardHeader>
         <CardFooter className="p-4 pt-4 border-t flex justify-between">
-          <Button variant="ghost" className="text-sm flex items-center">
-            <Link className="flex items-center" href="/services/sample-classes">
+          <Button variant="outline" className="text-sm flex items-center">
+            <Link className="flex items-center" href="/master-data/sample-classes">
               <FileText className="h-4 w-4 mr-2" />
               View all
             </Link>

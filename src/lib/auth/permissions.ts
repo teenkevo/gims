@@ -52,10 +52,19 @@ export const PERMISSIONS = {
   "billing:respond": "billing:respond",
   "billing:pay": "billing:pay",
 
+  // Reports
+  "report:read": "report:read",
+  "report:create": "report:create",
+  "report:update": "report:update",
+  "report:approve": "report:approve",
+  "report:query": "report:query",
+  "report:respond": "report:respond",
+
   // Security & audit
   "security:read": "security:read",
   "security:manage": "security:manage",
 } as const;
+
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
@@ -74,6 +83,7 @@ const INTERNAL_READ_PERMISSIONS: Permission[] = [
   PERMISSIONS["personnel:read"],
   PERMISSIONS["rfi:read"],
   PERMISSIONS["billing:read"],
+  PERMISSIONS["report:read"],
 ];
 
 const INTERNAL_WRITE_PERMISSIONS: Permission[] = [
@@ -93,6 +103,9 @@ const INTERNAL_WRITE_PERMISSIONS: Permission[] = [
   PERMISSIONS["rfi:update"],
   PERMISSIONS["billing:create"],
   PERMISSIONS["billing:update"],
+  PERMISSIONS["report:create"],
+  PERMISSIONS["report:update"],
+  PERMISSIONS["report:respond"],
 ];
 
 const INTERNAL_DELETE_PERMISSIONS: Permission[] = [
@@ -114,7 +127,10 @@ export const CLIENT_PERMISSIONS: Permission[] = [
   PERMISSIONS["rfi:read"],
   PERMISSIONS["rfi:create"],
   PERMISSIONS["rfi:update"],
+  PERMISSIONS["report:read"],
+  PERMISSIONS["report:query"],
 ];
+
 
 /**
  * Role → permission mapping. Module-specific rules can be tightened later
@@ -122,7 +138,11 @@ export const CLIENT_PERMISSIONS: Permission[] = [
  */
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   [ROLES.SUPER_ADMIN]: ALL_PERMISSIONS,
-  [ROLES.ADMIN]: [...ALL_EXCEPT_SECURITY_MANAGE, PERMISSIONS["security:read"]],
+  [ROLES.ADMIN]: [
+    ...ALL_EXCEPT_SECURITY_MANAGE,
+    PERMISSIONS["security:read"],
+    PERMISSIONS["report:approve"],
+  ],
   [ROLES.EDITOR]: [...INTERNAL_READ_PERMISSIONS, ...INTERNAL_WRITE_PERMISSIONS],
   [ROLES.VIEWER]: INTERNAL_READ_PERMISSIONS,
   [ROLES.CLIENT]: CLIENT_PERMISSIONS,

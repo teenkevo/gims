@@ -75,8 +75,8 @@ export function CreateTestMethodDialog({
           {trigger ? (
             trigger
           ) : (
-            <Button variant="outline" className="text-sm flex items-center">
-              <Plus className="h-4 w-4 mr-2 text-primary" />
+            <Button className="text-sm flex items-center">
+              <Plus className="h-4 w-4 mr-2" />
               Add new
             </Button>
           )}
@@ -86,7 +86,11 @@ export function CreateTestMethodDialog({
             <DialogTitle>Create Test Method</DialogTitle>
           </DialogHeader>
 
-          <TestMethodForm onPendingChange={setDialogLoading} setOpen={setOpen} standards={standards} />
+          <TestMethodForm
+            onPendingChange={setDialogLoading}
+            setOpen={setOpen}
+            standards={standards}
+          />
         </DialogContent>
       </Dialog>
     );
@@ -109,7 +113,11 @@ export function CreateTestMethodDialog({
           <DrawerTitle>Create Test Method</DrawerTitle>
         </DrawerHeader>
 
-        <TestMethodForm onPendingChange={setDialogLoading} setOpen={setOpen} standards={standards} />
+        <TestMethodForm
+          onPendingChange={setDialogLoading}
+          setOpen={setOpen}
+          standards={standards}
+        />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -123,7 +131,7 @@ export function CreateTestMethodDialog({
 function TestMethodForm({
   standards,
   setOpen,
-onPendingChange,
+  onPendingChange,
 }: {
   standards: ALL_STANDARDS_QUERY_RESULT;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -141,7 +149,6 @@ onPendingChange,
   React.useEffect(() => {
     onPendingChange?.(isPending || loading);
   }, [isPending, loading, onPendingChange]);
-
 
   const form = useForm({
     mode: "onChange",
@@ -207,7 +214,7 @@ onPendingChange,
     if (state?.status === "ok") {
       toast.success("Test method has been added");
       setOpen(false);
-      router.push("/services/test-methods");
+      router.push("/master-data/test-methods");
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }

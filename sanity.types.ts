@@ -2182,6 +2182,127 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
       } | null;
     }> | null;
   } | null;
+  report: {
+    _id: string;
+    reportNumber: string | null;
+    revisionNumber: string | null;
+    title: string | null;
+    summary: string | null;
+    status:
+      | "draft"
+      | "submitted"
+      | "revisions_requested"
+      | "rejected"
+      | "sent_to_client"
+      | null;
+    submittedAt: string | null;
+    sentToClientAt: string | null;
+    qaReview: {
+      decision: "accept" | "reject" | "revisions_requested" | null;
+      notes: string | null;
+      reviewedAt: string | null;
+      reviewedBy: {
+        name: string | null;
+        email: string | null;
+        role: string | null;
+        personnel: {
+          _id: string;
+        } | null;
+      } | null;
+    } | null;
+    preparedBy: {
+      name: string | null;
+      role: string | null;
+      personnel: {
+        _id: string;
+        fullName: string | null;
+        email: string | null;
+      } | null;
+    } | null;
+    file: {
+      asset: {
+        _id: string;
+        url: string | null;
+        originalFilename: string | null;
+        size: number | null;
+        mimeType: string | null;
+      } | null;
+    } | null;
+    queries: Array<{
+      _key: string;
+      subject: string | null;
+      status: "open" | "answered" | "closed" | null;
+      createdAt: string | null;
+      createdBy: {
+        name: string | null;
+        email: string | null;
+        contactPerson: {
+          _id: string;
+        } | null;
+      } | null;
+      messages: Array<{
+        _key: string;
+        message: string | null;
+        sentByClient: boolean | null;
+        senderName: string | null;
+        senderEmail: string | null;
+        timestamp: string | null;
+        contactPerson: {
+          _id: string;
+        } | null;
+        personnel: {
+          _id: string;
+        } | null;
+      }> | null;
+    }> | null;
+    revisions: Array<{
+      _id: string;
+      reportNumber: string | null;
+      revisionNumber: string | null;
+      title: string | null;
+      summary: string | null;
+      status:
+        | "draft"
+        | "submitted"
+        | "revisions_requested"
+        | "rejected"
+        | "sent_to_client"
+        | null;
+      submittedAt: string | null;
+      sentToClientAt: string | null;
+      qaReview: {
+        decision: "accept" | "reject" | "revisions_requested" | null;
+        notes: string | null;
+        reviewedAt: string | null;
+        reviewedBy: {
+          name: string | null;
+          email: string | null;
+          role: string | null;
+          personnel: {
+            _id: string;
+          } | null;
+        } | null;
+      } | null;
+      preparedBy: {
+        name: string | null;
+        role: string | null;
+        personnel: {
+          _id: string;
+          fullName: string | null;
+          email: string | null;
+        } | null;
+      } | null;
+      file: {
+        asset: {
+          _id: string;
+          url: string | null;
+          originalFilename: string | null;
+          size: number | null;
+          mimeType: string | null;
+        } | null;
+      } | null;
+    }> | null;
+  } | null;
 }>;
 
 // Source: src/sanity/lib/projects/getSampleAdequacyTemplates.ts

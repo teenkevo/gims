@@ -59,8 +59,8 @@ export function CreateSampleClassDialog({
           {trigger ? (
             trigger
           ) : (
-            <Button variant="outline" className="text-sm flex items-center">
-              <Plus className="h-4 w-4 mr-2 text-primary" />
+            <Button className="text-sm flex items-center">
+              <Plus className="h-4 w-4 mr-2" />
               Add new
             </Button>
           )}
@@ -106,7 +106,7 @@ export function CreateSampleClassDialog({
 
 function StandardForm({
   setOpen,
-onPendingChange,
+  onPendingChange,
 }: {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onPendingChange?: (pending: boolean) => void;
@@ -121,7 +121,6 @@ onPendingChange,
   React.useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
-
 
   // In the StandardForm function, update the useForm hook to include subclasses
   const form = useForm({
@@ -153,7 +152,7 @@ onPendingChange,
     if (state?.status === "ok") {
       toast.success("Sample class has been added");
       setOpen(false);
-      router.push("/services/sample-classes");
+      router.push("/master-data/sample-classes");
     } else if (state?.status === "error") {
       toast.error("Something went wrong");
     }

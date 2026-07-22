@@ -106,7 +106,7 @@ export default function TestMethodDetails({
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href="/services/test-methods"
+        href="/master-data/test-methods"
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back to test methods

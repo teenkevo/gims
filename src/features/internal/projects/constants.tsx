@@ -166,7 +166,7 @@ export function getProjectBillingStatusLabel(
     case "draft":
       return isClientUser ? "Waiting for Quotation" : "Quotation created";
     case "sent":
-      return "Quotation received";
+      return isClientUser ? "Quotation received" : "Quotation sent";
     case "accepted":
       return "Quotation accepted";
     case "rejected":

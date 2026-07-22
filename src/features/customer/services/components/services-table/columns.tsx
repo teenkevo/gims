@@ -92,7 +92,7 @@ export const getColumns = (
             <Link
               key={uuidv4()}
               className="hover:underline"
-              href={`/services/test-methods/${method._id}`}
+              href={`/master-data/test-methods/${method._id}`}
             >
               <Badge variant="outline">{method.standard?.acronym}</Badge>
             </Link>

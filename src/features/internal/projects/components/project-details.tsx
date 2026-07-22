@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
 import { SampleVerificationLifecycle } from "./sample-verification-lifecycle";
+import { ReportLifecycle } from "./report-lifecycle";
 import {
   ALL_CLIENTS_QUERY_RESULT,
   ALL_CONTACTS_QUERY_RESULT,
@@ -120,6 +121,7 @@ function ProjectDetailsContent({
   const canDelete = can(PERMISSIONS["projects:delete"]);
   const canUpdateClient = can(PERMISSIONS["clients:update"]);
   const canReadBilling = can(PERMISSIONS["billing:read"]);
+  const canReadReport = can(PERMISSIONS["report:read"]);
 
   const { quotation } = useQuotation(project, role);
 
@@ -207,6 +209,9 @@ function ProjectDetailsContent({
           {canReadBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
           {!isClientUser && (
             <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
+          )}
+          {!isClientUser && canReadReport && (
+            <TabsTrigger value="report">Report</TabsTrigger>
           )}
           {canDelete && (
             <TabsTrigger
@@ -365,6 +370,13 @@ function ProjectDetailsContent({
                 sampleAdequacyTemplate={sampleAdequacyTemplates[0]}
                 existingSampleReceipt={project.sampleReceipt}
               />
+            </div>
+          </TabsContent>
+        )}
+        {!isClientUser && canReadReport && (
+          <TabsContent value="report">
+            <div className="space-y-8 my-10">
+              <ReportLifecycle project={project} personnel={personnel} />
             </div>
           </TabsContent>
         )}

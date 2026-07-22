@@ -3365,11 +3365,13 @@ export async function deleteProject(
       }
     }
 
-    detachTx.patch(projectId, (p) => p.unset(["quotation", "sampleReceipt"]));
+    detachTx.patch(projectId, (p) =>
+      p.unset(["quotation", "sampleReceipt", "report"])
+    );
 
     if (existingDraftIds.includes(draftProjectId)) {
       detachTx.patch(draftProjectId, (p) =>
-        p.unset(["quotation", "sampleReceipt"])
+        p.unset(["quotation", "sampleReceipt", "report"])
       );
     }
 

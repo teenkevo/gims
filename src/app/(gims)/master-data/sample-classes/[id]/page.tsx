@@ -11,7 +11,6 @@ export default async function SampleClassPage({
 }) {
   const { id } = await params;
 
-  // Fetch data in parallel
   const [sampleClassData] = await Promise.all([getSampleClassById(id)]);
 
   return <SampleClassDetails sampleClass={sampleClassData[0]} />;

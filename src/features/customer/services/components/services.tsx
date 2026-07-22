@@ -1,8 +1,6 @@
 import * as React from "react";
 
-import { getColumns } from "./services-table/columns";
 import { DataTable } from "./services-table/data-table";
-import SummaryCards from "./summary-cards";
 import { getAllStandards } from "@/sanity/lib/services/getAllStandards";
 import { getAllTestMethods } from "@/sanity/lib/services/getAllTestMethods";
 import { getAllSampleClasses } from "@/sanity/lib/services/getAllSampleClasses";
@@ -18,7 +16,6 @@ export async function Services() {
   return (
     <main className="gap-4">
       <h1 className="text-2xl md:text-3xl font-bold mb-4">Services</h1>
-      <SummaryCards standards={standards} />
       <CreateServiceDialog
         standards={standards}
         sampleClasses={sampleClasses}
