@@ -6,7 +6,6 @@ import {
   Building2,
   Cable,
   Database,
-  FileCheck2,
   FileStack,
   FileText,
   FlaskConical,
@@ -71,12 +70,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/personnel",
       icon: Users,
       isDisabled: !can(PERMISSIONS["personnel:read"]),
-    },
-    {
-      title: "Workflows",
-      url: "/workflows",
-      icon: FileCheck2,
-      isDisabled: !can(PERMISSIONS["labs:read"]),
     },
   ];
 

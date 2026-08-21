@@ -100,7 +100,6 @@ export default function ReportFile({
   const report = project.report;
   if (!report?.file?.asset?.url) return null;
 
-  // Clients only see the report file once QA has accepted and sent it
   if (isClientUser && report.status !== "sent_to_client") {
     return null;
   }

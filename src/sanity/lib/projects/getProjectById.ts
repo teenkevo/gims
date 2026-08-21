@@ -612,6 +612,21 @@ export const getProjectById = async (projectId: string) => {
                 },
               },
             },
+          },
+          "workOrder": *[
+            _type == "workOrder"
+            && references(^._id)
+          ] | order(_updatedAt desc) [0] {
+            _id,
+            workOrderNumber,
+            status,
+            notes,
+            sentAt,
+            acknowledgedAt,
+            lab->{
+              _id,
+              name,
+            },
           }
         }
   `);

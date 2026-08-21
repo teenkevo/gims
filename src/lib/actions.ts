@@ -387,6 +387,15 @@ export async function sendQuotation(quotationId: string) {
       })
       .commit();
     revalidateTag("quotation");
+
+    const projectId = await writeClient.fetch<string | null>(
+      `*[_type == "project" && references($quotationId)][0]._id`,
+      { quotationId }
+    );
+    if (projectId) {
+      revalidateTag(`project-${projectId}`);
+    }
+
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error sending quotation:", error);
@@ -426,6 +435,7 @@ export async function respondToQuotation(
       })
       .commit();
     revalidateTag("quotation");
+
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error responding to quotation:", error);
@@ -712,6 +722,7 @@ export async function approvePayment(
     const result = await tx.commit({ autoGenerateArrayKeys: true });
 
     revalidateTag(`quotation`);
+
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error approving payment:", error);
@@ -2679,7 +2690,11 @@ const collectPaymentUnsetPaths = (
 // Schema types that hold a direct reference to a project document.
 // rfi.project, sampleReceipt.project, project.sampleReceipt, lab.projects[], personnel.projects
 const PROJECT_REFERENCER_DETACH_TYPES = new Set(["lab", "personnel"]);
-const PROJECT_REFERENCER_DELETE_TYPES = new Set(["rfi", "sampleReceipt"]);
+const PROJECT_REFERENCER_DELETE_TYPES = new Set([
+  "rfi",
+  "sampleReceipt",
+  "workOrder",
+]);
 
 type QuotationDeleteDoc = {
   _id: string;
@@ -3366,12 +3381,12 @@ export async function deleteProject(
     }
 
     detachTx.patch(projectId, (p) =>
-      p.unset(["quotation", "sampleReceipt", "report"])
+      p.unset(["quotation", "sampleReceipt", "report", "workOrder"])
     );
 
     if (existingDraftIds.includes(draftProjectId)) {
       detachTx.patch(draftProjectId, (p) =>
-        p.unset(["quotation", "sampleReceipt", "report"])
+        p.unset(["quotation", "sampleReceipt", "report", "workOrder"])
       );
     }
 
@@ -3480,6 +3495,12 @@ export async function deleteProject(
 
     for (const rfi of dependencies.rfis) {
       deleteTx.delete(rfi._id);
+    }
+
+    for (const referencer of dependencies.referencers) {
+      if (referencer._type === "workOrder") {
+        deleteTx.delete(referencer._id);
+      }
     }
 
     for (const sampleReceipt of sampleReceiptDocs) {

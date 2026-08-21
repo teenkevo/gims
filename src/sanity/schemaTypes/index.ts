@@ -25,6 +25,7 @@ import { sampleReceipt } from "./sample-receipt";
 import { sampleReviewTemplate } from "./sample-review-template";
 import { sampleAdequacyTemplate } from "./sample-adequacy-template";
 import { report } from "./report";
+import { workOrder } from "./work-order";
 import { auditLog } from "./audit-log";
 import { appUser } from "./app-user";
 import { appRole } from "./app-role";
@@ -56,6 +57,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     sampleReviewTemplate,
     sampleAdequacyTemplate,
     report,
+    workOrder,
     auditLog,
     appUser,
     appRole,

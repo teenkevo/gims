@@ -27,11 +27,13 @@ import ProjectUpdateNameForm from "./project-update-name-form";
 import ProjectUpdateDatesForm from "./project-update-dates-form";
 import { SampleVerificationLifecycle } from "./sample-verification-lifecycle";
 import { ReportLifecycle } from "./report-lifecycle";
+import { WorkOrderPanel } from "./work-order-panel";
 import {
   ALL_CLIENTS_QUERY_RESULT,
   ALL_CONTACTS_QUERY_RESULT,
   ALL_SERVICES_QUERY_RESULT,
   ALL_PERSONNEL_QUERY_RESULT,
+  ALL_LABS_QUERY_RESULT,
   PROJECT_BY_ID_QUERY_RESULT,
   SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT,
   SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT,
@@ -58,7 +60,6 @@ import { Badge } from "@/components/ui/badge";
 import { UnsavedChangesProvider } from "@/components/unsaved-changes/unsaved-changes-context";
 import { UnsavedChangesDialog } from "@/components/unsaved-changes/unsaved-changes-dialog";
 import { useGuardedTabChange } from "@/hooks/use-guarded-tab-change";
-
 export default function ProjectDetails(props: {
   project: PROJECT_BY_ID_QUERY_RESULT[number];
   existingContacts: ALL_CONTACTS_QUERY_RESULT;
@@ -67,6 +68,7 @@ export default function ProjectDetails(props: {
   personnel: ALL_PERSONNEL_QUERY_RESULT;
   sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT;
   sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT;
+  labs?: ALL_LABS_QUERY_RESULT;
 }) {
   return (
     <UnsavedChangesProvider>
@@ -83,6 +85,7 @@ function ProjectDetailsContent({
   personnel,
   sampleReviewTemplates,
   sampleAdequacyTemplates,
+  labs = [],
 }: {
   project: PROJECT_BY_ID_QUERY_RESULT[number];
   existingContacts: ALL_CONTACTS_QUERY_RESULT;
@@ -91,6 +94,7 @@ function ProjectDetailsContent({
   personnel: ALL_PERSONNEL_QUERY_RESULT;
   sampleReviewTemplates: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT;
   sampleAdequacyTemplates: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT;
+  labs?: ALL_LABS_QUERY_RESULT;
 }) {
   const { _id, name, clients, contactPersons, startDate, endDate } = project;
 
@@ -209,6 +213,9 @@ function ProjectDetailsContent({
           {canReadBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
           {!isClientUser && (
             <TabsTrigger value="sample-receipt">Sample Receipt</TabsTrigger>
+          )}
+          {!isClientUser && (
+            <TabsTrigger value="work-order">Work Order</TabsTrigger>
           )}
           {!isClientUser && canReadReport && (
             <TabsTrigger value="report">Report</TabsTrigger>
@@ -369,6 +376,17 @@ function ProjectDetailsContent({
                 sampleReviewTemplate={sampleReviewTemplates[0]}
                 sampleAdequacyTemplate={sampleAdequacyTemplates[0]}
                 existingSampleReceipt={project.sampleReceipt}
+              />
+            </div>
+          </TabsContent>
+        )}
+        {!isClientUser && (
+          <TabsContent value="work-order">
+            <div className="space-y-8 my-10">
+              <WorkOrderPanel
+                project={project}
+                labs={labs}
+                canCreate={canUpdate}
               />
             </div>
           </TabsContent>

@@ -16,7 +16,6 @@ export default async function ClientProjectPage({
 }) {
   const { projectId } = await params;
 
-  // Fetch data in parallel
   const [
     projectData,
     allServicesData,
@@ -29,7 +28,6 @@ export default async function ClientProjectPage({
     getSampleAdequacyTemplates(),
   ]);
 
-  // If project is not found, show 404 placeholder
   if (!projectData || projectData.length === 0) {
     return <NoProjectPlaceholder />;
   }

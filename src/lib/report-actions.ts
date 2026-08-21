@@ -192,6 +192,7 @@ export async function submitReportForQa(_prevState: unknown, formData: FormData)
       .commit({ autoGenerateArrayKeys: true });
 
     revalidateTag(`project-${projectId}`);
+
     return { result: report, status: "ok" as const };
   } catch (error) {
     console.error("Error submitting report for QA:", error);
@@ -270,6 +271,7 @@ export async function reviewReport(_prevState: unknown, formData: FormData) {
       .commit({ autoGenerateArrayKeys: true });
 
     revalidateTag(`project-${projectId}`);
+
     return { result: report, status: "ok" as const };
   } catch (error) {
     console.error("Error reviewing report:", error);

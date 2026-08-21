@@ -49,6 +49,7 @@ interface SampleVerificationLifecycleProps {
   sampleReviewTemplate?: SAMPLE_REVIEW_TEMPLATES_QUERY_RESULT[number];
   sampleAdequacyTemplate?: SAMPLE_ADEQUACY_TEMPLATES_QUERY_RESULT[number];
   existingSampleReceipt?: PROJECT_BY_ID_QUERY_RESULT[number]["sampleReceipt"];
+  canCreate?: boolean;
 }
 
 // Sample verification status types based on actual schema
@@ -170,6 +171,7 @@ function SampleVerificationStageCard({
   onGetlabApproval,
   onClientAcknowledgement,
   isLoading,
+  canCreate = true,
 }: {
   stage: SampleVerificationStage;
   currentStage: number;
@@ -186,6 +188,7 @@ function SampleVerificationStageCard({
   ) => Promise<void>;
   onClientAcknowledgement: (data: ClientAcknowledgementData) => Promise<void>;
   isLoading: boolean;
+  canCreate?: boolean;
 }) {
   const { role } = useRBAC();
   const isActive = stage.id === currentStage;
@@ -224,22 +227,28 @@ function SampleVerificationStageCard({
       {/* STAGE 1: Sample Receipt Creation */}
       {stage.id === 1 && isActive && role !== "client" && (
         <div className="mt-5 flex flex-wrap gap-2 items-center">
-          <SampleVerificationDrawer
-            project={project}
-            personnel={personnel}
-            sampleReviewTemplate={sampleReviewTemplate}
-            sampleAdequacyTemplate={sampleAdequacyTemplate}
-          >
-            <Button
-              size="sm"
-              variant={`${status === "not_started" ? "default" : "secondary"}`}
-              className={` ${status === "not_started" ? "" : "bg-secondary text-secondary-foreground border border-primary/30"}`}
+          {canCreate ? (
+            <SampleVerificationDrawer
+              project={project}
+              personnel={personnel}
+              sampleReviewTemplate={sampleReviewTemplate}
+              sampleAdequacyTemplate={sampleAdequacyTemplate}
             >
-              {status === "not_started"
-                ? "Create Sample Receipt"
-                : "Edit Sample Receipt"}
-            </Button>
-          </SampleVerificationDrawer>
+              <Button
+                size="sm"
+                variant={`${status === "not_started" ? "default" : "secondary"}`}
+                className={` ${status === "not_started" ? "" : "bg-secondary text-secondary-foreground border border-primary/30"}`}
+              >
+                {status === "not_started"
+                  ? "Create Sample Receipt"
+                  : "Edit Sample Receipt"}
+              </Button>
+            </SampleVerificationDrawer>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              You do not have permission to create a sample receipt.
+            </p>
+          )}
 
           {status === "draft" && (
             <Button size="sm" onClick={onSendForApproval} disabled={isLoading}>
@@ -613,6 +622,7 @@ export function SampleVerificationLifecycle({
   sampleReviewTemplate,
   sampleAdequacyTemplate,
   existingSampleReceipt,
+  canCreate = true,
 }: SampleVerificationLifecycleProps) {
   const resolvedReviewTemplate =
     sampleReviewTemplate ??
@@ -960,6 +970,7 @@ export function SampleVerificationLifecycle({
               onGetlabApproval={handleGetlabApproval}
               onClientAcknowledgement={handleClientAcknowledgement}
               isLoading={isLoading}
+              canCreate={canCreate}
             />
           ))}
         </div>
@@ -1014,6 +1025,7 @@ export function SampleVerificationLifecycle({
                   onGetlabApproval={handleGetlabApproval}
                   onClientAcknowledgement={handleClientAcknowledgement}
                   isLoading={isLoading}
+                  canCreate={canCreate}
                 />
               </div>
             ))}

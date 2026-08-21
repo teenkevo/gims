@@ -37,7 +37,56 @@ import {
 import { useRBAC } from "@/components/rbac-context";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { useQuotation } from "./useQuotation";
-import { toast } from "sonner";
+
+type ActivitySnapshot = {
+  activity: string;
+  unit: string;
+  price: number;
+  quantity: number;
+};
+
+function selectedServiceSnapshot(services: ALL_SERVICES_QUERY_RESULT) {
+  return services
+    .map((service) => ({
+      id: service._id,
+      price: (service as { price?: number }).price ?? null,
+      quantity: (service as { quantity?: number }).quantity ?? null,
+      unit: (service as { unit?: string }).unit ?? null,
+      method:
+        service.testMethods?.find(
+          (method) => (method as { selected?: boolean }).selected
+        )?.standard?.acronym ?? null,
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function activitySnapshot(activities: ActivitySnapshot[]) {
+  return activities.map((activity) => ({
+    activity: activity.activity,
+    unit: activity.unit,
+    price: activity.price,
+    quantity: activity.quantity,
+  }));
+}
+
+function quotationEditSnapshot({
+  selectedLabTests,
+  selectedFieldTests,
+  mobilizationActivities,
+  reportingActivities,
+}: {
+  selectedLabTests: ALL_SERVICES_QUERY_RESULT;
+  selectedFieldTests: ALL_SERVICES_QUERY_RESULT;
+  mobilizationActivities: ActivitySnapshot[];
+  reportingActivities: ActivitySnapshot[];
+}) {
+  return JSON.stringify({
+    lab: selectedServiceSnapshot(selectedLabTests),
+    field: selectedServiceSnapshot(selectedFieldTests),
+    mobilization: activitySnapshot(mobilizationActivities),
+    reporting: activitySnapshot(reportingActivities),
+  });
+}
 
 export function QuotationDrawer({
   allServices,
@@ -83,6 +132,9 @@ export function QuotationDrawer({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = React.useState(false);
   const [showWarning, setShowWarning] = React.useState(false);
+  const [baselineReady, setBaselineReady] = React.useState(false);
+  const baselineRef = React.useRef<string | null>(null);
+  const baselineLockedRef = React.useRef(false);
 
   const { role, can, isClientUser } = useRBAC();
 
@@ -96,32 +148,55 @@ export function QuotationDrawer({
       (quotationNeedsRevision && canCreateBilling) ||
       (quotation && !quotationNeedsRevision && canUpdateBilling));
 
+  // Capture baseline after child tables/managers finish hydrating from the saved
+  // quotation. Debounce until state settles, then lock so later user edits count
+  // as dirty instead of rewriting the baseline.
+  React.useEffect(() => {
+    if (!open) {
+      baselineRef.current = null;
+      baselineLockedRef.current = false;
+      setBaselineReady(false);
+      return;
+    }
+
+    if (baselineLockedRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      baselineRef.current = quotationEditSnapshot({
+        selectedLabTests,
+        selectedFieldTests,
+        mobilizationActivities,
+        reportingActivities,
+      });
+      baselineLockedRef.current = true;
+      setBaselineReady(true);
+    }, 200);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    open,
+    selectedLabTests,
+    selectedFieldTests,
+    mobilizationActivities,
+    reportingActivities,
+  ]);
+
   if (!canShowDrawer) {
     return null;
   }
 
-  const labTestsEdited = selectedLabTests.length > 0;
-  const fieldTestsEdited = selectedFieldTests.length > 0;
-
-  const mobilizationActivitiesEdited = mobilizationActivities.some(
-    (activity) =>
-      activity.price !== 0 ||
-      activity.quantity !== 0 ||
-      activity.activity !== ""
-  );
-
-  const reportingActivitiesEdited = reportingActivities.some(
-    (activity) =>
-      activity.price !== 0 ||
-      activity.quantity !== 0 ||
-      activity.activity !== ""
-  );
+  const currentSnapshot = quotationEditSnapshot({
+    selectedLabTests,
+    selectedFieldTests,
+    mobilizationActivities,
+    reportingActivities,
+  });
 
   const hasUnsavedEdits =
-    labTestsEdited ||
-    fieldTestsEdited ||
-    mobilizationActivitiesEdited ||
-    reportingActivitiesEdited;
+    open &&
+    baselineReady &&
+    baselineRef.current !== null &&
+    currentSnapshot !== baselineRef.current;
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && hasUnsavedEdits) {

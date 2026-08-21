@@ -1618,6 +1618,7 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
   startDate: string | null;
   endDate: string | null;
   stagesCompleted: Array<string> | null;
+  reportClientVisible: boolean | null;
   contactPersons: Array<{
     _id: string;
     name: string | null;
@@ -2302,6 +2303,18 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
         } | null;
       } | null;
     }> | null;
+  } | null;
+  workOrder: {
+    _id: string;
+    workOrderNumber: string | null;
+    status: "draft" | "sent" | "acknowledged" | null;
+    notes: string | null;
+    sentAt: string | null;
+    acknowledgedAt: string | null;
+    lab: {
+      _id: string;
+      name: string | null;
+    } | null;
   } | null;
 }>;
 

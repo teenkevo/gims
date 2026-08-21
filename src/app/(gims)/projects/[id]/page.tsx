@@ -10,6 +10,7 @@ import { getAllPersonnel } from "@/sanity/lib/personnel/getAllPersonnel";
 import Loading from "./loading";
 import { getSampleReviewTemplates } from "@/sanity/lib/projects/getSampleReviewTemplates";
 import { getSampleAdequacyTemplates } from "@/sanity/lib/projects/getSampleAdequacyTemplates";
+import { getAllLabs } from "@/sanity/lib/labs/getAllLabs";
 import { requirePermission, getSession } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requireProjectAccessOrError } from "@/lib/auth/project-scope";
@@ -40,6 +41,7 @@ export default async function ProjectPage({
     personnelData,
     sampleReviewTemplatesData,
     sampleAdequacyTemplatesData,
+    labsData,
   ] = await Promise.all([
     getProjectById(id),
     getAllContacts(),
@@ -48,6 +50,7 @@ export default async function ProjectPage({
     getAllPersonnel(),
     getSampleReviewTemplates(),
     getSampleAdequacyTemplates(),
+    getAllLabs(),
   ]);
 
   if (!projectData || projectData.length === 0) {
@@ -64,6 +67,7 @@ export default async function ProjectPage({
         personnel={personnelData}
         sampleReviewTemplates={sampleReviewTemplatesData}
         sampleAdequacyTemplates={sampleAdequacyTemplatesData}
+        labs={labsData}
       />
     </Suspense>
   );

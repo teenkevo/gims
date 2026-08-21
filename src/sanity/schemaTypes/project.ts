@@ -132,6 +132,14 @@ export const project = defineType({
       readOnly: true,
       description: "Current test report for this project",
     }),
+    defineField({
+      name: "workOrder",
+      title: "Work Order",
+      type: "reference",
+      to: [{ type: "workOrder" }],
+      readOnly: true,
+      description: "Current work order for this project",
+    }),
   ],
 });
 
