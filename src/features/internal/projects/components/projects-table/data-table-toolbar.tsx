@@ -1,69 +1,78 @@
+"use client";
+
 import { Cross2Icon } from "@radix-ui/react-icons";
-import { Table } from "@tanstack/react-table";
+import type { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
-import { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../sanity.types";
+import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import {
+  DUE_STATUS_FILTERS,
+  QUOTATION_STATUS_FILTERS,
+} from "../../constants";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
-  sampleClasses: ALL_SAMPLE_CLASSES_QUERY_RESULT;
-  statuses: string[];
-  openDialog: () => void;
+  onDeleteSelected?: () => void;
 }
 
-export function DataTableToolbar<TData>({ table, sampleClasses, statuses, openDialog }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-
-  const sample_classes = sampleClasses.map((sampleClass) => ({
-    value: sampleClass?.name?.toLowerCase().replace(/\s+/g, "") || "",
-    label: sampleClass?.name || "",
-  }));
+export function DataTableToolbar<TData>({
+  table,
+  onDeleteSelected,
+}: DataTableToolbarProps<TData>) {
+  const isFiltered =
+    table.getState().columnFilters.length > 0 ||
+    Boolean(table.getState().globalFilter);
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex flex-wrap gap-2 flex-1 items-center">
+      <div className="flex flex-1 flex-wrap items-center gap-2">
         <Input
-          placeholder="Filter services by code"
-          value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("code")?.setFilterValue(event.target.value)}
+          placeholder="Search projects..."
+          value={(table.getState().globalFilter as string) ?? ""}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {table.getColumn("sample_class") && (
+        {table.getColumn("quotationStatus") ? (
           <DataTableFacetedFilter
-            column={table.getColumn("sample_class")}
-            title="Sample Class"
-            options={sample_classes}
+            column={table.getColumn("quotationStatus")}
+            title="Filter by billing status"
+            options={[...QUOTATION_STATUS_FILTERS]}
           />
-        )}
-        {/* {table.getColumn("status") && (
+        ) : null}
+        {table.getColumn("dueStatus") ? (
           <DataTableFacetedFilter
-            column={table.getColumn("status")}
-            title="Status"
-            options={statuses}
+            column={table.getColumn("dueStatus")}
+            title="Filter by Due Condition"
+            options={[...DUE_STATUS_FILTERS]}
           />
-        )} */}
-        {isFiltered && (
-          <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
+        ) : null}
+        {isFiltered ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              table.resetColumnFilters();
+              table.setGlobalFilter("");
+            }}
+            className="h-8 px-2 lg:px-3"
+          >
             Reset
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
-        )}
-        {table.getSelectedRowModel().rows.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Button variant="destructive" onClick={openDialog} size="sm" className="h-8">
-              Delete {table.getSelectedRowModel().rows.length} selected
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {table.getSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
-            </span>
-          </div>
-        )}
+        ) : null}
+        {selectedCount > 0 && onDeleteSelected ? (
+          <Button
+            variant="destructive"
+            onClick={onDeleteSelected}
+            size="sm"
+            className="h-8"
+          >
+            Delete {selectedCount} selected
+          </Button>
+        ) : null}
       </div>
-
       <DataTableViewOptions table={table} />
     </div>
   );

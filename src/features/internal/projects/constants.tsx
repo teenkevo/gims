@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { ALL_PROJECTS_QUERY_RESULT, Quotation } from "../../../../sanity.types";
 import { Priority, ProjectStage } from "./types";
+import { isOverdue } from "@/lib/project-due";
 
 export const possibleStages: ProjectStage[] = [
   "BILLING",
@@ -178,6 +179,36 @@ export function getProjectBillingStatusLabel(
     case "fully_paid":
       return "Fully paid";
     default:
-      return "Not Billed";
+      return "Not billed";
   }
+}
+
+export const QUOTATION_STATUS_FILTERS = [
+  { label: "Not billed", value: "none" },
+  { label: "Draft", value: "draft" },
+  { label: "Awaiting feedback", value: "sent" },
+  { label: "Accepted", value: "accepted" },
+  { label: "Rejected", value: "rejected" },
+  { label: "Invoiced", value: "invoiced" },
+  { label: "Partially paid", value: "partially_paid" },
+  { label: "Fully paid", value: "fully_paid" },
+] as const;
+
+export const DUE_STATUS_FILTERS = [
+  { label: "Overdue", value: "overdue" },
+  { label: "Upcoming", value: "upcoming" },
+  { label: "No due date", value: "unset" },
+] as const;
+
+export function getProjectQuotationStatus(
+  project: ALL_PROJECTS_QUERY_RESULT[number]
+) {
+  return project.quotation?.status ?? "none";
+}
+
+export function getProjectDueStatus(
+  project: ALL_PROJECTS_QUERY_RESULT[number]
+) {
+  if (!project.endDate) return "unset";
+  return isOverdue(project.endDate) ? "overdue" : "upcoming";
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowUp,
-  Clock,
+  CircleAlert,
   FilePlus,
   FileStack,
   FileText,
@@ -45,10 +45,18 @@ type Metric = {
   value: number;
   href: string;
   icon: LucideIcon;
+  iconClassName?: string;
   change?: MonthChange | null;
 };
 
-function MetricCard({ label, value, href, icon: Icon, change }: Metric) {
+function MetricCard({
+  label,
+  value,
+  href,
+  icon: Icon,
+  iconClassName,
+  change,
+}: Metric) {
   return (
     <Link
       href={href}
@@ -61,7 +69,7 @@ function MetricCard({ label, value, href, icon: Icon, change }: Metric) {
           <ChangeBadge change={change} />
         ) : (
           <Icon
-            className="size-4 shrink-0 text-muted-foreground"
+            className={`size-4 shrink-0 ${iconClassName ?? "text-muted-foreground"}`}
             strokeWidth={1}
           />
         )}
@@ -154,19 +162,20 @@ export function MetricCards({
     {
       label: "Quotations Awaiting Feedback",
       value: data.awaitingClient,
-      href: "/projects",
+      href: "/projects?quotation=sent",
       icon: FileText,
     },
     {
       label: "Overdue",
       value: data.overdueProjects,
-      href: "/projects",
-      icon: Clock,
+      href: "/projects?due=overdue",
+      icon: CircleAlert,
+      iconClassName: "text-destructive",
     },
     {
       label: "Needs quotation",
       value: data.needsQuotation,
-      href: "/projects",
+      href: "/projects?quotation=none",
       icon: FilePlus,
     },
   ];

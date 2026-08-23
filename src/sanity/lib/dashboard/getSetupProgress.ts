@@ -1,5 +1,8 @@
 import { defineQuery } from "next-sanity";
 import { sanityFetch } from "../client";
+import { countOverdue, isOverdue } from "@/lib/project-due";
+
+export { countOverdue } from "@/lib/project-due";
 
 export type SetupProgress = {
   projects: number;
@@ -59,19 +62,6 @@ const PROJECT_PROJECTION = `{
   "clientName": clients[0]->name
 }`;
 
-export function countOverdue(
-  dates: Array<string | null | undefined>,
-  now = new Date()
-) {
-  const nowMs = now.getTime();
-  return dates.filter((value) => {
-    if (!value) return false;
-    const time = new Date(value).getTime();
-    if (Number.isNaN(time)) return false;
-    return time < nowMs;
-  }).length;
-}
-
 const INACTIVE_STAFF_STATUSES = new Set([
   "inactive",
   "terminated",
@@ -92,12 +82,14 @@ type WorkloadLabRow = {
     fullName: string | null;
     internalId: string | null;
     status: string | null;
+    projectCount: number | null;
   } | null> | null;
   labHead: {
     _id: string;
     fullName: string | null;
     internalId: string | null;
     status: string | null;
+    projectCount: number | null;
   } | null;
 };
 
@@ -147,9 +139,9 @@ function toWorkload(labs: WorkloadLabRow[] | null | undefined): {
       staffMap.set(person._id, entry);
     }
 
+    entry.projectCount = person.projectCount ?? 0;
     if (!entry.labs.some((assigned) => assigned._id === lab._id)) {
       entry.labs.push(lab);
-      entry.projectCount += lab.projectCount;
     }
   };
 
@@ -198,9 +190,8 @@ export const getDashboardData = async (): Promise<DashboardData> => {
     "sampleClasses": count(*[_type == "sampleClass"]),
     "projectsAtStartOfMonth": count(*[_type == "project" && _createdAt < $startOfThisMonth]),
     "awaitingClient": count(*[_type == "project" && quotation->status == "sent"]),
-    "overdueProjects": count(*[_type == "project" && defined(endDate) && endDate < now()]),
     "needsQuotation": count(*[_type == "project" && !defined(quotation)]),
-    "upcomingProjects": *[_type == "project" && defined(endDate) && endDate >= now()] | order(endDate asc) [0...6] ${PROJECT_PROJECTION},
+    "datedProjects": *[_type == "project" && defined(endDate)] | order(endDate asc) ${PROJECT_PROJECTION},
     "recentProjects": *[_type == "project"] | order(internalId desc) [0...6] ${PROJECT_PROJECTION},
     "workloadLabs": *[_type == "lab" && status != "retired"] | order(name asc) {
       _id,
@@ -214,13 +205,15 @@ export const getDashboardData = async (): Promise<DashboardData> => {
         _id,
         fullName,
         internalId,
-        status
+        status,
+        "projectCount": count(*[_type == "project" && ^._id in projectPersonnel[]._ref])
       },
       labHead->{
         _id,
         fullName,
         internalId,
-        status
+        status,
+        "projectCount": count(*[_type == "project" && ^._id in projectPersonnel[]._ref])
       }
     }
   }`);
@@ -234,15 +227,21 @@ export const getDashboardData = async (): Promise<DashboardData> => {
       revalidate: 0,
     });
 
-    const { workloadLabs, ...dashboard } = data ?? {};
+    const { workloadLabs, datedProjects, ...dashboard } = data ?? {};
     const { labWorkload, staffWorkload } = toWorkload(
       workloadLabs as WorkloadLabRow[] | null | undefined
     );
+    const dated = (datedProjects ?? []) as DashboardProject[];
+    const overdueProjects = countOverdue(dated.map((project) => project.endDate));
+    const upcomingProjects = dated
+      .filter((project) => project.endDate && !isOverdue(project.endDate))
+      .slice(0, 6);
 
     return {
       ...EMPTY_DASHBOARD,
       ...dashboard,
-      upcomingProjects: dashboard.upcomingProjects ?? [],
+      overdueProjects,
+      upcomingProjects,
       recentProjects: dashboard.recentProjects ?? [],
       labWorkload,
       staffWorkload,

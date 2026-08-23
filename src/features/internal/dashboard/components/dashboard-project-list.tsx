@@ -1,17 +1,47 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
 
-import { Badge } from "@/components/ui/badge";
 import NoProjectsPlaceholder from "@/features/internal/projects/components/no-projects-placeholder";
 import { useRBAC } from "@/components/rbac-context";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import type { DashboardProject } from "@/sanity/lib/dashboard/getSetupProgress";
+import { getDueInstant, isOverdue } from "@/lib/project-due";
 
 function projectHref(project: DashboardProject) {
   const name = project.name ?? "";
   return `/projects/${project._id}?project=${encodeURIComponent(name)}&tab=details`;
+}
+
+function formatDueIn(endDate: string, now = new Date()) {
+  const due = getDueInstant(endDate);
+  if (!due) return null;
+  const overdue = isOverdue(endDate, now);
+  const absMs = Math.abs(due.getTime() - now.getTime());
+  const days = Math.floor(absMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(absMs / (1000 * 60 * 60));
+
+  if (days >= 1) {
+    const amount = `${days} ${days === 1 ? "day" : "days"}`;
+    return overdue ? `${amount} overdue` : `Due in ${amount}`;
+  }
+  if (hours >= 1) {
+    const amount = `${hours} ${hours === 1 ? "hour" : "hours"}`;
+    return overdue ? `${amount} overdue` : `Due in ${amount}`;
+  }
+  return overdue ? "Overdue" : "Due this hour";
+}
+
+function DueIn({ endDate }: { endDate: string }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return <>{formatDueIn(endDate, new Date(now))}</>;
 }
 
 export function DashboardProjectList({
@@ -57,30 +87,31 @@ export function DashboardProjectList({
               <Link
                 href={projectHref(project)}
                 prefetch
-                className="flex items-start justify-between gap-3 px-5 py-3 transition-colors hover:bg-muted/50"
+                className="block px-5 py-3 transition-colors hover:bg-muted/50"
               >
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">
+                <span className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 truncate text-sm font-medium">
                     {project.name ?? "Untitled project"}
                   </span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                    {[
-                      project.internalId,
-                      project.clientName,
-                      project.endDate
-                        ? `Due ${format(new Date(project.endDate), "LLL d, yyyy")}`
-                        : null,
-                    ]
+                  {/* <Badge
+                    variant={project.quoted ? "default" : "secondary"}
+                    className="shrink-0 font-normal"
+                  >
+                    {project.quoted ? "Quoted" : "In progress"}
+                  </Badge> */}
+                </span>
+                <span className="mt-2 flex items-baseline justify-between gap-3 text-xs text-muted-foreground">
+                  <span className="min-w-0 truncate">
+                    {[project.internalId, project.clientName]
                       .filter(Boolean)
                       .join(" · ")}
                   </span>
+                  {project.endDate ? (
+                    <span className="shrink-0 text-destructive">
+                      <DueIn endDate={project.endDate} />
+                    </span>
+                  ) : null}
                 </span>
-                <Badge
-                  variant={project.quoted ? "default" : "secondary"}
-                  className="shrink-0 font-normal"
-                >
-                  {project.quoted ? "Quoted" : "In progress"}
-                </Badge>
               </Link>
             </li>
           ))}

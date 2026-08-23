@@ -6,14 +6,13 @@ import { FlaskConical, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLabSectionLabel } from "@/features/internal/labs/constants";
-import { cn } from "@/lib/utils";
 import type {
   LabWorkload,
   StaffWorkload,
 } from "@/sanity/lib/dashboard/getSetupProgress";
 
 const MAX_ROWS = 6;
-const STAFF_LOAD_CAP = 5;
+const STAFF_LOAD_CAP = 12;
 
 type WorkloadCardProps = {
   labs: LabWorkload[];
@@ -38,19 +37,24 @@ function isLabOverloaded(lab: LabWorkload) {
   return utilization !== null && utilization > 1;
 }
 
-function staffUtilization(person: StaffWorkload): number | null {
-  const fromLabs = person.labs
-    .map((lab) => labUtilization(lab))
-    .filter((value): value is number => value !== null);
-  if (fromLabs.length > 0) return Math.max(...fromLabs);
-  if (person.projectCount <= 0) return 0;
+function isLabAtCapacity(lab: LabWorkload) {
+  if (lab.status === "fullCapacity") return true;
+  const utilization = labUtilization(lab);
+  return utilization !== null && utilization >= 1;
+}
+
+function staffUtilization(person: StaffWorkload): number {
   return person.projectCount / STAFF_LOAD_CAP;
 }
 
 function isStaffOverloaded(person: StaffWorkload) {
   return (
-    person.labs.some(isLabOverloaded) || person.projectCount >= STAFF_LOAD_CAP
+    person.labs.some(isLabOverloaded) || person.projectCount > STAFF_LOAD_CAP
   );
+}
+
+function isStaffAtCapacity(person: StaffWorkload) {
+  return person.projectCount >= STAFF_LOAD_CAP;
 }
 
 function sortLabs(labs: LabWorkload[]) {
@@ -77,21 +81,24 @@ function sortStaff(staff: StaffWorkload[]) {
   });
 }
 
-function LoadBar({
-  value,
-  overloaded,
-}: {
-  value: number;
-  overloaded: boolean;
-}) {
+function loadTone(percent: number) {
+  if (percent >= 80) return "text-red-600 dark:text-red-400";
+  if (percent >= 40) return "text-orange-500 dark:text-orange-400";
+  return "text-emerald-600 dark:text-emerald-500";
+}
+
+function LoadBar({ value }: { value: number }) {
+  const percent = Math.min(Math.max(value, 0), 100);
+
   return (
-    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
       <div
-        className={cn(
-          "h-full rounded-full transition-all",
-          overloaded ? "bg-destructive" : "bg-primary"
-        )}
-        style={{ width: `${Math.min(Math.max(value, 0), 100)}%` }}
+        className="h-full w-full rounded-full transition-[clip-path]"
+        style={{
+          clipPath: `inset(0 ${100 - percent}% 0 0)`,
+          background:
+            "linear-gradient(to right, #22c55e 0%, #22c55e 28%, #fb923c 55%, #ef4444 100%)",
+        }}
       />
     </div>
   );
@@ -139,8 +146,8 @@ function EmptyState({
 export function WorkloadCard({ labs, staff }: WorkloadCardProps) {
   const labRows = sortLabs(labs).slice(0, MAX_ROWS);
   const staffRows = sortStaff(staff).slice(0, MAX_ROWS);
-  const overloadedLabs = labs.filter(isLabOverloaded).length;
-  const overloadedStaff = staff.filter(isStaffOverloaded).length;
+  const fullLabs = labs.filter(isLabAtCapacity).length;
+  const fullStaff = staff.filter(isStaffAtCapacity).length;
 
   return (
     <div className="rounded-2xl border bg-gradient-to-b from-muted/20 to-muted/40 shadow-sm">
@@ -149,24 +156,21 @@ export function WorkloadCard({ labs, staff }: WorkloadCardProps) {
           <h2 className="px-1 text-base font-semibold tracking-tight">
             Workload Distribution
           </h2>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {" "}
-            Track the workload of your laboratories and staff.{" "}
-          </p>
+
           <TabsList className="my-4 h-10">
             <TabsTrigger value="labs" className="gap-1.5 text-xs sm:text-sm">
               Laboratories
-              {overloadedLabs > 0 ? (
-                <span className="rounded-md bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">
-                  {overloadedLabs}
+              {fullLabs > 0 ? (
+                <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[11px] font-medium text-red-600 dark:text-red-400">
+                  {fullLabs}
                 </span>
               ) : null}
             </TabsTrigger>
             <TabsTrigger value="staff" className="gap-1.5 text-xs sm:text-sm">
               Staff
-              {overloadedStaff > 0 ? (
-                <span className="rounded-md bg-destructive/10 px-1.5 py-0.5 text-[11px] font-medium text-destructive">
-                  {overloadedStaff}
+              {fullStaff > 0 ? (
+                <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[11px] font-medium text-red-600 dark:text-red-400">
+                  {fullStaff}
                 </span>
               ) : null}
             </TabsTrigger>
@@ -217,13 +221,15 @@ export function WorkloadCard({ labs, staff }: WorkloadCardProps) {
                           {overloaded ? (
                             <OverloadBadge />
                           ) : percent !== null ? (
-                            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                            <span
+                              className={`shrink-0 text-xs tabular-nums ${loadTone(percent)}`}
+                            >
                               {percent}%
                             </span>
                           ) : null}
                         </div>
                         {percent !== null ? (
-                          <LoadBar value={percent} overloaded={overloaded} />
+                          <LoadBar value={percent} />
                         ) : (
                           <p className="mt-2 text-[11px] text-muted-foreground">
                             Set workstation capacity to track overload.
@@ -261,8 +267,7 @@ export function WorkloadCard({ labs, staff }: WorkloadCardProps) {
                 {staffRows.map((person) => {
                   const utilization = staffUtilization(person);
                   const overloaded = isStaffOverloaded(person);
-                  const percent =
-                    utilization === null ? 0 : Math.round(utilization * 100);
+                  const percent = Math.round(utilization * 100);
                   const labNames = person.labs
                     .map((lab) => lab.name)
                     .filter(Boolean)
@@ -286,7 +291,7 @@ export function WorkloadCard({ labs, staff }: WorkloadCardProps) {
                             </span>
                             <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                               {[
-                                pluralize(person.projectCount, "project"),
+                                `${person.projectCount} / ${STAFF_LOAD_CAP} assigned`,
                                 labNames ||
                                   pluralize(person.labs.length, "lab"),
                               ]
@@ -294,9 +299,17 @@ export function WorkloadCard({ labs, staff }: WorkloadCardProps) {
                                 .join(" · ")}
                             </span>
                           </span>
-                          {overloaded ? <OverloadBadge /> : null}
+                          {overloaded ? (
+                            <OverloadBadge />
+                          ) : (
+                            <span
+                              className={`shrink-0 text-xs tabular-nums ${loadTone(percent)}`}
+                            >
+                              {percent}%
+                            </span>
+                          )}
                         </div>
-                        <LoadBar value={percent} overloaded={overloaded} />
+                        <LoadBar value={percent} />
                       </Link>
                     </li>
                   );

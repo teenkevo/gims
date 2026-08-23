@@ -17,8 +17,11 @@ import {
   quotationTotal,
   isQuotationAmountVisible,
   getProjectBillingStatusLabel,
+  getProjectQuotationStatus,
+  getProjectDueStatus,
 } from "../../constants";
 import { ProjectTableRowActions } from "./project-table-row-actions";
+import { OverdueIndicator } from "./overdue-indicator";
 
 const selectColumn: ColumnDef<ALL_PROJECTS_QUERY_RESULT[number]> = {
   id: "select",
@@ -96,6 +99,26 @@ export const getColumns = (
     },
   },
   {
+    id: "quotationStatus",
+    accessorFn: (row) => getProjectQuotationStatus(row),
+    filterFn: (row, id, value: string[]) => {
+      if (!value?.length) return true;
+      return value.includes(row.getValue(id));
+    },
+    enableHiding: true,
+    enableSorting: false,
+  },
+  {
+    id: "dueStatus",
+    accessorFn: (row) => getProjectDueStatus(row),
+    filterFn: (row, id, value: string[]) => {
+      if (!value?.length) return true;
+      return value.includes(row.getValue(id));
+    },
+    enableHiding: true,
+    enableSorting: false,
+  },
+  {
     accessorKey: "startDate",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Start Date" />
@@ -123,22 +146,32 @@ export const getColumns = (
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="End Date" />
     ),
-    cell: ({ row }) =>
-      row.original?.endDate ? (
-        <SetDateRangeDialog
-          canUpdate={canUpdate}
-          icon={<ListEnd className="text-primary w-4 h-4 mr-2" />}
-          buttonText={format(new Date(row.original?.endDate), "dd/LL/yy")}
-          project={row.original}
-        />
-      ) : (
-        <SetDateRangeDialog
-          canUpdate={canUpdate}
-          icon={<TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />}
-          buttonText={canUpdate ? "Set end date" : "Not yet set"}
-          project={row.original}
-        />
-      ),
+    cell: ({ row }) => {
+      const overdue = getProjectDueStatus(row.original) === "overdue";
+
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          {row.original?.endDate ? (
+            <SetDateRangeDialog
+              canUpdate={canUpdate}
+              icon={<ListEnd className="text-primary w-4 h-4 mr-2" />}
+              buttonText={format(new Date(row.original.endDate), "dd/LL/yy")}
+              project={row.original}
+            />
+          ) : (
+            <SetDateRangeDialog
+              canUpdate={canUpdate}
+              icon={<TriangleAlert className="text-orange-500 w-4 h-4 mr-2" />}
+              buttonText={canUpdate ? "Set end date" : "Not yet set"}
+              project={row.original}
+            />
+          )}
+          {overdue && row.original.endDate ? (
+            <OverdueIndicator endDate={row.original.endDate} />
+          ) : null}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "projectBilling",

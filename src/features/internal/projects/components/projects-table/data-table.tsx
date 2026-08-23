@@ -25,27 +25,54 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { DataTableToolbar } from "@/features/customer/services/components/services-table/data-table-toolbar";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import type { ALL_PROJECTS_QUERY_RESULT } from "../../../../../../sanity.types";
-import type { ALL_SAMPLE_CLASSES_QUERY_RESULT } from "../../../../../../sanity.types";
-import type { ALL_STANDARDS_QUERY_RESULT } from "../../../../../../sanity.types";
-import { getColumns } from "./columns"; // Import the function instead of the constant
-import { deleteMultipleServices } from "@/lib/actions";
+import { getColumns } from "./columns";
 import { DeleteMultipleServices } from "./delete-multiple-services";
+import { DataTableToolbar } from "./data-table-toolbar";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useRBAC } from "@/components/rbac-context";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps {
   data: ALL_PROJECTS_QUERY_RESULT;
+  initialColumnFilters?: ColumnFiltersState;
 }
 
-export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>) {
+function projectSearchFn(
+  row: { original: ALL_PROJECTS_QUERY_RESULT[number] },
+  _columnId: string,
+  filterValue: unknown
+) {
+  const query = String(filterValue ?? "")
+    .trim()
+    .toLowerCase();
+  if (!query) return true;
+
+  const project = row.original;
+  const haystack = [
+    project.name,
+    project.internalId,
+    ...(project.clients?.map((client) => client?.name) ?? []),
+    ...(project.clients?.map((client) => client?.internalId) ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(query);
+}
+
+export function DataTable({ data, initialColumnFilters = [] }: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({
+      quotationStatus: false,
+      dueStatus: false,
+    });
+  const [columnFilters, setColumnFilters] =
+    React.useState<ColumnFiltersState>(initialColumnFilters);
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [openDialog, setOpenDialog] = useState<boolean>(false);
@@ -72,12 +99,15 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
       columnVisibility,
       rowSelection,
       columnFilters,
+      globalFilter,
     },
     enableRowSelection: canDelete,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: projectSearchFn,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -92,11 +122,10 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
 
   return (
     <div className="space-y-4">
-      {/* <DataTableToolbar
+      <DataTableToolbar
         table={table}
-        sampleClasses={sampleClasses}
-        openDialog={() => setOpenDialog(true)}
-      /> */}
+        onDeleteSelected={canDelete ? () => setOpenDialog(true) : undefined}
+      />
       <DeleteMultipleServices
         ids={serviceIds}
         open={openDialog && canDelete}
@@ -141,7 +170,7 @@ export function DataTable<TData, TValue>({ data }: DataTableProps<TData, TValue>
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No services.
+                  No projects.
                 </TableCell>
               </TableRow>
             )}

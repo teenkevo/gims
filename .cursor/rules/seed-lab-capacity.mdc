@@ -1,0 +1,26 @@
+---
+description: Seed ~70 projects and never assign more work to a lab than its capacity.
+globs: src/lib/seed/**
+alwaysApply: true
+---
+
+# Seed projects and lab capacity
+
+When changing seed data (`src/lib/seed/`):
+
+- Keep **about 70 projects** (`PROJECT_COUNT` in `ids.ts`), including the six featured jobs.
+- A lab's `projects` length must never exceed that lab's `capacity` (`LAB_CAPACITIES`). Assign extras only into remaining workstation slots; leftover projects stay unassigned rather than overflowing a lab.
+- Vary lab fill (`LAB_TARGET_LOADS`). Only **one** lab should sit at capacity; the others stay below so workload is mixed.
+- Do not set lab `status` to `fullCapacity` just because the lab is fully booked. The dashboard treats `fullCapacity` as overload even at 100% utilization. Use `"available"`.
+- Use `assignProjectsWithinCapacity()` so a seed that would overflow throws instead of silently dropping work.
+- Staff workload is **assigned projects** (`projectPersonnel`), not the lab's full queue. Concentrate extras on one technician so not everyone looks overloaded.
+
+```ts
+// ❌ BAD — soil has 4 featured jobs and capacity 2
+projects: [jinja, namanve, gulu, marina]
+
+// ✅ GOOD — fill remaining slots only
+projects: assignProjectsWithinCapacity({ soil, concrete, asphalt }).soil.map(seedRef)
+capacity: LAB_CAPACITIES.soil
+status: "available"
+```
