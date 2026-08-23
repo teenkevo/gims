@@ -5,6 +5,7 @@ export const getAllProjects = async () => {
   const ALL_PROJECTS_QUERY = defineQuery(`
         *[_type == "project"] | order(internalId desc) {
           _id,
+          _createdAt,
           internalId,
           name,
           startDate, 

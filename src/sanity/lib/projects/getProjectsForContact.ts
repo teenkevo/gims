@@ -4,6 +4,7 @@ import { sanityFetch } from "../client";
 const PROJECTS_FOR_CONTACT_QUERY = defineQuery(`
   *[_type == "project" && references($contactPersonId)] | order(internalId desc) {
     _id,
+    _createdAt,
     internalId,
     name,
     startDate,

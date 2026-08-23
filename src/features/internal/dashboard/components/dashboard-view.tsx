@@ -5,6 +5,7 @@ import { GettingStarted } from "./getting-started";
 import { DashboardHeader } from "./dashboard-header";
 import { MetricCards } from "./metric-cards";
 import { DashboardProjectList } from "./dashboard-project-list";
+import { WorkloadCard } from "./workload-card";
 import type { DashboardData } from "@/sanity/lib/dashboard/getSetupProgress";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +23,9 @@ export function DashboardView({
       <DashboardHeader firstName={firstName} fullName={fullName} />
       <MetricCards data={data} />
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,32rem)]">
-        <div className="order-1 lg:order-2">
+        <div className="order-1 flex flex-col gap-6 lg:order-2">
           <GettingStarted progress={data} />
+          <WorkloadCard labs={data.labWorkload} staff={data.staffWorkload} />
         </div>
         <div className="order-2 lg:order-1">
           <DashboardProjectList
@@ -40,7 +42,7 @@ export function ClientDashboardView({
   firstName,
   fullName,
   projects,
-  projectsDueSoon,
+  projectsAtStartOfMonth,
   awaitingClient,
   overdueProjects,
   needsQuotation,
@@ -49,7 +51,7 @@ export function ClientDashboardView({
   firstName: string | null;
   fullName: string;
   projects: number;
-  projectsDueSoon: number;
+  projectsAtStartOfMonth: number;
   awaitingClient: number;
   overdueProjects: number;
   needsQuotation: number;
@@ -86,7 +88,7 @@ export function ClientDashboardView({
       <MetricCards
         data={{
           projects,
-          projectsDueSoon,
+          projectsAtStartOfMonth,
           awaitingClient,
           overdueProjects,
           needsQuotation,

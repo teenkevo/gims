@@ -6,7 +6,6 @@ import {
 import { requireAuthOrRedirect } from "@/lib/auth/session";
 import { USER_TYPES } from "@/lib/auth/user-type";
 import {
-  countDueSoon,
   countOverdue,
   getDashboardData,
 } from "@/sanity/lib/dashboard/getSetupProgress";
@@ -22,6 +21,16 @@ export default async function DashboardPage() {
 
   if (session.userType === USER_TYPES.CLIENT) {
     const projects = await getProjectsForSession(session);
+    const now = new Date();
+    const startOfThisMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    ).getTime();
+    const projectsAtStartOfMonth = projects.filter((project) => {
+      const createdAt = Date.parse(project._createdAt);
+      return !Number.isNaN(createdAt) && createdAt < startOfThisMonth;
+    }).length;
     const projectItems = projects.slice(0, 6).map((project) => ({
       _id: project._id,
       name: project.name ?? null,
@@ -37,9 +46,7 @@ export default async function DashboardPage() {
         firstName={session.user.firstName}
         fullName={session.user.fullName}
         projects={projects.length}
-        projectsDueSoon={countDueSoon(
-          projects.map((project) => project.endDate)
-        )}
+        projectsAtStartOfMonth={projectsAtStartOfMonth}
         awaitingClient={
           projects.filter((project) => project.quotation?.status === "sent")
             .length
