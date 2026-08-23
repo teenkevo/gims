@@ -40,9 +40,11 @@ const formVariants = {
 export function CreateProjectForm({
   clients,
   labId,
+  from,
 }: {
   clients: ALL_CLIENTS_QUERY_RESULT;
   labId?: string;
+  from?: string;
 }) {
   const router = useRouter();
   const { can } = useRBAC();
@@ -73,6 +75,12 @@ export function CreateProjectForm({
   const {
     formState: { isValid },
   } = form;
+
+  const backHref = labId
+    ? `/labs/${labId}?tab=projects`
+    : from === "dashboard"
+      ? "/dashboard"
+      : "/projects";
 
   const onSubmit = (data: z.infer<typeof createProjectFormSchema>) => {
     const formData = new FormData();
@@ -127,7 +135,7 @@ export function CreateProjectForm({
     <>
       <Link
         className="mb-10 text-sm inline-flex tracking-tight underline underline-offset-4"
-        href={labId ? `/labs/${labId}?tab=projects` : "/projects"}
+        href={backHref}
       >
         <ArrowLeftCircle className="mr-5 text-primary" />
         Go back

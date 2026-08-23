@@ -1,14 +1,13 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { capitalizeWords } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 type TBreadCrumbProps = {
-  homeElement: ReactNode;
-  separator: ReactNode;
+  separator: React.ReactNode;
   containerClasses?: string;
   listClasses?: string;
   activeClasses?: string;
@@ -16,7 +15,6 @@ type TBreadCrumbProps = {
 };
 
 const NextBreadcrumb = ({
-  homeElement,
   separator,
   containerClasses,
   listClasses,
@@ -24,8 +22,11 @@ const NextBreadcrumb = ({
   capitalizeLinks,
 }: TBreadCrumbProps) => {
   const paths = usePathname();
-  const pathNames = paths.split("/").filter((path) => path);
+  const pathNames = paths
+    .split("/")
+    .filter((path) => path && path !== "dashboard");
   const searchParams = useSearchParams();
+  const isDashboard = paths === "/dashboard";
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -38,8 +39,8 @@ const NextBreadcrumb = ({
   return (
     <div>
       <ul className={containerClasses}>
-        <li className={listClasses}>
-          <Link href={"/projects"}>{homeElement}</Link>
+        <li className={isDashboard ? activeClasses : listClasses}>
+          <Link href={"/dashboard"}>Dashboard</Link>
         </li>
         {pathNames.length > 0 && separator}
         {pathNames.map((link, index) => {

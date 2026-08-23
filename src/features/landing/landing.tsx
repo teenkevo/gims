@@ -23,7 +23,7 @@ export function Landing() {
           <LoginButton variant="default" text="Get Started" />
         </div> */}
         <Button variant="default" asChild>
-          <Link href="/projects">Go to application</Link>
+          <Link href="/dashboard">Go to application</Link>
         </Button>
 
         <Features />

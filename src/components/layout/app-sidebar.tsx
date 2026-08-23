@@ -9,6 +9,7 @@ import {
   FileStack,
   FileText,
   FlaskConical,
+  LayoutDashboard,
   LayoutList,
   Rocket,
   ShieldCheck,
@@ -33,7 +34,23 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, can, isAccessLoading, isClientUser } = useRBAC();
 
+  const overviewNav = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      isDisabled: false,
+    },
+  ];
+
   const clientPortalNav = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      isActive: false,
+      isDisabled: false,
+    },
     {
       title: "Projects",
       url: "/projects",
@@ -144,6 +161,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </>
         ) : (
           <>
+            <NavGroup items={overviewNav} />
             <NavGroup label="Projects & delivery" items={projectsDeliveryNav} />
             <NavGroup label="Organization" items={organizationNav} />
             <NavGroup

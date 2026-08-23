@@ -56,14 +56,14 @@ export function NavGroup({
     }[];
     isDisabled?: boolean;
   }[];
-  label: string;
+  label?: string;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      {label ? <SidebarGroupLabel>{label}</SidebarGroupLabel> : null}
       <SidebarMenu>
         {items.map((item) => {
           const isItemActive =

@@ -34,7 +34,7 @@ export function Beta() {
         ) : isSignedIn ? (
           <div className="relative inline-block">
             <Button asChild>
-              <Link href="/projects">Go to App</Link>
+              <Link href="/dashboard">Go to App</Link>
             </Button>
             <Badge
               variant="secondary"
@@ -44,7 +44,7 @@ export function Beta() {
             </Badge>
           </div>
         ) : (
-          <SignInButton mode="redirect" forceRedirectUrl="/projects">
+          <SignInButton mode="redirect" forceRedirectUrl="/dashboard">
             <Button>Test application</Button>
           </SignInButton>
         )}

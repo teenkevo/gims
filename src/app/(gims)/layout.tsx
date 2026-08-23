@@ -32,7 +32,6 @@ export default function Layout({ children }: LayoutProps) {
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <NextBreadcrumb
-                homeElement={"Home"}
                 separator={
                   <BreadcrumbSeparator className="text-foreground flex justify-center space-x-2 items-center" />
                 }

@@ -6,15 +6,15 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 export default async function CreateProjectPage({
   searchParams,
 }: {
-  searchParams: Promise<{ labId?: string }>;
+  searchParams: Promise<{ labId?: string; from?: string }>;
 }) {
   await requirePermission(PERMISSIONS["projects:create"]);
 
-  const { labId } = await searchParams;
+  const { labId, from } = await searchParams;
   const clients = await getAllClients();
   return (
     <div className="flex flex-col">
-      <CreateProjectForm clients={clients} labId={labId} />
+      <CreateProjectForm clients={clients} labId={labId} from={from} />
     </div>
   );
 }
