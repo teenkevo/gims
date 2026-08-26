@@ -15,6 +15,7 @@ const CRUD_VERBS: Record<string, string> = {
   update: "Update",
   delete: "Delete",
   manage: "Manage",
+  approve: "Approve",
 };
 
 function singularizeResourceLabel(label: string): string {

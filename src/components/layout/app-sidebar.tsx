@@ -5,6 +5,7 @@ import {
   Briefcase,
   Building2,
   Cable,
+  CalendarDays,
   Database,
   FileStack,
   FileText,
@@ -87,6 +88,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/personnel",
       icon: Users,
       isDisabled: !can(PERMISSIONS["personnel:read"]),
+    },
+    {
+      title: "Leave Management",
+      url: "/leave",
+      icon: CalendarDays,
+      isDisabled: !can(PERMISSIONS["leave:read"]),
     },
   ];
 

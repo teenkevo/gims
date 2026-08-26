@@ -29,6 +29,8 @@ import { workOrder } from "./work-order";
 import { auditLog } from "./audit-log";
 import { appUser } from "./app-user";
 import { appRole } from "./app-role";
+import { leavePlan } from "./leave-plan";
+
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     standard, // CRUD ✅
@@ -44,6 +46,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     contactPerson, // CRUD ✅
     lab,
     personnel,
+    leavePlan,
     department,
     equipment,
     maintenanceLog,

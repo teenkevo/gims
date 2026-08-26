@@ -7,6 +7,7 @@ const READ = {
   labs: PERMISSIONS["labs:read"],
   equipment: PERMISSIONS["equipment:read"],
   personnel: PERMISSIONS["personnel:read"],
+  leave: PERMISSIONS["leave:read"],
   rfi: PERMISSIONS["rfi:read"],
   billing: PERMISSIONS["billing:read"],
   security: PERMISSIONS["security:read"],
@@ -18,6 +19,8 @@ const LAB_READ: Permission[] = [
   READ.equipment,
   READ.services,
   READ.rfi,
+  READ.leave,
+  PERMISSIONS["leave:create"],
 ];
 
 const LAB_WRITE: Permission[] = [
@@ -35,6 +38,8 @@ const OFFICE_READ: Permission[] = [
   READ.services,
   READ.billing,
   READ.rfi,
+  READ.leave,
+  PERMISSIONS["leave:create"],
 ];
 
 const OFFICE_WRITE: Permission[] = [
@@ -56,6 +61,9 @@ const HR_PERMISSIONS: Permission[] = [
   PERMISSIONS["personnel:delete"],
   READ.personnel,
   READ.security,
+  PERMISSIONS["leave:update"],
+  PERMISSIONS["leave:delete"],
+  PERMISSIONS["leave:approve"],
 ];
 
 const MANAGEMENT_PERMISSIONS: Permission[] = [
@@ -67,12 +75,17 @@ const MANAGEMENT_PERMISSIONS: Permission[] = [
   PERMISSIONS["equipment:update"],
   PERMISSIONS["services:update"],
   READ.security,
+  PERMISSIONS["leave:update"],
+  PERMISSIONS["leave:delete"],
+  PERMISSIONS["leave:approve"],
 ];
 
 /** Default when a departmental role has no explicit mapping. */
 export const DEFAULT_DEPARTMENT_ROLE_PERMISSIONS: Permission[] = [
   READ.projects,
   READ.services,
+  READ.leave,
+  PERMISSIONS["leave:create"],
 ];
 
 function normalize(value: string): string {

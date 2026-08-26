@@ -88,7 +88,7 @@ function StatusIcon({
   }
 
   return (
-    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary">
       <Icon className="size-5" />
     </span>
   );
@@ -125,17 +125,14 @@ function TaskLink({
     <Link
       href={href}
       prefetch
-      className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors",
-        complete ? "hover:bg-muted/50" : "bg-muted/40 hover:bg-muted"
-      )}
+      className="group flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted/50"
     >
       <StatusIcon complete={complete} icon={icon} />
       <span className="min-w-0 flex-1">
         <span
           className={cn(
             "block text-sm font-semibold",
-            complete && "text-muted-foreground"
+            complete && "text-muted-foreground line-through"
           )}
         >
           {title}
@@ -225,19 +222,14 @@ export function GettingStarted({ progress }: GettingStartedProps) {
             />
 
             <Collapsible open={masterOpen} onOpenChange={setMasterOpen}>
-              <div
-                className={cn(
-                  "rounded-xl",
-                  masterDataDone ? "" : "bg-muted/40"
-                )}
-              >
-                <CollapsibleTrigger className="group flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-muted/60">
+              <div className="rounded-xl">
+                <CollapsibleTrigger className="group flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-muted/50">
                   <StatusIcon complete={masterDataDone} icon={Database} />
                   <span className="min-w-0 flex-1">
                     <span
                       className={cn(
                         "block text-sm font-semibold",
-                        masterDataDone && "text-muted-foreground"
+                        masterDataDone && "text-muted-foreground line-through"
                       )}
                     >
                       {masterDataDone
@@ -361,7 +353,9 @@ function NestedTask({
         <span
           className={cn(
             "block text-sm",
-            complete ? "text-muted-foreground" : "font-medium"
+            complete
+              ? "text-muted-foreground line-through"
+              : "font-medium"
           )}
         >
           {title}

@@ -2552,10 +2552,16 @@ export async function deleteMultipleContacts(contactIds: string[]) {
   const denied = await requirePermissionOrError(PERMISSIONS["clients:update"]);
   if (denied) return denied;
 
+  if (contactIds.length === 0) {
+    return { results: [], status: "ok" };
+  }
+
   try {
-    const results = await Promise.all(
-      contactIds.map(async (contactId) => await writeClient.delete(contactId))
-    );
+    const tx = writeClient.transaction();
+    for (const contactId of contactIds) {
+      tx.delete(contactId);
+    }
+    const results = await tx.commit({ returnDocuments: false });
     revalidateTag("contactPerson");
     return { results, status: "ok" };
   } catch (error) {
@@ -2603,19 +2609,32 @@ export async function deleteClient(clientId: string) {
   if (denied) return denied;
 
   try {
-    // delete all contact persons for the client
-    const contactPersons = await writeClient.fetch(
-      `*[_type == "contactPerson" && client._ref == "${clientId}"]`
-    );
+    const relatedIds = [
+      ...new Set(
+        await writeClient.fetch<string[]>(
+          `*[
+            (
+              _type in ["contactPerson", "appUser", "clientFeedback"] &&
+              client._ref == $clientId
+            ) || (
+              _type == "appUser" &&
+              contactPerson._ref in *[_type == "contactPerson" && client._ref == $clientId]._id
+            )
+          ]._id`,
+          { clientId }
+        )
+      ),
+    ];
 
-    const contactPersonIds = contactPersons.map(
-      (contactPerson: any) => contactPerson._id
-    );
+    const tx = writeClient.transaction();
+    for (const id of relatedIds) {
+      tx.delete(id);
+    }
+    tx.delete(clientId);
 
-    await deleteMultipleContacts(contactPersonIds);
-
-    const result = await writeClient.delete(clientId);
+    const result = await tx.commit({ returnDocuments: false });
     revalidateTag("clients");
+    revalidateTag("contactPerson");
     return {
       result,
       status: "ok",

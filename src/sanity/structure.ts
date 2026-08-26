@@ -13,6 +13,7 @@ import {
 const GROUPED_DOCUMENT_TYPES = [
   "department",
   "personnel",
+  "leavePlan",
   "lab",
   "project",
   "quotation",
@@ -52,6 +53,7 @@ export const structure: StructureResolver = (S) =>
             .items([
               S.documentTypeListItem("department").title("Departments"),
               S.documentTypeListItem("personnel").title("Personnel"),
+              S.documentTypeListItem("leavePlan").title("Leave Plans"),
               S.documentTypeListItem("lab").title("Labs"),
             ])
         ),

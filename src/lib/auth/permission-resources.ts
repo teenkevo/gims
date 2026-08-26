@@ -47,6 +47,12 @@ export const PERMISSION_RESOURCES: PermissionResource[] = [
     actions: ["create", "read", "update", "delete"],
   },
   {
+    key: "leave",
+    label: "Leave",
+    actions: ["create", "read", "update", "delete"],
+    extraActions: [{ action: "approve", label: "Approve" }],
+  },
+  {
     key: "rfi",
     label: "Requests for Information",
     actions: ["create", "read", "update", "delete"],

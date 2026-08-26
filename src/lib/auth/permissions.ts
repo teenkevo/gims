@@ -37,6 +37,13 @@ export const PERMISSIONS = {
   "personnel:update": "personnel:update",
   "personnel:delete": "personnel:delete",
 
+  // Leave
+  "leave:read": "leave:read",
+  "leave:create": "leave:create",
+  "leave:update": "leave:update",
+  "leave:delete": "leave:delete",
+  "leave:approve": "leave:approve",
+
   // RFIs
   "rfi:read": "rfi:read",
   "rfi:create": "rfi:create",
@@ -81,6 +88,7 @@ const INTERNAL_READ_PERMISSIONS: Permission[] = [
   PERMISSIONS["labs:read"],
   PERMISSIONS["equipment:read"],
   PERMISSIONS["personnel:read"],
+  PERMISSIONS["leave:read"],
   PERMISSIONS["rfi:read"],
   PERMISSIONS["billing:read"],
   PERMISSIONS["report:read"],
@@ -99,6 +107,8 @@ const INTERNAL_WRITE_PERMISSIONS: Permission[] = [
   PERMISSIONS["equipment:update"],
   PERMISSIONS["personnel:create"],
   PERMISSIONS["personnel:update"],
+  PERMISSIONS["leave:create"],
+  PERMISSIONS["leave:update"],
   PERMISSIONS["rfi:create"],
   PERMISSIONS["rfi:update"],
   PERMISSIONS["billing:create"],
@@ -115,6 +125,7 @@ const INTERNAL_DELETE_PERMISSIONS: Permission[] = [
   PERMISSIONS["labs:delete"],
   PERMISSIONS["equipment:delete"],
   PERMISSIONS["personnel:delete"],
+  PERMISSIONS["leave:delete"],
   PERMISSIONS["rfi:delete"],
   PERMISSIONS["billing:delete"],
 ];
@@ -142,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     ...ALL_EXCEPT_SECURITY_MANAGE,
     PERMISSIONS["security:read"],
     PERMISSIONS["report:approve"],
+    PERMISSIONS["leave:approve"],
   ],
   [ROLES.EDITOR]: [...INTERNAL_READ_PERMISSIONS, ...INTERNAL_WRITE_PERMISSIONS],
   [ROLES.VIEWER]: INTERNAL_READ_PERMISSIONS,
