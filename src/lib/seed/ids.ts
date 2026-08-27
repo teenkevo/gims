@@ -127,6 +127,9 @@ export const IDS = {
     action: seedId("feedback-action", "turnaround"),
     survey: seedId("feedback", "unra"),
   },
+  notification: {
+    invoiceIssued: seedId("notification", "invoice-issued"),
+  },
 } as const;
 
 /** Total projects created by the seed, including the six featured jobs. */

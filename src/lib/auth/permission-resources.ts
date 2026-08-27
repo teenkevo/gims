@@ -73,6 +73,12 @@ export const PERMISSION_RESOURCES: PermissionResource[] = [
     actions: ["read"],
     extraActions: [{ action: "manage", label: "Manage" }],
   },
+  {
+    key: "notifications",
+    label: "Notifications",
+    actions: ["read"],
+    extraActions: [{ action: "manage", label: "Manage" }],
+  },
 ];
 
 export function toPermissionKey(

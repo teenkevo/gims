@@ -20,6 +20,15 @@ export type BillingData = {
   items: BillingItemsByCategory;
 };
 
+export const GETLAB_BANK_PAYMENT_DETAILS = {
+  accountName:
+    "GEOTECHNICAL ENGINEERING AND TECHNOLOGY LABORATORY LIMITED",
+  bank: "ABSA Bank",
+  branch: "Ntinda Branch, Kampala, Uganda",
+  accountNumber: "6007328255",
+  swiftCode: "BARCUGKXXX",
+} as const;
+
 function calculateCategoryTotal(items: any[] | undefined): number {
   if (!Array.isArray(items) || items.length === 0) return 0;
   return items.reduce((sum: number, item: BillingItem) => {

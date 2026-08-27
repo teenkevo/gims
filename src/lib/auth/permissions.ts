@@ -67,6 +67,10 @@ export const PERMISSIONS = {
   "report:query": "report:query",
   "report:respond": "report:respond",
 
+  // Notifications
+  "notifications:read": "notifications:read",
+  "notifications:manage": "notifications:manage",
+
   // Security & audit
   "security:read": "security:read",
   "security:manage": "security:manage",

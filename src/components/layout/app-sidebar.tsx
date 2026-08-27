@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  Bell,
   Briefcase,
   Building2,
   Cable,
@@ -94,6 +95,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/leave",
       icon: CalendarDays,
       isDisabled: !can(PERMISSIONS["leave:read"]),
+    },
+    {
+      title: "Notifications",
+      url: "/notifications",
+      icon: Bell,
+      isDisabled:
+        isAccessLoading || !can(PERMISSIONS["notifications:read"]),
     },
   ];
 

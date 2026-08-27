@@ -16,6 +16,11 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePermissionOrError } from "@/lib/auth/with-auth";
 import { getSession } from "@/lib/auth/session";
 import { requireQuotationProjectAccessOrError } from "@/lib/auth/project-scope";
+import {
+  emitInvoiceIssued,
+  emitNotification,
+  emitQuotationSent,
+} from "@/features/internal/notifications/emit";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
@@ -82,6 +87,7 @@ export async function createInvoice(quotationId: string, fileId: string) {
       .commit();
 
     revalidateTag(`quotation`);
+    void emitInvoiceIssued(quotationId, fileId);
     return { result: quotation, status: "ok" };
   } catch (error) {
     console.error("Error creating invoice:", error);
@@ -228,6 +234,22 @@ export async function createQuotation(
     // Revalidate both; projects often render quotation info
     revalidateTag("quotation");
     revalidateTag("projects");
+
+    if (!creatingRevision) {
+      void emitNotification("quotation.created", {
+        projectId: project._id,
+        projectName: project.name ?? undefined,
+        projectInternalId: project.internalId ?? undefined,
+        quotationId,
+        quotationNumber,
+        grandTotal,
+        currency,
+        attachmentFileId: fileId,
+        attachmentFilename: quotationNumber
+          ? `${quotationNumber}.pdf`
+          : undefined,
+      });
+    }
 
     return { result: quotationId, status: "ok" };
   } catch (error) {
@@ -378,7 +400,6 @@ export async function sendQuotation(quotationId: string) {
   const denied = await requirePermissionOrError(PERMISSIONS["billing:update"]);
   if (denied) return denied;
 
-  // TODO: Send email to client
   try {
     await writeClient
       .patch(quotationId as string)
@@ -395,6 +416,8 @@ export async function sendQuotation(quotationId: string) {
     if (projectId) {
       revalidateTag(`project-${projectId}`);
     }
+
+    void emitQuotationSent(quotationId);
 
     return { result: "ok", status: "ok" };
   } catch (error) {
@@ -779,6 +802,12 @@ export async function createClient(prevState: any, formData: FormData) {
     });
 
     revalidateTag("clients");
+    void emitNotification("client.created", {
+      clientId: client._id,
+      clientName: typeof clientName === "string" ? clientName : undefined,
+      clientInternalId:
+        typeof internalId === "string" ? internalId : undefined,
+    });
     return { result: client, status: "ok" };
   } catch (error) {
     console.error("Error creating client:", error);
@@ -1749,6 +1778,8 @@ export async function submitSampleReceiptForApproval(
 
     revalidateTag(`project-${projectId}`);
 
+    void emitNotification("sample.receipt.submitted", { projectId });
+
     return { result: sampleReceipt, status: "ok" };
   } catch (error) {
     console.error("Error submitting sample receipt for approval:", error);
@@ -1821,6 +1852,13 @@ export async function approveSampleReceipt(prevState: any, formData: FormData) {
 
     revalidateTag(`project-${projectId}`);
 
+    if (approvalDecision === "approve") {
+      void emitNotification("sample.receipt.approved", {
+        projectId,
+        status: "approved",
+      });
+    }
+
     return { result: sampleReceipt, status: "ok" };
   } catch (error) {
     console.error("Error processing sample receipt:", error);
@@ -1869,6 +1907,8 @@ export async function acknowledgeSampleReceipt(
       .commit({ autoGenerateArrayKeys: true });
 
     revalidateTag(`project-${projectId}`);
+
+    void emitNotification("sample.receipt.acknowledged", { projectId });
 
     return { result: sampleReceipt, status: "ok" };
   } catch (error) {
@@ -2151,6 +2191,12 @@ export async function createProject(prevState: any, formData: FormData) {
       }
     }
     revalidateTag("projects");
+    void emitNotification("project.created", {
+      projectId: project._id,
+      projectName: typeof projectName === "string" ? projectName : undefined,
+      projectInternalId:
+        typeof internalId === "string" ? internalId : undefined,
+    });
     return { result: project, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
@@ -2195,6 +2241,13 @@ export async function createProjectForClient(
     );
 
     revalidateTag(`client-${clientId}`);
+    void emitNotification("project.created", {
+      projectId: project._id,
+      projectName: typeof projectName === "string" ? projectName : undefined,
+      projectInternalId:
+        typeof internalId === "string" ? internalId : undefined,
+      clientId: typeof clientId === "string" ? clientId : undefined,
+    });
     return { result: project, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
@@ -2352,6 +2405,10 @@ export async function createContactPerson(prevState: any, formData: FormData) {
 
     revalidateTag("contactPerson");
     revalidateTag(`client-${clientId}`);
+    void emitNotification("contact.created", {
+      clientId: typeof clientId === "string" ? clientId : undefined,
+      contactName: typeof name === "string" ? name : undefined,
+    });
     return { result, status: "ok" };
   } catch (error) {
     return { error, status: "error" };
@@ -3834,6 +3891,12 @@ export async function createRFI(prevState: any, formData: FormData) {
       autoGenerateArrayKeys: true,
     });
     revalidateTag("rfi");
+    void emitNotification("rfi.created", {
+      rfiId: result._id,
+      rfiSubject: subject,
+      projectId: project || undefined,
+      clientId: client || undefined,
+    });
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error creating RFI:", error);
@@ -4066,6 +4129,12 @@ export async function sendMessageToRFI(prevState: any, formData: FormData) {
         });
     }
     revalidateTag("rfis");
+    void emitNotification("rfi.message.added", {
+      rfiId,
+      rfiSubject:
+        typeof currentRFI?.subject === "string" ? currentRFI.subject : undefined,
+      detail: message?.slice(0, 180),
+    });
     return { result, status: "ok" };
   } catch (error) {
     console.error("Error sending message to RFI:", error);
@@ -4263,6 +4332,14 @@ export async function updateRFIStatus(
 
     revalidateTag("rfis");
     revalidateTag(`rfi-${rfiId}`);
+
+    if (newStatus === "resolved") {
+      void emitNotification("rfi.resolved", {
+        rfiId,
+        rfiSubject: typeof rfi.subject === "string" ? rfi.subject : undefined,
+        status: "resolved",
+      });
+    }
 
     return { result, status: "ok" };
   } catch (error) {
@@ -4587,6 +4664,12 @@ export async function createLab(prevState: any, formData: FormData) {
 
     revalidateTag("labs");
     revalidatePath("/labs");
+    void emitNotification("lab.created", {
+      labId: lab._id,
+      labName: typeof name === "string" ? name : undefined,
+      labInternalId: typeof internalId === "string" ? internalId : undefined,
+      status: typeof status === "string" ? status : undefined,
+    });
     redirect(`/labs/${lab._id}?registered=1&tab=staffing`);
   } catch (error) {
     if (isRedirectError(error)) throw error;
@@ -4630,6 +4713,11 @@ export async function updateLabIdentity(formData: FormData, labId: string) {
       .commit();
 
     revalidateLab(labId);
+    void emitNotification("lab.status.updated", {
+      labId,
+      labName: result.name as string | undefined,
+      status: typeof status === "string" ? status : undefined,
+    });
     return { result, status: "ok" as const };
   } catch (error) {
     console.error("Error updating lab identity:", error);
@@ -5301,6 +5389,13 @@ export async function createEquipment(prevState: any, formData: FormData) {
 
     revalidateTag("equipment");
     revalidatePath("/equipment");
+    void emitNotification("equipment.created", {
+      equipmentId: equipment._id,
+      equipmentName: typeof name === "string" ? name : undefined,
+      equipmentInternalId:
+        typeof internalId === "string" ? internalId : undefined,
+      status: typeof status === "string" ? status : undefined,
+    });
     return { result: equipment, status: "ok" as const };
   } catch (error) {
     console.error("Error creating equipment:", error);

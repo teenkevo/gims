@@ -13,6 +13,7 @@ const REVALIDATE_TAGS = [
   "clients",
   "sampleReviewTemplate",
   "sampleAdequacyTemplate",
+  "notifications",
 ];
 
 const SEED_DOC_FILTER =

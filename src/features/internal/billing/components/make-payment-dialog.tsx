@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Components
@@ -82,6 +83,9 @@ export function MakePaymentDialog({
   const [loading, setLoading] = useState(false);
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
   const [state, dispatch, isPending] = useActionState(makePayment, null);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const hasAdvancePayment = existingPayments.some(
     (payment: any) => payment.paymentType === "advance"
@@ -201,6 +205,18 @@ export function MakePaymentDialog({
       }
     }
   };
+
+  const shouldOpenFromEmail = searchParams.get("pay") === "1";
+  useEffect(() => {
+    if (!shouldOpenFromEmail) return;
+    handleOpenChange(true);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("pay");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // Open once from the invoice email deep link.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldOpenFromEmail]);
 
   const onSubmit = async (data: PaymentFormData) => {
     if (!paymentType) {

@@ -1,5 +1,6 @@
 import { defineQuery } from "next-sanity";
 import { sanityFetch } from "../client";
+import type { ListedProject } from "./getAllProjects";
 
 const PROJECTS_FOR_CONTACT_QUERY = defineQuery(`
   *[_type == "project" && references($contactPersonId)] | order(internalId desc) {
@@ -58,7 +59,9 @@ const PROJECTS_FOR_CONTACT_QUERY = defineQuery(`
   }
 `);
 
-export async function getProjectsForContact(contactPersonId: string) {
+export async function getProjectsForContact(
+  contactPersonId: string
+): Promise<ListedProject[]> {
   try {
     const projects = await sanityFetch({
       query: PROJECTS_FOR_CONTACT_QUERY,

@@ -23,6 +23,7 @@ import {
   getReliefConflict,
   getUsedEntitlementDays,
 } from "./utils";
+import { emitNotification } from "@/features/internal/notifications/emit";
 
 type ActionResult = { status: "ok" } | { status: "error"; error: string };
 
@@ -325,6 +326,10 @@ export async function submitLeavePlan(planId: string): Promise<ActionResult> {
       metadata: { event: "submitted" },
     });
     await refreshLeave();
+    void emitNotification("leave.plan.submitted", {
+      employeeName: plan.employee?.fullName ?? undefined,
+      detail: `${plan.year ?? ""} leave plan`.trim(),
+    });
     return ok();
   } catch (error) {
     console.error("submitLeavePlan failed", error);
@@ -380,6 +385,16 @@ export async function reviewLeavePlan(input: {
       metadata: { event: input.decision },
     });
     await refreshLeave();
+    void emitNotification(
+      input.decision === "approved"
+        ? "leave.plan.approved"
+        : "leave.plan.changes_requested",
+      {
+        employeeName: plan.employee?.fullName ?? undefined,
+        status: input.decision,
+        detail: input.note?.trim() || undefined,
+      }
+    );
     return ok();
   } catch (error) {
     console.error("reviewLeavePlan failed", error);
@@ -409,6 +424,15 @@ export async function approveLeaveSession(input: {
       metadata: { event: "session_approved", sessionKey: input.sessionKey },
     });
     await refreshLeave();
+    const session = (plan.sessions ?? []).find(
+      (item) => item._key === input.sessionKey
+    );
+    void emitNotification("leave.session.approved", {
+      employeeName: plan.employee?.fullName ?? undefined,
+      detail: session
+        ? `${session.startDate ?? ""} – ${session.endDate ?? ""}`
+        : undefined,
+    });
     return ok();
   } catch (error) {
     console.error("approveLeaveSession failed", error);

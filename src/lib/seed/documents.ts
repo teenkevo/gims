@@ -1446,6 +1446,16 @@ export function buildSeedDocuments(): SeedDoc[] {
     },
   ];
 
+  const notifications: SeedDoc[] = [
+    {
+      _id: IDS.notification.invoiceIssued,
+      _type: "notificationSubscription",
+      eventType: "invoice.issued",
+      enabled: true,
+      departments: keyed([seedRef(IDS.department.finance)], "dept"),
+    },
+  ];
+
   return [
     ...standards,
     ...testMethods,
@@ -1466,5 +1476,6 @@ export function buildSeedDocuments(): SeedDoc[] {
     ...labs,
     ...rfis,
     ...feedback,
+    ...notifications,
   ];
 }

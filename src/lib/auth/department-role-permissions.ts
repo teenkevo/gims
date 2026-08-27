@@ -78,6 +78,8 @@ const MANAGEMENT_PERMISSIONS: Permission[] = [
   PERMISSIONS["leave:update"],
   PERMISSIONS["leave:delete"],
   PERMISSIONS["leave:approve"],
+  PERMISSIONS["notifications:read"],
+  PERMISSIONS["notifications:manage"],
 ];
 
 /** Default when a departmental role has no explicit mapping. */

@@ -56,6 +56,7 @@ export function SendQuotationDialog({
           },
         },
       });
+      return;
     }
     const result = await sendQuotation(quotation._id);
     if (result.status === "ok") {
@@ -95,8 +96,19 @@ export function SendQuotationDialog({
           <DialogHeader className="space-y-3">
             <DialogTitle>Send Quotation</DialogTitle>
             <DialogDescription>
-              This quotation will be sent to the client.
+              This quotation will be emailed to the project&apos;s contact
+              persons, with the quotation PDF attached.
             </DialogDescription>
+            {contactPersons && contactPersons.length > 0 && (
+              <ul className="text-sm text-muted-foreground space-y-1">
+                {contactPersons.map((contact) => (
+                  <li key={contact._id}>
+                    {contact.name}
+                    {contact.email ? ` — ${contact.email}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
               <span className="font-bold">Warning</span>: This action will
               finalize the quotation and send it to the client.
@@ -135,8 +147,19 @@ export function SendQuotationDialog({
         <DrawerHeader className="gap-3 text-left">
           <DialogTitle>Send Quotation</DialogTitle>
           <DialogDescription>
-            This quotation will be sent to the client.
+            This quotation will be emailed to the project&apos;s contact
+            persons, with the quotation PDF attached.
           </DialogDescription>
+          {contactPersons && contactPersons.length > 0 && (
+            <ul className="text-sm text-muted-foreground space-y-1">
+              {contactPersons.map((contact) => (
+                <li key={contact._id}>
+                  {contact.name}
+                  {contact.email ? ` — ${contact.email}` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="bg-orange-500/10 text-orange-500 p-3 rounded text-sm">
             <span className="font-bold">Warning</span>: This action will
             finalize the quotation and send it to the client.

@@ -1,7 +1,12 @@
 import { defineQuery } from "next-sanity";
 import { sanityFetch } from "../client";
+import type { ALL_PROJECTS_QUERY_RESULT } from "../../../../sanity.types";
 
-export const getAllProjects = async () => {
+export type ListedProject = ALL_PROJECTS_QUERY_RESULT[number] & {
+  _createdAt: string;
+};
+
+export const getAllProjects = async (): Promise<ListedProject[]> => {
   const ALL_PROJECTS_QUERY = defineQuery(`
         *[_type == "project"] | order(internalId desc) {
           _id,

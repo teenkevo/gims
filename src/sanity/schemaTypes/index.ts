@@ -30,6 +30,7 @@ import { auditLog } from "./audit-log";
 import { appUser } from "./app-user";
 import { appRole } from "./app-role";
 import { leavePlan } from "./leave-plan";
+import { notificationSubscription } from "./notification-subscription";
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -47,6 +48,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     lab,
     personnel,
     leavePlan,
+    notificationSubscription,
     department,
     equipment,
     maintenanceLog,

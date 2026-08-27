@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 import { writeClient } from "@/sanity/lib/write-client";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePermissionOrError } from "@/lib/auth/with-auth";
+import { emitNotification } from "@/features/internal/notifications/emit";
 
 export async function createWorkOrder(input: {
   projectId: string;
@@ -51,6 +52,12 @@ export async function createWorkOrder(input: {
 
   await tx.commit({ autoGenerateArrayKeys: true });
   revalidateTag(`project-${input.projectId}`);
+
+  if (input.send) {
+    void emitNotification("work.order.issued", { projectId: input.projectId });
+  } else if (!existing) {
+    void emitNotification("work.order.created", { projectId: input.projectId });
+  }
 
   return { status: "ok" as const, id: workOrderId };
 }
