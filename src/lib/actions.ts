@@ -15,10 +15,11 @@ import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail"
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePermissionOrError } from "@/lib/auth/with-auth";
 import { getSession } from "@/lib/auth/session";
-import { requireQuotationProjectAccessOrError } from "@/lib/auth/project-scope";
+import { requireProjectAccessOrError, requireQuotationProjectAccessOrError } from "@/lib/auth/project-scope";
 import {
   emitInvoiceIssued,
   emitNotification,
+  emitQuotationResponse,
   emitQuotationSent,
 } from "@/features/internal/notifications/emit";
 
@@ -59,16 +60,19 @@ interface QuotationProps {
 }
 
 // CREATE INVOICE
-export async function createInvoice(quotationId: string, fileId: string) {
+export async function createInvoice(
+  quotationId: string,
+  fileId: string,
+  projectId?: string
+) {
   const denied = await requirePermissionOrError(PERMISSIONS["billing:respond"]);
   if (denied) return denied;
 
   const session = await getSession();
   if (session.isAuthenticated) {
-    const scopeDenied = await requireQuotationProjectAccessOrError(
-      session,
-      quotationId
-    );
+    const scopeDenied = projectId
+      ? await requireProjectAccessOrError(session, projectId)
+      : await requireQuotationProjectAccessOrError(session, quotationId);
     if (scopeDenied) return scopeDenied;
   }
 
@@ -87,7 +91,7 @@ export async function createInvoice(quotationId: string, fileId: string) {
       .commit();
 
     revalidateTag(`quotation`);
-    void emitInvoiceIssued(quotationId, fileId);
+    void emitInvoiceIssued(quotationId, fileId, projectId);
     return { result: quotation, status: "ok" };
   } catch (error) {
     console.error("Error creating invoice:", error);
@@ -430,17 +434,17 @@ export async function sendQuotation(quotationId: string) {
 export async function respondToQuotation(
   quotationId: string,
   status: "accepted" | "rejected" | "revisions_requested",
-  rejectionNotes?: string
+  rejectionNotes?: string,
+  projectId?: string
 ) {
   const denied = await requirePermissionOrError(PERMISSIONS["billing:respond"]);
   if (denied) return denied;
 
   const session = await getSession();
   if (session.isAuthenticated) {
-    const scopeDenied = await requireQuotationProjectAccessOrError(
-      session,
-      quotationId
-    );
+    const scopeDenied = projectId
+      ? await requireProjectAccessOrError(session, projectId)
+      : await requireQuotationProjectAccessOrError(session, quotationId);
     if (scopeDenied) return scopeDenied;
   }
 
@@ -458,6 +462,16 @@ export async function respondToQuotation(
       })
       .commit();
     revalidateTag("quotation");
+
+    const projectId = await writeClient.fetch<string | null>(
+      `*[_type == "project" && references($quotationId)][0]._id`,
+      { quotationId }
+    );
+    if (projectId) {
+      revalidateTag(`project-${projectId}`);
+    }
+
+    void emitQuotationResponse(quotationId, status, rejectionNotes);
 
     return { result: "ok", status: "ok" };
   } catch (error) {

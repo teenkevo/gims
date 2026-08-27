@@ -108,7 +108,8 @@ export function RespondToQuotationDialog({
       const fileResult = await response.json();
       const invoiceResult = await createInvoice(
         quotation._id,
-        fileResult.files[0].fileId
+        fileResult.files[0].fileId,
+        project._id
       );
       if (invoiceResult.status === "error") {
         toastActionError(invoiceResult);
@@ -120,7 +121,8 @@ export function RespondToQuotationDialog({
     const result = await respondToQuotation(
       quotation._id,
       status,
-      rejectionNotes
+      rejectionNotes,
+      project._id
     );
 
     if (result.status === "ok") {

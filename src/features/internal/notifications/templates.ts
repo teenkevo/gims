@@ -34,7 +34,7 @@ type Template = {
   html: string;
 };
 
-function linesFor(payload: NotificationPayload) {
+function linesFor(payload: NotificationPayload, options?: { omitRequestFields?: boolean }) {
   const lines: Array<[string, string]> = [];
   const project = named(payload.projectName, payload.projectInternalId);
   if (project) lines.push(["Project", project]);
@@ -51,10 +51,46 @@ function linesFor(payload: NotificationPayload) {
   if (equipment) lines.push(["Equipment", equipment]);
   if (payload.rfiSubject) lines.push(["RFI", payload.rfiSubject]);
   if (payload.employeeName) lines.push(["Employee", payload.employeeName]);
-  if (payload.status) lines.push(["Status", payload.status]);
-  if (payload.detail) lines.push(["Details", payload.detail]);
+  if (!options?.omitRequestFields) {
+    if (payload.status) lines.push(["Status", payload.status]);
+    if (payload.detail) lines.push(["Details", payload.detail]);
+  }
   if (payload.actorName) lines.push(["By", payload.actorName]);
   return lines;
+}
+
+function htmlRowsFor(lines: Array<[string, string]>) {
+  return lines
+    .map(
+      ([label, value]) =>
+        `<tr>
+          <td style="padding:6px 12px 6px 0;color:#667085;font-size:14px;vertical-align:top;">${escapeHtml(label)}</td>
+          <td style="padding:6px 0;color:#101828;font-size:14px;">${escapeHtml(value)}</td>
+        </tr>`
+    )
+    .join("");
+}
+
+function escapeMultiline(value: string) {
+  return escapeHtml(value).replaceAll("\n", "<br>");
+}
+
+function revisionRequestBlock(payload: NotificationPayload): { text: string; html: string } {
+  const request = payload.detail?.trim();
+  const requestHtml = request
+    ? `<div style="margin:8px 0 0;padding:12px 14px;background:#fff;border:1px dotted #d0d5dd;border-radius:8px;color:#101828;font-size:14px;line-height:1.6;">${escapeMultiline(request)}</div>`
+    : `<p style="margin:8px 0 0;color:#667085;font-size:14px;">No revision notes were provided.</p>`;
+  const requestText = request
+    ? `\n\n${request}`
+    : "\nNo revision notes were provided.";
+
+  return {
+    text: `Revision request${requestText}`,
+    html: `<div style="margin:20px 0 0;padding:16px;background:#f9fafb;border:1px solid #e4e7ec;border-radius:8px;">
+      <p style="margin:0;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">Revision request</p>
+      ${requestHtml}
+    </div>`,
+  };
 }
 
 function subjectHint(payload: NotificationPayload) {
@@ -76,20 +112,14 @@ export function renderNotificationEmail(
   payload: NotificationPayload
 ): Template {
   const title = eventLabel(type);
-  const lines = linesFor(payload);
+  const isRevisionRequest = type === "quotation.revisions_requested";
+  const lines = linesFor(payload, { omitRequestFields: isRevisionRequest });
   const summary = lines.map(([label, value]) => `${label}: ${value}`).join("\n");
   const linkLine = payload.link ? `\nOpen in GIMS: ${payload.link}` : "";
   const hint = subjectHint(payload);
+  const request = isRevisionRequest ? revisionRequestBlock(payload) : null;
 
-  const htmlRows = lines
-    .map(
-      ([label, value]) =>
-        `<tr>
-          <td style="padding:6px 12px 6px 0;color:#667085;font-size:14px;vertical-align:top;">${escapeHtml(label)}</td>
-          <td style="padding:6px 0;color:#101828;font-size:14px;">${escapeHtml(value)}</td>
-        </tr>`
-    )
-    .join("");
+  const htmlRows = htmlRowsFor(lines);
 
   const htmlLink = payload.link
     ? `<p style="margin:24px 0 0;">
@@ -105,10 +135,11 @@ export function renderNotificationEmail(
   const htmlAttachment = payload.attachmentNote
     ? `<p style="margin:16px 0 0;color:#344054;font-size:14px;">${escapeHtml(payload.attachmentNote)}</p>`
     : "";
+  const requestText = request ? `\n\n${request.text}` : "";
 
   return {
     subject: hint ? `${title}: ${hint}` : title,
-    text: `${title}\n\n${summary}${attachmentLine}${linkLine}\n`.trim(),
+    text: `${title}\n\n${summary}${requestText}${attachmentLine}${linkLine}\n`.trim(),
     html: `<!doctype html>
 <html>
   <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
@@ -116,6 +147,7 @@ export function renderNotificationEmail(
       <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GIMS notification</p>
       <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">${escapeHtml(title)}</h1>
       <table style="border-collapse:collapse;">${htmlRows}</table>
+      ${request?.html ?? ""}
       ${htmlAttachment}
       ${htmlLink}
     </div>
@@ -358,6 +390,88 @@ www.getlab.co.ug`.trim(),
       <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(intro)} ${escapeHtml(attachLine)}</p>
       <table style="border-collapse:collapse;">${htmlRows}</table>
       ${payment?.html ?? ""}
+      ${htmlLink}
+      <p style="margin:24px 0 0;color:#667085;font-size:13px;line-height:1.5;">
+        Questions? Email <a href="mailto:info@getlab.co.ug" style="color:#101828;">info@getlab.co.ug</a>
+        or call +256 752 972309.
+      </p>
+      <p style="margin:16px 0 0;color:#667085;font-size:13px;line-height:1.5;">
+        Kind regards,<br/>
+        Geotechnical Engineering and Technology Laboratory (GETLAB) Limited<br/>
+        <a href="https://www.getlab.co.ug" style="color:#101828;">www.getlab.co.ug</a>
+      </p>
+    </div>
+  </body>
+</html>`,
+  };
+}
+
+export type ContactAddedToProjectEmailInput = {
+  contactName: string;
+  projectName?: string;
+  projectInternalId?: string;
+  clientName?: string;
+  portalUrl?: string;
+};
+
+export function renderContactAddedToProjectEmail(
+  input: ContactAddedToProjectEmailInput
+): Template {
+  const greeting = input.contactName ? `Dear ${input.contactName},` : "Dear customer,";
+  const project = named(input.projectName, input.projectInternalId);
+  const projectRef = input.projectInternalId || input.projectName;
+  const subject = projectRef
+    ? `Added as a Contact for Project - ${projectRef}`
+    : "Added as a Contact for Project";
+  const intro =
+    "GETLAB has added you as a contact person on this project. You'll receive project updates such as quotations and invoices at this email address.";
+
+  const lines: Array<[string, string]> = [];
+  if (project) lines.push(["Project", project]);
+  if (input.clientName) lines.push(["Client", input.clientName]);
+
+  const summary = lines.map(([label, value]) => `${label}: ${value}`).join("\n");
+  const htmlRows = lines
+    .map(
+      ([label, value]) =>
+        `<tr>
+          <td style="padding:6px 12px 6px 0;color:#667085;font-size:14px;vertical-align:top;">${escapeHtml(label)}</td>
+          <td style="padding:6px 0;color:#101828;font-size:14px;">${escapeHtml(value)}</td>
+        </tr>`
+    )
+    .join("");
+
+  const htmlLink = input.portalUrl
+    ? `<p style="margin:24px 0 0;">
+        <a href="${escapeHtml(input.portalUrl)}" style="display:inline-block;background:#101828;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;">
+          View project
+        </a>
+      </p>`
+    : "";
+  const linkLine = input.portalUrl ? `\nView project: ${input.portalUrl}` : "";
+
+  return {
+    subject,
+    text: `${greeting}
+
+${intro}
+
+${summary}${linkLine}
+
+If you have questions, email info@getlab.co.ug or call +256 752 972309.
+
+Kind regards,
+Geotechnical Engineering and Technology Laboratory (GETLAB) Limited
+www.getlab.co.ug`.trim(),
+    html: `<!doctype html>
+<html>
+  <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:24px;">
+      <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB</p>
+      <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">Added as a project contact</h1>
+      <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(greeting)}</p>
+      <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(intro)}</p>
+      <table style="border-collapse:collapse;">${htmlRows}</table>
       ${htmlLink}
       <p style="margin:24px 0 0;color:#667085;font-size:13px;line-height:1.5;">
         Questions? Email <a href="mailto:info@getlab.co.ug" style="color:#101828;">info@getlab.co.ug</a>

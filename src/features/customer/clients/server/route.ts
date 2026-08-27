@@ -7,6 +7,7 @@ import { authMiddleware } from "@/lib/auth/api";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { checkContactEmailExists } from "@/sanity/lib/clients/getContactByEmail";
 import { inviteContactToPortal } from "@/lib/auth/contact-invite";
+import { notifyContactAddedToProject } from "@/features/internal/notifications/customer-contact";
 import { sanitizePhoneNumber } from "@/lib/utils";
 
 // Schema for updating client name
@@ -128,6 +129,12 @@ const app = new Hono()
       revalidateTag(`client-${clientId}`);
       revalidateTag(`project-${projectId}`);
 
+      void notifyContactAddedToProject({
+        contactPersonId: newContactPerson._id,
+        projectId,
+        clientId,
+      });
+
       return c.json({ updatedProject });
     }
 
@@ -147,6 +154,12 @@ const app = new Hono()
         .commit({ autoGenerateArrayKeys: true });
 
       revalidateTag(`project-${projectId}`);
+
+      void notifyContactAddedToProject({
+        contactPersonId: existingContact,
+        projectId,
+        clientId,
+      });
 
       return c.json({ updatedProject });
     }

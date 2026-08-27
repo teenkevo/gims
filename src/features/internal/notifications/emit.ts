@@ -37,7 +37,8 @@ function inferNotificationLink(
 export type BillingNotificationContext = QuotationEmailContext;
 
 export async function getQuotationNotificationContext(
-  quotationId: string
+  quotationId: string,
+  projectId?: string
 ): Promise<BillingNotificationContext | null> {
   const doc = await writeClient.fetch<{
     quotationNumber?: string;
@@ -67,7 +68,12 @@ export async function getQuotationNotificationContext(
       paymentNotes,
       file { asset->{ _id, originalFilename } },
       invoice { asset->{ _id, originalFilename } },
-      "project": *[_type == "project" && references(^._id)][0]{
+      "project": *[
+        _type == "project" && (
+          quotation._ref == $quotationId ||
+          quotation._ref in *[_type == "quotation" && $quotationId in revisions[]._ref]._id
+        )
+      ][0]{
         _id,
         name,
         internalId,
@@ -84,8 +90,26 @@ export async function getQuotationNotificationContext(
 
   if (!doc) return null;
 
+  let project = doc.project;
+  if (!project && projectId) {
+    project = await writeClient.fetch<NonNullable<typeof doc>["project"]>(
+      `*[_type == "project" && _id == $projectId][0]{
+        _id,
+        name,
+        internalId,
+        clients[]->{ _id, name },
+        contactPersons[]->{
+          name,
+          email,
+          client->{ _id }
+        }
+      }`,
+      { projectId }
+    );
+  }
+
   const seenEmails = new Set<string>();
-  const contacts = (doc.project?.contactPersons ?? [])
+  const contacts = (project?.contactPersons ?? [])
     .flatMap((contact) => {
       const email = contact?.email?.trim();
       const name = contact?.name?.trim();
@@ -109,15 +133,15 @@ export async function getQuotationNotificationContext(
     currency: doc.currency,
     advance: doc.advance,
     paymentNotes: doc.paymentNotes ?? undefined,
-    projectId: doc.project?._id,
-    projectName: doc.project?.name,
-    projectInternalId: doc.project?.internalId,
+    projectId: project?._id,
+    projectName: project?.name,
+    projectInternalId: project?.internalId,
     fileId: doc.file?.asset?._id,
     fileOriginalFilename: doc.file?.asset?.originalFilename ?? undefined,
     invoiceFileId: doc.invoice?.asset?._id,
     invoiceOriginalFilename: doc.invoice?.asset?.originalFilename ?? undefined,
     contacts,
-    clients: (doc.project?.clients ?? []).flatMap((client) =>
+    clients: (project?.clients ?? []).flatMap((client) =>
       client?._id ? [{ _id: client._id, name: client.name }] : []
     ),
   };
@@ -136,6 +160,8 @@ function toPayload(
     projectId: context.projectId,
     projectName: context.projectName,
     projectInternalId: context.projectInternalId,
+    clientId: extras?.clientId ?? context.clients[0]?._id,
+    clientName: extras?.clientName ?? context.clients[0]?.name,
     link: context.projectId ? `${baseUrl}/projects/${context.projectId}` : undefined,
     ...extras,
   };
@@ -154,6 +180,33 @@ export async function emitBillingNotification(
     return;
   }
   await emitNotification(type, toPayload(context, extras));
+}
+
+const QUOTATION_RESPONSE_EVENTS = {
+  accepted: "quotation.accepted",
+  rejected: "quotation.rejected",
+  revisions_requested: "quotation.revisions_requested",
+} as const;
+
+const QUOTATION_RESPONSE_STATUS: Record<
+  keyof typeof QUOTATION_RESPONSE_EVENTS,
+  string
+> = {
+  accepted: "Accepted",
+  rejected: "Rejected",
+  revisions_requested: "Revisions requested",
+};
+
+export async function emitQuotationResponse(
+  quotationId: string,
+  status: keyof typeof QUOTATION_RESPONSE_EVENTS,
+  notes?: string
+) {
+  const detail = notes?.trim();
+  await emitBillingNotification(QUOTATION_RESPONSE_EVENTS[status], quotationId, {
+    status: QUOTATION_RESPONSE_STATUS[status],
+    detail: detail || undefined,
+  });
 }
 
 function quotationPdfFilename(context: BillingNotificationContext) {
@@ -208,9 +261,10 @@ function invoicePdfFilename(context: BillingNotificationContext) {
 
 export async function emitInvoiceIssued(
   quotationId: string,
-  invoiceFileId?: string
+  invoiceFileId?: string,
+  projectId?: string
 ) {
-  const context = await getQuotationNotificationContext(quotationId);
+  const context = await getQuotationNotificationContext(quotationId, projectId);
   if (!context) {
     console.warn(
       `Notification invoice.issued skipped: quotation ${quotationId} was not found`

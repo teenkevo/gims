@@ -65,6 +65,9 @@ export const NOTIFICATION_EVENT_TYPES = [
   "contact.created",
   "quotation.created",
   "quotation.sent",
+  "quotation.accepted",
+  "quotation.rejected",
+  "quotation.revisions_requested",
   "invoice.issued",
   "rfi.created",
   "rfi.message.added",
@@ -149,6 +152,24 @@ export const NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
     label: "Quotation sent",
     description:
       "A quotation is sent to the client. The PDF is attached internally, and a customer-facing email is sent to the project's contact persons.",
+  },
+  {
+    type: "quotation.accepted",
+    module: "billing",
+    label: "Quotation accepted",
+    description: "The client accepts a quotation.",
+  },
+  {
+    type: "quotation.rejected",
+    module: "billing",
+    label: "Quotation rejected",
+    description: "The client rejects a quotation.",
+  },
+  {
+    type: "quotation.revisions_requested",
+    module: "billing",
+    label: "Quotation revisions requested",
+    description: "The client asks GETLAB to revise a quotation.",
   },
   {
     type: "invoice.issued",
