@@ -59,8 +59,15 @@ async function sendContactAddedToProjectEmail(params: {
     ),
   ]);
 
-  const email = contact?.email?.trim();
-  const name = contact?.name?.trim();
+  if (!contact) {
+    console.warn(
+      `Contact added-to-project email skipped: contact ${params.contactPersonId} not found`
+    );
+    return;
+  }
+
+  const email = contact.email?.trim();
+  const name = contact.name?.trim();
   if (!email || !name) {
     console.warn(
       `Contact added-to-project email skipped: contact ${params.contactPersonId} has no name or email`

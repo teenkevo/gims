@@ -1,6 +1,7 @@
 import type { NotificationEventType, NotificationPayload } from "./events";
 import { NOTIFICATION_EVENTS } from "./events";
 import { GETLAB_BANK_PAYMENT_DETAILS } from "@/features/internal/billing/constants";
+import { getAppBaseUrl } from "@/lib/app-url";
 
 function escapeHtml(value: string) {
   return value
@@ -8,6 +9,23 @@ function escapeHtml(value: string) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function wrapEmailHtml(inner: string) {
+  const logoSrc = `${getAppBaseUrl()}/logo.png`;
+  return `<!doctype html>
+<html>
+  <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;">
+      <div style="padding:16px 24px;background:#000000;">
+        <img src="${escapeHtml(logoSrc)}" alt="GIMS by GETLAB" width="140" height="50" style="display:block;border:0;outline:none;text-decoration:none;width:140px;height:50px;" />
+      </div>
+      <div style="padding:24px;">
+        ${inner}
+      </div>
+    </div>
+  </body>
+</html>`;
 }
 
 function formatMoney(amount?: number, currency?: string) {
@@ -140,19 +158,14 @@ export function renderNotificationEmail(
   return {
     subject: hint ? `${title}: ${hint}` : title,
     text: `${title}\n\n${summary}${requestText}${attachmentLine}${linkLine}\n`.trim(),
-    html: `<!doctype html>
-<html>
-  <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:24px;">
+    html: wrapEmailHtml(`
       <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GIMS notification</p>
       <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">${escapeHtml(title)}</h1>
       <table style="border-collapse:collapse;">${htmlRows}</table>
       ${request?.html ?? ""}
       ${htmlAttachment}
       ${htmlLink}
-    </div>
-  </body>
-</html>`,
+    `),
   };
 }
 
@@ -380,10 +393,7 @@ If you have questions, email info@getlab.co.ug or call +256 752 972309.
 Kind regards,
 Geotechnical Engineering and Technology Laboratory (GETLAB) Limited
 www.getlab.co.ug`.trim(),
-    html: `<!doctype html>
-<html>
-  <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:24px;">
+    html: wrapEmailHtml(`
       <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB</p>
       <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">${escapeHtml(label)} ${escapeHtml(documentNumber)}</h1>
       <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(greeting)}</p>
@@ -400,9 +410,7 @@ www.getlab.co.ug`.trim(),
         Geotechnical Engineering and Technology Laboratory (GETLAB) Limited<br/>
         <a href="https://www.getlab.co.ug" style="color:#101828;">www.getlab.co.ug</a>
       </p>
-    </div>
-  </body>
-</html>`,
+    `),
   };
 }
 
@@ -463,10 +471,7 @@ If you have questions, email info@getlab.co.ug or call +256 752 972309.
 Kind regards,
 Geotechnical Engineering and Technology Laboratory (GETLAB) Limited
 www.getlab.co.ug`.trim(),
-    html: `<!doctype html>
-<html>
-  <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:24px;">
+    html: wrapEmailHtml(`
       <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB</p>
       <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">Added as a project contact</h1>
       <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(greeting)}</p>
@@ -482,8 +487,6 @@ www.getlab.co.ug`.trim(),
         Geotechnical Engineering and Technology Laboratory (GETLAB) Limited<br/>
         <a href="https://www.getlab.co.ug" style="color:#101828;">www.getlab.co.ug</a>
       </p>
-    </div>
-  </body>
-</html>`,
+    `),
   };
 }
