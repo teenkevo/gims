@@ -15,7 +15,6 @@ export { getAppBaseUrl } from "@/lib/app-url";
  *                      here instead of personnel or client inboxes. Use this
  *                      in development.
  *   NEXT_PUBLIC_APP_URL   used for deep links in notification emails
- *                         (`NEXT_PUBLIC_BASE_URL` is also accepted)
  */
 export function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
