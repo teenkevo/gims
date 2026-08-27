@@ -2,6 +2,8 @@ import "server-only";
 
 import { Resend } from "resend";
 
+export { getAppBaseUrl } from "@/lib/app-url";
+
 /**
  * Internal notification mailer.
  *
@@ -12,7 +14,8 @@ import { Resend } from "resend";
  *   EMAIL_REDIRECT     if set, every notification and customer email is sent
  *                      here instead of personnel or client inboxes. Use this
  *                      in development.
- *   NEXT_PUBLIC_BASE_URL  used for deep links in notification emails
+ *   NEXT_PUBLIC_APP_URL   used for deep links in notification emails
+ *                         (`NEXT_PUBLIC_BASE_URL` is also accepted)
  */
 export function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -44,8 +47,4 @@ export function getResendCustomerFrom() {
 export function getEmailRedirect() {
   const redirect = process.env.EMAIL_REDIRECT?.trim();
   return redirect || null;
-}
-
-export function getAppBaseUrl() {
-  return process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 }

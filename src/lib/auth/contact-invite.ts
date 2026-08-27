@@ -12,6 +12,7 @@ import { resolveClientPortalPermissions } from "./client-permissions";
 import { createAuditLog } from "./audit-log";
 import type { AuthContext } from "./types";
 import { USER_TYPES } from "./user-type";
+import { getClerkSignUpRedirectUrl } from "@/lib/app-url";
 
 function getClerkClient() {
   const secretKey = process.env.CLERK_SECRET_KEY;
@@ -43,13 +44,10 @@ export async function inviteContactToPortal(params: {
 
   const resolvedClerkUserId = await resolveClerkUserId(email, clerkUserId);
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-  const signUpPath = process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ?? "/sign-up";
-
   try {
     await clerk.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: `${baseUrl}${signUpPath}`,
+      redirectUrl: getClerkSignUpRedirectUrl(),
       publicMetadata: {
         userType: USER_TYPES.CLIENT,
       },
