@@ -1,7 +1,6 @@
 import type { NotificationEventType, NotificationPayload } from "./events";
 import { NOTIFICATION_EVENTS } from "./events";
 import { GETLAB_BANK_PAYMENT_DETAILS } from "@/features/internal/billing/constants";
-import { getAppBaseUrl } from "@/lib/app-url";
 
 function escapeHtml(value: string) {
   return value
@@ -12,14 +11,10 @@ function escapeHtml(value: string) {
 }
 
 function wrapEmailHtml(inner: string) {
-  const logoSrc = `${getAppBaseUrl()}/logo.png`;
   return `<!doctype html>
 <html>
   <body style="margin:0;padding:24px;background:#f2f4f7;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;">
     <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;">
-      <div style="padding:16px 24px;background:#000000;">
-        <img src="${escapeHtml(logoSrc)}" alt="GIMS by GETLAB" width="140" height="50" style="display:block;border:0;outline:none;text-decoration:none;width:140px;height:50px;" />
-      </div>
       <div style="padding:24px;">
         ${inner}
       </div>

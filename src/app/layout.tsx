@@ -13,9 +13,7 @@ export const metadata: Metadata = {
   description: "GETLAB Integrated Management System",
 };
 
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
-
-const splineSans = Spline_Sans({ subsets: ["latin"] });
+const splineSans = Spline_Sans({ subsets: ["latin"], display: 'swap', adjustFontFallback: false});
 
 export const viewport: Viewport = {
   width: "device-width",
