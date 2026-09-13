@@ -10,6 +10,7 @@ import type { EmailAttachment } from "./attachments";
 import {
   renderCustomerInvoiceEmail,
   renderCustomerQuotationEmail,
+  renderCustomerRevisionsRejectedEmail,
 } from "./templates";
 
 export type QuotationContact = {
@@ -108,6 +109,91 @@ export async function sendCustomerInvoiceEmails(
   attachments?: EmailAttachment[]
 ) {
   await sendCustomerDocumentEmails(context, attachments, "invoice");
+}
+
+export async function sendCustomerRevisionsRejectedEmails(
+  context: QuotationEmailContext,
+  reason: string
+) {
+  const contacts = context.contacts.filter((contact) => contact.email);
+  if (contacts.length === 0) {
+    console.warn(
+      `Customer revision rejected email skipped: quotation ${context.quotationId} has no contact emails`
+    );
+    return;
+  }
+
+  const resend = getResendClient();
+  if (!resend) {
+    console.info(
+      "Customer revision rejected email skipped: RESEND_API_KEY is not set"
+    );
+    return;
+  }
+
+  const redirectTo = getEmailRedirect();
+  if (process.env.NODE_ENV !== "production" && !redirectTo) {
+    console.info(
+      "Customer revision rejected email skipped: set EMAIL_REDIRECT in development so mail is not sent to clients."
+    );
+    return;
+  }
+
+  const from = getResendCustomerFrom();
+  const trimmedReason = reason.trim();
+
+  const renderFor = (contact: QuotationContact) =>
+    renderCustomerRevisionsRejectedEmail({
+      contactName: contact.name,
+      quotationNumber: context.quotationNumber,
+      projectName: context.projectName,
+      projectInternalId: context.projectInternalId,
+      reason: trimmedReason,
+      portalUrl: portalUrlForContact(contact, context),
+    });
+
+  if (redirectTo) {
+    const intended = contacts
+      .map((contact) => `${contact.name} <${contact.email}>`)
+      .join(", ");
+    const email = renderFor(contacts[0]);
+    const banner = `Customer revision rejected email. Intended for: ${intended}`;
+    const { error } = await resend.emails.send({
+      from,
+      to: redirectTo,
+      subject: `[dev] ${email.subject}`,
+      html: `<p style="margin:0 0 16px;padding:12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;color:#92400e;font-size:13px;">${escapeHtml(banner)}</p>${email.html}`,
+      text: `${banner}\n\n${email.text}`,
+    });
+    if (error) {
+      throw error;
+    }
+    return;
+  }
+
+  const results = await Promise.allSettled(
+    contacts.map(async (contact) => {
+      const email = renderFor(contact);
+      const { error } = await resend.emails.send({
+        from,
+        to: contact.email,
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+      });
+      if (error) {
+        throw error;
+      }
+    })
+  );
+
+  const failed = results.filter((result) => result.status === "rejected");
+  if (failed.length > 0) {
+    console.error(
+      `Customer revision rejected email: ${failed.length} of ${contacts.length} emails failed`,
+      failed
+    );
+  }
 }
 
 async function sendCustomerDocumentEmails(

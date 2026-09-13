@@ -1,5 +1,6 @@
 import React from "react";
-import { Image, Text, View, Page, StyleSheet, Font } from "@react-pdf/renderer";
+import { Image, Text, View, Page, StyleSheet } from "@react-pdf/renderer";
+import "@/lib/pdf-fonts";
 import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
 import { ALL_PERSONNEL_QUERY_RESULT } from "../../../../../sanity.types";
@@ -12,29 +13,6 @@ const tw = createTw({
       },
     },
   },
-});
-
-// Register font
-Font.register({
-  family: "SpaceGrotesk",
-  fonts: [
-    {
-      src: "https://getlab.b-cdn.net/SpaceGrotesk-Light.ttf",
-      fontWeight: 300,
-    },
-    {
-      src: "https://getlab.b-cdn.net/SpaceGrotesk-Regular.ttf",
-      fontWeight: 400,
-    },
-    {
-      src: "https://getlab.b-cdn.net/SpaceGrotesk-Medium.ttf",
-      fontWeight: 500,
-    },
-    {
-      src: "https://getlab.b-cdn.net/SpaceGrotesk-Bold.ttf",
-      fontWeight: 700,
-    },
-  ],
 });
 
 interface ReviewItem {

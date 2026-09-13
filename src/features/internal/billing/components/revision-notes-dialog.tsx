@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import { useState } from "react";
 import { AlertTriangle, MessageSquareMore } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -12,40 +15,70 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface RevisionNotesDialogProps {
   revisionText: string;
+  onReject?: () => void;
+  onAcceptAndRevise?: () => void;
 }
 
 export function RevisionNotesDialog({
   revisionText,
+  onReject,
+  onAcceptAndRevise,
 }: RevisionNotesDialogProps) {
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [open, setOpen] = useState(false);
+  const canAct = Boolean(onReject && onAcceptAndRevise);
 
-  useEffect(() => {
-    function handleResize() {
-      setIsMobile(window.innerWidth < 768);
-    }
+  const handleReject = () => {
+    setOpen(false);
+    window.setTimeout(() => onReject?.(), 150);
+  };
 
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleAcceptAndRevise = () => {
+    setOpen(false);
+    window.setTimeout(() => onAcceptAndRevise?.(), 150);
+  };
+
+  const notes = (
+    <div className="rounded-lg border bg-muted/50 p-4 max-h-[50vh] overflow-y-auto">
+      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+        {revisionText || "No revision notes were provided."}
+      </p>
+    </div>
+  );
+
+  const actions = canAct ? (
+    <>
+      <Button variant="destructive" onClick={handleReject}>
+        Reject Revisions
+      </Button>
+      <Button onClick={handleAcceptAndRevise}>Accept and Revise</Button>
+    </>
+  ) : (
+    <Button onClick={() => setOpen(false)}>Got it</Button>
+  );
+
+  const trigger = canAct ? (
+    <Button size="sm">Review Revisions</Button>
+  ) : (
+    <Button variant="secondary" size="icon">
+      <MessageSquareMore className="h-4 w-4 animate-bounce" />
+    </Button>
+  );
 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>
-          <Button variant="secondary" size="icon">
-            <MessageSquareMore className="h-4 w-4 animate-bounce" />
-          </Button>
-        </DrawerTrigger>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader className="text-left">
             <div className="flex items-center gap-2">
@@ -56,16 +89,8 @@ export function RevisionNotesDialog({
               Please review the following revision requests from the client.
             </DrawerDescription>
           </DrawerHeader>
-          <div className="px-4 pb-6">
-            <div className="rounded-lg border bg-muted/50 p-4 max-h-[40vh] overflow-y-auto">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {revisionText}
-              </p>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button onClick={() => setOpen(false)}>Got it</Button>
-            </div>
-          </div>
+          <div className="px-4 pb-2">{notes}</div>
+          <DrawerFooter className="pt-2">{actions}</DrawerFooter>
         </DrawerContent>
       </Drawer>
     );
@@ -73,11 +98,7 @@ export function RevisionNotesDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="secondary" size="icon">
-          <MessageSquareMore className="h-4 w-4 animate-bounce" />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -88,16 +109,8 @@ export function RevisionNotesDialog({
             Please review the following revision requests from the client.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="rounded-lg border bg-muted/50 p-4 max-h-[50vh] overflow-y-auto">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {revisionText}
-            </p>
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={() => setOpen(false)}>Got it</Button>
-          </div>
-        </div>
+        {notes}
+        <DialogFooter>{actions}</DialogFooter>
       </DialogContent>
     </Dialog>
   );

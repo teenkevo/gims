@@ -20,6 +20,7 @@ import {
   emitInvoiceIssued,
   emitNotification,
   emitQuotationResponse,
+  emitQuotationRevisionsRejected,
   emitQuotationSent,
 } from "@/features/internal/notifications/emit";
 
@@ -476,6 +477,76 @@ export async function respondToQuotation(
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error responding to quotation:", error);
+    return { error, status: "error" };
+  }
+}
+
+export async function rejectQuotationRevisions(
+  quotationId: string,
+  reason: string,
+  projectId?: string
+) {
+  const denied = await requirePermissionOrError(PERMISSIONS["billing:create"]);
+  if (denied) return denied;
+
+  const trimmedReason = reason.trim();
+  if (!trimmedReason) {
+    return { status: "error", error: "A reason is required" };
+  }
+
+  const session = await getSession();
+  if (session.isAuthenticated) {
+    const scopeDenied = projectId
+      ? await requireProjectAccessOrError(session, projectId)
+      : await requireQuotationProjectAccessOrError(session, quotationId);
+    if (scopeDenied) return scopeDenied;
+  }
+
+  try {
+    const quotation = await writeClient.fetch<{
+      status?: string;
+      rejectionNotes?: string | null;
+    } | null>(
+      `*[_type == "quotation" && _id == $quotationId][0]{ status, rejectionNotes }`,
+      { quotationId }
+    );
+
+    if (!quotation) {
+      return { status: "error", error: "Quotation not found" };
+    }
+
+    if (
+      quotation.status !== "rejected" ||
+      !(quotation.rejectionNotes?.trim()?.length)
+    ) {
+      return {
+        status: "error",
+        error: "This quotation has no pending revision request",
+      };
+    }
+
+    await writeClient
+      .patch(quotationId)
+      .set({ status: "sent" })
+      .unset(["rejectionNotes"])
+      .commit();
+    revalidateTag("quotation");
+
+    const resolvedProjectId =
+      projectId ??
+      (await writeClient.fetch<string | null>(
+        `*[_type == "project" && references($quotationId)][0]._id`,
+        { quotationId }
+      ));
+    if (resolvedProjectId) {
+      revalidateTag(`project-${resolvedProjectId}`);
+    }
+
+    void emitQuotationRevisionsRejected(quotationId, trimmedReason);
+
+    return { result: "ok", status: "ok" };
+  } catch (error) {
+    console.error("Error rejecting quotation revisions:", error);
     return { error, status: "error" };
   }
 }

@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth/session";
 import { getAppBaseUrl, getEmailRedirect, getResendClient, getResendFrom } from "@/lib/email/resend";
 import { getEnabledSubscriptionsForEvent } from "@/sanity/lib/notifications/getNotificationSubscriptions";
 import { attachmentFromSanityFile, type EmailAttachment } from "./attachments";
-import { sendCustomerInvoiceEmails, sendCustomerQuotationEmails, invoiceNumberFromQuotation, type QuotationEmailContext } from "./customer-quotation";
+import { sendCustomerInvoiceEmails, sendCustomerQuotationEmails, sendCustomerRevisionsRejectedEmails, invoiceNumberFromQuotation, type QuotationEmailContext } from "./customer-quotation";
 import type { NotificationEventType, NotificationPayload } from "./events";
 import { resolveDepartmentRecipients } from "./resolve-recipients";
 import { renderNotificationEmail } from "./templates";
@@ -207,6 +207,42 @@ export async function emitQuotationResponse(
     status: QUOTATION_RESPONSE_STATUS[status],
     detail: detail || undefined,
   });
+}
+
+export async function emitQuotationRevisionsRejected(
+  quotationId: string,
+  reason: string
+) {
+  const context = await getQuotationNotificationContext(quotationId);
+  if (!context) {
+    console.warn(
+      `Notification quotation.revisions_rejected skipped: quotation ${quotationId} was not found`
+    );
+    return;
+  }
+
+  const detail = reason.trim() || undefined;
+
+  try {
+    await emitNotification(
+      "quotation.revisions_rejected",
+      toPayload(context, {
+        status: "Revision request declined",
+        detail,
+      })
+    );
+  } catch (error) {
+    console.error(
+      "Internal quotation.revisions_rejected notification failed",
+      error
+    );
+  }
+
+  try {
+    await sendCustomerRevisionsRejectedEmails(context, reason);
+  } catch (error) {
+    console.error("Customer revision rejected email failed", error);
+  }
 }
 
 function quotationPdfFilename(context: BillingNotificationContext) {

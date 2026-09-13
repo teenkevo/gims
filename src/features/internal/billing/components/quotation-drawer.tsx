@@ -99,6 +99,9 @@ export function QuotationDrawer({
   setMobilizationActivities,
   reportingActivities,
   setReportingActivities,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   allServices: ALL_SERVICES_QUERY_RESULT;
   project: PROJECT_BY_ID_QUERY_RESULT[number];
@@ -128,9 +131,19 @@ export function QuotationDrawer({
       { activity: string; unit: string; price: number; quantity: number }[]
     >
   >;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [open, setOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
+  const setDrawerOpen: Dispatch<SetStateAction<boolean>> = (value) => {
+    const next = typeof value === "function" ? value(open) : value;
+    setOpen(next);
+  };
   const [showWarning, setShowWarning] = React.useState(false);
   const [baselineReady, setBaselineReady] = React.useState(false);
   const baselineRef = React.useRef<string | null>(null);
@@ -215,21 +228,23 @@ export function QuotationDrawer({
     return (
       <>
         <Sheet open={open} onOpenChange={handleOpenChange}>
-          <SheetTrigger asChild>
-            <Button
-              size="sm"
-              className="shadow-md"
-              variant={
-                quotation && !quotationNeedsRevision ? "outline" : "default"
-              }
-            >
-              {quotation && !quotationNeedsRevision
-                ? "Review"
-                : quotation && quotationNeedsRevision
-                  ? "Revise"
-                  : "Create Quotation"}
-            </Button>
-          </SheetTrigger>
+          {!hideTrigger && (
+            <SheetTrigger asChild>
+              <Button
+                size="sm"
+                className="shadow-md"
+                variant={
+                  quotation && !quotationNeedsRevision ? "outline" : "default"
+                }
+              >
+                {quotation && !quotationNeedsRevision
+                  ? "Review"
+                  : quotation && quotationNeedsRevision
+                    ? "Revise"
+                    : "Create Quotation"}
+              </Button>
+            </SheetTrigger>
+          )}
           <SheetContent className="w-full sm:max-w-7xl flex flex-col h-full">
             <SheetHeader className="flex-shrink-0 border-b border-border pb-5">
               <SheetTitle>
@@ -243,7 +258,7 @@ export function QuotationDrawer({
             </SheetHeader>
             <div className="flex-1 overflow-y-auto py-4">
               <QuotationOptions
-                setDrawerOpen={setOpen}
+                setDrawerOpen={setDrawerOpen}
                 allServices={allServices}
                 project={project}
                 selectedLabTests={selectedLabTests}
@@ -271,7 +286,10 @@ export function QuotationDrawer({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Continue Editing</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDiscardChanges}>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={handleDiscardChanges}
+              >
                 Discard Changes
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -284,21 +302,23 @@ export function QuotationDrawer({
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerTrigger asChild>
-          <Button
-            size="sm"
-            className="shadow-md"
-            variant={
-              quotation && !quotationNeedsRevision ? "outline" : "default"
-            }
-          >
-            {quotation && !quotationNeedsRevision
-              ? "Review"
-              : quotation && quotationNeedsRevision
-                ? "Revise"
-                : "Create Quotation"}
-          </Button>
-        </DrawerTrigger>
+        {!hideTrigger && (
+          <DrawerTrigger asChild>
+            <Button
+              size="sm"
+              className="shadow-md"
+              variant={
+                quotation && !quotationNeedsRevision ? "outline" : "default"
+              }
+            >
+              {quotation && !quotationNeedsRevision
+                ? "Review"
+                : quotation && quotationNeedsRevision
+                  ? "Revise"
+                  : "Create Quotation"}
+            </Button>
+          </DrawerTrigger>
+        )}
         <DrawerContent>
           <DrawerHeader className="text-left flex-shrink-0">
             <DrawerTitle>
@@ -312,7 +332,7 @@ export function QuotationDrawer({
           </DrawerHeader>
           <div className="px-4 overflow-y-auto max-h-[calc(80vh-10rem)]">
             <QuotationOptions
-              setDrawerOpen={setOpen}
+              setDrawerOpen={setDrawerOpen}
               allServices={allServices}
               project={project}
               selectedLabTests={selectedLabTests}
@@ -347,7 +367,10 @@ export function QuotationDrawer({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Continue Editing</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDiscardChanges}>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDiscardChanges}
+            >
               Discard Changes
             </AlertDialogAction>
           </AlertDialogFooter>

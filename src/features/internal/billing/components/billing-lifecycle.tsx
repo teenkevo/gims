@@ -34,6 +34,7 @@ import Link from "next/link";
 import { RespondToQuotationDialog } from "./respond-to-quotation";
 import { useQuotation } from "./useQuotation";
 import { RevisionNotesDialog } from "./revision-notes-dialog";
+import { RejectRevisionsDialog } from "./reject-revisions-dialog";
 import { MakePaymentDialog, Payments } from "./make-payment-dialog";
 import { ViewPaymentsDialog } from "./view-payment-dialog";
 import { RemakePaymentDialog } from "./remake-payment";
@@ -815,6 +816,8 @@ function StageCard({
     ((!quotation && canCreateBilling) ||
       (quotationNeedsRevision && canCreateBilling) ||
       (quotation && !quotationNeedsRevision && canUpdateBilling));
+  const [rejectRevisionsOpen, setRejectRevisionsOpen] = useState(false);
+  const [reviseQuotationOpen, setReviseQuotationOpen] = useState(false);
 
   return (
     <div
@@ -937,7 +940,7 @@ function StageCard({
             {isClientUser
               ? "GETLAB is preparing a revision"
               : canCreateBilling
-                ? "Client requested changes — revision needed"
+                ? "Client has requested changes"
                 : "Client requested changes to the quotation"}
           </span>
         </div>
@@ -956,9 +959,18 @@ function StageCard({
         quotationNeedsRevision &&
         !isClientUser &&
         canCreateBilling && (
-          <div className="mt-4 flex gap-2 items-center text-orange-500 text-xs">
+          <div className="mt-4 flex flex-wrap gap-2 items-center text-orange-500 text-xs">
             <RevisionNotesDialog
               revisionText={quotation?.rejectionNotes || ""}
+              onReject={() => setRejectRevisionsOpen(true)}
+              onAcceptAndRevise={() => setReviseQuotationOpen(true)}
+            />
+            <RejectRevisionsDialog
+              quotationId={quotation._id}
+              projectId={project._id}
+              revisionText={quotation?.rejectionNotes || ""}
+              open={rejectRevisionsOpen}
+              onOpenChange={setRejectRevisionsOpen}
             />
             <QuotationDrawer
               allServices={allServices}
@@ -971,6 +983,9 @@ function StageCard({
               setMobilizationActivities={setMobilizationActivities}
               reportingActivities={reportingActivities}
               setReportingActivities={setReportingActivities}
+              open={reviseQuotationOpen}
+              onOpenChange={setReviseQuotationOpen}
+              hideTrigger
             />
           </div>
         )}

@@ -68,6 +68,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   "quotation.accepted",
   "quotation.rejected",
   "quotation.revisions_requested",
+  "quotation.revisions_rejected",
   "invoice.issued",
   "rfi.created",
   "rfi.message.added",
@@ -170,6 +171,13 @@ export const NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
     module: "billing",
     label: "Quotation revisions requested",
     description: "The client asks GETLAB to revise a quotation.",
+  },
+  {
+    type: "quotation.revisions_rejected",
+    module: "billing",
+    label: "Quotation revisions rejected",
+    description:
+      "GETLAB declines a client's revision request. The original quotation is sent back to the client.",
   },
   {
     type: "invoice.issued",

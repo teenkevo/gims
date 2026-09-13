@@ -305,10 +305,12 @@ export const GenerateBillingDocument = ({
       <SheetContent
         side="bottom"
         className={
-          isMobile ? "h-[80vh] rounded-t-2xl p-4" : "h-full rounded-l-2xl"
+          isMobile
+            ? "flex h-[95dvh] flex-col overflow-hidden rounded-t-2xl p-4"
+            : "flex h-[100dvh] flex-col overflow-hidden rounded-l-2xl"
         }
       >
-        <SheetHeader className="text-start">
+        <SheetHeader className="shrink-0 text-start">
           <SheetTitle className="flex items-center gap-2 text-lg md:text-2xl">
             Quotation <Badge variant="outline">Draft</Badge>
           </SheetTitle>
@@ -324,13 +326,11 @@ export const GenerateBillingDocument = ({
           </div>
         </SheetHeader>
         {!isLoading ? (
-          <div className="mt-6 space-y-4">
-            <PDFViewer width="100%" height={600}>
-              {Doc}
-            </PDFViewer>
+          <div className="mt-4 min-h-0 flex-1">
+            <PDFViewer width="100%">{Doc}</PDFViewer>
           </div>
         ) : (
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 flex min-h-0 flex-1 items-center justify-center">
             <Loading text="Generating Quotation..." />
           </div>
         )}

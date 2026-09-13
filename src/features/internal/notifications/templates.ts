@@ -106,6 +106,22 @@ function revisionRequestBlock(payload: NotificationPayload): { text: string; htm
   };
 }
 
+function revisionRejectedBlock(payload: NotificationPayload): { text: string; html: string } {
+  const reason = payload.detail?.trim();
+  const reasonHtml = reason
+    ? `<div style="margin:8px 0 0;padding:12px 14px;background:#fff;border:1px dotted #d0d5dd;border-radius:8px;color:#101828;font-size:14px;line-height:1.6;">${escapeMultiline(reason)}</div>`
+    : `<p style="margin:8px 0 0;color:#667085;font-size:14px;">No reason was provided.</p>`;
+  const reasonText = reason ? `\n\n${reason}` : "\nNo reason was provided.";
+
+  return {
+    text: `GETLAB response${reasonText}`,
+    html: `<div style="margin:20px 0 0;padding:16px;background:#f9fafb;border:1px solid #e4e7ec;border-radius:8px;">
+      <p style="margin:0;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB response</p>
+      ${reasonHtml}
+    </div>`,
+  };
+}
+
 function subjectHint(payload: NotificationPayload) {
   return (
     payload.invoiceNumber ||
@@ -120,24 +136,37 @@ function subjectHint(payload: NotificationPayload) {
   );
 }
 
+function ctaLabel(type: NotificationEventType) {
+  if (type === "project.created") return "Go to Project";
+  return "Open in GIMS";
+}
+
 export function renderNotificationEmail(
   type: NotificationEventType,
   payload: NotificationPayload
 ): Template {
   const title = eventLabel(type);
   const isRevisionRequest = type === "quotation.revisions_requested";
-  const lines = linesFor(payload, { omitRequestFields: isRevisionRequest });
+  const isRevisionRejected = type === "quotation.revisions_rejected";
+  const lines = linesFor(payload, {
+    omitRequestFields: isRevisionRequest || isRevisionRejected,
+  });
   const summary = lines.map(([label, value]) => `${label}: ${value}`).join("\n");
-  const linkLine = payload.link ? `\nOpen in GIMS: ${payload.link}` : "";
+  const cta = ctaLabel(type);
+  const linkLine = payload.link ? `\n${cta}: ${payload.link}` : "";
   const hint = subjectHint(payload);
-  const request = isRevisionRequest ? revisionRequestBlock(payload) : null;
+  const request = isRevisionRequest
+    ? revisionRequestBlock(payload)
+    : isRevisionRejected
+      ? revisionRejectedBlock(payload)
+      : null;
 
   const htmlRows = htmlRowsFor(lines);
 
   const htmlLink = payload.link
     ? `<p style="margin:24px 0 0;">
         <a href="${escapeHtml(payload.link)}" style="display:inline-block;background:#101828;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;">
-          Open in GIMS
+          ${escapeHtml(cta)}
         </a>
       </p>`
     : "";
@@ -395,6 +424,89 @@ www.getlab.co.ug`.trim(),
       <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(intro)} ${escapeHtml(attachLine)}</p>
       <table style="border-collapse:collapse;">${htmlRows}</table>
       ${payment?.html ?? ""}
+      ${htmlLink}
+      <p style="margin:24px 0 0;color:#667085;font-size:13px;line-height:1.5;">
+        Questions? Email <a href="mailto:info@getlab.co.ug" style="color:#101828;">info@getlab.co.ug</a>
+        or call +256 752 972309.
+      </p>
+      <p style="margin:16px 0 0;color:#667085;font-size:13px;line-height:1.5;">
+        Kind regards,<br/>
+        Geotechnical Engineering and Technology Laboratory (GETLAB) Limited<br/>
+        <a href="https://www.getlab.co.ug" style="color:#101828;">www.getlab.co.ug</a>
+      </p>
+    `),
+  };
+}
+
+export type CustomerRevisionsRejectedEmailInput = {
+  contactName: string;
+  quotationNumber?: string;
+  projectName?: string;
+  projectInternalId?: string;
+  reason?: string;
+  portalUrl?: string;
+};
+
+export function renderCustomerRevisionsRejectedEmail(
+  input: CustomerRevisionsRejectedEmailInput
+): Template {
+  const greeting = input.contactName ? `Dear ${input.contactName},` : "Dear customer,";
+  const project = named(input.projectName, input.projectInternalId);
+  const projectHint = input.projectName ? ` — ${input.projectName}` : "";
+  const subject = input.quotationNumber
+    ? `Revision request declined: ${input.quotationNumber}${projectHint}`
+    : `Revision request declined${projectHint}`;
+  const intro =
+    "GETLAB has declined the requested changes to this quotation. The original quotation still stands. You may accept it, reject it, or request revisions again.";
+
+  const lines: Array<[string, string]> = [];
+  if (input.quotationNumber) lines.push(["Quotation", input.quotationNumber]);
+  if (project) lines.push(["Project", project]);
+
+  const summary = lines.map(([label, value]) => `${label}: ${value}`).join("\n");
+  const htmlRows = htmlRowsFor(lines);
+  const reason = input.reason?.trim();
+  const reasonText = reason
+    ? `\n\nGETLAB response\n${reason}`
+    : "";
+  const reasonHtml = reason
+    ? `<div style="margin:20px 0 0;padding:16px;background:#f9fafb;border:1px solid #e4e7ec;border-radius:8px;">
+      <p style="margin:0;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB response</p>
+      <div style="margin:8px 0 0;padding:12px 14px;background:#fff;border:1px dotted #d0d5dd;border-radius:8px;color:#101828;font-size:14px;line-height:1.6;">${escapeMultiline(reason)}</div>
+    </div>`
+    : "";
+
+  const htmlLink = input.portalUrl
+    ? `<p style="margin:24px 0 0;">
+        <a href="${escapeHtml(input.portalUrl)}" style="display:inline-block;background:#101828;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;">
+          Review quotation
+        </a>
+      </p>`
+    : "";
+  const linkLine = input.portalUrl
+    ? `\nReview quotation: ${input.portalUrl}`
+    : "";
+
+  return {
+    subject,
+    text: `${greeting}
+
+${intro}
+
+${summary}${reasonText}${linkLine}
+
+If you have questions, email info@getlab.co.ug or call +256 752 972309.
+
+Kind regards,
+Geotechnical Engineering and Technology Laboratory (GETLAB) Limited
+www.getlab.co.ug`.trim(),
+    html: wrapEmailHtml(`
+      <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB</p>
+      <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">Revision request declined</h1>
+      <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(greeting)}</p>
+      <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(intro)}</p>
+      <table style="border-collapse:collapse;">${htmlRows}</table>
+      ${reasonHtml}
       ${htmlLink}
       <p style="margin:24px 0 0;color:#667085;font-size:13px;line-height:1.5;">
         Questions? Email <a href="mailto:info@getlab.co.ug" style="color:#101828;">info@getlab.co.ug</a>
