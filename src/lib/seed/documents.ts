@@ -1454,6 +1454,27 @@ export function buildSeedDocuments(): SeedDoc[] {
       enabled: true,
       departments: keyed([seedRef(IDS.department.finance)], "dept"),
     },
+    {
+      _id: IDS.notification.paymentSubmitted,
+      _type: "notificationSubscription",
+      eventType: "payment.submitted",
+      enabled: true,
+      departments: keyed([seedRef(IDS.department.finance)], "dept"),
+    },
+    {
+      _id: IDS.notification.paymentApproved,
+      _type: "notificationSubscription",
+      eventType: "payment.approved",
+      enabled: true,
+      departments: keyed([seedRef(IDS.department.finance)], "dept"),
+    },
+    {
+      _id: IDS.notification.paymentRejected,
+      _type: "notificationSubscription",
+      eventType: "payment.rejected",
+      enabled: true,
+      departments: keyed([seedRef(IDS.department.finance)], "dept"),
+    },
   ];
 
   return [

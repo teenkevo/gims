@@ -5,6 +5,7 @@ import { createTw } from "react-pdf-tailwind";
 import { format } from "date-fns";
 import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { currencyCodeToName } from "@/lib/utils";
+import { paymentTypeLabel } from "@/lib/billing/payment-reference";
 import { numberToWords } from "../../projects/constants";
 import { Payments } from "./make-payment-dialog";
 
@@ -370,9 +371,7 @@ export const PaymentReceipt = ({
       </View>
       <View style={{ width: "100%", flexDirection: "row" }}>
         <View style={styles.tbody}>
-          <Text style={{ textTransform: "capitalize" }}>
-            {payment.paymentType} Payment
-          </Text>
+          <Text>{paymentTypeLabel(payment.paymentType)}</Text>
         </View>
         <View style={styles.tbodyRightAlign}>
           <Text>{payment.amount?.toLocaleString()}</Text>
@@ -389,9 +388,7 @@ export const PaymentReceipt = ({
           </Text>
         </View>
         <View style={styles.tbody}>
-          <Text style={{ textTransform: "capitalize" }}>
-            {quotation.quotationNumber}
-          </Text>
+          <Text>{payment.paymentReference || quotation.quotationNumber}</Text>
         </View>
       </View>
     </View>

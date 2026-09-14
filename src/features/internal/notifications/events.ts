@@ -30,7 +30,7 @@ export const NOTIFICATION_MODULES: NotificationModule[] = [
   {
     id: "billing",
     label: "Billing",
-    description: "Quotations and invoices.",
+    description: "Quotations, invoices, and payments.",
   },
   {
     id: "rfi",
@@ -70,6 +70,9 @@ export const NOTIFICATION_EVENT_TYPES = [
   "quotation.revisions_requested",
   "quotation.revisions_rejected",
   "invoice.issued",
+  "payment.submitted",
+  "payment.approved",
+  "payment.rejected",
   "rfi.created",
   "rfi.message.added",
   "rfi.resolved",
@@ -187,6 +190,27 @@ export const NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
       "An invoice PDF is issued after a quotation is accepted. The invoice is emailed to the client and to subscribed GETLAB departments.",
   },
   {
+    type: "payment.submitted",
+    module: "billing",
+    label: "Payment submitted",
+    description:
+      "A client submits payment evidence. GETLAB finance and the client are emailed, including the remaining invoice balance.",
+  },
+  {
+    type: "payment.approved",
+    module: "billing",
+    label: "Payment approved",
+    description:
+      "GETLAB approves a payment. The client and finance receive the receipt and remaining balance.",
+  },
+  {
+    type: "payment.rejected",
+    module: "billing",
+    label: "Payment rejected",
+    description:
+      "GETLAB rejects a payment. The client and finance are emailed with the reason and remaining balance.",
+  },
+  {
     type: "rfi.created",
     module: "rfi",
     label: "RFI created",
@@ -276,6 +300,12 @@ export type NotificationPayload = {
   invoiceNumber?: string;
   grandTotal?: number;
   currency?: string;
+  paymentAmount?: number;
+  paymentReference?: string;
+  paymentTypeLabel?: string;
+  paymentModeLabel?: string;
+  approvedTotal?: number;
+  remainingBalance?: number;
   clientId?: string;
   clientName?: string;
   clientInternalId?: string;

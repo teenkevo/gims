@@ -39,6 +39,9 @@ import { calculatePaymentStatus } from "./billing-lifecycle";
 import { MakePaymentDialog } from "./make-payment-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { paymentListTitle } from "@/lib/billing/payment-reference";
+import { useRBAC } from "@/components/rbac-context";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 type Quotation = NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>;
 
@@ -61,6 +64,9 @@ export function ViewPaymentsDialog({
 }) {
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { isClientUser, can } = useRBAC();
+  const canPayBilling = can(PERMISSIONS["billing:pay"]);
+  const canResubmitPayment = isClientUser && canPayBilling;
 
   const formatAmount = (amount?: number) => {
     const formattedAmount = amount?.toLocaleString() || "0";
@@ -162,8 +168,8 @@ export function ViewPaymentsDialog({
               >
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex flex-col">
-                    <span className="font-medium text-base capitalize">
-                      {payment.paymentType || "Unknown"} Payment
+                    <span className="font-medium text-base">
+                      {paymentListTitle(payment)}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {payment.paymentTime
@@ -203,7 +209,8 @@ export function ViewPaymentsDialog({
                           </Link>
                         </Button>
                       )}
-                    {payment.internalStatus === "rejected" &&
+                    {canResubmitPayment &&
+                      payment.internalStatus === "rejected" &&
                       (!payment?.resubmissions ||
                         payment?.resubmissions?.length === 0) && (
                         <RemakePaymentDialog
@@ -215,6 +222,14 @@ export function ViewPaymentsDialog({
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-2">
+                  {payment.paymentReference && (
+                    <div>
+                      <span>Reference:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {payment.paymentReference}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <span>Amount:</span>{" "}
                     <span className="font-semibold text-foreground">
@@ -339,7 +354,9 @@ export function ViewPaymentsDialog({
                                     )}
                                   {/* TODO: Add resubmission receipt */}
                                   {/* Resubmission dialog should only be shown for the last resubmission when it is rejected */}
-                                  {resubmission.internalStatus === "rejected" &&
+                                  {canResubmitPayment &&
+                                    resubmission.internalStatus ===
+                                      "rejected" &&
                                     idx ===
                                       (payment.resubmissions?.length || 0) -
                                         1 && (

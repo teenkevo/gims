@@ -43,3 +43,17 @@ export async function resolveDepartmentRecipients(
 
   return [...byEmail.values()];
 }
+
+export async function resolveDepartmentIdsByName(
+  names: string[]
+): Promise<string[]> {
+  const wanted = [...new Set(names.map((name) => name.trim()).filter(Boolean))];
+  if (wanted.length === 0) return [];
+
+  const departments = await writeClient.fetch<Array<string | null>>(
+    `*[_type == "department" && department in $names]._id`,
+    { names: wanted }
+  );
+
+  return (departments ?? []).flatMap((id) => (id ? [id] : []));
+}

@@ -6,9 +6,15 @@ import { getAppBaseUrl, getEmailRedirect, getResendClient, getResendFrom } from 
 import { getEnabledSubscriptionsForEvent } from "@/sanity/lib/notifications/getNotificationSubscriptions";
 import { attachmentFromSanityFile, type EmailAttachment } from "./attachments";
 import { sendCustomerInvoiceEmails, sendCustomerQuotationEmails, sendCustomerRevisionsRejectedEmails, invoiceNumberFromQuotation, type QuotationEmailContext } from "./customer-quotation";
+import { sendCustomerPaymentEmails } from "./customer-payment";
 import type { NotificationEventType, NotificationPayload } from "./events";
-import { resolveDepartmentRecipients } from "./resolve-recipients";
+import { resolveDepartmentIdsByName, resolveDepartmentRecipients } from "./resolve-recipients";
 import { renderNotificationEmail } from "./templates";
+import { summarizePayments } from "@/lib/billing/payment-totals";
+import {
+  paymentModeLabel,
+  paymentTypeLabel,
+} from "@/lib/billing/payment-reference";
 
 function escapeHtml(value: string) {
   return value
@@ -339,10 +345,232 @@ export async function emitInvoiceIssued(
   }
 }
 
+type PaymentNotificationKind = "submitted" | "approved" | "rejected";
+
+type PaymentLookup = {
+  paymentKey?: string;
+  paymentReference?: string;
+  resubmissionKey?: string;
+  receiptFileId?: string;
+  reason?: string;
+};
+
+type QuotationPaymentDoc = {
+  _key: string;
+  paymentType?: "advance" | "full" | "other" | null;
+  paymentReference?: string | null;
+  amount?: number | null;
+  paymentMode?: "mobile" | "bank" | "cash" | null;
+  internalStatus?: string | null;
+  internalNotes?: string | null;
+  receipt?: {
+    asset?: { _id?: string; originalFilename?: string | null } | null;
+  } | null;
+  resubmissions?: Array<{
+    _key: string;
+    amount?: number | null;
+    paymentMode?: "mobile" | "bank" | "cash" | null;
+    internalStatus?: string | null;
+    internalNotes?: string | null;
+    receipt?: {
+      asset?: { _id?: string; originalFilename?: string | null } | null;
+    } | null;
+  }> | null;
+};
+
+const PAYMENT_EVENTS = {
+  submitted: "payment.submitted",
+  approved: "payment.approved",
+  rejected: "payment.rejected",
+} as const;
+
+const PAYMENT_STATUS = {
+  submitted: "Pending review",
+  approved: "Approved",
+  rejected: "Rejected",
+} as const;
+
+function findPayment(
+  payments: QuotationPaymentDoc[],
+  lookup: PaymentLookup
+) {
+  if (lookup.paymentKey) {
+    return payments.find((payment) => payment._key === lookup.paymentKey);
+  }
+  if (lookup.paymentReference) {
+    return payments.find(
+      (payment) => payment.paymentReference === lookup.paymentReference
+    );
+  }
+  return payments[payments.length - 1];
+}
+
+function paymentSlice(
+  payment: QuotationPaymentDoc,
+  lookup: PaymentLookup,
+  kind: PaymentNotificationKind
+) {
+  const resubs = payment.resubmissions ?? [];
+  const resub = lookup.resubmissionKey
+    ? resubs.find((item) => item._key === lookup.resubmissionKey)
+    : kind === "submitted"
+      ? resubs[resubs.length - 1]
+      : undefined;
+  const current = resub ?? payment;
+  return {
+    amount: Number(current.amount) || Number(payment.amount) || 0,
+    paymentMode: current.paymentMode ?? payment.paymentMode,
+    receiptFileId: current.receipt?.asset?._id ?? payment.receipt?.asset?._id,
+    receiptFilename:
+      current.receipt?.asset?.originalFilename ??
+      payment.receipt?.asset?.originalFilename,
+    notes: current.internalNotes ?? payment.internalNotes,
+  };
+}
+
+async function emitPaymentEvent(
+  kind: PaymentNotificationKind,
+  quotationId: string,
+  lookup: PaymentLookup
+) {
+  const type = PAYMENT_EVENTS[kind];
+  const context = await getQuotationNotificationContext(quotationId);
+  if (!context) {
+    console.warn(`Notification ${type} skipped: quotation ${quotationId} was not found`);
+    return;
+  }
+
+  const quotation = await writeClient.fetch<{
+    grandTotal?: number | null;
+    currency?: string | null;
+    payments?: QuotationPaymentDoc[] | null;
+  } | null>(
+    `*[_type == "quotation" && _id == $quotationId][0]{
+      grandTotal,
+      currency,
+      payments[]{
+        _key,
+        paymentType,
+        paymentReference,
+        amount,
+        paymentMode,
+        internalStatus,
+        internalNotes,
+        receipt { asset->{ _id, originalFilename } },
+        resubmissions[]{
+          _key,
+          amount,
+          paymentMode,
+          internalStatus,
+          internalNotes,
+          receipt { asset->{ _id, originalFilename } }
+        }
+      }
+    }`,
+    { quotationId }
+  );
+
+  const payments = quotation?.payments ?? [];
+  const payment = findPayment(payments, lookup);
+  if (!payment) {
+    console.warn(`Notification ${type} skipped: payment was not found on ${quotationId}`);
+    return;
+  }
+
+  const slice = paymentSlice(payment, lookup, kind);
+  const totals = summarizePayments(payments, quotation?.grandTotal ?? context.grandTotal);
+  const remainingBalance =
+    kind === "submitted"
+      ? totals.remainingAfterPending
+      : totals.remainingAfterApproved;
+  const invoiceNumber = invoiceNumberFromQuotation(context.quotationNumber);
+  const receiptFileId = lookup.receiptFileId ?? slice.receiptFileId;
+  const receiptFilename = payment.paymentReference
+    ? `Receipt-${payment.paymentReference}.pdf`
+    : slice.receiptFilename;
+  const pdfAttachment =
+    kind === "approved" && receiptFileId
+      ? await attachmentFromSanityFile(receiptFileId, receiptFilename)
+      : null;
+  const attachments = pdfAttachment ? [pdfAttachment] : undefined;
+  const payload: Partial<NotificationPayload> = {
+    invoiceNumber,
+    paymentAmount: slice.amount,
+    paymentReference: payment.paymentReference ?? undefined,
+    paymentTypeLabel: paymentTypeLabel(payment.paymentType),
+    paymentModeLabel: paymentModeLabel(slice.paymentMode),
+    approvedTotal: totals.approved,
+    remainingBalance,
+    status: PAYMENT_STATUS[kind],
+    detail: kind === "rejected" ? lookup.reason?.trim() || slice.notes?.trim() : undefined,
+    attachmentFileId: attachments ? receiptFileId : undefined,
+    attachmentFilename: attachments ? receiptFilename : undefined,
+    attachmentNote: attachments
+      ? "The payment receipt is attached to this email."
+      : undefined,
+  };
+
+  try {
+    await emitNotification(type, toPayload(context, payload), {
+      attachments,
+      alwaysIncludeDepartmentNames: ["Finance"],
+    });
+  } catch (error) {
+    console.error(`Internal ${type} notification failed`, error);
+  }
+
+  try {
+    await sendCustomerPaymentEmails(
+      {
+        ...context,
+        kind,
+        invoiceNumber,
+        paymentReference: payment.paymentReference ?? undefined,
+        paymentTypeLabel: paymentTypeLabel(payment.paymentType),
+        paymentModeLabel: paymentModeLabel(slice.paymentMode),
+        paymentAmount: slice.amount,
+        approvedTotal: totals.approved,
+        remainingBalance,
+        rejectionReason:
+          kind === "rejected"
+            ? lookup.reason?.trim() || slice.notes?.trim()
+            : undefined,
+      },
+      attachments
+    );
+  } catch (error) {
+    console.error(`Customer ${type} email failed`, error);
+  }
+}
+
+export async function emitPaymentSubmitted(
+  quotationId: string,
+  lookup: Pick<PaymentLookup, "paymentKey" | "paymentReference">
+) {
+  await emitPaymentEvent("submitted", quotationId, lookup);
+}
+
+export async function emitPaymentApproved(
+  quotationId: string,
+  lookup: Pick<PaymentLookup, "paymentKey" | "resubmissionKey" | "receiptFileId">
+) {
+  await emitPaymentEvent("approved", quotationId, lookup);
+}
+
+export async function emitPaymentRejected(
+  quotationId: string,
+  lookup: Pick<PaymentLookup, "paymentKey" | "resubmissionKey" | "reason">
+) {
+  await emitPaymentEvent("rejected", quotationId, lookup);
+}
+
 export async function emitNotification(
   type: NotificationEventType,
   payload: NotificationPayload,
-  options?: { attachments?: EmailAttachment[] }
+  options?: {
+    attachments?: EmailAttachment[];
+    alwaysIncludeDepartmentNames?: string[];
+  }
 ) {
   try {
     const resend = getResendClient();
@@ -362,13 +590,19 @@ export async function emitNotification(
     }
 
     const subscriptions = await getEnabledSubscriptionsForEvent(type);
-    const departmentIds = [
+    let departmentIds = [
       ...new Set(
         subscriptions.flatMap((subscription) =>
           subscription.departments.map((department) => department._id)
         )
       ),
     ];
+    if (options?.alwaysIncludeDepartmentNames?.length) {
+      const extraIds = await resolveDepartmentIdsByName(
+        options.alwaysIncludeDepartmentNames
+      );
+      departmentIds = [...new Set([...departmentIds, ...extraIds])];
+    }
     const recipients =
       departmentIds.length > 0
         ? await resolveDepartmentRecipients(departmentIds)
@@ -403,7 +637,9 @@ export async function emitNotification(
         ? payload.attachmentNote ??
           (type === "invoice.issued"
             ? "The invoice PDF is attached to this email."
-            : "The quotation PDF is attached to this email.")
+            : type === "payment.approved"
+              ? "The payment receipt is attached to this email."
+              : "The quotation PDF is attached to this email.")
         : payload.attachmentNote,
     });
     const from = getResendFrom();

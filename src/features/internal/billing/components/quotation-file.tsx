@@ -8,7 +8,52 @@ import { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { useQuotation } from "./useQuotation";
 import { useRBAC } from "@/components/rbac-context";
 import { Badge } from "@/components/ui/badge";
-import { RevisionNotesDialog } from "./revision-notes-dialog";
+import {
+  RevisionCycleDialog,
+  type RevisionCycleEvent,
+} from "./revision-cycle-dialog";
+
+type QuotationRevision = NonNullable<
+  NonNullable<PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]>["revisions"]
+>[number];
+
+function revisionCycleEvents(
+  revision:
+    | PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
+    | QuotationRevision
+    | null
+    | undefined,
+  options?: { isSuperseded?: boolean; inferRevisedAt?: string | null }
+): RevisionCycleEvent[] {
+  const stored = (revision?.revisionEvents ?? []).flatMap((event) =>
+    event?.type
+      ? [
+          {
+            type: event.type,
+            at: event.at,
+            notes: event.notes,
+            actorName: event.actorName,
+            actorType: event.actorType,
+          } satisfies RevisionCycleEvent,
+        ]
+      : []
+  );
+  if (stored.length > 0) return stored;
+
+  const notes = revision?.rejectionNotes?.trim();
+  if (!notes) return [];
+
+  const events: RevisionCycleEvent[] = [
+    { type: "revisions_requested", notes },
+  ];
+  if (options?.isSuperseded) {
+    events.push({
+      type: "revised",
+      at: options.inferRevisedAt,
+    });
+  }
+  return events;
+}
 
 interface FileActionsProps {
   fileUrl: string;
@@ -49,14 +94,14 @@ interface QuotationFileDisplayProps {
     } | null;
   } | null;
   isLatest?: boolean;
-  rejectionNotes?: string;
+  events?: RevisionCycleEvent[];
 }
 
 const QuotationFileDisplay: React.FC<QuotationFileDisplayProps> = ({
   revisionNumber,
   file,
   isLatest = false,
-  rejectionNotes,
+  events = [],
 }) => {
   const fileUrl = file?.asset?.url || "";
   const fileName = file?.asset?.originalFilename;
@@ -90,9 +135,7 @@ const QuotationFileDisplay: React.FC<QuotationFileDisplayProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {rejectionNotes && (
-          <RevisionNotesDialog revisionText={rejectionNotes} />
-        )}
+        {events.length > 0 && <RevisionCycleDialog events={events} />}
         <FileActions
           fileUrl={fileUrl}
           fileName={fileName || ""}
@@ -122,7 +165,7 @@ export default function QuotationFile({
       <CardContent>
         <div className="space-y-4 mb-4">
           <div className="flex gap-2">
-            <p className="tracking-tight">Final revision</p>
+            <p className="tracking-tight">Current version</p>
             <Badge
               variant="outline"
               className={`text-xs ${
@@ -157,23 +200,30 @@ export default function QuotationFile({
               revisionNumber={quotation.revisionNumber || ""}
               file={quotation.file}
               isLatest={true}
+              events={revisionCycleEvents(quotation)}
             />
           )}
 
           {number_parent_revisions > 0 && (
-            <p className="mb-6 mt-10 text-sm text-destructive">
-              Rejected Versions
+            <p className="mb-6 mt-10 text-sm text-muted-foreground">
+              Previous versions
             </p>
           )}
           {number_parent_revisions > 0 &&
             rejected?.map(
-              (revision) =>
-                revision?.file && (
+              (revision, index) =>
+                revision?._id && (
                   <QuotationFileDisplay
-                    key={revision?._id}
-                    revisionNumber={revision?.revisionNumber || ""}
-                    file={revision?.file}
-                    rejectionNotes={revision?.rejectionNotes || ""}
+                    key={revision._id}
+                    revisionNumber={revision.revisionNumber || ""}
+                    file={revision.file}
+                    events={revisionCycleEvents(revision, {
+                      isSuperseded: true,
+                      inferRevisedAt:
+                        index === 0
+                          ? quotation?.quotationDate
+                          : rejected[index - 1]?.quotationDate,
+                    })}
                   />
                 )
             )}

@@ -110,7 +110,7 @@ export function ResponsiveActionDialog({
       </DialogTrigger>
       <DialogContent
         aria-describedby={undefined}
-        className="max-w-md flex flex-col max-h-[600px]"
+        className="w-full sm:max-w-2xl flex flex-col max-h-[85vh]"
       >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React, { Dispatch, SetStateAction, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   ALL_SERVICES_QUERY_RESULT,
   PROJECT_BY_ID_QUERY_RESULT,
@@ -72,6 +73,7 @@ export const GenerateBillingDocument = ({
   setDrawerOpen: Dispatch<SetStateAction<boolean>>;
   billingInfo: GenerateBillingDocumentProps;
 }) => {
+  const router = useRouter();
   const {
     currency,
     paymentNotes,
@@ -211,7 +213,7 @@ export const GenerateBillingDocument = ({
       });
       const fileResult = await response.json();
       const result = await updateQuotation(
-        project.quotation?._id || "",
+        quotation?._id || project.quotation?._id || "",
         finalBillingInfo,
         fileResult.files[0].fileId
       );
@@ -249,9 +251,10 @@ export const GenerateBillingDocument = ({
       );
       if (result.status === "ok") {
         setIsLoading(false);
-        toast.success("Quotation has been created");
+        toast.success("Revised quotation has been issued");
         setOpen(false);
         setDrawerOpen(false);
+        router.refresh();
       } else {
         setIsLoading(false);
         toastActionError(result);

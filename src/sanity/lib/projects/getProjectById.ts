@@ -34,6 +34,14 @@ export const getProjectById = async (projectId: string) => {
             currency,
             status,
             rejectionNotes,
+            revisionEvents[] {
+              _key,
+              type,
+              at,
+              notes,
+              actorName,
+              actorType,
+            },
             invoice {
               asset->{
                 _id,
@@ -52,6 +60,14 @@ export const getProjectById = async (projectId: string) => {
               currency,
               status,
               rejectionNotes,
+              revisionEvents[] {
+                _key,
+                type,
+                at,
+                notes,
+                actorName,
+                actorType,
+              },
               invoice {
                 asset->{
                   _id,
@@ -100,6 +116,7 @@ export const getProjectById = async (projectId: string) => {
                 _key,
                 paymentTime,
                 paymentType,
+                paymentReference,
                 amount,
                 paymentMode,
                 currency,
@@ -233,6 +250,7 @@ export const getProjectById = async (projectId: string) => {
               _key,
               paymentTime,
               paymentType,
+              paymentReference,
               amount,
               paymentMode,
               currency,

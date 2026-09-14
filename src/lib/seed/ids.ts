@@ -129,6 +129,9 @@ export const IDS = {
   },
   notification: {
     invoiceIssued: seedId("notification", "invoice-issued"),
+    paymentSubmitted: seedId("notification", "payment-submitted"),
+    paymentApproved: seedId("notification", "payment-approved"),
+    paymentRejected: seedId("notification", "payment-rejected"),
   },
 } as const;
 

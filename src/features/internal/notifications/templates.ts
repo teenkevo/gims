@@ -53,8 +53,15 @@ function linesFor(payload: NotificationPayload, options?: { omitRequestFields?: 
   if (project) lines.push(["Project", project]);
   if (payload.invoiceNumber) lines.push(["Invoice", payload.invoiceNumber]);
   if (payload.quotationNumber) lines.push(["Quotation", payload.quotationNumber]);
+  const isPayment = payload.remainingBalance != null || payload.paymentAmount != null;
   const total = formatMoney(payload.grandTotal, payload.currency);
-  if (total) lines.push(["Amount", total]);
+  if (total) lines.push([isPayment ? "Invoice total" : "Amount", total]);
+  const paymentAmount = formatMoney(payload.paymentAmount, payload.currency);
+  if (paymentAmount) lines.push(["This payment", paymentAmount]);
+  if (payload.paymentReference) lines.push(["Reference", payload.paymentReference]);
+  if (payload.paymentModeLabel) lines.push(["Method", payload.paymentModeLabel]);
+  const remaining = formatMoney(payload.remainingBalance, payload.currency);
+  if (remaining) lines.push(["Balance remaining", remaining]);
   const client = named(payload.clientName, payload.clientInternalId);
   if (client) lines.push(["Client", client]);
   if (payload.contactName) lines.push(["Contact", payload.contactName]);
@@ -124,6 +131,7 @@ function revisionRejectedBlock(payload: NotificationPayload): { text: string; ht
 
 function subjectHint(payload: NotificationPayload) {
   return (
+    payload.paymentReference ||
     payload.invoiceNumber ||
     payload.quotationNumber ||
     payload.projectName ||
@@ -138,6 +146,7 @@ function subjectHint(payload: NotificationPayload) {
 
 function ctaLabel(type: NotificationEventType) {
   if (type === "project.created") return "Go to Project";
+  if (type.startsWith("payment.")) return "Review payments";
   return "Open in GIMS";
 }
 
@@ -246,7 +255,6 @@ function paymentInstructions(input: CustomerDocumentEmailInput): {
   html: string;
 } {
   const bank = GETLAB_BANK_PAYMENT_DETAILS;
-  const total = formatMoney(input.grandTotal, input.currency);
   const advancePercentage = input.advancePercentage ?? 0;
   const requiresAdvance = advancePercentage > 0;
   const advanceAmount =
@@ -264,7 +272,7 @@ function paymentInstructions(input: CustomerDocumentEmailInput): {
 
   const dueLine = requiresAdvance
     ? `Pay ${advancePercentage}%${advanceAmount ? ` (${advanceAmount})` : ""} before the project starts.${remainderAmount ? ` The remaining ${remainderPercentage}% (${remainderAmount}) is due as agreed.` : ""}`
-    : `No advance payment is required. Please pay the invoice total${total ? ` of ${total}` : ""}.`;
+    : "";
 
   const notes = input.paymentNotes?.trim();
   const bankLines = [
@@ -289,7 +297,7 @@ function paymentInstructions(input: CustomerDocumentEmailInput): {
 
   const advanceBanner = requiresAdvance
     ? `<p style="margin:0 0 12px;padding:12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;color:#92400e;font-size:14px;line-height:1.5;"><strong>Advance payment required.</strong> ${escapeHtml(dueLine)}</p>`
-    : `<p style="margin:0 0 12px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(dueLine)}</p>`;
+    : "";
 
   const notesHtml = notes
     ? `<p style="margin:12px 0 0;color:#344054;font-size:14px;line-height:1.5;"><strong>Payment instructions:</strong> ${escapeHtml(notes)}</p>`
@@ -311,9 +319,7 @@ function paymentInstructions(input: CustomerDocumentEmailInput): {
 
   return {
     text: `How to pay
-${dueLine}
-
-1. Transfer the amount due using the GETLAB bank details below.
+${dueLine ? `${dueLine}\n\n` : ""}1. Transfer the amount due using the GETLAB bank details below.
 2. Upload your payment evidence in the client portal.
 
 Bank payment details
@@ -505,6 +511,148 @@ www.getlab.co.ug`.trim(),
       <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">Revision request declined</h1>
       <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(greeting)}</p>
       <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(intro)}</p>
+      <table style="border-collapse:collapse;">${htmlRows}</table>
+      ${reasonHtml}
+      ${htmlLink}
+      <p style="margin:24px 0 0;color:#667085;font-size:13px;line-height:1.5;">
+        Questions? Email <a href="mailto:info@getlab.co.ug" style="color:#101828;">info@getlab.co.ug</a>
+        or call +256 752 972309.
+      </p>
+      <p style="margin:16px 0 0;color:#667085;font-size:13px;line-height:1.5;">
+        Kind regards,<br/>
+        Geotechnical Engineering and Technology Laboratory (GETLAB) Limited<br/>
+        <a href="https://www.getlab.co.ug" style="color:#101828;">www.getlab.co.ug</a>
+      </p>
+    `),
+  };
+}
+
+export type CustomerPaymentEmailKind = "submitted" | "approved" | "rejected";
+
+export type CustomerPaymentEmailInput = {
+  kind: CustomerPaymentEmailKind;
+  contactName: string;
+  projectName?: string;
+  projectInternalId?: string;
+  invoiceNumber?: string;
+  quotationNumber?: string;
+  paymentReference?: string;
+  paymentTypeLabel?: string;
+  paymentModeLabel?: string;
+  paymentAmount?: number;
+  grandTotal?: number;
+  approvedTotal?: number;
+  remainingBalance?: number;
+  currency?: string;
+  rejectionReason?: string;
+  portalUrl?: string;
+  hasAttachment: boolean;
+};
+
+export function renderCustomerPaymentEmail(
+  input: CustomerPaymentEmailInput
+): Template {
+  const greeting = input.contactName ? `Dear ${input.contactName},` : "Dear customer,";
+  const project = named(input.projectName, input.projectInternalId);
+  const projectHint = input.projectName ? ` — ${input.projectName}` : "";
+  const referenceHint = input.paymentReference ?? input.invoiceNumber ?? "";
+
+  const copy = {
+    submitted: {
+      title: "Payment received",
+      subject: referenceHint
+        ? `Payment received: ${referenceHint}${projectHint}`
+        : `Payment received${projectHint}`,
+      intro:
+        "GETLAB has received your payment evidence. Finance will review it and confirm once it is approved.",
+    },
+    approved: {
+      title: "Payment approved",
+      subject: referenceHint
+        ? `Payment approved: ${referenceHint}${projectHint}`
+        : `Payment approved${projectHint}`,
+      intro: input.hasAttachment
+        ? "GETLAB has approved your payment. The receipt is attached to this email."
+        : "GETLAB has approved your payment.",
+    },
+    rejected: {
+      title: "Payment not accepted",
+      subject: referenceHint
+        ? `Payment not accepted: ${referenceHint}${projectHint}`
+        : `Payment not accepted${projectHint}`,
+      intro:
+        "GETLAB could not accept this payment. Please review the reason below and resubmit your payment evidence.",
+    },
+  }[input.kind];
+
+  const lines: Array<[string, string]> = [];
+  if (input.invoiceNumber) lines.push(["Invoice", input.invoiceNumber]);
+  if (input.quotationNumber) lines.push(["Quotation", input.quotationNumber]);
+  if (project) lines.push(["Project", project]);
+  const invoiceTotal = formatMoney(input.grandTotal, input.currency);
+  if (invoiceTotal) lines.push(["Invoice total", invoiceTotal]);
+  const paymentAmount = formatMoney(input.paymentAmount, input.currency);
+  if (paymentAmount) lines.push(["This payment", paymentAmount]);
+  if (input.paymentReference) lines.push(["Reference", input.paymentReference]);
+  if (input.paymentModeLabel) lines.push(["Method", input.paymentModeLabel]);
+  const remaining = formatMoney(input.remainingBalance, input.currency);
+  if (remaining) lines.push(["Balance remaining", remaining]);
+
+  const summary = lines.map(([label, value]) => `${label}: ${value}`).join("\n");
+  const htmlRows = htmlRowsFor(lines);
+
+  const reason = input.rejectionReason?.trim();
+  const reasonText =
+    input.kind === "rejected"
+      ? reason
+        ? `\n\nGETLAB response\n${reason}`
+        : "\n\nNo reason was provided."
+      : "";
+  const reasonHtml =
+    input.kind === "rejected"
+      ? `<div style="margin:20px 0 0;padding:16px;background:#f9fafb;border:1px solid #e4e7ec;border-radius:8px;">
+      <p style="margin:0;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB response</p>
+      ${
+        reason
+          ? `<div style="margin:8px 0 0;padding:12px 14px;background:#fff;border:1px dotted #d0d5dd;border-radius:8px;color:#101828;font-size:14px;line-height:1.6;">${escapeMultiline(reason)}</div>`
+          : `<p style="margin:8px 0 0;color:#667085;font-size:14px;">No reason was provided.</p>`
+      }
+    </div>`
+      : "";
+
+  const cta =
+    input.kind === "rejected"
+      ? "Resubmit payment"
+      : input.kind === "submitted"
+        ? "View payments"
+        : "View receipt";
+  const htmlLink = input.portalUrl
+    ? `<p style="margin:24px 0 0;">
+        <a href="${escapeHtml(input.portalUrl)}" style="display:inline-block;background:#101828;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;">
+          ${escapeHtml(cta)}
+        </a>
+      </p>`
+    : "";
+  const linkLine = input.portalUrl ? `\n${cta}: ${input.portalUrl}` : "";
+
+  return {
+    subject: copy.subject,
+    text: `${greeting}
+
+${copy.intro}
+
+${summary}${reasonText}${linkLine}
+
+If you have questions, email info@getlab.co.ug or call +256 752 972309.
+
+Kind regards,
+Geotechnical Engineering and Technology Laboratory (GETLAB) Limited
+www.getlab.co.ug`.trim(),
+    html: wrapEmailHtml(`
+      <p style="margin:0 0 4px;color:#667085;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">GETLAB</p>
+      <h1 style="margin:0 0 16px;font-size:20px;color:#101828;">${escapeHtml(copy.title)}</h1>
+      <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(greeting)}</p>
+      <p style="margin:0 0 16px;color:#344054;font-size:14px;line-height:1.5;">${escapeHtml(copy.intro)}</p>
       <table style="border-collapse:collapse;">${htmlRows}</table>
       ${reasonHtml}
       ${htmlLink}

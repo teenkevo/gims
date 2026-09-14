@@ -754,6 +754,7 @@ export type Quotation = {
   grandTotal?: number;
   payments?: Array<{
     paymentType?: "advance" | "full" | "other";
+    paymentReference?: string;
     paymentTime?: string;
     amount?: number;
     paymentMode?: "mobile" | "bank" | "cash";
@@ -809,6 +810,15 @@ export type Quotation = {
     | "partially_paid"
     | "fully_paid";
   rejectionNotes?: string;
+  revisionEvents?: Array<{
+    type?: "revised" | "revisions_declined" | "revisions_requested";
+    at?: string;
+    notes?: string;
+    actorName?: string;
+    actorType?: "client" | "personnel";
+    _type: "revisionEvent";
+    _key: string;
+  }>;
   invoice?: {
     asset?: SanityFileAssetReference;
     media?: unknown;
@@ -1650,6 +1660,14 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
       | "sent"
       | null;
     rejectionNotes: string | null;
+    revisionEvents: Array<{
+      _key: string;
+      type: "revised" | "revisions_declined" | "revisions_requested" | null;
+      at: string | null;
+      notes: string | null;
+      actorName: string | null;
+      actorType: "client" | "personnel" | null;
+    }> | null;
     invoice: {
       asset: {
         _id: string;
@@ -1676,6 +1694,14 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
         | "sent"
         | null;
       rejectionNotes: string | null;
+      revisionEvents: Array<{
+        _key: string;
+        type: "revised" | "revisions_declined" | "revisions_requested" | null;
+        at: string | null;
+        notes: string | null;
+        actorName: string | null;
+        actorType: "client" | "personnel" | null;
+      }> | null;
       invoice: {
         asset: {
           _id: string;
@@ -1740,6 +1766,7 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
         _key: string;
         paymentTime: string | null;
         paymentType: "advance" | "full" | "other" | null;
+        paymentReference: string | null;
         amount: number | null;
         paymentMode: "bank" | "cash" | "mobile" | null;
         currency: "eur" | "gbp" | "ugx" | "usd" | null;
@@ -1893,6 +1920,7 @@ export type PROJECT_BY_ID_QUERY_RESULT = Array<{
       _key: string;
       paymentTime: string | null;
       paymentType: "advance" | "full" | "other" | null;
+      paymentReference: string | null;
       amount: number | null;
       paymentMode: "bank" | "cash" | "mobile" | null;
       currency: "eur" | "gbp" | "ugx" | "usd" | null;

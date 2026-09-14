@@ -68,7 +68,7 @@ export function RevisionNotesDialog({
   );
 
   const trigger = canAct ? (
-    <Button size="sm">Review Revisions</Button>
+    <Button size="sm">Review the Request</Button>
   ) : (
     <Button variant="secondary" size="icon">
       <MessageSquareMore className="h-4 w-4 animate-bounce" />

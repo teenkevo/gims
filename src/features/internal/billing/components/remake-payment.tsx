@@ -48,6 +48,8 @@ import { NumericFormat } from "react-number-format";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { makeResubmission } from "@/lib/actions";
 import { toastActionError } from "@/lib/auth/notify-action-error";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { useRBAC } from "@/components/rbac-context";
 import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
 import { WarningOutlineIcon } from "@sanity/icons";
 
@@ -73,6 +75,8 @@ export function RemakePaymentDialog({
   currency: string;
   rejectedPayment: Payments[number];
 }) {
+  const { isClientUser, can } = useRBAC();
+  const canPayBilling = can(PERMISSIONS["billing:pay"]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [state, dispatch, isPending] = useActionState(makeResubmission, null);
@@ -142,6 +146,8 @@ export function RemakePaymentDialog({
   const isMobile = useMediaQuery("(max-width: 640px)");
   const paymentMode = form.watch("paymentMode");
   const paymentProof = form.watch("paymentProof");
+
+  if (!isClientUser || !canPayBilling) return null;
 
   const formContent = (
     <Form {...form}>
@@ -308,7 +314,7 @@ export function RemakePaymentDialog({
 
       <DialogContent
         aria-describedby={undefined}
-        className="max-w-md flex flex-col max-h-[600px]"
+        className="w-full sm:max-w-2xl flex flex-col max-h-[85vh]"
       >
         <DialogHeader>
           <DialogTitle>Resubmit Payment</DialogTitle>

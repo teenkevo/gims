@@ -15,14 +15,20 @@ import { getPersonnelByEmail } from "@/sanity/lib/personnel/getPersonnelByEmail"
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePermissionOrError } from "@/lib/auth/with-auth";
 import { getSession } from "@/lib/auth/session";
+import type { SessionContext } from "@/lib/auth/types";
+import { USER_TYPES } from "@/lib/auth/user-type";
 import { requireProjectAccessOrError, requireQuotationProjectAccessOrError } from "@/lib/auth/project-scope";
 import {
   emitInvoiceIssued,
   emitNotification,
+  emitPaymentApproved,
+  emitPaymentRejected,
+  emitPaymentSubmitted,
   emitQuotationResponse,
   emitQuotationRevisionsRejected,
   emitQuotationSent,
 } from "@/features/internal/notifications/emit";
+import { generatePaymentReference } from "@/lib/billing/payment-reference";
 
 interface QuotationProps {
   labTests: (ALL_SERVICES_QUERY_RESULT[number] & {
@@ -98,6 +104,62 @@ export async function createInvoice(
     console.error("Error creating invoice:", error);
     return { error, status: "error" };
   }
+}
+
+type RevisionEventType =
+  | "revisions_requested"
+  | "revisions_declined"
+  | "revised";
+
+function buildRevisionEvent(
+  session: SessionContext,
+  type: RevisionEventType,
+  notes?: string
+) {
+  return {
+    _type: "revisionEvent",
+    type,
+    at: new Date().toISOString(),
+    ...(notes?.trim() ? { notes: notes.trim() } : {}),
+    ...(session.isAuthenticated
+      ? {
+          actorName: session.user.fullName || session.user.email,
+          actorType:
+            session.userType === USER_TYPES.CLIENT ? "client" : "personnel",
+        }
+      : {}),
+  };
+}
+
+function latestQuotationId(project: QuotationProps["project"]) {
+  const parent = project.quotation;
+  if (!parent?._id) return "";
+
+  const rank = (revisionNumber?: string | null) => {
+    const match = /R?(\d{4})-(\d+)/i.exec(revisionNumber ?? "");
+    if (!match) return -1;
+    return Number(match[1]) * 1000 + Number(match[2]);
+  };
+
+  const docs = [parent, ...(parent.revisions ?? [])].filter(
+    (doc): doc is NonNullable<typeof doc> => Boolean(doc?._id)
+  );
+  const latest = docs.sort(
+    (a, b) => rank(b.revisionNumber) - rank(a.revisionNumber)
+  )[0];
+
+  return latest?._id || parent._id;
+}
+
+function quotationFileAssetId(
+  project: QuotationProps["project"],
+  quotationId: string
+) {
+  const parent = project.quotation;
+  if (!parent) return undefined;
+  if (parent._id === quotationId) return parent.file?.asset?._id ?? undefined;
+  const revision = parent.revisions?.find((item) => item?._id === quotationId);
+  return revision?.file?.asset?._id ?? undefined;
 }
 
 // CREATE QUOTATION
@@ -360,9 +422,9 @@ export async function updateQuotation(
     // If the file is referenced, unlink it from the quotation
     tx.patch(quotationId as string, (p) => p.unset(["file"]));
 
-    // first delete the old pdf file from the quotation
-    if (project.quotation?.file?.asset?._id) {
-      tx.delete(project.quotation?.file?.asset?._id);
+    const fileAssetId = quotationFileAssetId(project, quotationId);
+    if (fileAssetId) {
+      tx.delete(fileAssetId);
     }
 
     tx.patch(quotationId as string, (p) =>
@@ -450,18 +512,26 @@ export async function respondToQuotation(
   }
 
   try {
-    await writeClient
-      .patch(quotationId as string)
-      .set({
-        status:
-          status === "revisions_requested"
-            ? "rejected"
-            : status === "accepted"
-              ? "invoiced"
-              : status,
-        rejectionNotes,
-      })
-      .commit();
+    const nextStatus =
+      status === "revisions_requested"
+        ? "rejected"
+        : status === "accepted"
+          ? "invoiced"
+          : status;
+    const patch = writeClient.patch(quotationId as string).set({
+      status: nextStatus,
+      rejectionNotes,
+    });
+
+    if (status === "revisions_requested") {
+      patch
+        .setIfMissing({ revisionEvents: [] })
+        .append("revisionEvents", [
+          buildRevisionEvent(session, "revisions_requested", rejectionNotes),
+        ]);
+    }
+
+    await patch.commit({ autoGenerateArrayKeys: true });
     revalidateTag("quotation");
 
     const projectId = await writeClient.fetch<string | null>(
@@ -529,7 +599,11 @@ export async function rejectQuotationRevisions(
       .patch(quotationId)
       .set({ status: "sent" })
       .unset(["rejectionNotes"])
-      .commit();
+      .setIfMissing({ revisionEvents: [] })
+      .append("revisionEvents", [
+        buildRevisionEvent(session, "revisions_declined", trimmedReason),
+      ])
+      .commit({ autoGenerateArrayKeys: true });
     revalidateTag("quotation");
 
     const resolvedProjectId =
@@ -560,10 +634,11 @@ export async function createRevision(
   if (denied) return denied;
 
   try {
+    const session = await getSession();
     const { project } = billingInfo;
-    const originalQuotationId = project.quotation?._id || "";
+    const rootQuotationId = project.quotation?._id || "";
+    const supersededQuotationId = latestQuotationId(project);
 
-    // create revised quotation
     const revision = await createQuotation(billingInfo, fileId, true);
     if (revision.status !== "ok" || !revision.result) {
       return revision.status === "error"
@@ -573,16 +648,54 @@ export async function createRevision(
 
     const revisionId = revision.result;
 
-    // Append reference + mark revision "sent" in ONE transaction
-    const tx = writeClient.transaction();
-
-    tx.patch(originalQuotationId, (p) =>
-      p
-        .setIfMissing({ revisions: [] })
-        .append("revisions", [{ _type: "reference", _ref: revisionId }])
+    const root = await writeClient.fetch<{
+      _id: string;
+      revisions?: Array<{ _ref?: string | null } | null> | null;
+    } | null>(
+      `*[_id == $id][0]{ _id, "revisions": revisions[]{ _ref } }`,
+      { id: rootQuotationId }
     );
 
-    tx.patch(revisionId, (p) => p.set({ status: "sent" }));
+    const previousIds = [
+      root?._id,
+      ...(root?.revisions ?? []).map((item) => item?._ref),
+    ].filter((id): id is string => Boolean(id) && id !== revisionId);
+
+    const previousRefs = previousIds.map((id) => ({
+      _type: "reference" as const,
+      _ref: id,
+      _key: uuidv4(),
+    }));
+
+    const tx = writeClient.transaction();
+
+    const revisionEvent = buildRevisionEvent(
+      session,
+      "revised",
+      billingInfo.revisionNumber
+        ? `Issued ${billingInfo.revisionNumber}`
+        : undefined
+    );
+
+    tx.patch(revisionId, (p) =>
+      p.set({
+        status: "sent",
+        revisions: previousRefs,
+      })
+    );
+
+    tx.patch(project._id, (p) =>
+      p.set({
+        quotation: { _type: "reference", _ref: revisionId },
+      })
+    );
+
+    tx.patch(supersededQuotationId, (p) =>
+      p
+        .unset(["rejectionNotes"])
+        .setIfMissing({ revisionEvents: [] })
+        .append("revisionEvents", [revisionEvent])
+    );
 
     await tx.commit({
       autoGenerateArrayKeys: true,
@@ -590,6 +703,9 @@ export async function createRevision(
     });
 
     revalidateTag("quotation");
+    revalidateTag("projects");
+    revalidateTag(`project-${project._id}`);
+    revalidatePath(`/projects/${project._id}`);
     return { result: revisionId, status: "ok" };
   } catch (error) {
     console.error("Error creating revision:", error);
@@ -607,7 +723,6 @@ export async function makePayment(prevState: any, formData: FormData) {
   const currency = formData.get("currency");
   const paymentMode = formData.get("paymentMode");
   const paymentType = formData.get("paymentType");
-  const paymentReference = formData.get("reference");
   const paymentProof = formData.get("paymentProof");
 
   // Validate & coerce
@@ -639,6 +754,8 @@ export async function makePayment(prevState: any, formData: FormData) {
         ? "bank"
         : "cash";
 
+  const paymentReference = generatePaymentReference();
+
   try {
     await writeClient
       .patch(quotationId as string)
@@ -649,6 +766,7 @@ export async function makePayment(prevState: any, formData: FormData) {
       .append("payments", [
         {
           paymentType,
+          paymentReference,
           amount,
           paymentTime: new Date().toISOString(),
           paymentMode: paymentModeValue,
@@ -665,6 +783,7 @@ export async function makePayment(prevState: any, formData: FormData) {
       ])
       .commit({ autoGenerateArrayKeys: true });
     revalidateTag("quotation");
+    void emitPaymentSubmitted(quotationId as string, { paymentReference });
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error making payment:", error);
@@ -731,6 +850,9 @@ export async function makeResubmission(prevState: any, formData: FormData) {
       ])
       .commit({ autoGenerateArrayKeys: true });
     revalidateTag("quotation");
+    void emitPaymentSubmitted(quotationId as string, {
+      paymentKey: paymentKey as string,
+    });
     return { result: "ok", status: "ok" };
   } catch (error) {
     console.error("Error making resubmission:", error);
@@ -830,6 +952,11 @@ export async function approvePayment(
     const result = await tx.commit({ autoGenerateArrayKeys: true });
 
     revalidateTag(`quotation`);
+    void emitPaymentApproved(quotationId, {
+      paymentKey,
+      resubmissionKey,
+      receiptFileId: fileId,
+    });
 
     return { result, status: "ok" };
   } catch (error) {
@@ -864,6 +991,11 @@ export async function rejectPayment(
       .commit({ autoGenerateArrayKeys: true });
 
     revalidateTag("quotation");
+    void emitPaymentRejected(quotationId, {
+      paymentKey,
+      resubmissionKey,
+      reason: internalNotes,
+    });
     return { result: quotation, status: "ok" };
   } catch (error) {
     console.error("Error rejecting payment:", error);

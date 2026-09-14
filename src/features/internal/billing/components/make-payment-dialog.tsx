@@ -81,7 +81,6 @@ export function MakePaymentDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
   const [state, dispatch, isPending] = useActionState(makePayment, null);
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -98,19 +97,39 @@ export function MakePaymentDialog({
     (isAdvanceRequired && !hasAdvancePayment) ||
     (!isAdvanceRequired && existingPayments.length > 0);
   const isOtherDisabled = isAdvanceRequired && !hasAdvancePayment;
+  const defaultPaymentType: PaymentType =
+    isAdvanceRequired && !hasAdvancePayment
+      ? "advance"
+      : isFullDisabled
+        ? "other"
+        : "full";
+
+  const advanceAmount = (total * advancePercentage) / 100;
+  const fullAmount = total;
+
+  const amountForType = (type: PaymentType) => {
+    switch (type) {
+      case "advance":
+        return advanceAmount.toString();
+      case "full":
+        return fullAmount.toString();
+      default:
+        return "";
+    }
+  };
+
+  const [paymentType, setPaymentType] =
+    useState<PaymentType>(defaultPaymentType);
 
   const form = useForm<PaymentFormData>({
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      amount: "",
+      amount: amountForType(defaultPaymentType),
       paymentMode: undefined,
       paymentProof: [],
     },
   });
-
-  const advanceAmount = (total * advancePercentage) / 100;
-  const fullAmount = total;
 
   // Include pending resubmissions when computing unapproved totals
   const totalUnapprovedPayments = existingPayments.reduce(
@@ -192,17 +211,13 @@ export function MakePaymentDialog({
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
-      form.reset();
-      setPaymentType(null);
-      if (isAdvanceRequired && !hasAdvancePayment) {
-        setTimeout(() => {
-          handlePaymentTypeChange("advance");
-        }, 100);
-      } else {
-        setTimeout(() => {
-          handlePaymentTypeChange("other");
-        }, 100);
-      }
+      const nextType = defaultPaymentType;
+      setPaymentType(nextType);
+      form.reset({
+        amount: amountForType(nextType),
+        paymentMode: undefined,
+        paymentProof: [],
+      });
     }
   };
 
@@ -269,7 +284,7 @@ export function MakePaymentDialog({
       toast.success("Payment has been recorded successfully");
       setOpen(false);
       form.reset();
-      setPaymentType(null);
+      setPaymentType(defaultPaymentType);
     } else if (state?.status === "error") {
       toastActionError(state);
     }
@@ -303,31 +318,33 @@ export function MakePaymentDialog({
                 "ring-1 ring-foreground transition-all duration-300 rounded-md p-2"
             )}
           >
-            <ToggleGroupItem
-              variant="default"
-              size="sm"
-              value="advance"
-              disabled={isAdvanceDisabled}
-              aria-label="Pay Advance"
-              className={cn(
-                "flex items-center gap-1 px-3 py-2 relative border border-dotted",
-                paymentType === "advance" && "font-medium",
-                isAdvanceDisabled && "opacity-60 cursor-not-allowed"
-              )}
-            >
-              {paymentType === "advance" && !hasAdvancePayment && (
-                <Wallet className="w-4 h-4 text-primary absolute left-2 animate-in fade-in slide-in-from-left-1 duration-300" />
-              )}
-              <span
+            {isAdvanceRequired && (
+              <ToggleGroupItem
+                variant="default"
+                size="sm"
+                value="advance"
+                disabled={isAdvanceDisabled}
+                aria-label="Pay Advance"
                 className={cn(
-                  "transition-all duration-300 flex items-center",
-                  (paymentType === "advance" || hasAdvancePayment) && "ml-6"
+                  "flex items-center gap-1 px-3 py-2 relative border border-dotted",
+                  paymentType === "advance" && "font-medium",
+                  isAdvanceDisabled && "opacity-60 cursor-not-allowed"
                 )}
               >
-                ({advancePercentage}%) Advance
-                {hasAdvancePayment && <Badge className="ml-2">Sent</Badge>}
-              </span>
-            </ToggleGroupItem>
+                {paymentType === "advance" && !hasAdvancePayment && (
+                  <Wallet className="w-4 h-4 text-primary absolute left-2 animate-in fade-in slide-in-from-left-1 duration-300" />
+                )}
+                <span
+                  className={cn(
+                    "transition-all duration-300 flex items-center",
+                    (paymentType === "advance" || hasAdvancePayment) && "ml-6"
+                  )}
+                >
+                  ({advancePercentage}%) Advance
+                  {hasAdvancePayment && <Badge className="ml-2">Sent</Badge>}
+                </span>
+              </ToggleGroupItem>
+            )}
             <ToggleGroupItem
               variant="default"
               size="sm"
@@ -541,7 +558,7 @@ export function MakePaymentDialog({
 
       <DialogContent
         aria-describedby={undefined}
-        className="max-w-md flex flex-col max-h-[600px]"
+        className="w-full sm:max-w-2xl flex flex-col max-h-[85vh]"
       >
         <DialogHeader>
           <DialogTitle>Make Payment</DialogTitle>
