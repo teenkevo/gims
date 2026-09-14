@@ -8,6 +8,9 @@ import {
 import { ALL_PROJECTS_QUERY_RESULT, Quotation } from "../../../../sanity.types";
 import { Priority, ProjectStage } from "./types";
 import { isOverdue } from "@/lib/project-due";
+import { getCurrentQuotation } from "./quotation-versions";
+
+export { getCurrentQuotation, getQuotationVersions } from "./quotation-versions";
 
 export const possibleStages: ProjectStage[] = [
   "BILLING",
@@ -203,7 +206,7 @@ export const DUE_STATUS_FILTERS = [
 export function getProjectQuotationStatus(
   project: ALL_PROJECTS_QUERY_RESULT[number]
 ) {
-  return project.quotation?.status ?? "none";
+  return getCurrentQuotation(project.quotation)?.status ?? "none";
 }
 
 export function getProjectDueStatus(

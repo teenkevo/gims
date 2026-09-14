@@ -1,30 +1,6 @@
 import { useMemo } from "react";
+import { getQuotationVersions } from "@/features/internal/projects/quotation-versions";
 import type { PROJECT_BY_ID_QUERY_RESULT } from "../../../../../sanity.types";
-
-type ParentQuotation = NonNullable<
-  PROJECT_BY_ID_QUERY_RESULT[number]["quotation"]
->;
-type QuotationVersion =
-  | ParentQuotation
-  | NonNullable<ParentQuotation["revisions"]>[number];
-
-function revisionRank(revisionNumber?: string | null) {
-  const match = /R?(\d{4})-(\d+)/i.exec(revisionNumber ?? "");
-  if (!match) return -1;
-  return Number(match[1]) * 1000 + Number(match[2]);
-}
-
-function quotationVersions(
-  parentQuotation: ParentQuotation | null | undefined
-): QuotationVersion[] {
-  const docs = [parentQuotation, ...(parentQuotation?.revisions ?? [])].filter(
-    (doc): doc is QuotationVersion => Boolean(doc?._id)
-  );
-
-  return [...new Map(docs.map((doc) => [doc._id, doc])).values()].sort(
-    (a, b) => revisionRank(b.revisionNumber) - revisionRank(a.revisionNumber)
-  );
-}
 
 /**
  * Custom hook to encapsulate all quotation-related logic and checks.
@@ -38,7 +14,7 @@ export function useQuotation(
 ) {
   return useMemo(() => {
     const parentQuotation = project?.quotation;
-    const versions = quotationVersions(parentQuotation);
+    const versions = getQuotationVersions(parentQuotation);
     const quotation = versions[0];
     const rejected = versions.slice(1);
     const parentQuotationHasRevisions = rejected.length > 0;

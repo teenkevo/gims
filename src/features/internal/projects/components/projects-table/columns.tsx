@@ -16,6 +16,7 @@ import { SetDateRangeDialog } from "../set-project-date-range";
 import {
   quotationTotal,
   isQuotationAmountVisible,
+  getCurrentQuotation,
   getProjectBillingStatusLabel,
   getProjectQuotationStatus,
   getProjectDueStatus,
@@ -179,14 +180,7 @@ export const getColumns = (
       <DataTableColumnHeader column={column} title="Project Billing" />
     ),
     cell: ({ row }) => {
-      const parentQuotation = row.original?.quotation;
-
-      const parentQuotationHasRevisions =
-        (parentQuotation?.revisions?.length ?? 0) > 0;
-
-      const quotation = parentQuotationHasRevisions
-        ? parentQuotation?.revisions?.[0]
-        : parentQuotation;
+      const quotation = getCurrentQuotation(row.original?.quotation);
 
       const total = quotationTotal(quotation as Quotation);
       const currency = quotation?.currency;

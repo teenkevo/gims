@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   quotationTotal,
   isQuotationAmountVisible,
+  getCurrentQuotation,
   getProjectBillingStatusLabel,
 } from "@/features/internal/projects/constants";
 import { calculatePaymentStatus } from "@/features/internal/billing/components/billing-lifecycle";
@@ -145,12 +146,7 @@ export const getColumns = (
         <DataTableColumnHeader column={column} title="Project Billing" />
       ),
       cell: ({ row }) => {
-        const parentQuotation = row.original?.quotation;
-        const parentQuotationHasRevisions =
-          (parentQuotation?.revisions?.length ?? 0) > 0;
-        const quotation = parentQuotationHasRevisions
-          ? parentQuotation?.revisions?.[0]
-          : parentQuotation;
+        const quotation = getCurrentQuotation(row.original?.quotation);
 
         const total = quotationTotal(quotation as Quotation);
         const currency = quotation?.currency;
