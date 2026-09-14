@@ -53,6 +53,25 @@ interface SampleReceiptDocumentProps {
   personnel?: ALL_PERSONNEL_QUERY_RESULT[number];
 }
 
+function formatStatus(status?: string) {
+  const value = (status || "").trim().toLowerCase();
+  if (!value) return "—";
+  if (value === "not-applicable") return "N/A";
+  if (value === "unsatisfactory") return "Unsatisfactory";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function statusTone(status?: string): "positive" | "negative" | "muted" {
+  const value = (status || "").trim().toLowerCase();
+  if (["yes", "adequate", "satisfactory", "approve"].includes(value)) {
+    return "positive";
+  }
+  if (["no", "inadequate", "unsatisfactory", "reject"].includes(value)) {
+    return "negative";
+  }
+  return "muted";
+}
+
 export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
   const {
     reviewItems,
@@ -87,6 +106,23 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
       flexDirection: "column",
       fontFamily: "SpaceGrotesk",
     },
+    heading: {
+      color: "#43AC33",
+      fontWeight: 700,
+      fontSize: 12,
+      marginBottom: 5,
+    },
+    subHeading: {
+      color: "black",
+      fontSize: 9,
+      fontWeight: 600,
+      marginBottom: 5,
+    },
+    spaceBetweenNoAlign: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      color: "#3E3E3E",
+    },
     header: {
       flexDirection: "row",
       textAlign: "right",
@@ -94,167 +130,148 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
       justifyContent: "space-between",
       marginBottom: 10,
     },
-    headerLeft: {
-      width: "50%",
-      flexDirection: "column",
-    },
-    headerRight: {
-      width: "45%",
-      flexDirection: "column",
-      alignItems: "flex-end",
-    },
-    logo: { width: 150, marginBottom: 20 },
-    subHeading: {
-      color: "black",
-      fontSize: 9,
-      fontWeight: 600,
-      marginBottom: 5,
-    },
+    titleContainer: { flexDirection: "row", marginTop: 10 },
     addressTitle: { fontSize: 8, fontWeight: 400 },
     metaTitle: { fontSize: 9, fontWeight: 600 },
     metaDescription: { fontSize: 9, fontWeight: 400 },
+    quotationDetail: {
+      fontSize: 8,
+      fontWeight: 400,
+    },
     title: {
       fontSize: 20,
       fontWeight: 600,
     },
-    section: {
-      marginBottom: 20,
+    card: {
+      width: "48%",
+      border: "1px solid #43AC33",
+      backgroundColor: "#e1ebe3",
+      padding: 15,
+      borderRadius: 10,
+      minHeight: 80,
     },
-    sectionTitle: {
-      fontSize: 12,
-      fontWeight: 700,
-      color: "#000000",
-      marginBottom: 10,
-      backgroundColor: "#F5F5F5",
-      padding: 8,
-      borderLeft: "4 solid #000000",
-    },
-    table: {
-      width: "100%",
-      border: "1 solid #000000",
-      marginBottom: 15,
-    },
-    tableHeader: {
-      backgroundColor: "#F0F0F0",
-      flexDirection: "row",
-      borderBottom: "1 solid #000000",
-    },
-    tableHeaderCell: {
-      padding: 8,
-      fontSize: 9,
-      fontWeight: 700,
-      borderRight: "1 solid #000000",
-      flex: 1,
-    },
-    tableRow: {
-      flexDirection: "row",
-      borderBottom: "1 solid #CCCCCC",
-    },
-    tableCell: {
-      padding: 6,
-      fontSize: 8,
-      borderRight: "1 solid #CCCCCC",
-      flex: 1,
-    },
-    statusBadge: {
-      paddingTop: 3,
-      paddingBottom: 3,
-      paddingLeft: 4,
-      paddingRight: 4,
-      borderRadius: 3,
+    theader: {
+      marginTop: 5,
       fontSize: 7,
-      fontWeight: 700,
-      textAlign: "center",
-      marginBottom: 2,
-    },
-    statusYes: {
-      backgroundColor: "#D4EDDA",
-      color: "#155724",
-    },
-    statusNo: {
-      backgroundColor: "#F8D7DA",
-      color: "#721C24",
-    },
-    statusNotApplicable: {
-      backgroundColor: "#E2E3E5",
-      color: "#383D41",
-    },
-    statusAdequate: {
-      backgroundColor: "#D4EDDA",
-      color: "#155724",
-    },
-    statusInadequate: {
-      backgroundColor: "#F8D7DA",
-      color: "#721C24",
-    },
-    statusSatisfactory: {
-      backgroundColor: "#D4EDDA",
-      color: "#155724",
-    },
-    statusUnsatisfactory: {
-      backgroundColor: "#F8D7DA",
-      color: "#721C24",
-    },
-    text: {
-      fontSize: 9,
-      lineHeight: 1.4,
-      marginBottom: 5,
-    },
-    bold: {
-      fontWeight: 700,
-    },
-    italic: {
-      fontStyle: "italic",
-    },
-    signatureSection: {
-      marginTop: 30,
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    signatureBox: {
-      width: "45%",
-      borderTop: "1 solid #000000",
-      paddingTop: 10,
-    },
-    signatureLabel: {
-      fontSize: 9,
       fontWeight: 500,
-      marginBottom: 5,
+      paddingTop: 4,
+      paddingLeft: 5,
+      paddingRight: 5,
+      flex: 1,
+      height: 20,
+      backgroundColor: "#E1EBE3",
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
     },
-    signatureValue: {
-      fontSize: 9,
-      marginBottom: 3,
+    theaderSmall: {
+      marginTop: 5,
+      fontSize: 7,
+      fontWeight: 500,
+      paddingTop: 4,
+      paddingLeft: 5,
+      paddingRight: 5,
+      flex: 0.4,
+      height: 20,
+      backgroundColor: "#E1EBE3",
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
     },
-    footer: {
-      position: "absolute",
-      bottom: 30,
-      left: 30,
-      right: 30,
-      textAlign: "center",
+    theaderWide: {
+      marginTop: 5,
+      fontSize: 7,
+      fontWeight: 500,
+      paddingTop: 4,
+      paddingLeft: 5,
+      paddingRight: 5,
+      flex: 2.5,
+      height: 20,
+      backgroundColor: "#E1EBE3",
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+    tbody: {
       fontSize: 8,
-      color: "#666666",
+      fontWeight: 400,
+      paddingTop: 4,
+      paddingBottom: 4,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 1,
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+    tbodySmall: {
+      fontSize: 8,
+      fontWeight: 400,
+      paddingTop: 4,
+      paddingBottom: 4,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 0.4,
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+    tbodyWide: {
+      fontSize: 8,
+      fontWeight: 400,
+      paddingTop: 4,
+      paddingBottom: 4,
+      paddingLeft: 7,
+      paddingRight: 7,
+      flex: 2.5,
+      borderColor: "whitesmoke",
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+    },
+    subsection: {
+      fontSize: 9,
+      textAlign: "center",
+      paddingTop: 4,
+      paddingLeft: 7,
+      paddingBottom: 4,
+      flex: 1.5,
+      borderColor: "whitesmoke",
+      borderBottomWidth: 1,
+      fontWeight: 600,
+      fontFamily: "SpaceGrotesk",
+      backgroundColor: "whitesmoke",
+    },
+    statusPositive: {
+      fontSize: 8,
+      fontWeight: 700,
+      color: "#43AC33",
+    },
+    statusNegative: {
+      fontSize: 8,
+      fontWeight: 700,
+      color: "#b45353",
+    },
+    statusMuted: {
+      fontSize: 8,
+      fontWeight: 500,
+      color: "#3E3E3E",
+    },
+    pageNumber: {
+      position: "absolute",
+      fontSize: 10,
+      bottom: 30,
+      left: 0,
+      right: 0,
+      textAlign: "center",
+      color: "grey",
     },
   });
 
-  const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "yes":
-        return [styles.statusBadge, styles.statusYes];
-      case "no":
-        return [styles.statusBadge, styles.statusNo];
-      case "not-applicable":
-        return [styles.statusBadge, styles.statusNotApplicable];
-      case "adequate":
-        return [styles.statusBadge, styles.statusAdequate];
-      case "inadequate":
-        return [styles.statusBadge, styles.statusInadequate];
-      case "satisfactory":
-        return [styles.statusBadge, styles.statusSatisfactory];
-      case "unsatisfactory":
-        return [styles.statusBadge, styles.statusUnsatisfactory];
-      default:
-        return [styles.statusBadge];
-    }
+  const statusStyle = (status?: string) => {
+    const tone = statusTone(status);
+    if (tone === "positive") return styles.statusPositive;
+    if (tone === "negative") return styles.statusNegative;
+    return styles.statusMuted;
   };
 
   /* eslint-disable jsx-a11y/alt-text */
@@ -280,7 +297,7 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
         </Text>
       </View>
       <View>
-        <Text style={[styles.title]}>SAMPLE RECEIPT</Text>
+        <Text style={styles.title}>SAMPLE RECEIPT</Text>
         <View style={tw("flex flex-row mt-9")}>
           <Text style={styles.metaTitle}>Revision No:</Text>
           <Text style={styles.metaDescription}> {revisionNumber}</Text>
@@ -296,221 +313,239 @@ export const SampleReceiptDocument = (props: SampleReceiptDocumentProps) => {
             {format(new Date(receiptDate), "MMM d, yyyy, h:mma")}
           </Text>
         </View>
-        {/* <View style={tw("flex flex-row")}>
-          <Text style={styles.metaTitle}>Project:</Text>
-          <Text style={styles.metaDescription}> {projectName}</Text>
-        </View>
-        <View style={tw("flex flex-row")}>
-          <Text style={styles.metaTitle}>Client:</Text>
-          <Text style={styles.metaDescription}> {clientName}</Text>
-        </View> */}
+      </View>
+    </View>
+  );
+  /* eslint-enable jsx-a11y/alt-text */
+
+  const ClientAndProject = () => (
+    <View style={[styles.spaceBetweenNoAlign, { marginBottom: 16 }]}>
+      <View style={styles.card}>
+        <Text style={{ ...styles.heading, marginBottom: 15 }}>Received from</Text>
+        <Text style={styles.subHeading}>{clientName}</Text>
+        <Text style={styles.addressTitle}>Email: {email}</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={{ ...styles.heading, marginBottom: 15 }}>For Project</Text>
+        <Text style={styles.subHeading}>{projectName}</Text>
       </View>
     </View>
   );
 
-  return (
-    <Page size="A4" style={styles.page}>
-      <Header />
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>PROJECT INFORMATION</Text>
-        <View style={tw("gap-1 mt-2")}>
-          <View style={tw("flex flex-row")}>
-            <Text style={styles.metaTitle}>Project:</Text>
-            <Text style={styles.metaDescription}> {projectName}</Text>
-          </View>
-          <View style={tw("flex flex-row")}>
-            <Text style={styles.metaTitle}>Client:</Text>
-            <Text style={styles.metaDescription}> {clientName}</Text>
-          </View>
-          <View style={tw("flex flex-row")}>
-            <Text style={styles.metaTitle}>Email:</Text>
-            <Text style={styles.metaDescription}> {email}</Text>
-          </View>
-        </View>
+  const Subsection = ({ text }: { text: string }) => (
+    <View style={{ width: "100%", flexDirection: "row" }}>
+      <View style={styles.subsection}>
+        <Text>{text}</Text>
       </View>
+    </View>
+  );
 
-      {/* General Checks Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          GENERAL CHECKS FOR THE SAMPLES DELIVERED
-        </Text>
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>Sr. No.</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>
-              Points Reviewed
-            </Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>
-              Comments
-            </Text>
-          </View>
-          {reviewItems.map((item) => (
-            <View key={item.id} style={styles.tableRow}>
-              <Text style={[styles.tableCell, { flex: 0.5 }]}>{item.id}</Text>
-              <Text style={[styles.tableCell, { flex: 2 }]}>{item.label}</Text>
-              <View style={[styles.tableCell, { flex: 1 }]}>
-                <Text style={getStatusStyle(item.status)}>
-                  {item.status.toUpperCase()}
-                </Text>
-              </View>
-              <Text style={[styles.tableCell, { flex: 1.5 }]}>
-                {item.comments || "-"}
-              </Text>
-            </View>
-          ))}
-        </View>
+  const TableHead = ({
+    pointLabel,
+  }: {
+    pointLabel: string;
+  }) => (
+    <View style={{ width: "100%", flexDirection: "row", marginTop: 8 }}>
+      <View style={styles.theaderSmall}>
+        <Text>NO.</Text>
       </View>
-
-      {/* Adequacy Checks Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          ADEQUACY CHECKS FOR THE SAMPLES DELIVERED
-        </Text>
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>No.</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>
-              Requirements
-            </Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>
-              Comments
-            </Text>
-          </View>
-          {adequacyChecks.map((item) => (
-            <View key={item.id} style={styles.tableRow}>
-              <Text style={[styles.tableCell, { flex: 0.5 }]}>{item.id}</Text>
-              <Text style={[styles.tableCell, { flex: 2 }]}>
-                {item.label}
-                {item.required && " *"}
-              </Text>
-              <View style={[styles.tableCell, { flex: 1 }]}>
-                <Text style={getStatusStyle(item.status)}>
-                  {item.status.toUpperCase()}
-                </Text>
-              </View>
-              <Text style={[styles.tableCell, { flex: 1.5 }]}>
-                {item.comments || "-"}
-              </Text>
-            </View>
-          ))}
-        </View>
+      <View style={styles.theaderWide}>
+        <Text>{pointLabel}</Text>
       </View>
+      <View style={styles.theader}>
+        <Text>STATUS</Text>
+      </View>
+      <View style={styles.theader}>
+        <Text>COMMENTS</Text>
+      </View>
+    </View>
+  );
 
-      {/* Overall Comments Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          OVERALL COMMENTS ON SAMPLE DELIVERED
-        </Text>
-        <View style={{ marginBottom: 10 }}>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>Status: </Text>
-            <Text style={getStatusStyle(overallStatus)}>
-              {overallStatus.toUpperCase()}
-            </Text>
+  const TableRows = ({
+    items,
+  }: {
+    items: Array<{
+      id: number;
+      label: string;
+      status: string;
+      comments: string;
+      required?: boolean;
+    }>;
+  }) =>
+    items.map((item) => (
+      <View key={item.id} style={{ width: "100%", flexDirection: "row" }} wrap={false}>
+        <View style={styles.tbodySmall}>
+          <Text>{item.id}</Text>
+        </View>
+        <View style={styles.tbodyWide}>
+          <Text>
+            {item.label}
+            {item.required ? " *" : ""}
           </Text>
         </View>
-        {comments && (
-          <View>
-            <Text style={styles.bold}>Additional Comments:</Text>
-            <Text style={styles.text}>{comments}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Sample Receipt Personnel Section */}
-      {/* <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SAMPLE RECEIPT PERSONNEL</Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Name: </Text>
-          {personnel?.fullName}
-        </Text>
-        <Text style={styles.text}>
-          <Text style={styles.bold}>Role: </Text>
-          {personnel?.departmentRoles?.[0]?.role}
-        </Text>
-      </View> */}
-
-      {/* Signatures */}
-      <View style={styles.signatureSection}>
-        <View style={{ width: "45%" }}>
-          <View style={{ marginBottom: 15 }}>
-            <Text style={styles.sectionTitle}>CLIENT'S ACKNOWLEDGEMENT</Text>
-            <Text style={styles.text}>{clientAcknowledgement}</Text>
-          </View>
-          <View style={styles.signatureBox}>
-            <Text style={styles.signatureLabel}>Client Representative</Text>
-            <Text style={styles.signatureValue}>Name: {clientSignature}</Text>
-            <Text style={styles.signatureValue}>
-              Role: {clientRepresentative}
-            </Text>
-            <Text style={styles.signatureValue}>
-              Date: {format(new Date(receiptDate), "dd/MM/yyyy")}
-            </Text>
-          </View>
+        <View style={styles.tbody}>
+          <Text style={statusStyle(item.status)}>{formatStatus(item.status)}</Text>
         </View>
-        <View style={{ width: "45%" }}>
-          <View style={{ marginBottom: 15 }}>
-            <Text style={styles.sectionTitle}>GETLAB'S ACKNOWLEDGEMENT</Text>
-
-            {/* Approval Decision */}
-            {approvalDecision && (
-              <Text style={styles.text}>
-                <Text style={styles.bold}>Decision: </Text>
-                {approvalDecision === "approve" ? "APPROVED" : "REJECTED"}
-              </Text>
-            )}
-
-            {/* Rejection Reason */}
-            {approvalDecision === "reject" && rejectionReason && (
-              <Text style={styles.text}>
-                <Text style={styles.bold}>Rejection Reason: </Text>
-                {rejectionReason}
-              </Text>
-            )}
-
-            {/* Only show delivery date and retention duration for approved samples */}
-            {approvalDecision === "approve" && (
-              <>
-                <Text style={styles.text}>
-                  <Text style={styles.bold}>Expected delivery date: </Text>
-                  {expectedDeliveryDate
-                    ? format(new Date(expectedDeliveryDate), "dd/MM/yyyy")
-                    : "Not specified"}
-                </Text>
-                <Text style={styles.text}>
-                  <Text style={styles.bold}>Sample retention duration: </Text>
-                  {sampleRetentionDuration || "Not specified"}
-                </Text>
-              </>
-            )}
-
-            {getlabAcknowledgement && (
-              <View style={{ marginTop: 10 }}>
-                <Text style={styles.bold}>Additional Notes:</Text>
-                <Text style={styles.text}>{getlabAcknowledgement}</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.signatureBox}>
-            <Text style={styles.signatureLabel}>GETLAB Personnel</Text>
-            <Text style={styles.signatureValue}>Name: {sampleReceiptName}</Text>
-            <Text style={styles.signatureValue}>
-              Role: {personnel?.departmentRoles?.[0]?.role}
-            </Text>
-            <Text style={styles.signatureValue}>
-              Date: {format(new Date(receiptDate), "dd/MM/yyyy")}
-            </Text>
-          </View>
+        <View style={styles.tbody}>
+          <Text>{item.comments?.trim() ? item.comments : "—"}</Text>
         </View>
       </View>
+    ));
 
-      {/* Footer */}
-      <Text style={styles.footer}>
-        This document was generated on {format(new Date(), "dd/MM/yyyy HH:mm")}{" "}
-        | GETLAB Environmental Testing Services
-      </Text>
-    </Page>
+  const OverallComments = () => (
+    <View style={styles.titleContainer}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+        }}
+      >
+        <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>Overall status</Text>
+          <Text style={statusStyle(overallStatus)}>
+            {formatStatus(overallStatus)}
+          </Text>
+        </View>
+        <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>Additional comments</Text>
+          <Text style={[styles.quotationDetail, { flexWrap: "wrap" }]}>
+            {comments?.trim() ? comments : "No additional comments provided"}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const Acknowledgements = () => (
+    <View style={[styles.titleContainer, { marginTop: 16 }]}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+        }}
+      >
+        <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>Client acknowledgement</Text>
+          <Text style={[styles.quotationDetail, { marginBottom: 8 }]}>
+            {clientAcknowledgement || "—"}
+          </Text>
+          <Text style={styles.quotationDetail}>
+            Name: {clientSignature || "—"}
+          </Text>
+          <Text style={styles.quotationDetail}>
+            Role: {clientRepresentative || "—"}
+          </Text>
+          <Text style={styles.quotationDetail}>
+            Date: {format(new Date(receiptDate), "dd/MM/yyyy")}
+          </Text>
+        </View>
+        <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>GETLAB acknowledgement</Text>
+          {approvalDecision ? (
+            <Text style={styles.quotationDetail}>
+              Decision:{" "}
+              {approvalDecision === "approve" ? "Approved" : "Rejected"}
+            </Text>
+          ) : null}
+          {approvalDecision === "reject" && rejectionReason ? (
+            <Text style={styles.quotationDetail}>
+              Rejection reason: {rejectionReason}
+            </Text>
+          ) : null}
+          {approvalDecision === "approve" ? (
+            <>
+              <Text style={styles.quotationDetail}>
+                Expected delivery date:{" "}
+                {expectedDeliveryDate
+                  ? format(new Date(expectedDeliveryDate), "dd/MM/yyyy")
+                  : "Not specified"}
+              </Text>
+              <Text style={styles.quotationDetail}>
+                Sample retention duration:{" "}
+                {sampleRetentionDuration || "Not specified"}
+              </Text>
+            </>
+          ) : null}
+          {getlabAcknowledgement ? (
+            <Text style={[styles.quotationDetail, { marginTop: 4 }]}>
+              Notes: {getlabAcknowledgement}
+            </Text>
+          ) : null}
+          <Text style={[styles.quotationDetail, { marginTop: 8 }]}>
+            Name: {sampleReceiptName || "—"}
+          </Text>
+          <Text style={styles.quotationDetail}>
+            Role: {personnel?.departmentRoles?.[0]?.role || "—"}
+          </Text>
+          <Text style={styles.quotationDetail}>
+            Date: {format(new Date(receiptDate), "dd/MM/yyyy")}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const Certifications = () => (
+    <View style={styles.titleContainer}>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+        }}
+      >
+        <View style={{ width: "48%" }}>
+          <Text style={styles.heading}>Contact us</Text>
+          <Text style={styles.quotationDetail}>
+            If you have any questions concerning this sample receipt, contact
+            GETLAB on +256 (0) 392 175 883 or email info@getlab.co.ug
+          </Text>
+        </View>
+        <View style={{ width: "48%" }}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
+          <Image
+            style={tw("w-[200px] mt-5")}
+            src="/getlab-certifications.png"
+          />
+        </View>
+      </View>
+    </View>
+  );
+
+  const PageNumber = () => (
+    <Text
+      style={styles.pageNumber}
+      render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+      fixed
+    />
+  );
+
+  return (
+    <>
+      <Page size="A4" style={styles.page}>
+        <Header />
+        <ClientAndProject />
+        <TableHead pointLabel="POINTS REVIEWED" />
+        <Subsection text="General checks for the samples delivered" />
+        <TableRows items={reviewItems} />
+        <PageNumber />
+      </Page>
+      <Page size="A4" style={styles.page}>
+        <TableHead pointLabel="REQUIREMENTS" />
+        <Subsection text="Adequacy checks for the samples delivered" />
+        <TableRows items={adequacyChecks} />
+        <OverallComments />
+        <Acknowledgements />
+        <Certifications />
+        <PageNumber />
+      </Page>
+    </>
   );
 };
