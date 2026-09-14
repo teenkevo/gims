@@ -80,7 +80,7 @@ export function SetDateRangeDialog({
             {buttonText}
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Set Project Dates</DialogTitle>
             <DrawerDescription>

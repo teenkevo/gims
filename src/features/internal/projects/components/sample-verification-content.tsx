@@ -41,13 +41,6 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Moon, Sun, Database, Trash2 } from "lucide-react";
 import {
   seedSampleReceiptTemplates,
@@ -57,6 +50,7 @@ import ValidityChecker from "../../billing/components/validity-checker";
 import { toast } from "sonner";
 import { GenerateSampleReceiptDocument } from "./generate-sample-receipt-document";
 import { format } from "date-fns";
+import { useRBAC } from "@/components/rbac-context";
 import {
   PROJECT_BY_ID_QUERY_RESULT,
   ALL_PERSONNEL_QUERY_RESULT,
@@ -556,6 +550,32 @@ export function SampleVerificationContent({
   isReadOnly?: boolean;
   onApprove?: () => void;
 }) {
+  const { user } = useRBAC();
+  const responsiblePersonnel = useMemo(() => {
+    const storedName = existingSampleReceipt?.sampleReceiptPersonnel?.name;
+    if (isReadOnly && storedName) {
+      return personnel.find((person) => person.fullName === storedName);
+    }
+
+    if (!user) return undefined;
+    const email = user.email.toLowerCase();
+    return (
+      personnel.find((person) => person.email?.toLowerCase() === email) ||
+      personnel.find((person) => person.fullName === user.fullName)
+    );
+  }, [
+    existingSampleReceipt?.sampleReceiptPersonnel?.name,
+    isReadOnly,
+    personnel,
+    user,
+  ]);
+  const sampleReceiptName = isReadOnly
+    ? existingSampleReceipt?.sampleReceiptPersonnel?.name ||
+      responsiblePersonnel?.fullName ||
+      user?.fullName ||
+      ""
+    : responsiblePersonnel?.fullName || user?.fullName || "";
+
   // Extract values from project
   const clientName = project.clients?.[0]?.name || "Client Name";
   const projectName = project.name || "Sample Receipt Verification";
@@ -637,9 +657,6 @@ export function SampleVerificationContent({
           10
         )
       : undefined
-  );
-  const [sampleReceiptName, setSampleReceiptName] = useState<string>(
-    existingSampleReceipt?.sampleReceiptPersonnel?.name || ""
   );
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
@@ -835,16 +852,6 @@ export function SampleVerificationContent({
     setHasUnsavedEdits,
   ]);
 
-  useEffect(() => {
-    if (existingSampleReceipt?.sampleReceiptPersonnel?.name !== undefined) {
-      setSampleReceiptName(
-        existingSampleReceipt.sampleReceiptPersonnel.name || ""
-      );
-      // Reset unsaved edits when data is updated from Sanity
-      setHasUnsavedEdits(false);
-    }
-  }, [existingSampleReceipt?.sampleReceiptPersonnel?.name, setHasUnsavedEdits]);
-
   // Handle case when sample receipt is deleted (existingSampleReceipt becomes null/undefined)
   useEffect(() => {
     if (existingSampleReceipt === null || existingSampleReceipt === undefined) {
@@ -873,7 +880,6 @@ export function SampleVerificationContent({
       setGetlabAcknowledgement("");
       setExpectedDeliveryDate(undefined);
       setSampleRetentionDuration(undefined);
-      setSampleReceiptName("");
       // Reset unsaved edits when sample receipt is deleted
       setHasUnsavedEdits(false);
     }
@@ -890,8 +896,6 @@ export function SampleVerificationContent({
   const [isOverallCommentsValid, setIsOverallCommentsValid] =
     useState<boolean>(false);
   const [isGetlabAcknowledgementValid, setIsGetlabAcknowledgementValid] =
-    useState<boolean>(false);
-  const [isSampleReceiptPersonnelValid, setIsSampleReceiptPersonnelValid] =
     useState<boolean>(false);
 
   const { setTheme } = useTheme();
@@ -945,13 +949,6 @@ export function SampleVerificationContent({
     []
   );
 
-  const handleSampleReceiptPersonnelValidationChange = useCallback(
-    (isValid: boolean) => {
-      setIsSampleReceiptPersonnelValid(isValid);
-    },
-    []
-  );
-
   // Validation logic
   const isReviewSectionValid = useCallback(() => {
     return reviewItems.every((item) => {
@@ -986,10 +983,6 @@ export function SampleVerificationContent({
     return true; // Expected delivery date is no longer required
   }, [existingSampleReceipt?.status]);
 
-  const isSampleReceiptPersonnelSectionValid = useCallback(() => {
-    return sampleReceiptName !== "";
-  }, [sampleReceiptName]);
-
   // Update validation states when data changes
   useEffect(() => {
     handleReviewValidationChange(isReviewSectionValid());
@@ -1015,16 +1008,6 @@ export function SampleVerificationContent({
     existingSampleReceipt?.status,
     isGetlabAcknowledgementSectionValid,
     handleGetlabAcknowledgementValidationChange,
-  ]);
-
-  useEffect(() => {
-    handleSampleReceiptPersonnelValidationChange(
-      isSampleReceiptPersonnelSectionValid()
-    );
-  }, [
-    sampleReceiptName,
-    isSampleReceiptPersonnelSectionValid,
-    handleSampleReceiptPersonnelValidationChange,
   ]);
 
   const handleReviewStatusChange = useCallback(
@@ -1286,51 +1269,6 @@ export function SampleVerificationContent({
             />
           </CardContent>
         </div>
-
-        <div
-          className={`border transition-all duration-500 ease-in-out rounded-lg bg-gradient-to-b from-muted/20 to-muted/40 ${
-            isSampleReceiptPersonnelValid
-              ? "border-border"
-              : "border-destructive"
-          }`}
-        >
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>Personnel</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-5">
-              <ValidityChecker isValid={isSampleReceiptPersonnelValid} />
-            </div>
-            <div>
-              <Label htmlFor="personnel-name">
-                Personnel responsible for this sample receipt
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Select
-                value={sampleReceiptName}
-                onValueChange={(value) => {
-                  setSampleReceiptName(value);
-                  debouncedSetHasUnsavedEdits();
-                }}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select personnel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {personnel.map((person) => (
-                    <SelectItem key={person._id} value={person.fullName || ""}>
-                      {person.fullName} -{" "}
-                      {person.departmentRoles?.[0]?.role || "No role"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </div>
       </div>
 
       {/* Always show the Review Sample Receipt button */}
@@ -1365,10 +1303,7 @@ export function SampleVerificationContent({
           sampleReceiptNumber:
             existingSampleReceipt?.sampleReceiptNumber || undefined,
           revisionNumber: existingSampleReceipt?.revisionNumber || undefined,
-          personnel:
-            personnel?.find(
-              (person) => person.fullName === sampleReceiptName
-            ) || undefined,
+          personnel: responsiblePersonnel,
         }}
         onCloseDrawers={handleCloseDrawers}
       />

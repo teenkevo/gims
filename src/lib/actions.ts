@@ -1726,6 +1726,21 @@ export async function deleteAsset() {
   }
 }
 
+function sampleReceiptPersonnelFromSession(session: SessionContext) {
+  if (
+    !session.isAuthenticated ||
+    !(session.user.fullName || session.user.email)
+  ) {
+    return null;
+  }
+
+  return {
+    role: session.departmentRoles[0]?.roleName || session.role || "",
+    name: session.user.fullName || session.user.email,
+    personnel: session.personnelId,
+  };
+}
+
 // CREATE SAMPLE RECEIPT
 export async function createSampleReceipt(
   prevState: any,
@@ -1744,9 +1759,15 @@ export async function createSampleReceipt(
     const getlabAcknowledgement = JSON.parse(
       formData.get("getlabAcknowledgement") as string
     );
-    const sampleReceiptPersonnel = JSON.parse(
-      formData.get("sampleReceiptPersonnel") as string
+    const sampleReceiptPersonnel = sampleReceiptPersonnelFromSession(
+      await getSession()
     );
+    if (!sampleReceiptPersonnel) {
+      return {
+        error: "Unable to identify the logged-in personnel",
+        status: "error",
+      };
+    }
     const reviewTemplate = formData.get("reviewTemplate") as string;
     const adequacyTemplate = formData.get("adequacyTemplate") as string;
     const sampleReceiptNumber = formData.get("sampleReceiptNumber") as string;
@@ -1870,9 +1891,15 @@ export async function updateSampleReceipt(
     const getlabAcknowledgement = JSON.parse(
       formData.get("getlabAcknowledgement") as string
     );
-    const sampleReceiptPersonnel = JSON.parse(
-      formData.get("sampleReceiptPersonnel") as string
+    const sampleReceiptPersonnel = sampleReceiptPersonnelFromSession(
+      await getSession()
     );
+    if (!sampleReceiptPersonnel) {
+      return {
+        error: "Unable to identify the logged-in personnel",
+        status: "error",
+      };
+    }
     const reviewTemplate = formData.get("reviewTemplate") as string;
     const adequacyTemplate = formData.get("adequacyTemplate") as string;
     const sampleReceiptNumber = formData.get("sampleReceiptNumber") as string;
@@ -2155,9 +2182,15 @@ export async function createSampleReceiptRevision(
     const getlabAcknowledgement = JSON.parse(
       formData.get("getlabAcknowledgement") as string
     );
-    const sampleReceiptPersonnel = JSON.parse(
-      formData.get("sampleReceiptPersonnel") as string
+    const sampleReceiptPersonnel = sampleReceiptPersonnelFromSession(
+      await getSession()
     );
+    if (!sampleReceiptPersonnel) {
+      return {
+        error: "Unable to identify the logged-in personnel",
+        status: "error",
+      };
+    }
     const reviewTemplate = formData.get("reviewTemplate") as string;
     const adequacyTemplate = formData.get("adequacyTemplate") as string;
     const originalSampleReceiptId = formData.get(

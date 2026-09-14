@@ -88,7 +88,7 @@ export function SampleVerificationDrawer({
                   ? "Approve / Reject Sample Receipt"
                   : project.sampleReceipt?.status === "rejected"
                     ? "Revise Sample Receipt"
-                    : "Sample Receipt Verification"}{" "}
+                    : "Sample Receipt"}{" "}
                 {isReadOnly && (
                   <Badge className="" variant="destructive">
                     Read Only
@@ -98,7 +98,7 @@ export function SampleVerificationDrawer({
               <SheetDescription>
                 {project.sampleReceipt?.status === "rejected"
                   ? "Revise and resubmit the sample receipt for approval."
-                  : "Complete the sample receipt verification process for the project."}
+                  : "Complete the sample receipt process for the project."}
               </SheetDescription>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto py-4">
